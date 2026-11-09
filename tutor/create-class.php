@@ -56,10 +56,16 @@ if (!SessionUser::hasValidSession()) {
 
                         <div class="col-12 d-flex flex-column p-0 m-0 g-0 contentBodyArea vh-100" id="real-list">
                             <div class="row p-4 m-0 g-0">
-                                <div class="col-12 p-0">
-                                    <?php enlixo_page_header('Create a Class', 'Set up the class, its weekly times and fee in one place', '', '', 'Fill in what you need now. Only the fields marked * are required. You can change everything later.', 'class-actions'); ?>
-                                </div>
-                                <div class="col-12 p-0" id="class-form-root"></div>
+                                <?php enlixo_form_header('Create a Class', [['Classes', 'classes'], ['Create a Class', null]], [
+                                    'intro' => 'Set up a class in one go: what you teach, when and where, the monthly fee and who can join.',
+                                    'points' => [
+                                        'Fields with a red star are required. Everything else can be added later.',
+                                        'Leave the class name empty and we name it for you, e.g. "2027 A/L Physics Theory (Sinhala)".',
+                                        'Weekly times are added to your timetable every week. Online times get a Zoom link automatically.',
+                                        'Use the gear icon to hide fields you never use or add your own fields.',
+                                    ],
+                                ], 'class-actions'); ?>
+                                <div class="col-12 p-4 component-theme" id="class-form-root"></div>
                             </div>
                             <div class="flex-grow-1"></div>
                             <footer>
