@@ -1,6 +1,13 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_VERSION_ID < 80100) {
+    http_response_code(503);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['ok' => false, 'error' => ['code' => 'setup_php', 'message' => 'The new pages need PHP 8.1 or newer. This server runs PHP ' . PHP_VERSION . '.', 'details' => new stdClass()]]);
+    exit;
+}
+
 // Front controller for /api/v1/* (see .htaccess in this folder).
 use Enlixo\App;
 use Enlixo\Core\HttpException;
