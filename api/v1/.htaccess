@@ -1,0 +1,4 @@
+# Send every /api/v1/* request to index.php (this file's rules replace the root .htaccess rules for this folder).
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L,QSA]

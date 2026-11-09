@@ -1,0 +1,23 @@
+/* Tutor side menu, grouped like the ENLIXO V3 portal (tutor/includes/side-menu.php). Uses style.css theme variables. */
+.ex-sidenav { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.ex-sidenav-scroll { padding: 0 0 0 12px; }
+.ex-sidenav a { text-decoration: none; }
+.ex-nav-details > summary { list-style: none; }
+.ex-nav-details > summary::-webkit-details-marker, .ex-subgroup > summary::-webkit-details-marker { display: none; }
+.ex-nav-group { display: flex; align-items: center; gap: 12px; padding: 9px 14px 9px 13px; margin: 2px 0; border-left: 3px solid transparent; color: var(--dark-color, #1D2026); font-size: 14px; cursor: pointer; user-select: none; }
+.ex-nav-group:hover { color: var(--dark-theme, #0061D2); }
+.ex-nav-group.ex-in { background: var(--light-theme, #E8ECFF); border-left-color: var(--dark-theme, #0061D2); color: var(--dark-theme, #0061D2); }
+.ex-nav-group .ex-nav-label { flex: 1; }
+.ex-chev { width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); margin: 0 4px 3px 0; opacity: .7; transition: transform .15s; }
+details[open] > summary > .ex-chev { transform: rotate(-135deg); margin-bottom: -3px; }
+.ex-subnav { list-style: none; margin: 4px 0 8px; padding: 0 0 0 32px; }
+.ex-subnav.ex-depth-2 { padding-left: 14px; margin: 2px 0 4px 2px; border-left: 1px solid var(--line-color, #E9EAF0); }
+.ex-subnav-link { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 0; font-size: 12.5px; color: var(--main-text-color, #4E5566); cursor: pointer; list-style: none; }
+.ex-subnav-link .ex-nav-label { flex: 1; }
+.ex-subnav-link:hover { color: var(--dark-theme, #0061D2); }
+.ex-subnav-link.ex-in { color: var(--dark-color, #1D2026); }
+.ex-subnav-link.ex-current { color: var(--dark-theme, #0061D2); position: relative; }
+.ex-depth-2 .ex-subnav-link.ex-current::before { content: ""; position: absolute; left: -15px; top: 50%; width: 8px; border-top: 1px solid var(--dark-theme, #0061D2); }
+.ex-sidenav :focus-visible { outline: 2px solid var(--dark-theme, #0061D2); outline-offset: -2px; }
+[data-custom-theme="dark"] .ex-nav-group.ex-in, [data-custom-theme="dark"] .ex-subnav-link.ex-current, [data-custom-theme="dark"] .ex-nav-group:hover, [data-custom-theme="dark"] .ex-subnav-link:hover { color: #8cb8ff; }
+[data-custom-theme="dark"] .ex-depth-2 .ex-subnav-link.ex-current::before { border-color: #8cb8ff; }

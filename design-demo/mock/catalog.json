@@ -1,0 +1,558 @@
+{
+    "plans": {
+        "start": {
+            "id": 1,
+            "name": "START",
+            "student_limit": 50,
+            "price": "LKR 2,500 – 3,000 / month"
+        },
+        "grow": {
+            "id": 2,
+            "name": "GROW",
+            "student_limit": 150,
+            "price": "LKR 5,000 – 6,000 / month"
+        },
+        "pro": {
+            "id": 3,
+            "name": "PRO",
+            "student_limit": 300,
+            "price": "LKR 8,000 – 10,000 / month"
+        }
+    },
+    "features": [
+        {
+            "key": "classes.setup",
+            "name": "Subject / Grade / Language Setup",
+            "category": "Class & Student Management",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Create classes by subject, grade and medium."
+        },
+        {
+            "key": "students.registration",
+            "name": "Student Registration",
+            "category": "Class & Student Management",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Register students and approve join requests."
+        },
+        {
+            "key": "parents.login",
+            "name": "Parent Login",
+            "category": "Class & Student Management",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Parents log in to follow their children."
+        },
+        {
+            "key": "timetable.manage",
+            "name": "Timetable Management",
+            "category": "Class & Student Management",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Plan lessons per class."
+        },
+        {
+            "key": "classes.scheduling",
+            "name": "Physical & Online Class Scheduling",
+            "category": "Class & Student Management",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Weekly schedules for physical and online classes."
+        },
+        {
+            "key": "tutes.manage",
+            "name": "Tute / Material Management",
+            "category": "Class & Student Management",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Share tutes and materials per class."
+        },
+        {
+            "key": "exams.mcq",
+            "name": "MCQ Exams + Grading",
+            "category": "Class & Student Management",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Online MCQ papers with auto marking."
+        },
+        {
+            "key": "fees.class_based",
+            "name": "Class-Based Fee Setup",
+            "category": "Class & Student Management",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Monthly fee per class."
+        },
+        {
+            "key": "fees.advanced",
+            "name": "Advanced Class-Based Fee Logic",
+            "category": "Class & Student Management",
+            "plans": [
+                "pro"
+            ],
+            "description": "Discounts, penalties and custom fee rules per student."
+        },
+        {
+            "key": "payments.bank_tracking",
+            "name": "Bank Transfer Tracking",
+            "category": "Payment Management",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Students upload bank slips."
+        },
+        {
+            "key": "payments.manual_approval",
+            "name": "Manual Payment Approval",
+            "category": "Payment Management",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Approve or reject payments."
+        },
+        {
+            "key": "payments.online_card",
+            "name": "Online Card Payments (Tutor Gateway)",
+            "category": "Payment Management",
+            "plans": [
+                "grow",
+                "pro"
+            ],
+            "description": "Accept card payments with your own gateway."
+        },
+        {
+            "key": "payments.arrears",
+            "name": "Arrears Tracking Dashboard",
+            "category": "Payment Management",
+            "plans": [
+                "pro"
+            ],
+            "description": "See who owes what, across all classes."
+        },
+        {
+            "key": "payments.parent_dashboard",
+            "name": "Parent Payment Dashboard",
+            "category": "Payment Management",
+            "plans": [
+                "pro"
+            ],
+            "description": "Parents see and pay their children's fees."
+        },
+        {
+            "key": "payments.enviiz_gateway",
+            "name": "ENVIIZ Payment Gateway",
+            "category": "Payment Management",
+            "plans": [],
+            "description": "Card payments through the ENVIIZ gateway.",
+            "addon": {
+                "key": "enviiz_gateway",
+                "name": "ENVIIZ Payment Gateway",
+                "pricing": "+ LKR 2,000/month + 2–3% per transaction"
+            }
+        },
+        {
+            "key": "zoom.tutor_integration",
+            "name": "Tutor Zoom Integration",
+            "category": "Classes & Recordings",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Connect your Zoom and auto-create class meetings."
+        },
+        {
+            "key": "zoom.enviiz_account",
+            "name": "ENVIIZ Zoom Account",
+            "category": "Classes & Recordings",
+            "plans": [],
+            "description": "Use our licensed Zoom account.",
+            "addon": {
+                "key": "enviiz_zoom",
+                "name": "ENVIIZ Zoom Account",
+                "pricing": "LKR 1,500–2,000/month"
+            }
+        },
+        {
+            "key": "recordings.upload",
+            "name": "Non-Secured Recordings (Tutor Upload)",
+            "category": "Classes & Recordings",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Share class recordings with students."
+        },
+        {
+            "key": "recordings.controlled_access",
+            "name": "Controlled Recording Access",
+            "category": "Classes & Recordings",
+            "plans": [
+                "pro"
+            ],
+            "description": "Limit how long each student can watch a recording."
+        },
+        {
+            "key": "recordings.expiry",
+            "name": "Expiry-Based Recording Access",
+            "category": "Classes & Recordings",
+            "plans": [
+                "pro"
+            ],
+            "description": "Recordings close automatically after a date."
+        },
+        {
+            "key": "recordings.secure_streaming",
+            "name": "ENVIIZ Secure Streaming",
+            "category": "Classes & Recordings",
+            "plans": [],
+            "description": "DRM streaming with watermark.",
+            "addon": {
+                "key": "enviiz_streaming",
+                "name": "ENVIIZ Secure Streaming",
+                "pricing": "From LKR 1,500/month"
+            }
+        },
+        {
+            "key": "comms.email",
+            "name": "Email Notifications",
+            "category": "Communication",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Email students and parents."
+        },
+        {
+            "key": "comms.whatsapp",
+            "name": "WhatsApp (Tutor API)",
+            "category": "Communication",
+            "plans": [
+                "grow",
+                "pro"
+            ],
+            "description": "Send WhatsApp messages with your API."
+        },
+        {
+            "key": "comms.sms",
+            "name": "SMS (Tutor Gateway)",
+            "category": "Communication",
+            "plans": [
+                "grow",
+                "pro"
+            ],
+            "description": "Send SMS with your gateway."
+        },
+        {
+            "key": "comms.enviiz_sms",
+            "name": "ENVIIZ SMS Service",
+            "category": "Communication",
+            "plans": [],
+            "description": "Pay-as-you-go SMS.",
+            "addon": {
+                "key": "enviiz_sms",
+                "name": "ENVIIZ SMS Service",
+                "pricing": "Pay-as-you-go"
+            }
+        },
+        {
+            "key": "comms.enviiz_whatsapp",
+            "name": "ENVIIZ WhatsApp API",
+            "category": "Communication",
+            "plans": [],
+            "description": "WhatsApp without your own API.",
+            "addon": {
+                "key": "enviiz_whatsapp",
+                "name": "ENVIIZ WhatsApp API",
+                "pricing": "Conversation-based pricing"
+            }
+        },
+        {
+            "key": "attendance.manual",
+            "name": "Manual Attendance",
+            "category": "Attendance & ID",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Mark attendance by hand."
+        },
+        {
+            "key": "attendance.qr",
+            "name": "QR-Based Attendance",
+            "category": "Attendance & ID",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Scan student QR codes."
+        },
+        {
+            "key": "attendance.export",
+            "name": "Attendance Reports Export",
+            "category": "Attendance & ID",
+            "plans": [
+                "grow",
+                "pro"
+            ],
+            "description": "Export attendance to Excel / PDF."
+        },
+        {
+            "key": "id.digital",
+            "name": "Digital Student ID (QR)",
+            "category": "Attendance & ID",
+            "plans": [
+                "grow",
+                "pro"
+            ],
+            "description": "Each student gets a QR ID card in the app."
+        },
+        {
+            "key": "id.physical_cards",
+            "name": "Physical ID Card Printing",
+            "category": "Attendance & ID",
+            "plans": [],
+            "description": "Printed PVC ID cards.",
+            "addon": {
+                "key": "physical_id",
+                "name": "Physical ID Card Setup",
+                "pricing": "One-time + per-card cost"
+            }
+        },
+        {
+            "key": "reports.basic",
+            "name": "Basic Reports",
+            "category": "Reporting & Analytics",
+            "plans": [
+                "start",
+                "grow",
+                "pro"
+            ],
+            "description": "Student and payment summaries."
+        },
+        {
+            "key": "reports.attendance",
+            "name": "Attendance Analytics",
+            "category": "Reporting & Analytics",
+            "plans": [
+                "grow",
+                "pro"
+            ],
+            "description": "Attendance trends per class."
+        },
+        {
+            "key": "reports.payments",
+            "name": "Payment Analytics",
+            "category": "Reporting & Analytics",
+            "plans": [
+                "grow",
+                "pro"
+            ],
+            "description": "Income trends and collection rates."
+        },
+        {
+            "key": "reports.class_advanced",
+            "name": "Advanced Class Analytics",
+            "category": "Reporting & Analytics",
+            "plans": [
+                "pro"
+            ],
+            "description": "Exam, watch-time and engagement insights."
+        },
+        {
+            "key": "staff.custom_roles",
+            "name": "Staff Accounts & Custom Roles",
+            "category": "Team",
+            "plans": [
+                "grow",
+                "pro"
+            ],
+            "description": "Add assistants and choose exactly what each role can do."
+        }
+    ],
+    "permissions": [
+        {
+            "key": "students.view",
+            "name": "View students",
+            "module": "Students",
+            "feature": null
+        },
+        {
+            "key": "students.manage",
+            "name": "Add & edit students",
+            "module": "Students",
+            "feature": null
+        },
+        {
+            "key": "students.approve_requests",
+            "name": "Approve join requests",
+            "module": "Students",
+            "feature": null
+        },
+        {
+            "key": "classes.view",
+            "name": "View classes",
+            "module": "Classes & Timetable",
+            "feature": null
+        },
+        {
+            "key": "classes.manage",
+            "name": "Create & edit classes",
+            "module": "Classes & Timetable",
+            "feature": null
+        },
+        {
+            "key": "timetable.manage",
+            "name": "Manage timetable",
+            "module": "Classes & Timetable",
+            "feature": null
+        },
+        {
+            "key": "zoom.schedule",
+            "name": "Schedule Zoom classes",
+            "module": "Classes & Timetable",
+            "feature": "zoom.tutor_integration"
+        },
+        {
+            "key": "recordings.view",
+            "name": "View recordings",
+            "module": "Recordings",
+            "feature": null
+        },
+        {
+            "key": "recordings.manage",
+            "name": "Upload & edit recordings",
+            "module": "Recordings",
+            "feature": null
+        },
+        {
+            "key": "recordings.limits",
+            "name": "Set watch-time limits",
+            "module": "Recordings",
+            "feature": "recordings.controlled_access"
+        },
+        {
+            "key": "recordings.grant_extra",
+            "name": "Give students extra watch time",
+            "module": "Recordings",
+            "feature": "recordings.controlled_access"
+        },
+        {
+            "key": "tutes.manage",
+            "name": "Manage tutes & materials",
+            "module": "Tutes & Exams",
+            "feature": null
+        },
+        {
+            "key": "exams.manage",
+            "name": "Create MCQ exams",
+            "module": "Tutes & Exams",
+            "feature": null
+        },
+        {
+            "key": "exams.grade",
+            "name": "Grade exams",
+            "module": "Tutes & Exams",
+            "feature": null
+        },
+        {
+            "key": "payments.view",
+            "name": "View payments",
+            "module": "Payments",
+            "feature": null
+        },
+        {
+            "key": "payments.approve",
+            "name": "Approve / reject payments",
+            "module": "Payments",
+            "feature": null
+        },
+        {
+            "key": "fees.manage",
+            "name": "Edit class fees & discounts",
+            "module": "Payments",
+            "feature": null
+        },
+        {
+            "key": "payments.arrears",
+            "name": "View arrears dashboard",
+            "module": "Payments",
+            "feature": "payments.arrears"
+        },
+        {
+            "key": "attendance.mark",
+            "name": "Mark attendance",
+            "module": "Attendance",
+            "feature": null
+        },
+        {
+            "key": "attendance.export",
+            "name": "Export attendance",
+            "module": "Attendance",
+            "feature": "attendance.export"
+        },
+        {
+            "key": "messages.send",
+            "name": "Send messages",
+            "module": "Messages",
+            "feature": null
+        },
+        {
+            "key": "reports.view",
+            "name": "View reports",
+            "module": "Reports",
+            "feature": null
+        },
+        {
+            "key": "settings.roles",
+            "name": "Manage roles",
+            "module": "Settings",
+            "feature": "staff.custom_roles"
+        },
+        {
+            "key": "settings.staff",
+            "name": "Manage staff users",
+            "module": "Settings",
+            "feature": "staff.custom_roles"
+        },
+        {
+            "key": "settings.integrations",
+            "name": "Manage integrations (Zoom, gateways)",
+            "module": "Settings",
+            "feature": null
+        }
+    ]
+}
