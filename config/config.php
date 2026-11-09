@@ -34,5 +34,16 @@ $config = [
 $local = __DIR__ . '/config.local.php';
 if (is_file($local)) {
     $config = array_replace_recursive($config, require $local);
+} elseif (!getenv('DB_DSN')) {
+    // No config.local.php yet: reuse the database login the existing app already uses (includes/connection.php),
+    // so the new pages work on a fresh XAMPP / Hostinger copy without extra setup.
+    $legacy = @file_get_contents(dirname(__DIR__) . '/includes/connection.php');
+    if ($legacy && preg_match('/new\s+mysqli\(\s*([\'"])(.*?)\1\s*,\s*([\'"])(.*?)\3\s*,\s*([\'"])(.*?)\5\s*,\s*([\'"])(.*?)\7/s', $legacy, $m)) {
+        $config['db'] = [
+            'dsn' => sprintf('mysql:host=%s;dbname=%s;charset=utf8mb4', $m[2], $m[8]),
+            'user' => $m[4],
+            'password' => $m[6],
+        ];
+    }
 }
 return $config;
