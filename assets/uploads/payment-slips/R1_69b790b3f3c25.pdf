@@ -1,0 +1,6 @@
+<br />
+<b>Fatal error</b>:  Uncaught Error: Cannot access protected property setasign\Fpdi\Fpdi::$k in C:\xampp\htdocs\Times-Academy-Admin\includes\PdfHelper.php:134
+Stack trace:
+#0 C:\xampp\htdocs\Times-Academy-Admin\api\downloadStudentIDCard.php(67): PdfHelper::RoundedImage(Object(setasign\Fpdi\Fpdi), '../assets/imgs/...', 20, 40, 20, 20, 4)
+#1 {main}
+  thrown in <b>C:\xampp\htdocs\Times-Academy-Admin\includes\PdfHelper.php</b> on line <b>134</b><br />

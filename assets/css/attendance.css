@@ -1,0 +1,403 @@
+#students-table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+/* Keep your student column padding, but for day cells remove bootstrap padding */
+#students-table td.day-cell {
+    padding: 0 !important;
+    vertical-align: top !important;
+    position: relative;
+    min-width: 140px;
+    height: 58px;
+    /* screenshot-like row height */
+    background: #fff;
+}
+
+/* Column tint (soft) */
+#students-table tbody td.day-cell:nth-child(even) {
+    background: rgba(0, 97, 210, 0.03);
+}
+
+/* Vertical colored line at the start of each day column (like screenshot) */
+#students-table td.day-cell::before,
+#students-table th.day-col::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(239, 68, 68, 0.18);
+    /* soft red column line */
+    pointer-events: none;
+}
+
+/* Make inside fill */
+#students-table td.day-cell .cell-stack {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* When there is only one item, center it vertically like screenshot */
+#students-table td.day-cell .cell-stack:has(.att-item:only-child) {
+    justify-content: center;
+}
+
+/* === stable table-cell layout (no flex on td) === */
+#students-table td.day-cell {
+    padding: 0 !important;
+    vertical-align: top !important;
+    position: relative;
+    min-width: 140px;
+    height: 58px;
+    /* base row height */
+    background: #fff;
+    overflow: hidden;
+    /* important for fill */
+}
+
+/* column tint */
+#students-table tbody td.day-cell:nth-child(even) {
+    background: rgba(0, 97, 210, 0.03);
+}
+
+/* vertical red guide line */
+#students-table td.day-cell::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(239, 68, 68, .18);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* === fill the entire td using absolute layer === */
+#students-table td.day-cell .cell-stack {
+    position: absolute;
+    inset: 0;
+    /* top:0 right:0 bottom:0 left:0 */
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+}
+
+/* one item -> fill full height */
+#students-table td.day-cell .cell-stack:has(.att-item:only-child) .att-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+/* multi item -> stack nicely in center */
+#students-table td.day-cell .cell-stack:has(.att-item:nth-child(2)) {
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 0;
+    /* breathing room */
+}
+
+#students-table td.day-cell .cell-stack:has(.att-item:nth-child(2)) .att-item {
+    flex: unset;
+    min-height: 22px;
+}
+
+/* attendance block */
+#students-table td.day-cell .att-item {
+    width: 100%;
+    padding: 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: rgba(17, 24, 39, .55);
+    cursor: pointer;
+    position: relative;
+}
+
+/* status blocks */
+#students-table td.day-cell .att-item.status-ontime {
+    background: var(--light-green);
+    color: var(--dark-green);
+}
+
+#students-table td.day-cell .att-item.status-late {
+    background: rgba(245, 158, 11, .12);
+    color: rgba(124, 74, 3, .75);
+}
+
+#students-table td.day-cell .att-item.status-watch {
+    background: var(--light-purple);
+    color: var(--dark-purple);
+}
+
+
+#students-table td.day-cell .att-item.status-absent {
+    background: var(--light-red);
+    color: var(--dark-red);
+    border-left: 5px solid var(--dark-red);
+}
+
+#students-table td.day-cell .att-item.status-absent::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: rgba(239, 68, 68, .65);
+}
+
+
+.att-tooltip {
+    position: fixed;
+    width: 320px;
+    background: rgba(17, 24, 39, 0.95);
+    color: #fff;
+    border-radius: 14px;
+    padding: 12px;
+    z-index: 99999;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity .12s ease, transform .12s ease;
+}
+
+.att-tooltip.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.att-tooltip .tt-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: flex-start;
+}
+
+.att-tooltip .tt-title {
+    font-weight: 800;
+    font-size: 13px;
+    line-height: 1.1;
+}
+
+.att-tooltip .tt-badge {
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    white-space: nowrap;
+}
+
+.att-tooltip .tt-grid {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    gap: 8px 10px;
+    padding: 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.att-tooltip .k {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.att-tooltip .v {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.att-tooltip .tt-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.att-tooltip .btn-soft {
+    background: rgba(255, 255, 255, 0.10);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.att-chart-card {
+    background: var(--custom-white);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.att-chart-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.att-chart-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-color);
+}
+
+.att-chart-sub {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sub-text);
+    margin-top: 2px;
+}
+
+.att-chart-btn {
+    border: 1px solid var(--line-color);
+    background: var(--custom-white);
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+/* donut grid */
+.att-donut-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    padding-top: 14px;
+    flex: 1;
+    /* makes card match height with left side */
+    align-content: center;
+}
+
+.att-donut-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.att-donut-wrap {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.att-donut-wrap canvas {
+    width: 120px !important;
+    height: 120px !important;
+}
+
+.att-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.att-donut-center .p {
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--text-color);
+    line-height: 1;
+}
+
+.att-donut-center .t {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--sub-text);
+    margin-top: 4px;
+}
+
+.att-donut-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sub-text);
+}
+
+.att-donut-meta .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+}
+
+.dot-present {
+    background: var(--dark-green);
+}
+
+.dot-absent {
+    background: var(--dark-red);
+}
+
+.dot-watch {
+    background: var(--dark-theme);
+}
+
+.att-chart-footer {
+    display: flex;
+    gap: 14px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.att-foot-item {
+    flex: 1;
+    padding: 10px 12px;
+    background: var(--light-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.att-foot-item .k {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sub-text);
+}
+
+.att-foot-item .v {
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--text-color);
+}
+
+/* responsive */
+@media (max-width: 991px) {
+    .att-donut-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .att-donut-wrap {
+        width: 140px;
+        height: 140px;
+    }
+
+    .att-donut-wrap canvas {
+        width: 140px !important;
+        height: 140px !important;
+    }
+}

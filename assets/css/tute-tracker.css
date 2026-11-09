@@ -1,0 +1,201 @@
+.card {
+    border-radius: 0px !important;
+}
+
+/* Premium avatar */
+.avatar-xl {
+    width: 54px;
+    height: 54px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    background: rgba(13, 110, 253, .10);
+    color: var(--dark-theme);
+    border: 1px solid rgba(13, 110, 253, .18);
+}
+
+/* Soft pills */
+.pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(0, 0, 0, .08);
+    background: var(--custom-white);
+    color: var(--sub-text);
+}
+
+.pill-soft {
+    background: rgba(13, 110, 253, .04);
+    border-color: rgba(13, 110, 253, .10);
+}
+
+/* Status chip */
+.status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-weight: 800;
+    font-size: 13px;
+    border: 1px solid var(--light-color);
+    background: var(--custom-white);
+}
+
+.status-chip .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--light-color);
+    box-shadow: 0 0 0 4px rgba(173, 181, 189, .18);
+}
+
+.status-chip.pending .dot {
+    background: #ffc107;
+    box-shadow: 0 0 0 4px rgba(255, 193, 7, .18);
+}
+
+.status-chip.intransit .dot {
+    background: #0d6efd;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, .18);
+}
+
+.status-chip.delivered .dot {
+    background: #198754;
+    box-shadow: 0 0 0 4px rgba(25, 135, 84, .18);
+}
+
+.status-chip.cancelled .dot {
+    background: #dc3545;
+    box-shadow: 0 0 0 4px rgba(220, 53, 69, .18);
+}
+
+.tracking-id {
+    letter-spacing: .4px;
+}
+
+/* Pro table */
+.pro-table thead th {
+    font-weight: 700;
+    border-top: 0;
+}
+
+.pro-table tbody tr {
+    border-color: rgba(0, 0, 0, .06);
+}
+
+.pro-table tbody tr:hover {
+    background: rgba(13, 110, 253, .03);
+}
+
+/* Timeline */
+/* Header live pill */
+.timeline-pill {
+    font-weight: 600;
+}
+
+.live-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--dark-theme);
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, .15);
+}
+
+/* Timeline v2 */
+.timeline-v2 {
+    position: relative;
+    padding-left: 34px;
+}
+
+.timeline-v2::before {
+    content: "";
+    position: absolute;
+    left: 14px;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: rgba(0, 0, 0, .08);
+}
+
+.tl-item {
+    position: relative;
+    padding: 10px 0;
+}
+
+.tl-dot {
+    position: absolute;
+    left: -25px;
+    top: 18px;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: var(--line-color);
+    border: 3px solid var(--light-color);
+    box-shadow: 0 0 0 3px rgba(206, 212, 218, .35);
+}
+
+.tl-item.active .tl-dot {
+    background: #0d6efd;
+    box-shadow: 0 0 0 5px rgba(13, 110, 253, .18);
+}
+
+.tl-card {
+    background: var(-custom-white);
+    border: 1px solid var(--light-color);
+    padding: 14px 14px;
+    margin: 20px;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+.tl-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(0, 0, 0, .10);
+    border-color: rgba(13, 110, 253, .18);
+}
+
+.tl-item.active .tl-card {
+    background: rgba(13, 110, 253, .04);
+    border-color: rgba(13, 110, 253, .28);
+    box-shadow: 0 16px 32px rgba(13, 110, 253, .10);
+}
+
+.tl-title {
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--dark-color);
+}
+
+.tl-desc {
+    font-size: 12.5px;
+    color: var(--sub-text);
+    margin-top: 2px;
+}
+
+.tl-time {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--sub-text);
+    display: flex;
+    align-items: center;
+}
+
+/* Small badge (optional) */
+.tl-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, .08);
+    background: var(--custom-white);
+    white-space: nowrap;
+}
+
+.tl-badge-blue {
+    color: #0d6efd;
+    background: rgba(13, 110, 253, .08);
+    border-color: rgba(13, 110, 253, .18);
+}
