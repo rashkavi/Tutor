@@ -89,6 +89,7 @@ Status: ✅ done in this branch · 🟡 started · ⬜ to do
 |---|---|
 | `tutor/students.php`: list now uses `DataView` (search, class + status filters, skeleton loading, paging) via `GET /api/v1/tutor/students` | ✅ |
 | `portal/watch-recording.php`, `portal/watch-pre-recording.php`: watch-time meter + lock (PRO only), enrolment check on pre-recordings | ✅ |
+| ENLIXO V3 layout: grouped side menu (Academic / Finance / Communication / Settings), header card with Action menu, count + search + filter dropdown + Export Report, Results Per Page, "Update ticked" bulk action, ticked table with sort icons. Applied to Students | ✅ |
 | `tutor/payments`, `tutor/attendance`, `tutor/class-students`, `tutor/time-table` | ⬜ next |
 | Student portal: timetable + recordings grouped by class | ⬜ |
 | Tutor settings: custom roles page | ⬜ |

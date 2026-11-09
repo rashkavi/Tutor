@@ -6,8 +6,8 @@ import { h } from '../core/dom.js';
  * Options can load asynchronously (e.g. the tutor's classes); a "Loading…" option shows meanwhile.
  */
 export class FilterBar extends Component {
-  constructor({ filters, values = {}, onChange }) {
-    super({ filters, onChange });
+  constructor({ filters, values = {}, onChange, stacked = false }) {
+    super({ filters, onChange, stacked });
     this.values = { ...values };
     this.options = {};
     for (const f of filters) {
@@ -33,6 +33,11 @@ export class FilterBar extends Component {
   }
 
   render() {
+    if (this.props.stacked) {
+      // Inside the filter dropdown: one labelled field per filter
+      return h('div', { class: 'ex-filters ex-stacked' }, this.props.filters.map((f) =>
+        h('div', { class: 'ex-field' }, h('span', { class: 'ex-field-label' }, f.label), this.#renderFilter(f))));
+    }
     return h('div', { class: 'ex-filters' }, this.props.filters.map((f) => this.#renderFilter(f)));
   }
 

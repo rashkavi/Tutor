@@ -60,7 +60,7 @@ export class ApiClient {
         method,
         signal,
         credentials: 'same-origin', // uses the existing PHP login session
-        headers: { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}), ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}) },
+        headers: { Accept: 'application/json', 'X-Requested-With': 'enlixo', ...(body ? { 'Content-Type': 'application/json' } : {}), ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}) },
         body: body ? JSON.stringify(body) : undefined,
       });
     } catch (e) {

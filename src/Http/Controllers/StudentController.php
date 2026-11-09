@@ -5,6 +5,7 @@ namespace Enlixo\Http\Controllers;
 
 use Enlixo\App;
 use Enlixo\Classes\ClassRepository;
+use Enlixo\Core\HttpException;
 use Enlixo\Core\JsonResponse;
 use Enlixo\Core\Request;
 use Enlixo\Students\StudentRepository;
@@ -23,6 +24,21 @@ final class StudentController
         $this->app->permissions()->require($auth, 'students.view');
         $q = ListQuery::fromArray($r->query, StudentRepository::FILTERS, StudentRepository::SORTS, 10);
         return (new StudentRepository($this->app->db()))->forTutor($auth->tenantId(), $q)->toResponse();
+    }
+
+    /** POST /api/v1/tutor/students/status  { ids: [..], status: 1|2, class?: id }  (the "Update ticked students" bulk action) */
+    public function updateStatus(Request $r): JsonResponse
+    {
+        $auth = $r->auth();
+        $this->app->permissions()->require($auth, 'students.manage');
+        $ids = $r->input('ids');
+        $status = (int) $r->input('status');
+        if (!is_array($ids) || $ids === [] || count($ids) > 500 || !in_array($status, [1, 2], true)) {
+            throw new HttpException(422, 'validation_failed', 'Tick at least one student and choose Active or Inactive.');
+        }
+        $class = $r->input('class');
+        $changed = (new StudentRepository($this->app->db()))->setStatus($auth->tenantId(), $ids, $status, $class !== null && $class !== '' ? (int) $class : null);
+        return JsonResponse::ok(['changed' => $changed]);
     }
 
     /** GET /api/v1/tutor/classes (filter options) */

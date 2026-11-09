@@ -1,61 +1,80 @@
-// Tutor → Students (tutor/students.php). Same look as the rest of the tutor app, built from the shared DataView.
+// Tutor → Students (tutor/students.php), laid out like the ENLIXO V3 Students page, built from the shared DataView.
 import { h, fmt } from '../core/dom.js';
 import { ApiClient } from '../core/ApiClient.js';
 import { DataView } from '../components/DataView.js';
+import { ActionMenu } from '../components/Popover.js';
 import { FeatureGate } from '../components/FeatureGate.js';
+import { Toast } from '../components/Toast.js';
 
 const api = new ApiClient();
 const gate = await FeatureGate.load(api).catch(() => null);
-
 const assets = new URL('../../../', import.meta.url).href; // <root>/assets/
 
+const fullName = (s) => `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim();
+const initials = (s) => h('span', { class: 'ex-avatar' }, fmt.initials(fullName(s) || '?'));
 function avatar(s) {
-  if (s.profile_img) {
-    const img = h('img', { src: `${assets}imgs/students/${encodeURIComponent(s.profile_img)}`, class: 'hwr-40', alt: '' });
-    img.onerror = () => img.replaceWith(initials(s));
-    return img;
-  }
-  return initials(s);
+  if (!s.profile_img) return initials(s);
+  const img = h('img', { class: 'ex-avatar', alt: '', src: `${assets}imgs/students/${encodeURIComponent(s.profile_img)}` });
+  img.onerror = () => img.replaceWith(initials(s));
+  return img;
 }
+// 2026-11-09 09:49 AM, like V3
+const stamp = (d) => {
+  if (!d) return '';
+  const t = new Date(d.replace(' ', 'T'));
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')} ${String(t.getHours() % 12 || 12).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')} ${t.getHours() < 12 ? 'AM' : 'PM'}`;
+};
 
-const initials = (s) => h('div', { class: 'd-flex hwr-40 dark-theme bg-light-theme align-items-center justify-content-center fw-medium' }, fmt.initials(`${s.first_name} ${s.last_name}`));
+let view;
+const setStatus = async (ids, status) => {
+  const { data } = await api.post('/tutor/students/status', { ids, status: Number(status), class: view.state.filters.class ?? null });
+  Toast.success(`${ids.length} ${ids.length === 1 ? 'student' : 'students'} marked ${status === '1' ? 'Active' : 'Inactive'}.`);
+  return data;
+};
 
-const icon = (name) => h('iconify-icon', { icon: name, width: '16', height: '16' });
+// Header "Action" menu: locked items stay visible with the premium badge
+document.getElementById('students-actions').append(ActionMenu.button('Action', [
+  { label: 'Add New Student', href: 'add-student-to-class' },
+  { label: 'Add Registered Student', href: 'add-registered-student-to-class' },
+  { label: 'Bulk Upload (CSV)', href: 'upload-student-bulk' },
+  gate && { label: 'Send WhatsApp Message', locked: gate.badge('comms.whatsapp'), onClick: gate.guard('comms.whatsapp', () => { location.href = 'message-center'; }) },
+]));
 
-// Header buttons: locked ones stay visible with the premium badge
-const actions = document.getElementById('students-actions');
-if (gate) {
-  actions.append(
-    h('button', { class: 'ex-btn', onclick: gate.guard('comms.whatsapp', () => { location.href = 'message-center'; }) }, icon('logos:whatsapp-icon'), 'Message', gate.badge('comms.whatsapp')),
-    h('a', { class: 'ex-btn ex-btn-primary', href: 'add-student-to-class' }, icon('mdi:plus'), 'Add student'),
-  );
-}
-
-new DataView({
+view = new DataView({
   api,
   endpoint: '/tutor/students',
   key: 'students',
   perPage: 10,
   perPageOptions: [10, 25, 50, 100],
-  className: 'ex-flat',
   noun: ['student', 'students'],
-  searchPlaceholder: 'Search name, ID, email or phone',
+  searchPlaceholder: 'Search by name, e-mail, mobile or WhatsApp',
   filters: [
     { key: 'class', label: 'Class', allLabel: 'All classes', options: async () => (await api.get('/tutor/classes')).data.map((c) => ({ value: c.id, label: c.name })) },
     { key: 'status', label: 'Status', type: 'chips', options: [{ value: '1', label: 'Active' }, { value: '2', label: 'Inactive' }] },
   ],
+  bulk: {
+    actions: [{ value: '1', label: 'Mark as Active' }, { value: '2', label: 'Mark as Inactive' }],
+    onApply: (ids, action) => setStatus(ids, action),
+  },
+  exportCsv: {
+    filename: `students-${new Date().toISOString().slice(0, 10)}.csv`,
+    columns: [['Student ID', (s) => s.id], ['Student Name', fullName], ['Email Address', (s) => s.email], ['Mobile', (s) => s.mobile], ['WhatsApp Number', (s) => s.whatsapp], ['Classes', (s) => s.classes], ['Gender', (s) => s.gender], ['Admission Date', (s) => stamp(s.date_registered)], ['Status', (s) => s.status]],
+  },
   columns: [
-    { key: 'name', label: 'Student Name', sortable: true, avatar: true, render: (s) => h('div', { class: 'd-flex align-items-center gap-2' }, avatar(s), h('div', {}, h('div', { class: 'text-14 main-text fw-medium' }, `${s.first_name} ${s.last_name}`), h('div', { class: 'text-12 sub-text' }, `#${s.id}`))) },
-    { key: 'whatsapp', label: 'WhatsApp Number', render: (s) => h('span', { class: 'text-14 main-text' }, s.whatsapp ?? '') },
-    { key: 'classes', label: 'Classes', render: (s) => h('span', { class: 'text-14 main-text' }, s.classes ?? '') },
-    { key: 'gender', label: 'Gender', render: (s) => h('span', { class: `badge ${s.gender === 'Male' ? 'table-btn-primary text-primary' : 'table-btn-pink text-dark-pink'} br-0 py-2 px-3 d-inline-flex align-items-center gap-1 fw-normal` }, h('iconify-icon', { icon: s.gender === 'Male' ? 'mdi:gender-male' : 'mdi:gender-female', width: '14' }), s.gender) },
-    { key: 'date', label: 'Admission Date', sortable: true, render: (s) => h('span', { class: 'text-14 main-text' }, fmt.date(s.date_registered)) },
-    { key: 'status', label: 'Status', render: (s) => h('span', { class: `table-btn ${s.status === 'Active' ? 'table-btn-success' : 'table-btn-danger'} d-inline-block px-3` }, s.status) },
-    { key: 'actions', label: '', width: '48px', render: (s) => h('div', { class: 'dropdown' },
-      h('iconify-icon', { icon: 'charm:menu-kebab', width: '20', height: '20', class: 'sub-text cursor-pointer', 'data-bs-toggle': 'dropdown', 'aria-expanded': 'false', role: 'button', tabindex: '0', 'aria-label': 'Actions' }),
-      h('ul', { class: 'dropdown-menu border-0 shadow br-5' },
-        h('li', {}, h('a', { class: 'dropdown-item text-14 main-text d-flex align-items-center gap-2', href: `edit-student?student-id=${encodeURIComponent(s.id)}` }, h('iconify-icon', { icon: 'ic:sharp-edit', width: '18' }), 'Edit')))) },
+    { key: 'name', label: 'Student Name', sortable: true, render: (s) => h('div', { class: 'ex-person' }, avatar(s), h('span', {}, fullName(s))) },
+    { key: 'email', label: 'Email Address', render: (s) => s.email ?? '' },
+    { key: 'mobile', label: 'Mobile', render: (s) => s.mobile ?? '' },
+    { key: 'whatsapp', label: 'WhatsApp Number', render: (s) => s.whatsapp ?? '' },
+    { key: 'classes', label: 'Classes', wrap: true, render: (s) => s.classes ?? '' },
+    { key: 'date', label: 'Admission Date', sortable: true, render: (s) => stamp(s.date_registered) },
+    { key: 'status', label: 'Status', render: (s) => h('span', { class: `ex-status ${s.status === 'Active' ? '' : 'ex-off'}` }, s.status) },
+    { key: 'actions', label: '', width: '48px', render: (s) => ActionMenu.kebab([
+      { label: 'Edit Student', href: `edit-student?student-id=${encodeURIComponent(s.id)}` },
+      s.status === 'Active'
+        ? { label: 'Mark as Inactive', danger: true, onClick: () => setStatus([s.id], '2').then(() => view.reload()).catch((e) => Toast.error(e.message)) }
+        : { label: 'Mark as Active', onClick: () => setStatus([s.id], '1').then(() => view.reload()).catch((e) => Toast.error(e.message)) },
+    ], `Actions for ${fullName(s)}`) },
   ],
-  empty: { icon: '🎓', title: 'No students yet', text: 'Add a student to one of your classes to see them here.', action: h('a', { class: 'ex-btn ex-btn-primary', href: 'add-student-to-class' }, 'Add student') },
+  empty: { icon: '🎓', title: 'No students yet', text: 'Add a student to one of your classes to see them here.', action: h('a', { class: 'ex-btn ex-btn-primary', href: 'add-student-to-class' }, 'Add New Student') },
   onLocked: (e) => gate?.openUpgrade(e.details),
 }).mount(document.getElementById('students-list'));

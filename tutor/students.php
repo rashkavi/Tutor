@@ -4,6 +4,7 @@ require_once '../includes/UserPermissionsClass.php';
 require_once "../includes/connection.php";
 require_once "../includes/Project.php";
 require_once "../tutor/includes/security-helpers.php";
+require_once "../includes/enlixo/page-header.php";
 if (!SessionUser::hasValidSession()) {
     header("Location: ./index");
 } else {
@@ -55,16 +56,8 @@ if (!SessionUser::hasValidSession()) {
 
                         <div class="col-12 d-flex flex-column p-0 m-0 g-0 contentBodyArea vh-100" id="real-list">
                             <div class="row p-4 m-0 g-0">
-                                <div class="col-12 px-4 py-3 component-theme mb-4">
-                                    <div class="row align-items-center p-0 m-0 g-0">
-                                        <div class="col-12 col-md-8">
-                                            <div class="row">
-                                                <span class="main-topic lh-lg" data-i18n="students">Students</span>
-                                                <span class="text-14 sub-text lh-base mt-1" data-i18n="students-desc">Effortlessly manage students, access profiles, and maintain oversight</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-12 col-md-4 mt-3 mt-md-0 d-flex justify-content-md-end gap-2" id="students-actions"></div>
-                                    </div>
+                                <div class="col-12 p-0">
+                                    <?php enlixo_page_header('Students', 'Effortlessly manage students, access profiles, and maintain oversight', 'students', 'students-desc', 'Everyone enrolled in at least one of your classes. Status is per class: making a student inactive here only affects your classes.', 'students-actions'); ?>
                                 </div>
 
                                 <div class="col-12 p-0 component-theme" id="students-list"></div>

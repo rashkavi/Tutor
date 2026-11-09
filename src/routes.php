@@ -19,6 +19,7 @@ return static function (Router $router, App $app): void {
     $router->get('/api/v1/me/access', $access->show(...));
 
     $router->get('/api/v1/tutor/students', $students->index(...));
+    $router->post('/api/v1/tutor/students/status', $students->updateStatus(...));
     $router->get('/api/v1/tutor/classes', $students->classes(...));
 
     $router->get('/api/v1/permissions', $roles->catalogue(...));
