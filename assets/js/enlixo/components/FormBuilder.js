@@ -1,6 +1,7 @@
 import { h, fill } from '../core/dom.js';
 import { QuickGuide } from './QuickGuide.js';
 import { Popover } from './Popover.js';
+import { ImageCropper } from './ImageCropper.js';
 
 const DAYS = [[1, 'Monday'], [2, 'Tuesday'], [3, 'Wednesday'], [4, 'Thursday'], [5, 'Friday'], [6, 'Saturday'], [7, 'Sunday']];
 const INFO_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>';
@@ -29,15 +30,17 @@ function sectionInfo(title, text) {
  *   form.values(); form.coverFile(); form.showErrors({ field: 'message', 'schedule.0': '...' })
  *
  * Field types: text, textarea, number, date, select, chips (drawn as a select), radio, switch, yesno, schedule, image.
- * An `image` field is drawn as the upload panel on the left of the first section, like V3's profile photo.
+ * An `image` field is drawn as the upload panel on the left of the first section, like V3's profile photo:
+ * a chosen picture opens the Crop Image modal, and `onGenerateImage(field)` (optional) adds a "Generate thumbnail" button.
+ * A select whose options come from exam_types / subjects / mediums gets "+ Add new" when `onAddOption(field)` is given.
  * `showIf: [otherKey, [allowed values]]` hides a field until the other field matches.
  */
 export class FormBuilder {
-  constructor({ sections, fields, lookups = {}, values = {}, onChange = () => {}, lockBadge = () => null, onLocked = () => {} }) {
-    this.o = { sections, fields, lookups, onChange, lockBadge, onLocked };
+  constructor({ sections, fields, lookups = {}, values = {}, file = null, onChange = () => {}, lockBadge = () => null, onLocked = () => {}, onAddOption = null, onGenerateImage = null }) {
+    this.o = { sections, fields, lookups, onChange, lockBadge, onLocked, onAddOption, onGenerateImage };
     this.v = {};
     for (const f of fields) this.v[f.key] = values[f.key] ?? f.default ?? (f.type === 'schedule' ? [] : f.type === 'switch' ? false : '');
-    this.file = null;
+    this.file = file;
     this.rows = {};
   }
 
@@ -114,8 +117,10 @@ export class FormBuilder {
   #col(f) {
     const id = `f-${f.key}`;
     const label = h('label', { class: `text-14 main-text ${f.required ? 'required' : ''}`, for: ['radio', 'schedule'].includes(f.type) ? null : id, id: `${id}-label` }, f.label);
+    const addable = f.type === 'select' && this.o.onAddOption && ['exam_types', 'subjects', 'mediums'].includes(f.options);
     const col = h('div', { class: `${this.#colClass(f)} d-flex flex-column`, 'data-key': f.key },
-      h('div', { class: 'd-flex align-items-center gap-1' }, label, fieldInfo(f.info, f.label), f.locked ? this.o.lockBadge(f) : null),
+      h('div', { class: 'd-flex align-items-center gap-1' }, label, fieldInfo(f.info, f.label), f.locked ? this.o.lockBadge(f) : null,
+        addable ? h('button', { type: 'button', class: 'ex-link-add ms-auto', onclick: () => this.#addOption(f, id) }, '+ Add new') : null),
       this.#input(f, id),
       h('span', { class: 'ex-feedback text-dark-red text-12', role: 'alert' }));
     this.rows[f.key] = col;
@@ -160,8 +165,18 @@ export class FormBuilder {
       case 'schedule':
         return this.#schedule(f);
       default:
-        return h('input', { ...common, class: 'form-control custom-input mt-2', type: 'text', maxlength: f.maxlength ?? null, value: val, placeholder: f.placeholder ?? (f.auto ? 'Leave empty to use the suggested name' : `Enter ${f.label.toLowerCase()}`), oninput: (e) => set(e.target.value) });
+        return h('input', { ...common, class: 'form-control custom-input mt-2', type: 'text', maxlength: f.maxlength ?? null, value: val, placeholder: f.placeholder ?? (f.auto && !f.required ? 'Leave empty to use the suggested name' : `Enter ${f.label.toLowerCase()}`), oninput: (e) => set(e.target.value) });
     }
+  }
+
+  async #addOption(f, id) {
+    const added = await this.o.onAddOption(f);
+    if (!added) return;
+    (this.o.lookups[f.options] ??= []).push({ ...added, own: true });
+    const select = document.getElementById(id);
+    select?.append(h('option', { value: added.value }, added.label));
+    if (select) select.value = added.value;
+    this.set(f.key, added.value);
   }
 
   #schedule(f) {
@@ -195,26 +210,49 @@ export class FormBuilder {
     const id = `f-${f.key}`;
     const empty = () => h('div', { class: 'ex-image-empty', 'aria-hidden': 'true', html: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 5v14H5V5h14m0-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm-4.86 8.86-3 3.87L9 13.14 6 17h12l-3.86-5.14Z"/></svg>' });
     const box = h('div', { class: 'ex-image-box' }, empty());
+    let original = null; // what the tutor picked or generated, so "Crop again" starts from the full picture
+
+    const show = (file) => {
+      this.file = file;
+      fill(box, file ? h('img', { src: URL.createObjectURL(file), alt: 'Class cover preview' }) : empty());
+      actions.classList.toggle('d-none', !file);
+      this.set(f.key, file ? file.name : '');
+    };
+    const crop = async (source) => {
+      const file = await ImageCropper.open({ source, aspect: 16 / 9, fileName: 'class-cover.jpg' });
+      if (file) { original = source; show(file); }
+    };
     const input = h('input', { id, type: 'file', accept: 'image/jpeg,image/png,image/webp', class: 'd-none', onchange: (e) => {
       const file = e.target.files[0];
+      input.value = '';
       if (!file) return;
-      if (file.size > 2 * 1024 * 1024) { this.showErrors({ [f.key]: 'The image must be 2 MB or smaller.' }); input.value = ''; return; }
-      this.file = file;
-      fill(box, h('img', { src: URL.createObjectURL(file), alt: 'Class cover preview' }));
-      removeBtn.classList.remove('d-none');
-      this.set(f.key, file.name);
+      if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { this.showErrors({ [f.key]: 'Use a JPG, PNG or WebP image.' }); return; }
+      if (file.size > 15 * 1024 * 1024) { this.showErrors({ [f.key]: 'This picture is too big. Use one under 15 MB.' }); return; }
+      crop(file);
     } });
-    const removeBtn = h('button', { type: 'button', class: 'btn btn-link p-0 text-12 w-100 d-none', onclick: () => { this.file = null; input.value = ''; fill(box, empty()); removeBtn.classList.add('d-none'); this.set(f.key, ''); } }, 'Remove image');
+    const actions = h('div', { class: `d-flex justify-content-center gap-3 mt-2 ${this.file ? '' : 'd-none'}` },
+      h('button', { type: 'button', class: 'ex-link-add', onclick: () => crop(original ?? this.file) }, 'Crop again'),
+      h('button', { type: 'button', class: 'ex-link-add text-dark-red', onclick: () => { original = null; show(null); } }, 'Remove image'));
+    if (this.file) fill(box, h('img', { src: URL.createObjectURL(this.file), alt: 'Class cover preview' }));
+
+    const generate = this.o.onGenerateImage
+      ? h('button', { type: 'button', class: 'custom-outline-btn ex-btn-md w-100 mt-3 d-inline-flex align-items-center justify-content-center gap-2', onclick: async () => {
+        const dataUrl = await this.o.onGenerateImage(f);
+        if (dataUrl) await crop(dataUrl);
+      } }, h('span', { class: 'ex-btn-ico', 'aria-hidden': 'true', html: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2Zm7 12 .9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14Z"/></svg>' }), 'Generate thumbnail')
+      : null;
+
     const col = h('div', { class: 'd-flex flex-column', 'data-key': f.key },
-      h('div', { class: 'd-flex align-items-center gap-1 mb-2' }, h('span', { class: 'text-14 main-text' }, f.label), fieldInfo(f.info, f.label)),
+      h('div', { class: 'd-flex align-items-center gap-1 mb-2' }, h('span', { class: `text-14 main-text ${f.required ? 'required' : ''}` }, f.label), fieldInfo(f.info, f.label)),
       h('div', { class: 'ex-image-panel bl-solid p-3' },
         h('div', { class: 'position-relative' }, box,
           h('label', { class: 'upload-image text-white p-2 bottom-0 start-0 m-0 text-14 gap-2', for: id, role: 'button', tabindex: '0',
             onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } } },
             h('span', { 'aria-hidden': 'true', html: '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M11 16V7.85l-2.6 2.6L7 9l5-5 5 5-1.4 1.45-2.6-2.6V16h-2Zm-5 4a2 2 0 0 1-2-2v-3h2v3h12v-3h2v3a2 2 0 0 1-2 2H6Z"/></svg>' }), 'Upload Image')),
         input,
-        h('p', { class: 'text-center text-12 sub-text mt-2 mb-0' }, 'Image size must be 2MB or less, with a 16:9 aspect ratio for the best look. Accepted formats: JPG, PNG, WebP.'),
-        removeBtn),
+        actions,
+        h('p', { class: 'text-center text-12 sub-text mt-2 mb-0' }, 'JPG, PNG or WebP. You can crop it to 16:9 after choosing.'),
+        generate),
       h('span', { class: 'ex-feedback text-dark-red text-12', role: 'alert' }));
     this.rows[f.key] = col;
     return col;

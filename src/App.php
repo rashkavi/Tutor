@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Enlixo;
 
+use Enlixo\Ai\GeminiImageClient;
 use Enlixo\Core\Clock;
 use Enlixo\Core\Crypto;
 use Enlixo\Core\Database;
@@ -41,6 +42,12 @@ final class App
     public function crypto(): ?Crypto
     {
         return $this->once('crypto', fn () => $this->config['app']['key'] !== '' ? new Crypto($this->config['app']['key']) : null);
+    }
+
+    public function geminiImages(): GeminiImageClient
+    {
+        $c = $this->config['ai'] ?? [];
+        return $this->once('gemini', fn () => new GeminiImageClient(new CurlHttpClient(90), (string) ($c['gemini_api_key'] ?? ''), (string) ($c['gemini_image_model'] ?? 'gemini-2.5-flash-image')));
     }
 
     public function entitlements(): EntitlementService

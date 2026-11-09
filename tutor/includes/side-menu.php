@@ -36,6 +36,7 @@ class load_side_menu
                 ['Message Center', null, 'message-center', 'message-center', ['Message Center']],
             ]],
             ['Settings', 'solar:settings-linear', null, '', [], [
+                ['Class Form', null, 'class-form-settings', '', ['Class Form']],
                 ['Integrations', null, 'intergrations', 'intergrations', ['Intergrations']],
             ]],
         ];

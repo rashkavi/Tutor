@@ -36,7 +36,8 @@ Every step reuses the shared kit (DataView, ActionMenu, page header, Form with i
 
 | # | Step | What the tutor gets | Status |
 |---|---|---|---|
-| 1 | **Class creation form** | One page: basics, how it runs (physical / online, weekly times, hall), fee, enrolment, cover. Info (i) icon on every field. Tutor can hide optional fields and add their own fields. | ✅ this step |
+| 1 | **Class creation form** | One page: basics, how it runs (physical / online, weekly times, hall), fee, enrolment, cover. Info (i) icon on every field. Tutor can hide optional fields and add their own fields. | ✅ |
+| 1b | **Class form settings + covers** | Settings page (V3 layout): turn fields on/off, make required, rename, reorder, own fields per section, own exam types / subjects / mediums (only that tutor sees them). Cover: crop modal, "Generate thumbnail" (AI or a designed cover). | ✅ this step |
 | 2 | Classes list (V3 list layout) | Search, filter by exam type / year / subject / medium / status, cards or table, Action menu. | next |
 | 3 | Class page | Tabs: Overview, Students, Timetable, Attendance, Payments, Recordings, Tutes, all scoped to the class. | |
 | 4 | Timetable | Week / list view, generated sessions, one-off extra or cancelled class, Zoom links. | |
@@ -58,3 +59,14 @@ Every step reuses the shared kit (DataView, ActionMenu, page header, Form with i
 * **Customise form** (per tutor): show or hide every optional field, and add own fields (text, number, date, dropdown, yes/no) with their own help text and "required" switch. Values are saved per class.
 * **Saving** creates the class, its weekly schedule rows and its monthly fee plan in one go (one transaction).
 * Data: additive migration `002_class_form.sql` (new columns on `classes`, plus `tutor_class_form_settings` and `class_custom_field_values`). Nothing is renamed.
+
+## Step 1b details: form settings, own options, covers
+
+* Page: Settings > Class Form (`tutor/class-form-settings.php`), also the gear on Create a Class.
+* Settings JSON (`tutor_class_form_settings.config`): `hidden`, `required`, `labels` (name / help / placeholder per field),
+  `order` (per section), `custom` (own fields, each with a `section`).
+* Own options: a normal row in `exam_type` / `subjects` / `medium` plus a row in `tutor_lookup_owners` (migration 003).
+  Options without an owner row are the defaults everyone sees. Own options can be renamed, and deleted while no class uses them.
+* Cover: every picture goes through the Crop Image modal (16:9). "Generate thumbnail" calls Gemini
+  (`ai.gemini_api_key`, 10 a day per tutor) or, without a key, draws a designed cover in the browser.
+* UI rules for all pages: `docs/UI-STANDARD.md`.

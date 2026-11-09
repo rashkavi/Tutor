@@ -83,21 +83,77 @@ final class ClassFormSchema
         ];
     }
 
-    /** Fields after this tutor's settings: hidden ones dropped, own fields appended. */
-    public static function forTutor(array $settings): array
+    /** Names shown in the "Type" column of the form settings page. */
+    public const TYPE_NAMES = [
+        'text' => 'Short text', 'textarea' => 'Long text', 'number' => 'Number', 'date' => 'Date', 'select' => 'List of choices',
+        'chips' => 'List of choices', 'radio' => 'One of a few choices', 'switch' => 'On / off', 'yesno' => 'Yes / No', 'schedule' => 'Weekly times', 'image' => 'Image',
+    ];
+
+    /** Optional built-in fields of these types can be made required by the tutor. Switches and choices always have a value. */
+    private const REQUIRABLE_TYPES = ['text', 'textarea', 'number', 'date', 'schedule', 'image'];
+
+    public static function canRequire(array $f): bool
     {
-        $hidden = array_flip($settings['hidden'] ?? []);
+        return empty($f['core']) && empty($f['custom']) && in_array($f['type'], self::REQUIRABLE_TYPES, true);
+    }
+
+    private static function emptySettings(): array
+    {
+        return ['hidden' => [], 'required' => [], 'labels' => [], 'order' => [], 'custom' => []];
+    }
+
+    /**
+     * Every field (built-in and the tutor's own) after this tutor's settings, hidden ones included,
+     * each with `enabled`, `canHide`, `canRequire` and `typeName`. Sorted by the tutor's order inside each section.
+     */
+    public static function allForTutor(array $settings): array
+    {
+        $settings += self::emptySettings();
+        $hidden = array_flip($settings['hidden']);
+        $required = array_flip($settings['required']);
+        $sectionKeys = array_column(self::sections(), 'key');
+
         $fields = [];
         foreach (self::builtIn() as $f) {
-            if (empty($f['core']) && isset($hidden[$f['key']])) {
-                continue;
+            $f['default_label'] = $f['label'];
+            foreach (['label', 'info', 'placeholder'] as $k) {
+                if (isset($settings['labels'][$f['key']][$k]) && $settings['labels'][$f['key']][$k] !== '') {
+                    $f[$k] = $settings['labels'][$f['key']][$k];
+                }
             }
+            $f['canRequire'] = self::canRequire($f);
+            if ($f['canRequire'] && isset($required[$f['key']])) {
+                $f['required'] = true;
+            }
+            $f['canHide'] = empty($f['core']);
+            $f['enabled'] = !$f['canHide'] || !isset($hidden[$f['key']]);
             $fields[] = $f;
         }
-        foreach ($settings['custom'] ?? [] as $c) {
-            $fields[] = ['section' => 'custom', 'custom' => true, 'width' => $c['type'] === 'text' ? 'half' : null] + $c;
+        foreach ($settings['custom'] as $c) {
+            $section = in_array($c['section'] ?? 'custom', $sectionKeys, true) ? ($c['section'] ?? 'custom') : 'custom';
+            $fields[] = ['custom' => true, 'width' => null, 'canRequire' => true, 'canHide' => true, 'enabled' => !isset($hidden[$c['key']])]
+                + ['section' => $section] + $c;
         }
-        return $fields;
+        foreach ($fields as &$f) {
+            $f['typeName'] = self::TYPE_NAMES[$f['type']] ?? $f['type'];
+        }
+        unset($f);
+
+        // Order inside each section: the tutor's list first, then anything not in it in its default place.
+        $pos = [];
+        foreach ($fields as $i => $f) {
+            $list = $settings['order'][$f['section']] ?? [];
+            $at = array_search($f['key'], $list, true);
+            $pos[$i] = [array_search($f['section'], $sectionKeys, true), $at === false ? 1000 + $i : $at, $i];
+        }
+        uksort($fields, static fn ($a, $b) => $pos[$a] <=> $pos[$b]);
+        return array_values($fields);
+    }
+
+    /** Fields shown on the Create a Class form for this tutor: the enabled ones, in the tutor's order. */
+    public static function forTutor(array $settings): array
+    {
+        return array_values(array_filter(self::allForTutor($settings), static fn (array $f) => $f['enabled']));
     }
 
     /** Fields a tutor may hide. */
@@ -109,11 +165,11 @@ final class ClassFormSchema
         ));
     }
 
-    /** Clean and validate a settings payload from the "Customise form" panel. */
+    /** Clean and validate a settings payload from the form settings page. Unknown keys are dropped. */
     public static function sanitiseSettings(array $in): array
     {
-        $hideable = array_column(self::hideable(), 'key');
-        $hidden = array_values(array_intersect($hideable, array_map('strval', (array) ($in['hidden'] ?? []))));
+        $sectionKeys = array_column(self::sections(), 'key');
+        $builtIn = array_column(self::builtIn(), null, 'key');
 
         $custom = [];
         $errors = [];
@@ -138,7 +194,16 @@ final class ClassFormSchema
                 continue;
             }
             $seen[$key] = true;
-            $field = ['key' => $key, 'label' => $label, 'type' => $type, 'required' => !empty($c['required']), 'info' => mb_substr(trim((string) ($c['info'] ?? '')), 0, 200)];
+            $section = (string) ($c['section'] ?? 'custom');
+            $field = [
+                'key' => $key, 'label' => $label, 'type' => $type, 'required' => !empty($c['required']),
+                'info' => mb_substr(trim((string) ($c['info'] ?? '')), 0, 300),
+                'section' => in_array($section, $sectionKeys, true) ? $section : 'custom',
+            ];
+            $placeholder = mb_substr(trim((string) ($c['placeholder'] ?? '')), 0, 80);
+            if ($placeholder !== '' && in_array($type, ['text', 'number'], true)) {
+                $field['placeholder'] = $placeholder;
+            }
             if ($type === 'select') {
                 $opts = array_values(array_unique(array_filter(array_map(static fn ($o) => mb_substr(trim((string) (is_array($o) ? ($o['value'] ?? '') : $o)), 0, 60), (array) ($c['options'] ?? [])), 'strlen')));
                 if (count($opts) < 2) {
@@ -149,9 +214,49 @@ final class ClassFormSchema
             }
             $custom[] = $field;
         }
+
+        $customKeys = array_column($custom, 'key');
+        $hideable = array_merge(array_column(self::hideable(), 'key'), $customKeys);
+        $hidden = array_values(array_unique(array_intersect(array_map('strval', (array) ($in['hidden'] ?? [])), $hideable)));
+        $requirable = array_keys(array_filter($builtIn, [self::class, 'canRequire']));
+        $required = array_values(array_unique(array_intersect(array_map('strval', (array) ($in['required'] ?? [])), $requirable)));
+
+        $labels = [];
+        foreach ((array) ($in['labels'] ?? []) as $key => $o) {
+            if (!isset($builtIn[$key]) || !is_array($o)) {
+                continue;
+            }
+            $clean = [];
+            foreach (['label' => 60, 'info' => 300, 'placeholder' => 80] as $k => $max) {
+                $v = trim((string) ($o[$k] ?? ''));
+                if (mb_strlen($v) > $max) {
+                    $errors["labels.$key.$k"] = $k === 'label' ? "Keep the field name under $max letters." : "Keep this under $max letters.";
+                    continue;
+                }
+                if ($v !== '' && $v !== ($builtIn[$key][$k] ?? '')) {
+                    $clean[$k] = $v;
+                }
+            }
+            if ($clean) {
+                $labels[$key] = $clean;
+            }
+        }
+
+        $sectionOf = array_column($builtIn, 'section', 'key') + array_column($custom, 'section', 'key');
+        $order = [];
+        foreach ((array) ($in['order'] ?? []) as $section => $keys) {
+            if (!in_array($section, $sectionKeys, true)) {
+                continue;
+            }
+            $list = array_values(array_unique(array_filter(array_map('strval', (array) $keys), static fn ($k) => ($sectionOf[$k] ?? null) === $section)));
+            if ($list) {
+                $order[$section] = $list;
+            }
+        }
+
         if ($errors) {
             throw HttpException::validation($errors);
         }
-        return ['hidden' => $hidden, 'custom' => $custom];
+        return ['hidden' => $hidden, 'required' => $required, 'labels' => $labels, 'order' => $order, 'custom' => $custom];
     }
 }

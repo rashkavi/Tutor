@@ -62,7 +62,8 @@ if (!SessionUser::hasValidSession()) {
                                         'Fields with a red star are required. Everything else can be added later.',
                                         'Leave the class name empty and we name it for you, e.g. "2027 A/L Physics Theory (Sinhala)".',
                                         'Weekly times are added to your timetable every week. Online times get a Zoom link automatically.',
-                                        'Use the gear icon to hide fields you never use or add your own fields.',
+                                        'No cover? Press Generate thumbnail and we make one from your class details. You can crop any picture to fit.',
+                                        'Use the gear icon to hide, rename, reorder or require fields, and to add your own fields, exam types and subjects.',
                                     ],
                                 ], 'class-actions'); ?>
                                 <div class="col-12 p-4 component-theme" id="class-form-root"></div>

@@ -26,6 +26,11 @@ return static function (Router $router, App $app): void {
     $router->post('/api/v1/tutor/classes', $classes->store(...));
     $router->get('/api/v1/tutor/class-form', $classes->form(...));
     $router->put('/api/v1/tutor/class-form', $classes->saveForm(...));
+    $router->get('/api/v1/tutor/class-form/options', $classes->options(...));
+    $router->post('/api/v1/tutor/class-form/options/{list}', $classes->addOption(...));
+    $router->put('/api/v1/tutor/class-form/options/{list}/{id}', $classes->renameOption(...));
+    $router->delete('/api/v1/tutor/class-form/options/{list}/{id}', $classes->deleteOption(...));
+    $router->post('/api/v1/tutor/classes/thumbnail', $classes->thumbnail(...));
 
     $router->get('/api/v1/permissions', $roles->catalogue(...));
     $router->get('/api/v1/tutor/roles', $roles->index(...));
