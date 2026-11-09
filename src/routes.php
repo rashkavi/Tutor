@@ -1,0 +1,35 @@
+<?php
+declare(strict_types=1);
+
+use Enlixo\App;
+use Enlixo\Core\Router;
+use Enlixo\Http\Controllers\EntitlementController;
+use Enlixo\Http\Controllers\RecordingController;
+use Enlixo\Http\Controllers\RoleController;
+use Enlixo\Http\Controllers\StudentController;
+use Enlixo\Http\Controllers\ZoomWebhookController;
+
+return static function (Router $router, App $app): void {
+    $access = new EntitlementController($app);
+    $roles = new RoleController($app);
+    $rec = new RecordingController($app);
+    $zoom = new ZoomWebhookController($app);
+    $students = new StudentController($app);
+
+    $router->get('/api/v1/me/access', $access->show(...));
+
+    $router->get('/api/v1/tutor/students', $students->index(...));
+    $router->get('/api/v1/tutor/classes', $students->classes(...));
+
+    $router->get('/api/v1/permissions', $roles->catalogue(...));
+    $router->get('/api/v1/tutor/roles', $roles->index(...));
+    $router->post('/api/v1/tutor/roles', $roles->store(...));
+    $router->put('/api/v1/tutor/roles/{id}', $roles->update(...));
+    $router->delete('/api/v1/tutor/roles/{id}', $roles->destroy(...));
+
+    $router->get('/api/v1/student/recordings/{kind}/{id}/status', $rec->status(...));
+    $router->post('/api/v1/student/recordings/{kind}/{id}/start', $rec->start(...));
+    $router->post('/api/v1/student/recordings/heartbeat', $rec->heartbeat(...));
+
+    $router->post('/api/v1/webhooks/zoom', $zoom->handle(...));
+};

@@ -11,11 +11,12 @@ if (!SessionUser::ifUserIsStudent()) {
 
     if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['recording-id']) && !empty($_GET['recording-id'])) {
 
-        $recording_id = $_GET["recording-id"];
+        $recording_id = (int) $_GET["recording-id"]; // int cast: this value goes into SQL below
 
         $query = "SELECT * FROM `pre_recordings` 
             INNER JOIN `classes` ON `pre_recordings`.`classes_class_id` = `classes`.`class_id`
-            WHERE `pre_recording_id` = '" . $recording_id . "'";
+            WHERE `pre_recording_id` = '" . $recording_id . "'
+            AND `classes`.`class_id` IN (SELECT `classes_class_id` FROM `students_has_classes` WHERE `students_student_id` = '" . (int) $sessionUserObject["student_id"] . "')";
 
         $recording = Database::search($query);
         if ($recording->num_rows == 0) {
@@ -55,6 +56,7 @@ if (!SessionUser::ifUserIsStudent()) {
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/style.css?v=<?= Project::getVersion() ?>">
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/skeleton.css?v=<?= Project::getVersion() ?>">
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/intergration-card.css?v=<?= Project::getVersion() ?>">
+                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
                 <link href="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.css" rel="stylesheet">
 
@@ -146,7 +148,17 @@ if (!SessionUser::ifUserIsStudent()) {
                                         <div class="col-12 py-4 px-4 pe-4 component-theme">
                                             <div class="row p-0 m-0 g-0 align-content-center">
 
-                                                <?php if ($recordingData['integrations_integration_id'] == null): ?>
+                                                <?php
+                                                // Watch-time limit (includes/enlixo/recording-guard.php): when the time is used up or expired,
+                                                // the player is never sent to the browser.
+                                                $guardKind = 'pre';
+                                                $guardRecordingId = $recording_id;
+                                                $guardStudentId = (int) $sessionUserObject["student_id"];
+                                                $recordingGuard = require '../includes/enlixo/recording-guard.php';
+                                                ?>
+                                                <?php if (!$recordingGuard['can_play']): ?>
+                                                    <?= $recordingGuard['lock_html'] ?>
+                                                <?php elseif ($recordingData['integrations_integration_id'] == null): ?>
                                                     <?= $recordingData["recording_link"]; ?>
                                                     <?php else:
 
@@ -170,6 +182,7 @@ if (!SessionUser::ifUserIsStudent()) {
                                                                 allowfullscreen>
                                                             </iframe>
                                                         </div>
+                                                        <?= $recordingGuard['meter_html'] ?>
                                                     <?php
                                                     }
                                                     ?>
@@ -196,6 +209,7 @@ if (!SessionUser::ifUserIsStudent()) {
                 <script src="<?= Project::getAssetsPath() ?>/js/script.js?v=<?= Project::getVersion() ?>"></script>
                 <script src="js/functions.js?v=<?= Project::getVersion() ?>"></script>
 
+                <script type="module" src="<?= Project::getAssetsPath() ?>/js/enlixo/pages/app-watch-recording.js?v=<?= Project::getVersion() ?>"></script>
                 <script>
                     document.addEventListener("DOMContentLoaded", function() {
                         toggleSkeleton();
