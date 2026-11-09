@@ -1,33 +1,30 @@
-// Tutor → Create a Class (tutor/create-class.php). One page: details, weekly times, fee, who can join, cover.
-// The fields come from the server (GET /tutor/class-form), so the tutor's own fields and hidden fields apply here.
-import { h, fill, fmt } from '../core/dom.js';
+// Tutor → Create a Class (tutor/create-class.php), ENLIXO V3 form style.
+// Fields come from the server (GET /tutor/class-form), so the tutor's own fields and hidden fields apply here.
+// Saved with POST /tutor/classes: class + weekly times + monthly fee in one go.
+import { h, fill } from '../core/dom.js';
 import { ApiClient, ApiError, FeatureLockedError } from '../core/ApiClient.js';
-import { FormBuilder } from '../components/FormBuilder.js';
-import { ActionMenu } from '../components/Popover.js';
+import { FormBuilder, fieldInfo } from '../components/FormBuilder.js';
+import { QuickGuide } from '../components/QuickGuide.js';
 import { FeatureGate } from '../components/FeatureGate.js';
-import { Modal } from '../components/Modal.js';
 import { Toast } from '../components/Toast.js';
-import { infoTip } from '../components/InfoTip.js';
-import { LoadingState } from '../components/LoadingState.js';
-import { EmptyState } from '../components/EmptyState.js';
 
 const api = new ApiClient();
 const root = document.getElementById('class-form-root');
-const DAY = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const TYPE_LABEL = { theory: 'Theory', revision: 'Revision', paper: 'Paper', other: '' };
-const MODE_LABEL = { physical: 'Physical', online: 'Online', hybrid: 'Physical + Online' };
-const ENROL_LABEL = { open: 'Anyone with the link', approval: 'You approve each student', invite: 'Only students you add' };
 
 let gate = null;
 let schema = null;
 let form = null;
 
-document.getElementById('class-actions').append(ActionMenu.button('Action', [
-  { label: 'Customise this form', onClick: () => openCustomiser() },
-  { label: 'All classes', href: 'classes' },
-]));
+QuickGuide.attachAll();
 
-fill(root, h('div', { class: 'ex-root ex-card ex-card-pad' }, LoadingState.list(4)));
+// Header: gear (customise form) + Save, like V3's Add New Student
+const saveBtn = h('button', { type: 'button', class: 'custom-btn px-5 border-0', onclick: () => save() }, 'Save Class');
+const gearBtn = h('button', { type: 'button', class: 'btn p-0 border-0 bg-transparent ex-gear', 'aria-label': 'Customise this form', title: 'Customise this form', onclick: () => openCustomiser(),
+  html: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68 1.65 1.65 0 0 0 10 3.17V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.32.35.6.6.82.27.2.6.32.95.32H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>' });
+document.getElementById('class-actions').append(gearBtn, saveBtn);
+
+fill(root, h('div', { class: 'ex-root' }, h('div', { class: 'placeholder-glow' }, [70, 45, 85, 60].map((w) => h('span', { class: 'placeholder col-12 mb-3', style: { width: `${w}%`, height: '40px' } })))));
 load();
 
 async function load() {
@@ -35,7 +32,10 @@ async function load() {
     [gate, schema] = await Promise.all([FeatureGate.load(api).catch(() => null), api.get('/tutor/class-form').then((r) => r.data)]);
     draw();
   } catch (e) {
-    fill(root, h('div', { class: 'ex-root ex-card' }, EmptyState.error(e.message, load)));
+    fill(root, h('div', { class: 'text-center py-5' },
+      h('p', { class: 'main-text mb-1' }, 'Couldn\'t load the form'),
+      h('p', { class: 'text-14 sub-text' }, e.message),
+      h('button', { type: 'button', class: 'custom-btn px-4 border-0', onclick: load }, 'Try again')));
   }
 }
 
@@ -44,22 +44,13 @@ const label = (list, v) => (schema.lookups[list] ?? []).find((o) => String(o.val
 function suggestedName(v) {
   if (!v.subject) return '';
   const parts = [label('years', v.year), label('exam_types', v.exam_type), label('subjects', v.subject), TYPE_LABEL[v.class_type] ?? ''].filter(Boolean);
-  if (!parts.length) return '';
   const medium = label('mediums', v.medium);
   return `${parts.join(' ')}${medium ? ` (${medium})` : ''}`;
 }
 
 function draw() {
   const previous = form?.values() ?? {};
-  const preview = h('aside', { class: 'ex-card ex-class-preview', 'aria-label': 'Preview' });
-  const formHost = h('div');
-  const saveBtn = h('button', { type: 'submit', class: 'ex-btn ex-btn-primary ex-btn-save' }, 'Save Class');
-  const page = h('form', { class: 'ex-root ex-create-class', novalidate: true, onsubmit: (e) => { e.preventDefault(); save(saveBtn); } },
-    h('div', { class: 'ex-create-grid' }, formHost, h('div', { class: 'ex-preview-col' }, preview)),
-    h('div', { class: 'ex-savebar' },
-      h('span', { class: 'ex-muted ex-small' }, h('span', { class: 'ex-req' }, '*'), ' required. Everything else can be added later.'),
-      h('a', { class: 'ex-btn', href: 'classes' }, 'Cancel'), saveBtn));
-
+  const host = h('div');
   form = new FormBuilder({
     sections: schema.sections,
     fields: schema.fields,
@@ -69,43 +60,22 @@ function draw() {
     onLocked: (f) => gate?.openUpgrade(f.feature),
     onChange: (v, key) => {
       if (key === 'delivery_mode') form.redrawSchedule?.();
-      renderPreview(preview, v);
+      const nameInput = document.getElementById('f-name');
+      if (nameInput) nameInput.placeholder = suggestedName(v) || 'Leave empty to use the suggested name';
     },
-  }).mount(formHost);
-  fill(root, page);
-  renderPreview(preview, form.values());
+  }).mount(host);
+  fill(root, host);
 }
 
-function renderPreview(el, v) {
-  const name = v.name?.trim() || suggestedName(v) || 'Your class name';
-  const cover = form?.coverFile();
-  fill(el,
-    h('div', { class: 'ex-preview-head' }, h('strong', {}, 'Preview'), infoTip('This is how the class card looks to you and to students.')),
-    h('div', { class: 'ex-preview-cover' }, cover ? h('img', { src: URL.createObjectURL(cover), alt: '' }) : h('span', {}, (label('subjects', v.subject) || 'Class').slice(0, 1))),
-    h('div', { class: 'ex-preview-body' },
-      h('h3', {}, name),
-      h('div', { class: 'ex-preview-tags' },
-        [label('exam_types', v.exam_type), label('mediums', v.medium), TYPE_LABEL[v.class_type], MODE_LABEL[v.delivery_mode]].filter(Boolean).map((t) => h('span', { class: 'ex-tag' }, t))),
-      h('dl', { class: 'ex-preview-list' },
-        h('dt', {}, 'Every week'),
-        h('dd', {}, (v.schedule ?? []).length ? v.schedule.map((s) => h('div', {}, `${DAY[s.weekday]} ${fmt.time(s.start)} – ${fmt.time(s.end)}${v.delivery_mode === 'hybrid' ? ` · ${s.mode === 'online' ? 'Online' : 'Hall'}` : ''}`)) : h('span', { class: 'ex-muted' }, 'No fixed times yet')),
-        v.location && v.delivery_mode !== 'online' ? [h('dt', {}, 'Where'), h('dd', {}, v.location)] : null,
-        h('dt', {}, 'Fee'),
-        h('dd', {}, v.is_free ? 'Free class' : v.fee ? `${fmt.money(v.fee)} / month${v.due_day ? `, due on the ${ordinal(v.due_day)}` : ''}` : h('span', { class: 'ex-muted' }, 'Set later')),
-        v.enrollment_mode ? [h('dt', {}, 'Joining'), h('dd', {}, ENROL_LABEL[v.enrollment_mode])] : null,
-        v.capacity ? [h('dt', {}, 'Seats'), h('dd', {}, `Up to ${v.capacity} students`)] : null)));
-}
-
-const ordinal = (n) => { n = Number(n); const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
-
-async function save(btn) {
+async function save() {
+  if (!form) return;
   const v = form.values();
   if (!v.name?.trim()) v.name = suggestedName(v);
   const body = new FormData();
   body.append('data', JSON.stringify(v));
   if (form.coverFile()) body.append('cover', form.coverFile());
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving…';
   try {
     const { data } = await api.post('/tutor/classes', body);
     Toast.success(`"${data.name}" created${data.slots ? ` with ${data.slots} weekly ${data.slots === 1 ? 'time' : 'times'}` : ''}.`);
@@ -114,60 +84,74 @@ async function save(btn) {
     if (e instanceof FeatureLockedError) gate?.openUpgrade(e.details);
     else if (e instanceof ApiError && e.details?.fields) { form.showErrors(e.details.fields); Toast.error('Please check the highlighted fields.'); }
     else Toast.error(e.message);
-    btn.disabled = false;
-    btn.textContent = 'Save Class';
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save Class';
   }
 }
 
-// ---------- Customise form: hide optional fields, add your own ----------
+// ---------- Gear: customise the form (Bootstrap modal, app's own classes) ----------
 function openCustomiser() {
   if (!schema) return;
   const hidden = new Set(schema.settings.hidden ?? []);
-  let custom = structuredClone(schema.settings.custom ?? []);
+  const custom = structuredClone(schema.settings.custom ?? []);
   const sections = Object.fromEntries(schema.sections.map((s) => [s.key, s.title]));
-  const customHost = h('div', { class: 'ex-custom-list' });
-  const errorsEl = h('div', { class: 'ex-error', role: 'alert', hidden: true });
-
   const typeNames = { text: 'Text', number: 'Number', date: 'Date', select: 'Dropdown', yesno: 'Yes / No' };
+  const customHost = h('div', { class: 'd-flex flex-column gap-3' });
+  const errorEl = h('span', { class: 'text-dark-red text-12', role: 'alert' });
+
   const drawCustom = () => fill(customHost,
-    custom.length ? null : h('p', { class: 'ex-muted ex-small' }, 'No fields yet. Example: "Institute name", "Hall number", "Syllabus unit", "Batch code".'),
-    custom.map((c, i) => h('div', { class: 'ex-custom-field' },
-      h('div', { class: 'ex-custom-line' },
-        h('input', { class: 'ex-input', placeholder: 'Field name, e.g. Institute name', 'aria-label': 'Field name', value: c.label ?? '', maxlength: '60', oninput: (e) => { c.label = e.target.value; } }),
-        h('select', { class: 'ex-select', 'aria-label': 'Field type', onchange: (e) => { c.type = e.target.value; drawCustom(); } },
-          schema.custom_types.map((t) => h('option', { value: t, selected: t === c.type }, typeNames[t] ?? t))),
-        h('label', { class: 'ex-check-label' }, h('input', { type: 'checkbox', class: 'ex-check', checked: !!c.required, onchange: (e) => { c.required = e.target.checked; } }), 'Required'),
-        h('button', { type: 'button', class: 'ex-btn ex-btn-ghost ex-btn-sm', 'aria-label': 'Move up', disabled: i === 0, onclick: () => { [custom[i - 1], custom[i]] = [custom[i], custom[i - 1]]; drawCustom(); } }, '↑'),
-        h('button', { type: 'button', class: 'ex-btn ex-btn-ghost ex-btn-sm', 'aria-label': 'Remove field', onclick: () => { custom.splice(i, 1); drawCustom(); } }, '✕')),
-      h('input', { class: 'ex-input', placeholder: 'Help text for the (i) icon (optional)', 'aria-label': 'Help text', value: c.info ?? '', maxlength: '200', oninput: (e) => { c.info = e.target.value; } }),
-      c.type === 'select' ? h('textarea', { class: 'ex-input', rows: '2', placeholder: 'Choices, one per line', 'aria-label': 'Dropdown choices',
-        oninput: (e) => { c.options = e.target.value.split('\n'); } }, (c.options ?? []).map((o) => (typeof o === 'string' ? o : o.value)).join('\n')) : null)),
-    custom.length < schema.max_custom ? h('button', { type: 'button', class: 'ex-btn ex-btn-sm', onclick: () => { custom.push({ label: '', type: 'text', required: false, info: '' }); drawCustom(); customHost.querySelector('.ex-custom-field:last-of-type input')?.focus(); } }, '+ Add your own field') : null);
+    custom.length ? null : h('p', { class: 'text-14 sub-text m-0' }, 'No fields yet. Examples: Institute name, Hall number, Syllabus unit, Batch code.'),
+    custom.map((c, i) => h('div', { class: 'bl-solid p-3' },
+      h('div', { class: 'row gx-3 gy-2 align-items-end' },
+        h('div', { class: 'col-12 col-md-5 d-flex flex-column' }, h('label', { class: 'text-14 main-text required' }, 'Field name'),
+          h('input', { class: 'form-control custom-input mt-2', placeholder: 'e.g. Institute name', value: c.label ?? '', maxlength: '60', oninput: (e) => { c.label = e.target.value; } })),
+        h('div', { class: 'col-7 col-md-3 d-flex flex-column' }, h('label', { class: 'text-14 main-text' }, 'Type'),
+          h('select', { class: 'form-select custom-select mt-2', onchange: (e) => { c.type = e.target.value; drawCustom(); } },
+            schema.custom_types.map((t) => h('option', { value: t, selected: t === c.type }, typeNames[t] ?? t)))),
+        h('div', { class: 'col-5 col-md-2' }, h('div', { class: 'form-check form-switch mb-2' },
+          h('input', { class: 'form-check-input', type: 'checkbox', role: 'switch', id: `cf-req-${i}`, checked: !!c.required, onchange: (e) => { c.required = e.target.checked; } }),
+          h('label', { class: 'form-check-label text-14 main-text', for: `cf-req-${i}` }, 'Required'))),
+        h('div', { class: 'col-12 col-md-2 d-flex justify-content-md-end gap-1 mb-1' },
+          h('button', { type: 'button', class: 'btn btn-light btn-sm', 'aria-label': 'Move up', disabled: i === 0, onclick: () => { [custom[i - 1], custom[i]] = [custom[i], custom[i - 1]]; drawCustom(); } }, '↑'),
+          h('button', { type: 'button', class: 'btn btn-light btn-sm text-dark-red', 'aria-label': 'Remove field', onclick: () => { custom.splice(i, 1); drawCustom(); } }, '✕')),
+        h('div', { class: 'col-12 d-flex flex-column' }, h('label', { class: 'text-14 main-text' }, 'Help text for the (i) icon'),
+          h('input', { class: 'form-control custom-input mt-2', placeholder: 'Optional', value: c.info ?? '', maxlength: '200', oninput: (e) => { c.info = e.target.value; } })),
+        c.type === 'select' ? h('div', { class: 'col-12 d-flex flex-column' }, h('label', { class: 'text-14 main-text required' }, 'Choices (one per line)'),
+          h('textarea', { class: 'form-control custom-input mt-2', rows: '3', oninput: (e) => { c.options = e.target.value.split('\n'); } }, (c.options ?? []).map((o) => (typeof o === 'string' ? o : o.value)).join('\n'))) : null))),
+    custom.length < schema.max_custom ? h('div', {}, h('button', { type: 'button', class: 'custom-outline-btn px-4 text-14 ex-h40', onclick: () => { custom.push({ label: '', type: 'text', required: false, info: '' }); drawCustom(); } }, '+ Add your own field')) : null);
   drawCustom();
 
-  const body = h('div', { class: 'ex-root ex-customiser' },
-    h('h3', {}, 'Show or hide fields', infoTip('Hidden fields disappear from the form. Exam type, year, subject, medium and how you teach are always needed.')),
-    h('div', { class: 'ex-hide-grid' }, schema.hideable.map((f) => h('label', { class: 'ex-switch ex-switch-row' },
-      h('input', { type: 'checkbox', role: 'switch', checked: !hidden.has(f.key), onchange: (e) => (e.target.checked ? hidden.delete(f.key) : hidden.add(f.key)) }),
-      h('span', { class: 'ex-switch-track', 'aria-hidden': 'true' }),
-      h('span', { class: 'ex-switch-text' }, f.label, h('small', { class: 'ex-muted' }, ` · ${sections[f.section]}`))))),
-    h('h3', { class: 'mt-3' }, 'Your own fields', infoTip('Add details you always collect for a class. They show under "More details" and are saved with each class.')),
-    customHost, errorsEl);
-
-  const saveBtn = h('button', { class: 'ex-btn ex-btn-primary', onclick: async () => {
-    saveBtn.disabled = true;
+  const save = h('button', { type: 'button', class: 'custom-btn px-5 border-0' }, 'Save Form');
+  const modalEl = h('div', { class: 'modal fade br-0', tabindex: '-1', 'aria-labelledby': 'customise-title', 'aria-hidden': 'true' },
+    h('div', { class: 'modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable br-0' },
+      h('div', { class: 'modal-content p-4 br-0' },
+        h('div', { class: 'modal-header p-0 border-0' }, h('h1', { class: 'sub-topic m-0', id: 'customise-title' }, 'Customise the class form'), h('button', { type: 'button', class: 'btn-close', 'data-bs-dismiss': 'modal', 'aria-label': 'Close' })),
+        h('div', { class: 'modal-body p-0 mt-4' },
+          h('div', { class: 'd-flex align-items-center gap-2 mb-3' }, h('span', { class: 'sub-topic text-16' }, 'Show or hide fields'), fieldInfo('Hidden fields disappear from the form. Exam type, year, subject, medium and how you teach are always needed.', 'Show or hide fields')),
+          h('div', { class: 'row gx-4 gy-2' }, schema.hideable.map((f) => h('div', { class: 'col-12 col-md-6 col-lg-4' },
+            h('div', { class: 'form-check form-switch' },
+              h('input', { class: 'form-check-input', type: 'checkbox', role: 'switch', id: `hide-${f.key}`, checked: !hidden.has(f.key), onchange: (e) => (e.target.checked ? hidden.delete(f.key) : hidden.add(f.key)) }),
+              h('label', { class: 'form-check-label text-14 main-text', for: `hide-${f.key}` }, f.label, h('span', { class: 'sub-text text-12' }, ` · ${sections[f.section]}`)))))),
+          h('div', { class: 'd-flex align-items-center gap-2 mt-5 mb-3' }, h('span', { class: 'sub-topic text-16' }, 'Your own fields'), fieldInfo('Details you always collect for a class. They show under "More details" and are saved with each class.', 'Your own fields')),
+          customHost),
+        h('div', { class: 'modal-footer p-0 pt-4 border-0 d-flex justify-content-between' }, errorEl,
+          h('div', { class: 'd-flex gap-3' }, h('button', { type: 'button', class: 'custom-outline-btn px-4', 'data-bs-dismiss': 'modal' }, 'Cancel'), save)))));
+  document.body.append(modalEl);
+  const modal = new window.bootstrap.Modal(modalEl);
+  modalEl.addEventListener('hidden.bs.modal', () => modalEl.remove());
+  save.onclick = async () => {
+    save.disabled = true;
+    errorEl.textContent = '';
     try {
-      const { data } = await api.put('/tutor/class-form', { hidden: [...hidden], custom });
-      schema.settings = data;
-      modal.close();
+      await api.put('/tutor/class-form', { hidden: [...hidden], custom });
       schema = (await api.get('/tutor/class-form')).data;
+      modal.hide();
       draw();
       Toast.success('Form updated.');
     } catch (e) {
       const msgs = Object.values(e.details?.fields ?? {});
-      errorsEl.textContent = msgs.length ? msgs.join(' ') : e.message;
-      errorsEl.hidden = false;
-    } finally { saveBtn.disabled = false; }
-  } }, 'Save form');
-  const modal = new Modal({ title: 'Customise the class form', body, wide: true, footer: [h('button', { class: 'ex-btn', onclick: () => modal.close() }, 'Cancel'), saveBtn] }).open();
+      errorEl.textContent = msgs.length ? msgs.join(' ') : e.message;
+    } finally { save.disabled = false; }
+  };
+  modal.show();
 }

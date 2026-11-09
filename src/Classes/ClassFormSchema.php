@@ -24,8 +24,7 @@ final class ClassFormSchema
             ['key' => 'basics', 'title' => 'Class details', 'info' => 'What you teach and for which exam. Students search and filter by these.'],
             ['key' => 'running', 'title' => 'When and where', 'info' => 'Set your weekly times once. Class days are added to the timetable automatically, with Zoom links for online days.'],
             ['key' => 'fee', 'title' => 'Class fee', 'info' => 'The monthly fee students pay for this class. You can add discounts and late fees later from Payment Plans.'],
-            ['key' => 'enrolment', 'title' => 'Who can join', 'info' => 'Control how students get into this class.'],
-            ['key' => 'cover', 'title' => 'Cover image', 'info' => 'Shown on the class card in your app and in the student portal.'],
+            ['key' => 'enrolment', 'title' => 'Enrolment', 'info' => 'Control how students get into this class.'],
             ['key' => 'custom', 'title' => 'More details', 'info' => 'Your own fields. Add or change them with "Customise form".'],
         ];
     }
@@ -47,24 +46,24 @@ final class ClassFormSchema
              'info' => 'Theory covers the syllabus, Revision goes over it again before the exam, Paper class is for past papers and model papers.'],
             ['key' => 'name', 'section' => 'basics', 'label' => 'Class name', 'type' => 'text', 'maxlength' => 100, 'auto' => true, 'width' => 'full',
              'info' => 'We suggest a name from the details above. Change it if you like. Students see this name.'],
-            ['key' => 'description', 'section' => 'basics', 'label' => 'Description', 'type' => 'textarea', 'maxlength' => 1000, 'width' => 'full',
+            ['key' => 'description', 'section' => 'basics', 'label' => 'Description', 'type' => 'textarea', 'maxlength' => 1000, 'placeholder' => 'What the class covers, what to bring, who it is for', 'width' => 'full',
              'info' => 'A short note for students: what the class covers, what to bring, who it is for.'],
 
             ['key' => 'delivery_mode', 'section' => 'running', 'label' => 'How you teach', 'type' => 'chips', 'core' => true, 'required' => true, 'default' => 'physical',
              'options' => [['value' => 'physical', 'label' => 'Physical'], ['value' => 'online', 'label' => 'Online'], ['value' => 'hybrid', 'label' => 'Both']],
              'info' => 'Physical: students come to a hall. Online: on Zoom. Both: some days in the hall, some online, or both at once.'],
-            ['key' => 'location', 'section' => 'running', 'label' => 'Hall / location', 'type' => 'text', 'maxlength' => 150, 'showIf' => ['delivery_mode', ['physical', 'hybrid']],
+            ['key' => 'location', 'section' => 'running', 'label' => 'Hall / location', 'type' => 'text', 'maxlength' => 150, 'placeholder' => 'e.g. Sipwin Institute, Hall 3, Colombo 06', 'showIf' => ['delivery_mode', ['physical', 'hybrid']],
              'info' => 'Where physical classes happen, e.g. "Sipwin Institute, Hall 3, Galle Road, Colombo 06".'],
             ['key' => 'schedule', 'section' => 'running', 'label' => 'Weekly class times', 'type' => 'schedule', 'width' => 'full',
              'info' => 'Add each weekly class time. Each one is added to your timetable every week. Leave empty if the times change every week; you can add class days one by one later.'],
-            ['key' => 'auto_zoom', 'section' => 'running', 'label' => 'Create Zoom meetings automatically', 'type' => 'switch', 'default' => true, 'feature' => 'zoom.tutor_integration', 'showIf' => ['delivery_mode', ['online', 'hybrid']],
+            ['key' => 'auto_zoom', 'section' => 'running', 'label' => 'Zoom meetings', 'type' => 'switch', 'default' => true, 'switchText' => 'Create Zoom meetings automatically', 'feature' => 'zoom.tutor_integration', 'showIf' => ['delivery_mode', ['online', 'hybrid']],
              'info' => 'For online class times we create the Zoom meeting about two weeks ahead and share the link with paid students. Connect Zoom in Settings > Integrations first.'],
             ['key' => 'starts_on', 'section' => 'running', 'label' => 'First class date', 'type' => 'date',
              'info' => 'Class days are added from this date. Leave empty to start from today.'],
 
-            ['key' => 'is_free', 'section' => 'fee', 'label' => 'This is a free class', 'type' => 'switch', 'default' => false,
+            ['key' => 'is_free', 'section' => 'fee', 'label' => 'Free class', 'type' => 'switch', 'default' => false, 'switchText' => 'This class is free',
              'info' => 'Turn on for free seminars or trial classes. Students won\'t be asked to pay.'],
-            ['key' => 'fee', 'section' => 'fee', 'label' => 'Monthly fee (LKR)', 'type' => 'number', 'min' => 0, 'max' => 1000000, 'step' => 50, 'showIf' => ['is_free', [false]], 'prefix' => 'LKR',
+            ['key' => 'fee', 'section' => 'fee', 'label' => 'Monthly fee', 'type' => 'number', 'placeholder' => 'e.g. 2500', 'min' => 0, 'max' => 1000000, 'step' => 50, 'showIf' => ['is_free', [false]], 'prefix' => 'LKR',
              'info' => 'What one student pays per month. Leave empty to set it later in Payment Plans.'],
             ['key' => 'due_day', 'section' => 'fee', 'label' => 'Fee due on day', 'type' => 'number', 'min' => 1, 'max' => 28, 'default' => 10, 'showIf' => ['is_free', [false]],
              'info' => 'Day of the month the fee is due, 1 to 28. After this day the student shows in arrears.'],
@@ -76,10 +75,10 @@ final class ClassFormSchema
                  ['value' => 'invite', 'label' => 'Only students I add', 'hint' => 'The class is hidden from search.'],
              ],
              'info' => 'Most tutors approve each student so they can check the payment first.'],
-            ['key' => 'capacity', 'section' => 'enrolment', 'label' => 'Maximum students', 'type' => 'number', 'min' => 1, 'max' => 5000,
+            ['key' => 'capacity', 'section' => 'enrolment', 'label' => 'Maximum students', 'type' => 'number', 'placeholder' => 'No limit', 'min' => 1, 'max' => 5000,
              'info' => 'Stop new joins when the hall or class is full. Leave empty for no limit. Your package also has a total student limit.'],
 
-            ['key' => 'cover', 'section' => 'cover', 'label' => 'Class cover', 'type' => 'image', 'width' => 'full',
+            ['key' => 'cover', 'section' => 'basics', 'label' => 'Class cover', 'type' => 'image', 'width' => 'full',
              'info' => 'JPG or PNG, up to 2 MB, wide (16:9) works best.'],
         ];
     }
