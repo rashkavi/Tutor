@@ -4,6 +4,7 @@ Tutor LMS for Sri Lankan tuition classes: classes, timetables, recordings with w
 custom staff roles, and START / GROW / PRO packages with premium locks.
 
 - **Plan:** [docs/PLAN.md](docs/PLAN.md) (what is done, what is next)
+- **Product plan (tutor-first):** [docs/TUTOR-PRODUCT-PLAN.md](docs/TUTOR-PRODUCT-PLAN.md)
 - **Research:** [docs/RESEARCH.md](docs/RESEARCH.md) (how other LMS / SaaS products do it, and the rules we follow)
 
 ## Layout
@@ -37,7 +38,7 @@ No packages to install. Tests use in-memory fakes, so they don't need MySQL.
 
 ## Install on a server
 
-1. Run `database/migrations/001_packages_roles_recordings_zoom.sql` on the existing `enlixo_tutor` database.
+1. Run the files in `database/migrations/` in order (`001_…`, `002_…`) on the existing `enlixo_tutor` database.
    It only **adds** tables and columns; nothing existing is renamed or dropped. Take a backup first.
 2. Copy `config/config.php` to `config/config.local.php` (or set env vars) with DB details, `APP_KEY`
    (`php -r "echo base64_encode(random_bytes(32));"`) and Zoom keys.
