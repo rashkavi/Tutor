@@ -60,8 +60,8 @@ export class ApiClient {
         method,
         signal,
         credentials: 'same-origin', // uses the existing PHP login session
-        headers: { Accept: 'application/json', 'X-Requested-With': 'enlixo', ...(body ? { 'Content-Type': 'application/json' } : {}), ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}) },
-        body: body ? JSON.stringify(body) : undefined,
+        headers: { Accept: 'application/json', 'X-Requested-With': 'enlixo', ...(body && !(body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}), ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}) },
+        body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined, // FormData = file upload
       });
     } catch (e) {
       if (e.name === 'AbortError') throw e;

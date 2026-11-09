@@ -15,7 +15,10 @@ class load_side_menu
         return [
             ['Dashboard', 'material-symbols:team-dashboard-outline', 'dashboard', 'dashboard', ['Dashboard']],
             ['Academic', 'ph:graduation-cap', null, '', [], [
-                ['Classes', null, 'classes', 'classes', ['Classes', 'Pre-Recordings', 'Tutes']],
+                ['Classes', null, null, 'classes', ['Classes', 'Pre-Recordings', 'Tutes'], [
+                    ['All Classes', null, 'classes', '', []],
+                    ['Create a Class', null, 'create-class', '', []],
+                ]],
                 ['Students', null, null, 'students', ['Students'], [
                     ['All Students', null, 'students', '', []],
                     ['Add New Student', null, 'add-student-to-class', '', []],

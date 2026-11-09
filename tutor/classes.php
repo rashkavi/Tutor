@@ -68,7 +68,7 @@ if (!SessionUser::ifUserIsTutor()) {
                                         <div class="col-12 col-md-12 col-lg-4 mt-3 mt-lg-0">
                                             <div class="row gx-3 justify-content-end">
                                                 <div class="col-6 mt-3 m-md-0 d-flex justify-content-end align-items-center">
-                                                    <button class="custom-btn col-12" data-bs-target="#addSubject" data-bs-toggle="modal" data-i18n="">Create a Class</button>
+                                                    <a class="custom-btn col-12 d-inline-flex align-items-center justify-content-center text-decoration-none" href="create-class" data-i18n="">Create a Class</a>
                                                 </div>
                                             </div>
                                         </div>

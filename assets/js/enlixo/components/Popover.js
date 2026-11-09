@@ -33,7 +33,7 @@ export class Popover {
     document.addEventListener('keydown', this.onKey);
     window.addEventListener('resize', this.onMove);
     window.addEventListener('scroll', this.onMove, true);
-    this.panel.querySelector('select, input, button, a')?.focus();
+    this.panel.querySelector('select, input, button, a')?.focus({ preventScroll: true });
   }
 
   #place() {
