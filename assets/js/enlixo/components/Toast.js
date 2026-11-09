@@ -6,7 +6,7 @@ export class Toast {
   }
 
   static show(message, type = 'info', ms = 3200) {
-    const el = h('div', { class: `ex-toast ${type}` }, message);
+    const el = h('div', { class: `ex-toast ex-${type}` }, message);
     Toast.#host().append(el);
     setTimeout(() => el.remove(), ms);
   }

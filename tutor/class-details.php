@@ -222,7 +222,7 @@ if (!SessionUser::hasValidSession()) {
                                             <select name="" class="form-select custom-select mt-2" id="edit-exam-type">
                                                 <option value="0">- Select -</option>
                                                 <?php
-                                                $exam_type = Database::search("SELECT * FROM `exam_type`");
+                                                $exam_type = Database::search("SELECT * FROM `exam_type` WHERE `exam_type_id` NOT IN (SELECT `option_id` FROM `tutor_lookup_owners` WHERE `list` = 'exam_types' AND `tutor_id` <> '" . (int) $sessionUserObject['user_id'] . "')");
                                                 while ($type = $exam_type->fetch_assoc()) {
                                                 ?>
                                                     <option value="<?= $type['exam_type_id'] ?>"><?= $type['exam_type'] ?></option>
@@ -260,7 +260,7 @@ if (!SessionUser::hasValidSession()) {
 
                                                 <div class="search-dropdown">
                                                     <?php
-                                                    $subjects = Database::search("SELECT * FROM `subjects`");
+                                                    $subjects = Database::search("SELECT * FROM `subjects` WHERE `subject_id` NOT IN (SELECT `option_id` FROM `tutor_lookup_owners` WHERE `list` = 'subjects' AND `tutor_id` <> '" . (int) $sessionUserObject['user_id'] . "')");
                                                     while ($subject = $subjects->fetch_assoc()) {
                                                     ?>
                                                         <div class="search-option"
@@ -278,7 +278,7 @@ if (!SessionUser::hasValidSession()) {
                                             <select name="" class="form-select custom-select mt-2" id="edit-medium">
                                                 <option value="0">- Select -</option>
                                                 <?php
-                                                $mediums = Database::search("SELECT * FROM `medium`");
+                                                $mediums = Database::search("SELECT * FROM `medium` WHERE `medium_id` NOT IN (SELECT `option_id` FROM `tutor_lookup_owners` WHERE `list` = 'mediums' AND `tutor_id` <> '" . (int) $sessionUserObject['user_id'] . "')");
                                                 while ($medium = $mediums->fetch_assoc()) {
                                                 ?>
                                                     <option value="<?= $medium['medium_id'] ?>"><?= $medium['medium'] ?></option>

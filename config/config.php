@@ -29,6 +29,12 @@ $config = [
         'webhook_secret' => getenv('ZOOM_WEBHOOK_SECRET') ?: '',
         'schedule_weeks_ahead' => 2,
     ],
+    'ai' => [
+        // Google AI Studio key for "Generate thumbnail" on the class form. Empty = the button makes a simple cover in the browser instead.
+        'gemini_api_key' => getenv('GEMINI_API_KEY') ?: '',
+        'gemini_image_model' => getenv('GEMINI_IMAGE_MODEL') ?: 'gemini-2.5-flash-image',
+        'thumbnails_per_day' => 10, // per tutor
+    ],
 ];
 
 $local = __DIR__ . '/config.local.php';

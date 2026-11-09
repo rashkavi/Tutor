@@ -29,7 +29,7 @@ final class ClassCreator
         foreach (ClassFormSchema::forTutor($settings) as $f) {
             $fields[$f['key']] = $f;
         }
-        $lookups = $this->repo->lookups();
+        $lookups = $this->repo->lookups($tutorId);
         $errors = [];
         $v = fn (string $k, $default = null) => array_key_exists($k, $fields) ? ($in[$k] ?? $default) : $default;
         $str = fn (string $k) => trim((string) ($v($k) ?? ''));
@@ -160,6 +160,29 @@ final class ClassCreator
         $cover = null;
         if ($file !== null && ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE && array_key_exists('cover', $fields)) {
             $cover = $this->checkCover($file, $errors);
+        }
+
+        // Optional fields this tutor made required (only when they are showing, e.g. no hall for an online class)
+        $parents = ['is_free' => $isFree, 'delivery_mode' => $mode];
+        foreach ($fields as $key => $f) {
+            if (empty($f['required']) || !empty($f['core']) || !empty($f['custom']) || isset($errors[$key])) {
+                continue;
+            }
+            if (isset($f['showIf']) && !in_array($parents[$f['showIf'][0]] ?? null, $f['showIf'][1], true)) {
+                continue;
+            }
+            $missing = match ($key) {
+                'schedule' => !$slots && !array_filter(array_keys($errors), static fn ($k) => str_starts_with((string) $k, 'schedule.')),
+                'cover' => $cover === null,
+                default => $str($key) === '',
+            };
+            if ($missing) {
+                $errors[$key] = match ($key) {
+                    'schedule' => 'Add at least one weekly time.',
+                    'cover' => 'Please add a class cover.',
+                    default => 'Please fill in ' . mb_strtolower($f['label']) . '.',
+                };
+            }
         }
 
         if ($errors) {
