@@ -33,40 +33,33 @@ final class ClassFormSchema
     public static function builtIn(): array
     {
         return [
-            ['key' => 'exam_type', 'section' => 'basics', 'label' => 'Exam type', 'type' => 'select', 'options' => 'exam_types', 'core' => true, 'required' => true,
-             'info' => 'The exam your students are preparing for, e.g. A/L or Grade 5 Scholarship.'],
+            ['key' => 'exam_type', 'section' => 'basics', 'label' => 'Exam type', 'type' => 'select', 'options' => 'exam_types', 'core' => true, 'required' => true],
             ['key' => 'year', 'section' => 'basics', 'label' => 'Exam year', 'type' => 'select', 'options' => 'years', 'core' => true, 'required' => true,
-             'info' => 'The year students sit the exam (their batch), not the year the class starts. A 2027 A/L class can start in 2025.'],
-            ['key' => 'subject', 'section' => 'basics', 'label' => 'Subject', 'type' => 'select', 'options' => 'subjects', 'core' => true, 'required' => true, 'searchable' => true,
-             'info' => 'The subject you teach in this class.'],
-            ['key' => 'medium', 'section' => 'basics', 'label' => 'Medium', 'type' => 'select', 'options' => 'mediums', 'core' => true, 'required' => true,
-             'info' => 'The language you teach in.'],
+             'info' => 'The year your students sit the exam (their batch). Students and parents find the class by this year.', 'enter' => 'The exam year, not the year the class starts. A class that starts in 2025 for students sitting A/L in 2027 is a 2027 class.'],
+            ['key' => 'subject', 'section' => 'basics', 'label' => 'Subject', 'type' => 'select', 'options' => 'subjects', 'core' => true, 'required' => true, 'searchable' => true],
+            ['key' => 'medium', 'section' => 'basics', 'label' => 'Medium', 'type' => 'select', 'options' => 'mediums', 'core' => true, 'required' => true],
             ['key' => 'class_type', 'section' => 'basics', 'label' => 'Class type', 'type' => 'chips', 'default' => 'theory',
              'options' => [['value' => 'theory', 'label' => 'Theory'], ['value' => 'revision', 'label' => 'Revision'], ['value' => 'paper', 'label' => 'Paper class'], ['value' => 'other', 'label' => 'Other']],
-             'info' => 'Theory covers the syllabus, Revision goes over it again before the exam, Paper class is for past papers and model papers.'],
+             'info' => 'Tells students what kind of class this is, and keeps your theory, revision and paper classes apart in lists and reports.', 'enter' => 'Theory: you teach the syllabus. Revision: you go over it again before the exam. Paper class: past papers and model papers.'],
             ['key' => 'name', 'section' => 'basics', 'label' => 'Class name', 'type' => 'text', 'maxlength' => 100, 'auto' => true, 'width' => 'full',
-             'info' => 'We suggest a name from the details above. Change it if you like. Students see this name.'],
-            ['key' => 'description', 'section' => 'basics', 'label' => 'Description', 'type' => 'textarea', 'maxlength' => 1000, 'placeholder' => 'What the class covers, what to bring, who it is for', 'width' => 'full',
-             'info' => 'A short note for students: what the class covers, what to bring, who it is for.'],
+             'info' => 'The name students, parents and your staff see everywhere: class list, timetable, payments and messages.', 'enter' => 'Leave it empty to use the name we suggest from the details above, e.g. "2027 A/L Physics Theory (Sinhala)". Up to 100 letters.'],
+            ['key' => 'description', 'section' => 'basics', 'label' => 'Description', 'type' => 'textarea', 'maxlength' => 1000, 'placeholder' => 'What the class covers, what to bring, who it is for', 'width' => 'full'],
 
             ['key' => 'delivery_mode', 'section' => 'running', 'label' => 'How you teach', 'type' => 'chips', 'core' => true, 'required' => true, 'default' => 'physical',
              'options' => [['value' => 'physical', 'label' => 'Physical'], ['value' => 'online', 'label' => 'Online'], ['value' => 'hybrid', 'label' => 'Both']],
-             'info' => 'Physical: students come to a hall. Online: on Zoom. Both: some days in the hall, some online, or both at once.'],
-            ['key' => 'location', 'section' => 'running', 'label' => 'Hall / location', 'type' => 'text', 'maxlength' => 150, 'placeholder' => 'e.g. Sipwin Institute, Hall 3, Colombo 06', 'showIf' => ['delivery_mode', ['physical', 'hybrid']],
-             'info' => 'Where physical classes happen, e.g. "Sipwin Institute, Hall 3, Galle Road, Colombo 06".'],
+             'info' => 'Decides what the class needs: a hall for physical classes, Zoom links for online ones, or both.', 'enter' => 'Physical if students come to a hall, Online if you teach on Zoom, Both if you do some of each (you choose per weekly time below).'],
+            ['key' => 'location', 'section' => 'running', 'label' => 'Hall / location', 'type' => 'text', 'maxlength' => 150, 'placeholder' => 'e.g. Sipwin Institute, Hall 3, Colombo 06', 'showIf' => ['delivery_mode', ['physical', 'hybrid']]],
             ['key' => 'schedule', 'section' => 'running', 'label' => 'Weekly class times', 'type' => 'schedule', 'width' => 'full',
-             'info' => 'Add each weekly class time. Each one is added to your timetable every week. Leave empty if the times change every week; you can add class days one by one later.'],
+             'info' => 'Each weekly time becomes a class day on your timetable every week, so attendance, recordings and Zoom links line up by themselves.', 'enter' => 'The day, start time and end time, e.g. Saturday 8:00 AM to 12:00 PM. Add one row per weekly class. Leave empty if the times change every week.'],
             ['key' => 'auto_zoom', 'section' => 'running', 'label' => 'Zoom meetings', 'type' => 'switch', 'default' => true, 'switchText' => 'Create Zoom meetings automatically', 'feature' => 'zoom.tutor_integration', 'showIf' => ['delivery_mode', ['online', 'hybrid']],
-             'info' => 'For online class times we create the Zoom meeting about two weeks ahead and share the link with paid students. Connect Zoom in Settings > Integrations first.'],
+             'info' => 'For online times we create the Zoom meeting about two weeks ahead and share the link only with students who can join.', 'enter' => 'Turn on if you teach on Zoom. Connect your Zoom account first in Settings > Integrations.'],
             ['key' => 'starts_on', 'section' => 'running', 'label' => 'First class date', 'type' => 'date',
-             'info' => 'Class days are added from this date. Leave empty to start from today.'],
+             'info' => 'Class days are added to the timetable from this date. Days before it are left empty.', 'enter' => 'The date of the very first class. Leave empty to start from today.'],
 
-            ['key' => 'is_free', 'section' => 'fee', 'label' => 'Free class', 'type' => 'switch', 'default' => false, 'switchText' => 'This class is free',
-             'info' => 'Turn on for free seminars or trial classes. Students won\'t be asked to pay.'],
-            ['key' => 'fee', 'section' => 'fee', 'label' => 'Monthly fee', 'type' => 'number', 'placeholder' => 'e.g. 2500', 'min' => 0, 'max' => 1000000, 'step' => 50, 'showIf' => ['is_free', [false]], 'prefix' => 'LKR',
-             'info' => 'What one student pays per month. Leave empty to set it later in Payment Plans.'],
+            ['key' => 'is_free', 'section' => 'fee', 'label' => 'Free class', 'type' => 'switch', 'default' => false, 'switchText' => 'This class is free'],
+            ['key' => 'fee', 'section' => 'fee', 'label' => 'Monthly fee', 'type' => 'number', 'placeholder' => 'e.g. 2500', 'min' => 0, 'max' => 1000000, 'step' => 50, 'showIf' => ['is_free', [false]], 'prefix' => 'LKR'],
             ['key' => 'due_day', 'section' => 'fee', 'label' => 'Fee due on day', 'type' => 'number', 'min' => 1, 'max' => 28, 'default' => 10, 'showIf' => ['is_free', [false]],
-             'info' => 'Day of the month the fee is due, 1 to 28. After this day the student shows in arrears.'],
+             'info' => 'After this day of the month, students who have not paid show as in arrears and can get a reminder.', 'enter' => 'A day from 1 to 28, e.g. 10 means the fee is due by the 10th of every month.'],
 
             ['key' => 'enrollment_mode', 'section' => 'enrolment', 'label' => 'Who can join', 'type' => 'radio', 'default' => 'approval',
              'options' => [
@@ -74,12 +67,11 @@ final class ClassFormSchema
                  ['value' => 'approval', 'label' => 'I approve each student', 'hint' => 'Requests wait in Requested Students.'],
                  ['value' => 'invite', 'label' => 'Only students I add', 'hint' => 'The class is hidden from search.'],
              ],
-             'info' => 'Most tutors approve each student so they can check the payment first.'],
+             'info' => 'Controls how students get into this class.', 'enter' => 'Most tutors choose "I approve each student" so they can check the payment or the student first.'],
             ['key' => 'capacity', 'section' => 'enrolment', 'label' => 'Maximum students', 'type' => 'number', 'placeholder' => 'No limit', 'min' => 1, 'max' => 5000,
-             'info' => 'Stop new joins when the hall or class is full. Leave empty for no limit. Your package also has a total student limit.'],
+             'info' => 'New students can\'t join once this many are in the class.', 'enter' => 'The number of seats, e.g. 120 for your hall. Leave empty for no limit. Your package also has a total student limit.'],
 
-            ['key' => 'cover', 'section' => 'basics', 'label' => 'Class cover', 'type' => 'image', 'width' => 'full',
-             'info' => 'JPG or PNG, up to 2 MB, wide (16:9) works best.'],
+            ['key' => 'cover', 'section' => 'basics', 'label' => 'Class cover', 'type' => 'image', 'width' => 'full'],
         ];
     }
 
@@ -116,7 +108,7 @@ final class ClassFormSchema
         $fields = [];
         foreach (self::builtIn() as $f) {
             $f['default_label'] = $f['label'];
-            foreach (['label', 'info', 'placeholder'] as $k) {
+            foreach (['label', 'info', 'enter', 'placeholder'] as $k) {
                 if (isset($settings['labels'][$f['key']][$k]) && $settings['labels'][$f['key']][$k] !== '') {
                     $f[$k] = $settings['labels'][$f['key']][$k];
                 }
@@ -198,6 +190,7 @@ final class ClassFormSchema
             $field = [
                 'key' => $key, 'label' => $label, 'type' => $type, 'required' => !empty($c['required']),
                 'info' => mb_substr(trim((string) ($c['info'] ?? '')), 0, 300),
+                'enter' => mb_substr(trim((string) ($c['enter'] ?? '')), 0, 300),
                 'section' => in_array($section, $sectionKeys, true) ? $section : 'custom',
             ];
             $placeholder = mb_substr(trim((string) ($c['placeholder'] ?? '')), 0, 80);
@@ -227,7 +220,7 @@ final class ClassFormSchema
                 continue;
             }
             $clean = [];
-            foreach (['label' => 60, 'info' => 300, 'placeholder' => 80] as $k => $max) {
+            foreach (['label' => 60, 'info' => 300, 'enter' => 300, 'placeholder' => 80] as $k => $max) {
                 $v = trim((string) ($o[$k] ?? ''));
                 if (mb_strlen($v) > $max) {
                     $errors["labels.$key.$k"] = $k === 'label' ? "Keep the field name under $max letters." : "Keep this under $max letters.";

@@ -1,4 +1,5 @@
 import { h } from '../core/dom.js';
+import { icon } from '../core/icons.js';
 
 /**
  * A button that opens a small panel under it (filters, Action menu, row kebab).
@@ -39,7 +40,8 @@ export class Popover {
   #place() {
     const r = this.trigger.getBoundingClientRect();
     const p = this.panel;
-    Object.assign(p.style, { position: 'fixed', top: '', bottom: '', left: '', right: '' });
+    // 'auto' (not '') so the stylesheet's top/right for the old absolute layout can't stretch or squash the panel.
+    Object.assign(p.style, { position: 'fixed', top: 'auto', bottom: 'auto', left: 'auto', right: 'auto' });
     const below = window.innerHeight - r.bottom;
     if (below < p.offsetHeight + 12 && r.top > below) p.style.bottom = `${window.innerHeight - r.top + 6}px`;
     else p.style.top = `${r.bottom + 6}px`;
@@ -60,26 +62,29 @@ export class Popover {
 }
 
 /**
- * Dropdown list of actions, e.g. the blue "Action" button in a page header or a row's ⋮ menu.
+ * Dropdown list of actions (ENLIXO V3 menu): white card, an outline icon and a label per row, thin lines between rows.
  *   ActionMenu.button('Action', items)   ActionMenu.kebab(items)
- * Item: { label, icon?: Element, href?, onClick?, locked?: Element (premium badge), danger? }
+ * Item: { label, icon?: icon name (assets/icons/icon-map.json) or Element, href?, onClick?, locked?: Element (premium badge), danger? }
+ * A `null` item is skipped; the string '-' adds a thicker gap between groups.
  */
 export class ActionMenu {
   static list(items, pop) {
-    return h('ul', { class: 'ex-menu', role: 'menu' }, items.filter(Boolean).map((it) => h('li', { role: 'none' },
-      h(it.href && !it.onClick ? 'a' : 'button', {
-        role: 'menuitem', class: `ex-menu-item ${it.danger ? 'ex-danger' : ''}`, href: it.href ?? null, type: it.href ? null : 'button',
-        onclick: it.onClick ? (e) => { pop.close(); it.onClick(e); } : null,
-      }, it.icon ?? null, h('span', {}, it.label), it.locked ?? null))));
+    return h('ul', { class: 'ex-menu', role: 'menu' }, items.filter(Boolean).map((it) => (it === '-'
+      ? h('li', { role: 'separator', class: 'ex-menu-sep' })
+      : h('li', { role: 'none' },
+        h(it.href && !it.onClick ? 'a' : 'button', {
+          role: 'menuitem', class: `ex-menu-item ${it.danger ? 'ex-danger' : ''}`, href: it.href ?? null, type: it.href ? null : 'button',
+          onclick: it.onClick ? (e) => { pop.close(); it.onClick(e); } : null,
+        }, typeof it.icon === 'string' ? icon(it.icon, { size: 20, className: 'ex-menu-ico' }) : (it.icon ?? null), h('span', { class: 'flex-grow-1' }, it.label), it.locked ?? null)))));
   }
 
-  static button(label, items, { className = 'ex-btn ex-btn-primary ex-btn-action' } = {}) {
-    const trigger = h('button', { type: 'button', class: className }, label, h('span', { class: 'ex-caret', 'aria-hidden': 'true' }, '▾'));
+  static button(label, items, { className = 'custom-btn ex-btn-md px-4 border-0' } = {}) {
+    const trigger = h('button', { type: 'button', class: className }, label, icon('chevron-down', { size: 16 }));
     return new Popover({ trigger, content: (pop) => ActionMenu.list(items, pop) }).el;
   }
 
   static kebab(items, label = 'Actions') {
-    const trigger = h('button', { type: 'button', class: 'ex-kebab', 'aria-label': label, html: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>' });
+    const trigger = h('button', { type: 'button', class: 'ex-kebab', 'aria-label': label }, icon('kebab', { size: 20 }));
     return new Popover({ trigger, content: (pop) => ActionMenu.list(items, pop) }).el;
   }
 }

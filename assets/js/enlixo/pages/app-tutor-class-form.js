@@ -253,21 +253,22 @@ function input(id, label, value, { max, placeholder = '', textarea = false, requ
 
 function editBuiltIn(f) {
   const name = input('e-label', 'Field name', f.label, { max: 60, required: true, help: `Default: ${f.default_label}` });
-  const info = input('e-info', 'Help text for the (i) icon', f.info, { max: 300, textarea: true });
+  const info = input('e-info', '(i) What it does', f.info, { max: 300, textarea: true, help: 'Leave both (i) boxes empty on easy fields, so the icon only shows where it helps.' });
+  const enter = input('e-enter', '(i) What to enter', f.enter, { max: 300, textarea: true });
   const hasPh = ['text', 'textarea', 'number'].includes(f.type);
   const ph = hasPh ? input('e-ph', 'Placeholder (grey example text)', f.placeholder ?? '', { max: 80 }) : null;
   const saveBtn = BsModal.button('Save', { primary: true, onclick: async () => {
     const label = name.el.value.trim();
     if (!label) { name.err.textContent = 'Give the field a name.'; name.el.classList.add('is-invalid'); return; }
-    schema.settings.labels = { ...schema.settings.labels, [f.key]: { label, info: info.el.value.trim(), ...(hasPh ? { placeholder: ph.el.value.trim() } : {}) } };
+    schema.settings.labels = { ...schema.settings.labels, [f.key]: { label, info: info.el.value.trim(), enter: enter.el.value.trim(), ...(hasPh ? { placeholder: ph.el.value.trim() } : {}) } };
     saveBtn.disabled = true;
     try { await save({ reload: true }); m.close(); Toast.success('Field updated.'); } catch { saveBtn.disabled = false; }
   } });
   const m = BsModal.open({
     title: `Edit ${f.default_label}`,
     subtitle: `${f.typeName}${f.core ? ' · always on the form' : ''}`,
-    body: h('div', { class: 'row gy-3' }, name.col, info.col, ph?.col),
-    footerStart: [BsModal.button('Use default', { onclick: () => { name.el.value = f.default_label; info.el.value = ''; if (ph) ph.el.value = ''; } })],
+    body: h('div', { class: 'row gy-3' }, name.col, info.col, enter.col, ph?.col),
+    footerStart: [BsModal.button('Use default', { onclick: () => { name.el.value = f.default_label; info.el.value = ''; enter.el.value = ''; if (ph) ph.el.value = ''; } })],
     footerEnd: [BsModal.button('Cancel', { onclick: () => m.close() }), saveBtn],
   });
 }
@@ -280,7 +281,8 @@ function editCustom(f, section = 'custom') {
     Object.entries(CUSTOM_TYPE_NAMES).map(([v, n]) => h('option', { value: v, selected: v === c.type }, n)));
   const where = h('select', { id: 'c-section', class: 'form-select custom-select mt-2' }, schema.sections.map((s) => h('option', { value: s.key, selected: s.key === (c.section ?? 'custom') }, s.title)));
   const req = h('input', { class: 'form-check-input', type: 'checkbox', role: 'switch', id: 'c-req', checked: !!c.required });
-  const info = input('c-info', 'Help text for the (i) icon', c.info, { max: 300, textarea: true, placeholder: 'Optional' });
+  const info = input('c-info', '(i) What it does', c.info, { max: 300, textarea: true, placeholder: 'Optional. Only fill this in if the field needs explaining.' });
+  const enter = input('c-enter', '(i) What to enter', c.enter ?? '', { max: 300, textarea: true, placeholder: 'Optional, e.g. "Your batch code, like PHY27-S"' });
   const ph = input('c-ph', 'Placeholder (grey example text)', c.placeholder ?? '', { max: 80, placeholder: 'Optional' });
   const choices = input('c-opts', 'Choices (one per line)', (c.options ?? []).map((o) => (typeof o === 'string' ? o : o.value)).join('\n'), { textarea: true, required: true, placeholder: 'Unit 1\nUnit 2' });
   if (c.type !== 'select') choices.col.classList.add('d-none');
@@ -288,7 +290,7 @@ function editCustom(f, section = 'custom') {
   const err = h('span', { class: 'text-12 text-dark-red', role: 'alert' });
 
   const saveBtn = BsModal.button(f ? 'Save' : 'Add field', { primary: true, onclick: async () => {
-    const next = { ...c, label: name.el.value.trim(), type: type.value, section: where.value, required: req.checked, info: info.el.value.trim(), placeholder: ph.el.value.trim(), options: choices.el.value.split('\n') };
+    const next = { ...c, label: name.el.value.trim(), type: type.value, section: where.value, required: req.checked, info: info.el.value.trim(), enter: enter.el.value.trim(), placeholder: ph.el.value.trim(), options: choices.el.value.split('\n') };
     if (!next.label) { name.err.textContent = 'Give the field a name.'; name.el.classList.add('is-invalid'); return; }
     const before = schema.settings.custom;
     schema.settings.custom = f ? before.map((x) => (x.key === f.key ? next : x)) : [...before, next];
@@ -323,7 +325,7 @@ function editCustom(f, section = 'custom') {
       h('div', { class: 'col-12 col-md-6 d-flex flex-column' }, h('label', { class: 'text-14 main-text', for: 'c-type' }, 'Type'), type),
       h('div', { class: 'col-12 col-md-6 d-flex flex-column' }, h('label', { class: 'text-14 main-text', for: 'c-section' }, 'Show it under'), where),
       h('div', { class: 'col-12' }, h('div', { class: 'form-check form-switch ex-switch-bs' }, req, h('label', { class: 'form-check-label text-14 main-text', for: 'c-req' }, 'Required'))),
-      choices.col, ph.col, info.col, h('div', { class: 'col-12' }, err)),
+      choices.col, ph.col, info.col, enter.col, h('div', { class: 'col-12' }, err)),
     footerStart: remove ? [remove] : [],
     footerEnd: [BsModal.button('Cancel', { onclick: () => m.close() }), saveBtn],
   });
