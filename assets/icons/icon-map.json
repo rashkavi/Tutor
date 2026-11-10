@@ -1,5 +1,5 @@
 {
-  "_about": "One icon library for ENLIXO Tutor: Solar (Iconify, MIT). Pages use these names, never a raw icon set. After editing, run: node bin/build-icons.mjs <path to @iconify-json/solar/icons.json>",
+  "_about": "One icon library for ENLIXO Tutor: Solar (Iconify, MIT). Pages use these names, never a raw icon set. After editing, run: node bin/build-icons.mjs <path to @iconify-json/solar/icons.json> A value that starts with '<' is our own SVG body (24x24, drawn to match Solar), for the few shapes Solar lacks.",
   "dashboard": "widget-5-linear",
   "dashboard-active": "widget-5-bold-duotone",
   "academic": "square-academic-cap-linear",
@@ -71,5 +71,7 @@
   "online": "videocamera-record-linear",
   "physical": "map-point-linear",
   "sun": "sun-2-linear",
-  "moon": "moon-linear"
+  "moon": "moon-linear",
+  "view-rows": "rows-2-linear",
+  "drag-dots": "<g fill=\"currentColor\"><circle cx=\"9\" cy=\"6\" r=\"1.6\"/><circle cx=\"15\" cy=\"6\" r=\"1.6\"/><circle cx=\"9\" cy=\"12\" r=\"1.6\"/><circle cx=\"15\" cy=\"12\" r=\"1.6\"/><circle cx=\"9\" cy=\"18\" r=\"1.6\"/><circle cx=\"15\" cy=\"18\" r=\"1.6\"/></g>"
 }

@@ -12,6 +12,7 @@ const map = JSON.parse(readFileSync(join(root, 'assets/icons/icon-map.json'), 'u
 const out = {};
 for (const [name, solar] of Object.entries(map)) {
   if (name.startsWith('_')) continue;
+  if (solar.startsWith('<')) { out[name] = solar; continue; } // our own SVG body for a shape Solar lacks
   const icon = set.icons[solar] ?? set.icons[set.aliases?.[solar]?.parent];
   if (!icon) throw new Error(`Solar has no icon "${solar}" (for "${name}")`);
   out[name] = icon.body;

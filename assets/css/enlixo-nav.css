@@ -1,6 +1,6 @@
 /* Tutor side menu (tutor/includes/side-menu.php): ENLIXO V3 groups, Solar icons, find box, plan card, user card.
    Colours come from style.css theme variables, so light and dark themes both work. */
-.ex-sidenav { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; border-right: 1px solid var(--line-color, #E9EAF0); }
+.ex-sidenav { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 .ex-sidenav a { text-decoration: none; }
 .ex-sidenav .ex-ico { display: inline-flex; flex: none; }
 .ex-sidenav :focus-visible { outline: 2px solid var(--dark-theme, #0061D2); outline-offset: -2px; }
@@ -11,11 +11,11 @@
 /* find a page */
 .ex-sidenav-find { position: relative; margin: 4px 16px 6px; }
 .ex-find-ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--sub-text, #8C94A3); pointer-events: none; }
-.ex-find-input { width: 100%; height: 38px; padding: 0 34px 0 34px; border: 1px solid var(--line-color, #E9EAF0); background: var(--light-color, #f9fafb); color: var(--main-text-color, #4E5566); font-size: 13px; outline: none; border-radius: 8px; }
+.ex-find-input { width: 100%; height: 38px; padding: 0 34px 0 34px; border: 0; background: var(--body-color, #F7F7F7); color: var(--main-text-color, #4E5566); font-size: 13px; outline: none; border-radius: 8px; }
 .ex-find-input::placeholder { color: var(--sub-text, #8C94A3); }
-.ex-find-input:focus { border-color: var(--dark-theme, #0061D2); background: var(--custom-white, #fff); box-shadow: 0 0 0 3px var(--light-theme, #E8ECFF); }
+.ex-find-input:focus { background: var(--custom-white, #fff); box-shadow: 0 0 0 2px var(--dark-theme, #0061D2); }
 .ex-find-input::-webkit-search-cancel-button { display: none; }
-.ex-find-kbd { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); font: 500 11px/1 inherit; padding: 3px 6px; border: 1px solid var(--line-color, #E9EAF0); border-radius: 4px; color: var(--sub-text, #8C94A3); background: var(--custom-white, #fff); box-shadow: none; }
+.ex-find-kbd { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); font: 500 11px/1 inherit; padding: 3px 6px; border: 0; border-radius: 4px; color: var(--sub-text, #8C94A3); background: var(--custom-white, #fff); box-shadow: none; }
 .ex-find-input:focus + .ex-find-kbd, .ex-finding .ex-find-kbd { display: none; }
 .ex-find-empty { font-size: 12.5px; color: var(--sub-text, #8C94A3); padding: 8px 14px; margin: 0; }
 
@@ -44,8 +44,8 @@ details[open] > summary > .ex-chev { transform: rotate(180deg); }
   .ex-sidenav details[open]::details-content { height: auto; }
 }
 
-/* sub items: a thin tree line with a dot on the current page */
-.ex-subnav { list-style: none; margin: 2px 0 8px 27px; padding: 0 0 0 14px; border-left: 1px solid var(--line-color, #E9EAF0); }
+/* sub items: indented, with a dot on the current page (no lines) */
+.ex-subnav { list-style: none; margin: 2px 0 8px 27px; padding: 0 0 0 14px; }
 .ex-subnav.ex-depth-2 { margin: 0 0 4px 2px; }
 .ex-subnav-link { position: relative; display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; font-size: 13px; color: var(--main-text-color, #4E5566); cursor: pointer; list-style: none; transition: background .15s, color .15s; }
 .ex-subnav-link .ex-nav-label { flex: 1; }

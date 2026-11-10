@@ -37,7 +37,7 @@ export class ThumbnailMaker {
 
       const chips = [labels.subject, [labels.year, labels.exam].filter(Boolean).join(' '), labels.type, labels.medium].filter(Boolean);
       const styleCards = h('div', { class: 'row g-2', role: 'radiogroup', 'aria-label': 'Style' }, STYLES.map((s) => h('div', { class: 'col-12 col-md-4' },
-        h('label', { class: 'ex-choice bl-solid d-flex gap-2 align-items-center p-2 h-100' },
+        h('label', { class: 'ex-choice d-flex gap-2 align-items-center p-2 h-100' },
           h('input', { class: 'form-check-input mt-0 flex-none', type: 'radio', name: 'thumb-style', value: s.key, checked: s.key === style, onchange: () => { style = s.key; } }),
           h('span', { class: 'ex-thumb-swatch flex-none', style: { background: s.swatch }, 'aria-hidden': 'true' }),
           h('span', {}, h('span', { class: 'd-block text-14 main-text' }, s.name), h('span', { class: 'd-block text-12 sub-text' }, s.hint))))));

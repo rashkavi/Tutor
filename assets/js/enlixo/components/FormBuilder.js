@@ -164,7 +164,7 @@ export class FormBuilder {
       case 'radio':
         return h('div', { class: 'row gx-3 gy-2 mt-0', role: 'radiogroup', 'aria-labelledby': `${id}-label` }, f.options.map((o, i) =>
           h('div', { class: 'col-12 col-md-4' },
-            h('label', { class: 'ex-choice bl-solid d-flex gap-2 p-3 h-100', for: `${id}-${i}` },
+            h('label', { class: 'ex-choice d-flex gap-2 p-3 h-100', for: `${id}-${i}` },
               h('input', { class: 'form-check-input mt-1 flex-none', type: 'radio', name: f.key, id: `${id}-${i}`, value: o.value, checked: o.value === val, onchange: () => set(o.value) }),
               h('span', {}, h('span', { class: 'd-block text-14 main-text' }, o.label), o.hint ? h('span', { class: 'd-block text-12 sub-text' }, o.hint) : null)))));
       case 'switch':
@@ -259,7 +259,7 @@ export class FormBuilder {
 
     const col = h('div', { class: 'd-flex flex-column', 'data-key': f.key },
       h('div', { class: 'd-flex align-items-center gap-1 mb-2' }, h('span', { class: `text-14 main-text ${f.required ? 'required' : ''}` }, f.label), fieldInfo(f.info, f.label, f.enter)),
-      h('div', { class: 'ex-image-panel bl-solid p-3' },
+      h('div', { class: 'ex-image-panel p-3' },
         h('div', { class: 'position-relative' }, box,
           h('label', { class: 'upload-image text-white p-2 bottom-0 start-0 m-0 text-14 gap-2', for: id, role: 'button', tabindex: '0',
             onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } } },
