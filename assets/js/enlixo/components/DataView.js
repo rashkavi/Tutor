@@ -78,6 +78,12 @@ export class DataView {
 
   reload() { return this.load(); }
 
+  /** Set the filters from outside the list (e.g. a stat card above it). */
+  setFilters(filters) {
+    this.filterBar?.reset(filters);
+    this.#change({ filters, page: 1 });
+  }
+
   /** Current search + filters + sort, as API params (used by load and export). */
   get params() {
     return { q: this.state.q, sort: this.state.sort, dir: this.state.dir, ...this.state.filters, ...(this.o.params ?? {}) };

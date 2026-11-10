@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 use Enlixo\App;
 use Enlixo\Core\Router;
+use Enlixo\Http\Controllers\ApplicationController;
 use Enlixo\Http\Controllers\ClassController;
 use Enlixo\Http\Controllers\EntitlementController;
 use Enlixo\Http\Controllers\RecordingController;
@@ -16,12 +17,24 @@ return static function (Router $router, App $app): void {
     $rec = new RecordingController($app);
     $zoom = new ZoomWebhookController($app);
     $students = new StudentController($app);
+    $apps = new ApplicationController($app, dirname(__DIR__) . '/assets/imgs/students');
     $classes = new ClassController($app, dirname(__DIR__) . '/assets/imgs/classes-covers');
 
     $router->get('/api/v1/me/access', $access->show(...));
 
     $router->get('/api/v1/tutor/students', $students->index(...));
     $router->post('/api/v1/tutor/students/status', $students->updateStatus(...));
+    $router->post('/api/v1/tutor/students', $apps->addStudent(...));
+    $router->get('/api/v1/tutor/student-form', $apps->form(...));
+    $router->put('/api/v1/tutor/student-form', $apps->saveForm(...));
+    $router->get('/api/v1/tutor/applications', $apps->index(...));
+    $router->get('/api/v1/tutor/applications/stats', $apps->stats(...));
+    $router->get('/api/v1/tutor/applications/{id}', $apps->show(...)); // keep after /applications/stats
+    $router->post('/api/v1/tutor/applications/{id}/status', $apps->status(...));
+    $router->get('/api/v1/tutor/application-link', $apps->link(...));
+    $router->post('/api/v1/tutor/application-link', $apps->updateLink(...));
+    $router->get('/api/v1/public/apply/{token}', $apps->publicForm(...));
+    $router->post('/api/v1/public/apply/{token}', $apps->publicApply(...));
     $router->get('/api/v1/tutor/classes', $students->classes(...));
     $router->post('/api/v1/tutor/classes', $classes->store(...));
     $router->get('/api/v1/tutor/class-form', $classes->form(...));

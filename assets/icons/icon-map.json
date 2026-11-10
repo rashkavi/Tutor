@@ -73,5 +73,22 @@
   "sun": "sun-2-linear",
   "moon": "moon-linear",
   "view-rows": "rows-2-linear",
-  "drag-dots": "<g fill=\"currentColor\"><circle cx=\"9\" cy=\"6\" r=\"1.6\"/><circle cx=\"15\" cy=\"6\" r=\"1.6\"/><circle cx=\"9\" cy=\"12\" r=\"1.6\"/><circle cx=\"15\" cy=\"12\" r=\"1.6\"/><circle cx=\"9\" cy=\"18\" r=\"1.6\"/><circle cx=\"15\" cy=\"18\" r=\"1.6\"/></g>"
+  "drag-dots": "<g fill=\"currentColor\"><circle cx=\"9\" cy=\"6\" r=\"1.6\"/><circle cx=\"15\" cy=\"6\" r=\"1.6\"/><circle cx=\"9\" cy=\"12\" r=\"1.6\"/><circle cx=\"15\" cy=\"12\" r=\"1.6\"/><circle cx=\"9\" cy=\"18\" r=\"1.6\"/><circle cx=\"15\" cy=\"18\" r=\"1.6\"/></g>",
+  "application": "document-add-linear",
+  "phone": "phone-linear",
+  "whatsapp": "chat-round-line-linear",
+  "mail": "letter-linear",
+  "hashtag": "hashtag-linear",
+  "send": "plain-2-linear",
+  "user-check": "user-check-rounded-linear",
+  "share": "share-linear",
+  "home": "home-2-linear",
+  "id-card": "card-2-linear",
+  "hourglass": "hourglass-linear",
+  "expand": "alt-arrow-down-linear",
+  "collapse": "alt-arrow-up-linear",
+  "students-active": "users-group-rounded-bold-duotone",
+  "school": "square-academic-cap-2-linear",
+  "inbox": "inbox-linear",
+  "dots": "menu-dots-bold"
 }
