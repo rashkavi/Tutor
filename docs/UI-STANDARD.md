@@ -5,6 +5,13 @@ Every Tutor page follows the ENLIXO V3 look: Bootstrap 5 for layout, the app's o
 New screens are built from the shared kit in `assets/js/enlixo/components` so buttons, text and spacing
 come out the same everywhere. Don't add one-off sizes or colours in a page.
 
+## No borders
+
+Components have **no borders**: cards, list rows, panels, menus, popovers, switchers, the side menu and tool buttons
+are white (or light grey) blocks on the grey page, separated by space and, where needed, a soft shadow.
+Only form inputs keep their 1px line, and menus and tables keep thin dividers between rows.
+Don't add `border: 1px` to a new component; use a background change for hover and a blue ring for focus.
+
 ## Page skeleton
 
 | Part | Use |
@@ -68,11 +75,20 @@ White card, 10px corners, soft shadow, one outline icon and a short label per ro
 The risky item (Deactivate, Delete) is last and red, and asks with `BsModal.confirm` first. The menu opens below the
 button, or above it when there is no room.
 
-## Views and ordering
+## Lists, views and ordering
 
-A list that people browse (Classes) offers **Cards**, **Table** and **Details** with a segmented switch; the choice is
-remembered on the device. Drag and drop to change the order works only in "My order" with no search or filters, and
-the handle also moves with the arrow keys. Save the order on its own and show "Order saved."
+Lists follow V3 Branches. The default view is **rows**: one white row per item with the ⋮⋮ handle on the left,
+a small picture, a title, one or two grey lines under it, then the orange **Actions** dropdown (`.ex-btn-actions`)
+and the blue **View** button on the right. Above the list: the count on the left; export and the view switcher
+(icon-only squares, the chosen one filled blue, `.ex-view-switch`) on the right. Other views: **table** (many items)
+and **grid** (picture first). The chosen view is remembered on the device.
+
+Changing the order:
+* Only by dragging the ⋮⋮ handle (`drag-dots` icon), never the whole card. The other items move aside while you drag,
+  so what you see when you let go is the new order. The arrow keys move a focused handle too.
+* One plain line says how: "To change the order, hold ⋮⋮ and drag a class up or down."
+* With a search or filter on, the handles are hidden and the line says to clear them. No separate sort control.
+* Save on drop and show "Order saved."
 
 ## Modals
 

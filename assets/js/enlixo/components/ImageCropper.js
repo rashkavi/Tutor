@@ -83,7 +83,7 @@ export class ImageCropper {
       h('div', { class: 'col-12 col-lg-3 d-flex flex-column' },
         h('span', { class: 'text-12 main-text mb-2' }, 'Preview'),
         this.preview,
-        h('div', { class: 'mt-auto pt-3 border-top ex-crop-hints text-12 sub-text d-flex flex-column gap-2' },
+        h('div', { class: 'mt-auto pt-3 ex-crop-hints text-12 sub-text d-flex flex-column gap-2' },
           h('span', {}, h('i', { html: ICON.drag }), 'Drag to move the picture'),
           h('span', {}, h('i', { html: ICON.mouse }), 'Scroll or use the slider to zoom'),
           h('span', {}, h('i', { html: ICON.keys }), 'Arrow keys move, Enter applies'),

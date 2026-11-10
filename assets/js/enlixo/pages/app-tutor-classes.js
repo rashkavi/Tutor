@@ -1,5 +1,6 @@
-// Tutor → Classes (tutor/classes.php): stat cards, search + filters, three views (cards, table, details)
-// and drag-and-drop ordering. Data: GET /tutor/classes/overview. Order: POST /tutor/classes/order.
+// Tutor → Classes (tutor/classes.php), laid out like ENLIXO V3 Branches: stat cards, search + filters,
+// three views (rows, table, grid) and ordering by dragging the ⋮⋮ handle.
+// Data: GET /tutor/classes/overview. Order: POST /tutor/classes/order.
 import { h, fill, debounce } from '../core/dom.js';
 import { ApiClient } from '../core/ApiClient.js';
 import { icon } from '../core/icons.js';
@@ -14,24 +15,18 @@ const COVERS = new URL('../../../imgs/classes-covers/', import.meta.url).href;
 const DAYS = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const TYPE = { theory: 'Theory', revision: 'Revision', paper: 'Paper class', other: 'Other' };
 const MODE = { physical: 'Physical', online: 'Online', hybrid: 'Physical & online' };
-const JOIN = { open: 'Anyone with the link', approval: 'You approve each student', invite: 'Only students you add' };
-const VIEWS = [['cards', 'Cards', 'view-cards'], ['table', 'Table', 'view-table'], ['details', 'Details', 'view-details']];
-const SORTS = [['mine', 'My order'], ['newest', 'Newest first'], ['name', 'Name A to Z'], ['students', 'Most students']];
+const VIEWS = [['rows', 'Rows', 'view-rows'], ['table', 'Table', 'view-details'], ['grid', 'Grid', 'view-cards']];
 
 const state = {
   classes: [],
-  view: localStorage.getItem('enlixo.classes.view') ?? 'cards',
-  sort: 'mine',
+  view: VIEWS.some(([k]) => k === localStorage.getItem('enlixo.classes.view')) ? localStorage.getItem('enlixo.classes.view') : 'rows',
   q: '',
   filters: { exam: '', year: '', subject: '', medium: '', status: '' },
 };
 
 QuickGuide.attachAll();
 document.getElementById('classes-actions').append(
-  ActionMenu.button('More', [
-    { label: 'Class form settings', icon: 'class-form', href: 'class-form-settings' },
-    { label: 'Export classes (CSV)', icon: 'export', onClick: () => exportCsv() },
-  ], { className: 'custom-outline-btn ex-btn-lg px-4 d-inline-flex align-items-center gap-2' }),
+  h('a', { href: 'class-form-settings', class: 'ex-gear', title: 'Class form settings', 'aria-label': 'Class form settings' }, icon('settings', { size: 26 })),
   h('a', { href: 'create-class', class: 'custom-btn ex-btn-lg px-4 border-0 d-inline-flex align-items-center gap-2' }, icon('add', { size: 20 }), 'Create a Class'),
 );
 
@@ -42,7 +37,7 @@ function skeleton() {
   fill(root, h('div', { class: 'placeholder-glow' },
     h('div', { class: 'row g-3 mb-4' }, [0, 1, 2, 3].map(() => h('div', { class: 'col-12 col-md-6 col-xl-3' }, h('span', { class: 'placeholder col-12', style: { height: '92px' } })))),
     h('span', { class: 'placeholder col-12 mb-4', style: { height: '72px' } }),
-    h('div', { class: 'row g-3' }, [0, 1, 2, 3].map(() => h('div', { class: 'col-12 col-md-6 col-xl-3' }, h('span', { class: 'placeholder col-12', style: { height: '320px' } }))))));
+    [0, 1, 2, 3].map(() => h('span', { class: 'placeholder col-12 mb-2', style: { height: '76px' } }))));
 }
 
 async function load() {
@@ -71,7 +66,7 @@ const cover = (c, cls = '') => {
   return img;
 };
 const filtering = () => state.q.trim() !== '' || Object.values(state.filters).some(Boolean);
-const canDrag = () => state.sort === 'mine' && !filtering();
+const canDrag = () => !filtering();
 
 function visible() {
   const q = state.q.trim().toLowerCase();
@@ -79,9 +74,6 @@ function visible() {
   let list = state.classes.filter((c) => (!q || `${c.name} ${c.subject} ${c.exam} ${c.year} ${c.medium} ${c.location ?? ''}`.toLowerCase().includes(q))
     && (!f.exam || c.exam_id === f.exam) && (!f.year || c.year_id === f.year) && (!f.subject || c.subject_id === f.subject)
     && (!f.medium || c.medium_id === f.medium) && (!f.status || (f.status === 'active') === c.active));
-  if (state.sort === 'newest') list = [...list].sort((a, b) => b.id - a.id);
-  if (state.sort === 'name') list = [...list].sort((a, b) => a.name.localeCompare(b.name));
-  if (state.sort === 'students') list = [...list].sort((a, b) => b.students - a.students);
   return list;
 }
 
@@ -89,7 +81,7 @@ function draw() {
   const list = visible();
   const scroller = document.querySelector('.contentBodyArea');
   const y = scroller?.scrollTop;
-  fill(root, stats(), toolbar(list), list.length ? body(list) : empty());
+  fill(root, stats(), toolbar(), viewBar(list), list.length ? body(list) : empty());
   if (scroller && y !== undefined) scroller.scrollTop = y;
 }
 
@@ -114,39 +106,43 @@ function stats() {
     card('clock', `${Math.round(hours * 10) / 10} h`, 'Teaching each week', `${active.reduce((n, c) => n + c.times.length, 0)} weekly class times`));
 }
 
-// ---------- toolbar: search, filters, sort, view ----------
+// ---------- toolbar: search and filters ----------
 function options(key, idKey) {
   const seen = new Map();
   for (const c of state.classes) seen.set(c[idKey], c[key]);
   return [...seen].sort((a, b) => String(a[1]).localeCompare(String(b[1]), undefined, { numeric: true }));
 }
 
-function toolbar(list) {
+function toolbar() {
   const select = (label, key, opts) => h('select', { class: 'form-select custom-select ex-h40 ex-filter', 'aria-label': label, onchange: (e) => { state.filters[key] = e.target.value; draw(); } },
     h('option', { value: '' }, label), opts.map(([v, l]) => h('option', { value: v, selected: state.filters[key] === v }, l)));
   const search = h('input', { type: 'search', class: 'form-control custom-input ex-h40 ps-5', placeholder: 'Search classes', value: state.q, 'aria-label': 'Search classes',
     oninput: debounce((e) => { state.q = e.target.value; const pos = e.target.selectionStart; draw(); const el = root.querySelector('.ex-classes-search input'); el?.focus(); el?.setSelectionRange(pos, pos); }, 200) });
-  const viewSwitch = h('div', { class: 'ex-segmented', role: 'group', 'aria-label': 'View' }, VIEWS.map(([key, label, ico]) => h('button', {
-    type: 'button', class: state.view === key ? 'active' : '', 'aria-pressed': String(state.view === key), title: label,
-    onclick: () => { state.view = key; localStorage.setItem('enlixo.classes.view', key); draw(); },
-  }, icon(ico, { size: 18 }), h('span', { class: 'd-none d-xxl-inline' }, label))));
-
-  return h('div', { class: 'component-theme p-3 mb-4' },
+  return h('div', { class: 'component-theme p-3 mb-3' },
     h('div', { class: 'd-flex flex-wrap align-items-center gap-2' },
       h('div', { class: 'position-relative ex-classes-search flex-grow-1' }, h('span', { class: 'ex-search-ico' }, icon('search', { size: 16 })), search),
       select('All exams', 'exam', options('exam', 'exam_id')),
       select('All years', 'year', options('year', 'year_id')),
       select('All subjects', 'subject', options('subject', 'subject_id')),
       select('All mediums', 'medium', options('medium', 'medium_id')),
-      select('Any status', 'status', [['active', 'Active'], ['inactive', 'Inactive']]),
-      h('select', { class: 'form-select custom-select ex-h40 ex-filter', 'aria-label': 'Sort', onchange: (e) => { state.sort = e.target.value; draw(); } },
-        SORTS.map(([v, l]) => h('option', { value: v, selected: state.sort === v }, l))),
-      viewSwitch),
-    h('div', { class: 'd-flex flex-wrap align-items-center gap-2 mt-2 text-12 sub-text' },
-      h('span', {}, `Showing ${list.length} of ${state.classes.length} ${state.classes.length === 1 ? 'class' : 'classes'}`),
-      filtering() ? h('button', { type: 'button', class: 'ex-link-add', onclick: () => { state.q = ''; Object.keys(state.filters).forEach((k) => { state.filters[k] = ''; }); draw(); } }, 'Clear search and filters') : null,
-      h('span', { class: 'ms-auto d-inline-flex align-items-center gap-1' }, icon('drag', { size: 14 }),
-        canDrag() ? 'Drag the handle to change the order' : state.sort !== 'mine' ? 'Choose "My order" to drag classes' : 'Clear search and filters to drag classes')));
+      select('Any status', 'status', [['active', 'Active'], ['inactive', 'Inactive']])));
+}
+
+// The line above the list: count and how to reorder on the left, export and the view switcher on the right (as in V3).
+function viewBar(list) {
+  const total = state.classes.length;
+  const clear = () => { state.q = ''; Object.keys(state.filters).forEach((k) => { state.filters[k] = ''; }); draw(); };
+  return h('div', { class: 'd-flex flex-wrap align-items-center gap-3 mb-3' },
+    h('span', { class: 'text-14 main-text' }, filtering() ? `${list.length} of ${total} classes` : `${total} ${total === 1 ? 'class' : 'classes'}`),
+    total > 1 ? (canDrag()
+      ? h('span', { class: 'text-12 sub-text d-inline-flex align-items-center gap-1' }, 'To change the order, hold', h('span', { class: 'ex-grip-sample' }, icon('drag-dots', { size: 14 })), 'and drag a class up or down.')
+      : h('span', { class: 'text-12 sub-text' }, 'Showing a filtered list. ', h('button', { type: 'button', class: 'ex-link-add', onclick: clear }, 'Clear search and filters'), ' to change the order.')) : null,
+    h('div', { class: 'ms-auto d-flex align-items-center gap-2' },
+      h('button', { type: 'button', class: 'ex-view-btn', title: 'Export classes (CSV)', 'aria-label': 'Export classes (CSV)', onclick: exportCsv }, icon('export', { size: 18 })),
+      h('div', { class: 'ex-view-switch', role: 'group', 'aria-label': 'View' }, VIEWS.map(([key, label, ico]) => h('button', {
+        type: 'button', class: `ex-view-btn ${state.view === key ? 'active' : ''}`, 'aria-pressed': String(state.view === key), title: label, 'aria-label': `${label} view`,
+        onclick: () => { state.view = key; localStorage.setItem('enlixo.classes.view', key); draw(); },
+      }, icon(ico, { size: 18 }))))));
 }
 
 function empty() {
@@ -159,150 +155,163 @@ function empty() {
 }
 
 // ---------- shared bits ----------
-function menu(c) {
+const detailsUrl = (c) => `class-details?class-id=${encodeURIComponent(c.id)}`;
+const subtitle = (c) => `${c.year} ${c.exam} · ${c.subject} · ${c.medium}`;
+const facts = (c) => [c.times.length ? c.times.map(timeText).join(', ') : 'No weekly times yet', `${c.students} ${c.students === 1 ? 'student' : 'students'}`, feeText(c)].join(' · ');
+const inactiveTag = (c) => (c.active ? null : h('span', { class: 'ex-tag-off' }, 'Inactive'));
+
+/** V3 "Actions" dropdown (orange) for one class. */
+function actions(c, size = 'md') {
   const id = encodeURIComponent(c.id);
-  return ActionMenu.kebab([
-    { label: 'View class', icon: 'view', href: `class-details?class-id=${id}` },
+  return ActionMenu.button('Actions', [
     { label: 'Edit', icon: 'edit', href: `edit-class?class-id=${id}` },
     { label: 'Students', icon: 'students', href: `class-students?class-id=${id}` },
     { label: 'Time Table', icon: 'timetable', href: `class-time-table?class-id=${id}` },
+    { label: 'Attendance', icon: 'attendance', href: `class-attendance?class-id=${id}` },
+    { label: 'Payments', icon: 'payments', href: `class-payments?class-id=${id}` },
     { label: 'Recordings', icon: 'recordings', href: `class-recordings?class-id=${id}` },
     { label: 'Pre-Recorded Classes', icon: 'pre-recorded', href: `class-pre-recordings?class-id=${id}` },
-    { label: 'Attendance', icon: 'attendance', href: `class-attendance?class-id=${id}` },
     { label: 'Tutes', icon: 'tutes', href: `class-tutes?class-id=${id}` },
-    { label: 'Payments', icon: 'payments', href: `class-payments?class-id=${id}` },
     c.active
       ? { label: 'Deactivate', icon: 'deactivate', danger: true, onClick: () => setActive(c, false) }
       : { label: 'Activate', icon: 'activate', onClick: () => setActive(c, true) },
-  ], `Actions for ${c.name}`);
+  ], { className: `ex-btn-actions ex-btn-${size}` });
 }
+const viewBtn = (c, size = 'md') => h('a', { href: detailsUrl(c), class: `custom-btn ex-btn-${size} ex-btn-view border-0` }, 'View');
 
-const badge = (c) => h('span', { class: `ex-class-badge ex-exam-${(c.exam || '').toLowerCase().replace(/[^a-z]+/g, '')}` }, `${c.year} · ${c.exam}`);
-const statusPill = (c) => h('span', { class: `ex-status ${c.active ? '' : 'ex-off'}` }, c.active ? 'Active' : 'Inactive');
-const handle = (c, list) => (canDrag() ? h('button', {
-  type: 'button', class: 'ex-grip', 'aria-label': `Move ${c.name}. Use the arrow keys.`, 'data-grip': String(c.id),
-  onkeydown: (e) => {
-    const i = list.indexOf(c);
-    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); move(c, i - 1); }
-    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); move(c, i + 1); }
-  },
-}, icon('drag', { size: 18 })) : null);
-
-/** Makes an element a drag source and drop target for reordering. */
-function draggable(el, c) {
-  if (!canDrag()) return el;
-  el.draggable = true;
-  el.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', String(c.id)); e.dataTransfer.effectAllowed = 'move'; requestAnimationFrame(() => el.classList.add('ex-dragging')); });
-  el.addEventListener('dragend', () => el.classList.remove('ex-dragging'));
-  el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('ex-drop'); });
-  el.addEventListener('dragleave', () => el.classList.remove('ex-drop'));
-  el.addEventListener('drop', (e) => {
-    e.preventDefault();
-    el.classList.remove('ex-drop');
-    const from = state.classes.find((x) => String(x.id) === e.dataTransfer.getData('text/plain'));
-    if (from && from !== c) move(from, state.classes.indexOf(c));
-  });
-  return el;
+/** The ⋮⋮ handle. Dragging starts only from here; the arrow keys move the class too. */
+function grip(c) {
+  if (!canDrag() || state.classes.length < 2) return null;
+  return h('button', {
+    type: 'button', class: 'ex-grip', title: 'Drag to change the order', 'aria-label': `Change the order of ${c.name}: drag, or use the up and down arrow keys`, 'data-grip': String(c.id),
+    onkeydown: (e) => {
+      const i = state.classes.indexOf(c);
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); moveTo(c, i - 1); }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); moveTo(c, i + 1); }
+    },
+  }, icon('drag-dots', { size: 20 }));
 }
 
 // ---------- views ----------
 function body(list) {
-  if (state.view === 'table') return tableView(list);
-  if (state.view === 'details') return detailsView(list);
-  return cardsView(list);
+  const view = state.view === 'table' ? tableView(list) : state.view === 'grid' ? gridView(list) : rowsView(list);
+  if (canDrag()) sortable(view);
+  return view;
 }
 
-function cardsView(list) {
-  return h('div', { class: 'row g-3' }, list.map((c) => h('div', { class: 'col-12 col-md-6 col-xl-4 col-xxl-3' },
-    draggable(h('article', { class: `ex-class-card2 h-100 ${c.active ? '' : 'ex-inactive'}`, 'data-id': String(c.id) },
-      h('a', { href: `class-details?class-id=${encodeURIComponent(c.id)}`, class: 'ex-class-cover2', tabindex: '-1' },
-        cover(c), badge(c), c.active ? null : h('span', { class: 'ex-cover-flag' }, 'Inactive')),
-      h('div', { class: 'ex-class-body2' },
-        h('div', { class: 'd-flex align-items-start gap-2' },
-          h('div', { class: 'flex-grow-1 min-w-0' },
-            h('span', { class: 'ex-class-subject' }, c.subject),
-            h('a', { href: `class-details?class-id=${encodeURIComponent(c.id)}`, class: 'ex-class-name' }, c.name)),
-          handle(c, list)),
-        h('div', { class: 'ex-class-meta' },
-          h('span', {}, icon('language', { size: 15 }), c.medium),
-          h('span', {}, icon('students', { size: 15 }), `${c.students}${c.capacity ? ` / ${c.capacity}` : ''} students`),
-          h('span', {}, icon('money', { size: 15 }), feeText(c))),
-        c.times.length ? h('div', { class: 'ex-time-chips' }, c.times.slice(0, 3).map((t) => h('span', { class: `ex-time-chip ${t.mode}` }, timeText(t))), c.times.length > 3 ? h('span', { class: 'ex-time-chip' }, `+${c.times.length - 3}`) : null) : null,
-        h('div', { class: 'ex-class-foot2' },
-          h('a', { href: `class-details?class-id=${encodeURIComponent(c.id)}`, class: 'custom-btn ex-btn-md flex-grow-1 border-0' }, icon('view', { size: 18 }), 'View Class'),
-          h('a', { href: `edit-class?class-id=${encodeURIComponent(c.id)}`, class: 'ex-icon-btn', 'aria-label': `Edit ${c.name}`, title: 'Edit' }, icon('edit', { size: 18 })),
-          menu(c)))), c))));
+/** Default view, like V3 Branches: one white row per class. */
+function rowsView(list) {
+  return h('div', { class: 'ex-sort-list d-flex flex-column gap-2' }, list.map((c) => h('article', { class: `ex-list-row ${c.active ? '' : 'ex-inactive'}`, 'data-id': String(c.id) },
+    grip(c),
+    h('a', { href: detailsUrl(c), class: 'ex-list-thumb', tabindex: '-1' }, cover(c)),
+    h('div', { class: 'ex-list-text' },
+      h('a', { href: detailsUrl(c), class: 'ex-list-title' }, c.name, inactiveTag(c)),
+      h('div', { class: 'ex-list-sub' }, subtitle(c)),
+      h('div', { class: 'ex-list-sub' }, facts(c))),
+    h('div', { class: 'ex-list-actions' }, actions(c), viewBtn(c)))));
 }
 
+/** Compact table for many classes. */
 function tableView(list) {
-  const drag = canDrag();
+  const drag = canDrag() && state.classes.length > 1;
   return h('div', { class: 'component-theme p-3' }, h('div', { class: 'table-responsive' },
     h('table', { class: 'table ex-v3-table align-middle m-0' },
       h('thead', {}, h('tr', {},
-        drag ? h('th', { scope: 'col', class: 'ex-col-order' }, 'Order') : null,
-        h('th', { scope: 'col' }, 'Class'), h('th', { scope: 'col' }, 'Exam'), h('th', { scope: 'col' }, 'Medium'),
-        h('th', { scope: 'col' }, 'Students'), h('th', { scope: 'col' }, 'Monthly fee'), h('th', { scope: 'col' }, 'Weekly times'),
-        h('th', { scope: 'col' }, 'Status'), h('th', { scope: 'col', class: 'text-center' }, 'Actions'))),
-      h('tbody', {}, list.map((c) => draggable(h('tr', { 'data-id': String(c.id), class: c.active ? '' : 'ex-row-off' },
-        drag ? h('td', { class: 'ex-col-order' }, handle(c, list)) : null,
-        h('td', {}, h('a', { href: `class-details?class-id=${encodeURIComponent(c.id)}`, class: 'd-flex align-items-center gap-3 text-decoration-none' },
+        drag ? h('th', { scope: 'col', class: 'ex-col-order' }, h('span', { class: 'visually-hidden' }, 'Order')) : null,
+        h('th', { scope: 'col' }, 'Class'), h('th', { scope: 'col' }, 'Weekly times'), h('th', { scope: 'col' }, 'Students'),
+        h('th', { scope: 'col' }, 'Monthly fee'), h('th', { scope: 'col' }, 'Status'), h('th', { scope: 'col', class: 'text-end' }, 'Actions'))),
+      h('tbody', { class: 'ex-sort-list' }, list.map((c) => h('tr', { 'data-id': String(c.id), class: c.active ? '' : 'ex-row-off' },
+        drag ? h('td', { class: 'ex-col-order' }, grip(c)) : null,
+        h('td', {}, h('a', { href: detailsUrl(c), class: 'd-flex align-items-center gap-3 text-decoration-none' },
           cover(c, 'ex-thumb-sm'),
-          h('span', { class: 'd-flex flex-column' }, h('span', { class: 'text-14 main-text fw-medium ex-clamp-1' }, c.name), h('span', { class: 'text-12 sub-text' }, `${c.subject} · ${TYPE[c.class_type] ?? 'Class'}`)))),
-        h('td', { class: 'text-14' }, `${c.year} ${c.exam}`),
-        h('td', { class: 'text-14' }, c.medium),
+          h('span', { class: 'd-flex flex-column min-w-0' }, h('span', { class: 'text-14 main-text fw-medium ex-clamp-1' }, c.name), h('span', { class: 'text-12 sub-text' }, subtitle(c))))),
+        h('td', { class: 'text-12' }, c.times.length ? c.times.map((t) => h('div', { class: 'text-nowrap' }, timeText(t))) : h('span', { class: 'sub-text' }, 'None yet')),
         h('td', { class: 'text-14' }, `${c.students}${c.capacity ? ` / ${c.capacity}` : ''}`),
         h('td', { class: 'text-14 text-nowrap' }, feeText(c)),
-        h('td', { class: 'text-12' }, c.times.length ? c.times.map((t) => h('div', { class: 'text-nowrap' }, timeText(t))) : h('span', { class: 'sub-text' }, 'None yet')),
-        h('td', {}, statusPill(c)),
-        h('td', { class: 'text-center' }, menu(c))), c))))));
+        h('td', {}, h('span', { class: `ex-status ${c.active ? '' : 'ex-off'}` }, c.active ? 'Active' : 'Inactive')),
+        h('td', {}, h('div', { class: 'd-flex justify-content-end gap-2' }, actions(c, 'sm'), viewBtn(c, 'sm')))))))));
 }
 
-function detailsView(list) {
-  return h('div', { class: 'd-flex flex-column gap-3' }, list.map((c) => draggable(h('article', { class: `component-theme ex-class-row ${c.active ? '' : 'ex-inactive'}`, 'data-id': String(c.id) },
-    h('a', { href: `class-details?class-id=${encodeURIComponent(c.id)}`, class: 'ex-class-row-cover', tabindex: '-1' }, cover(c), badge(c)),
-    h('div', { class: 'ex-class-row-main' },
-      h('div', { class: 'd-flex align-items-start gap-2' },
-        h('div', { class: 'flex-grow-1 min-w-0' },
-          h('div', { class: 'd-flex flex-wrap align-items-center gap-2 mb-1' }, h('span', { class: 'ex-class-subject m-0' }, c.subject), h('span', { class: 'ex-tag-v3' }, TYPE[c.class_type] ?? 'Class'), statusPill(c)),
-          h('a', { href: `class-details?class-id=${encodeURIComponent(c.id)}`, class: 'ex-class-name' }, c.name),
-          c.description ? h('p', { class: 'text-12 sub-text m-0 mt-1 ex-clamp-2' }, c.description) : null),
-        handle(c, list), menu(c)),
-      h('div', { class: 'row g-3 mt-1' },
-        info('timetable', 'Weekly times', c.times.length ? c.times.map((t) => h('div', {}, timeText(t), t.mode === 'online' ? h('span', { class: 'ex-mini-tag' }, 'Zoom') : null)) : 'None yet'),
-        info(c.delivery_mode === 'online' ? 'online' : 'location', MODE[c.delivery_mode] ?? 'Where', c.delivery_mode === 'online' ? 'On Zoom' : (c.location || 'Hall not set')),
-        info('money', 'Monthly fee', c.is_free ? 'Free' : c.fee == null ? 'Not set' : [money(c.fee), h('div', { class: 'text-12 sub-text' }, `due on day ${c.due_day ?? 10}`)]),
-        info('students', 'Students', [`${c.students}${c.capacity ? ` of ${c.capacity}` : ''}`,
-          c.capacity ? h('div', { class: 'ex-mini-meter mt-1' }, h('span', { style: { width: `${Math.min(100, Math.round((c.students / c.capacity) * 100))}%` } })) : h('div', { class: 'text-12 sub-text' }, JOIN[c.enrollment_mode] ?? '')])),
-      h('div', { class: 'd-flex flex-wrap gap-2 mt-3' },
-        h('a', { href: `class-details?class-id=${encodeURIComponent(c.id)}`, class: 'custom-btn ex-btn-md px-4 border-0' }, icon('view', { size: 18 }), 'View Class'),
-        h('a', { href: `edit-class?class-id=${encodeURIComponent(c.id)}`, class: 'custom-outline-btn ex-btn-md px-4' }, icon('edit', { size: 18 }), 'Edit'),
-        h('a', { href: `class-students?class-id=${encodeURIComponent(c.id)}`, class: 'custom-outline-btn ex-btn-md px-4' }, icon('students', { size: 18 }), 'Students'),
-        h('a', { href: `class-time-table?class-id=${encodeURIComponent(c.id)}`, class: 'custom-outline-btn ex-btn-md px-4' }, icon('timetable', { size: 18 }), 'Time Table')))), c)));
+/** Picture-first grid. */
+function gridView(list) {
+  return h('div', { class: 'ex-sort-list row g-3' }, list.map((c) => h('div', { class: 'col-12 col-md-6 col-xl-4 col-xxl-3', 'data-id': String(c.id) },
+    h('article', { class: `ex-grid-card h-100 ${c.active ? '' : 'ex-inactive'}` },
+      h('div', { class: 'ex-grid-cover' }, h('a', { href: detailsUrl(c), tabindex: '-1' }, cover(c)), grip(c)),
+      h('div', { class: 'ex-grid-body' },
+        h('a', { href: detailsUrl(c), class: 'ex-list-title' }, c.name, inactiveTag(c)),
+        h('div', { class: 'ex-list-sub' }, subtitle(c)),
+        h('div', { class: 'ex-list-sub' }, facts(c)),
+        h('div', { class: 'ex-grid-actions' }, actions(c), viewBtn(c)))))));
 }
 
-function info(ico, label, value) {
-  return h('div', { class: 'col-12 col-sm-6 col-xl-3' },
-    h('div', { class: 'd-flex gap-2' },
-      h('span', { class: 'ex-info-ico' }, icon(ico, { size: 18 })),
-      h('div', { class: 'min-w-0' }, h('div', { class: 'text-12 sub-text' }, label), h('div', { class: 'text-14 main-text' }, value))));
+// ---------- ordering ----------
+/**
+ * Drag by the handle: the item follows the pointer and the others move aside right away,
+ * so what you see when you let go is the new order. Saved on drop.
+ */
+function sortable(view) {
+  const box = view.classList.contains('ex-sort-list') ? view : view.querySelector('.ex-sort-list');
+  let dragged = null;
+  box.addEventListener('pointerdown', (e) => {
+    const item = e.target.closest('.ex-grip') && e.target.closest('[data-id]');
+    if (item) item.draggable = true;
+  });
+  box.addEventListener('pointerup', () => { if (!dragged) box.querySelectorAll('[draggable="true"]').forEach((el) => { el.draggable = false; }); });
+  box.addEventListener('dragstart', (e) => {
+    dragged = e.target.closest?.('[data-id]');
+    if (!dragged) return;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', dragged.dataset.id);
+    requestAnimationFrame(() => { dragged?.classList.add('ex-dragging'); box.classList.add('ex-sorting'); });
+  });
+  box.addEventListener('dragover', (e) => {
+    if (!dragged) return;
+    e.preventDefault();
+    const over = e.target.closest('[data-id]');
+    if (!over || over === dragged || over.parentElement !== box) return;
+    const r = over.getBoundingClientRect();
+    const grid = box.classList.contains('row');
+    const after = grid ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2;
+    over[after ? 'after' : 'before'](dragged);
+  });
+  box.addEventListener('drop', (e) => e.preventDefault());
+  box.addEventListener('dragend', () => {
+    if (!dragged) return;
+    dragged.classList.remove('ex-dragging');
+    dragged.draggable = false;
+    box.classList.remove('ex-sorting');
+    const id = dragged.dataset.id;
+    dragged = null;
+    const ids = [...box.children].map((el) => el.dataset.id);
+    const before = state.classes.map((c) => String(c.id));
+    if (ids.join() === before.join()) return;
+    state.classes.sort((a, b) => ids.indexOf(String(a.id)) - ids.indexOf(String(b.id)));
+    saveOrder(id);
+  });
 }
 
-// ---------- actions ----------
-let saveTimer = null;
-function move(c, to) {
+function moveTo(c, to) {
   const list = state.classes;
   const from = list.indexOf(c);
   if (to < 0 || to >= list.length || from === to) return;
   list.splice(to, 0, list.splice(from, 1)[0]);
+  saveOrder(String(c.id));
+}
+
+let saveTimer = null;
+function saveOrder(movedId) {
   draw();
-  requestAnimationFrame(() => root.querySelector(`[data-grip="${c.id}"]`)?.focus({ preventScroll: true }));
+  const row = root.querySelector(`[data-id="${movedId}"]`);
+  row?.classList.add('ex-just-moved');
+  setTimeout(() => row?.classList.remove('ex-just-moved'), 900);
+  root.querySelector(`[data-grip="${movedId}"]`)?.focus({ preventScroll: true });
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
     try {
       await api.post('/tutor/classes/order', { ids: state.classes.map((x) => x.id) });
       Toast.success('Order saved.');
     } catch (e) { Toast.error(e.message); }
-  }, 500);
+  }, 400);
 }
 
 async function setActive(c, active) {
