@@ -48,7 +48,8 @@ on every page (old pages too); `ex-btn-lg` and `ex-btn-md` are the same size and
 | 48px | `custom-btn` / `custom-outline-btn` (+ `ex-btn-md`) | Every button: page header, toolbars, forms, modals |
 | 32px | `custom-btn ex-btn-sm` / `custom-outline-btn ex-btn-sm` | Only inside a table row or a small panel tool (View, Edit, Expand all) |
 
-* One filled (`custom-btn`) button per area: the main action. Everything else is outline (`custom-outline-btn`).
+* One filled (`custom-btn`) button per area: the main action. Everything else is outline (`custom-outline-btn`):
+  white, a 1px blue line, blue text, square corners, normal weight. The older `ex-btn` looks the same now.
 * Danger: `ex-btn-danger-fill` on the button (red) after a `BsModal.confirm`.
 * Small text links (Add new, Crop again): `.ex-link-add`.
 * In JS use `BsModal.button(text, { primary, icon, danger, onclick })`, which applies the rules above.
@@ -111,6 +112,25 @@ Changing the order:
 * With a search or filter on, the handles are hidden and the line says to clear them. No separate sort control.
 * Save on drop and show "Order saved."
 
+## Filters
+
+Like V3: next to the search box there is an outlined **filter toggle** (the `sliders` icon and a small arrow).
+Clicking it slides a row of labelled dropdowns open **below the search row**; the arrow then points up.
+Each dropdown has its label above it and an "- All … -" first option. A round grey refresh button at the end
+clears the filters. A red number on the toggle shows how many filters are set, and the row starts open when
+a filter is already set (e.g. from the link). `DataView` does all of this from its `filters` option; pages with
+their own toolbar (Classes) use the same classes: `.ex-filter-toggle`, `.ex-filter-row`, `.ex-filter-field`.
+No filter popovers.
+
+## Calendar
+
+The time table follows the V3 Lecture Schedule: outlined Previous / Next buttons around the month name,
+a short legend of the status badges, a 7-column month grid (days of the other months greyed, today ringed
+in blue with a "Today" tag), each lecture a small white card with a coloured left line, its time and type,
+the class name and an outlined status badge (`.ex-cal-badge.ex-st-*`: live, upcoming, done, cancelled,
+postponed). At most 3 per day, then "+N more". Pointing at a lecture shows a hover card (date, time, tutor,
+class chips, status); clicking opens the details. Clicking a day opens the day with "Schedule a Lecture".
+
 ## Modals
 
 `BsModal.open({ title, subtitle, body, size, footerStart, footerEnd })`: title + grey subtitle, body,
@@ -125,7 +145,8 @@ Switches in tables are Bootstrap `form-switch`. Locked items show the lock icon 
 ## Loading, empty and error states
 
 * Loading: Bootstrap `placeholder-glow` blocks in the shape of the page.
-* Empty: one line of `text-14 sub-text`, centred, saying what to do next.
+* Empty: `EmptyState.empty({ icon, title, text, action })`, like V3: a round soft-blue icon, a bold title and
+  one grey line saying what to do next, centred. Use a Solar icon name (`inbox`, `search`, `classes` ...).
 * Error: message + `custom-btn ex-btn-md` "Try again".
 * Feedback after an action: `Toast.success()` / `Toast.error()` (top right).
 

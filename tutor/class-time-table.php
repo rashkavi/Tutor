@@ -38,6 +38,7 @@ if (!SessionUser::hasValidSession()) {
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/skeleton.css?v=<?= Project::getVersion() ?>">
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/calender.css?v=<?= Project::getVersion() ?>">
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
+        <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
                 <link href="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.css" rel="stylesheet">
 
                 <script src="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.js"></script>
@@ -97,44 +98,7 @@ if (!SessionUser::hasValidSession()) {
                                         <div class="col-12 p-4 component-theme">
                                             <div class="row p-0 m-0 gy-4 gx-3">
                                                 <div class="container">
-                                                    <div class="col-12 d-flex flex-column flex-lg-row justify-content-center mb-4 mt-2">
-                                                        <div class="col-2 col-lg-1 d-none d-lg-block">
-                                                            <button class="w-100 p-2 bl-solid br-8 d-flex align-items-center justify-content-center component-theme previous-button" onclick="prevMonthSchedule()">
-                                                                <iconify-icon icon="tabler:arrow-left" width="20" height="20" class="dark-color px-1"></iconify-icon>
-                                                                <span class="text-14 main-text fw-semibold">Previous</span>
-                                                            </button>
-                                                        </div>
-                                                        <div class="col-12 col-lg-10 d-flex justify-content-center align-items-center gap-2">
-                                                            <h4 class="text-center" data-i18n="lecture-schedule">Time Table</h4>
-                                                            <h4 class="text-center">-</h4>
-                                                            <h4 class="text-center" id="month"></h4>
-                                                            <h4 class="text-center" id="year"></h4>
-                                                        </div>
-                                                        <div class="col-12 col-lg-1 mt-3 d-block d-lg-none">
-                                                            <div class="row">
-                                                                <div class="col-6 d-flex justify-content-start">
-                                                                    <button class="py-2 px-3 bl-solid br-8 d-flex align-items-center justify-content-center component-theme previous-button" onclick="prevMonthSchedule()">
-                                                                        <iconify-icon icon="tabler:arrow-left" width="20" height="20" class="dark-color px-1"></iconify-icon>
-                                                                        <span class="text-14 main-text fw-semibold">Previous</span>
-                                                                    </button>
-                                                                </div>
-                                                                <div class="col-6 d-flex justify-content-end">
-                                                                    <button class="py-2 px-3 bl-solid br-8 d-flex align-items-center justify-content-center component-theme next-button" onclick="nextMonthSchedule()">
-                                                                        <span class="text-14 main-text fw-semibold">Next</span>
-                                                                        <iconify-icon icon="tabler:arrow-right" width="20" height="20" class="dark-color px-1"></iconify-icon>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-6 col-lg-1 text-end d-none d-lg-block">
-                                                            <button class="w-100 p-2 bl-solid br-8 d-flex align-items-center justify-content-center component-theme next-button" onclick="nextMonthSchedule()">
-                                                                <span class="text-14 main-text fw-semibold">Next</span>
-                                                                <iconify-icon icon="tabler:arrow-right" width="20" height="20" class="dark-color px-1"></iconify-icon>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div id="calendar" class="calendar"></div>
+                                                    <div id="calendar" class="ex-cal"></div>
                                                 </div>
 
                                                 <!-- Event Modal -->
