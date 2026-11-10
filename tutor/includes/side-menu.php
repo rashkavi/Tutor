@@ -25,7 +25,7 @@ class load_side_menu
                     ['Requested Students', null, 'requested-students', '', ['Requested Students']],
                     ['Add New Student', null, 'add-student', '', ['Add New Student']],
                     ['Add Registered Student', null, 'add-registered-student-to-class', '', []],
-                    ['Bulk Upload', null, 'upload-student-bulk', '', []],
+                    ['Upload Students Bulk', null, 'upload-student-bulk', '', ['Upload Students Bulk']],
                 ]],
                 ['Time Table', null, 'time-table', 'time-table', ['Time Table']],
                 ['Attendance', null, 'attendance', 'attendance', ['Attendance']],

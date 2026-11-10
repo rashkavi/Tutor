@@ -20,6 +20,8 @@ QuickGuide.attachAll();
 const saveBtn = h('button', { type: 'button', class: 'custom-btn ex-btn-lg px-5 border-0', onclick: () => save() }, 'Save Student');
 document.getElementById('student-actions').append(
   h('a', { href: 'student-form-settings', class: 'ex-gear', 'aria-label': 'Customise this form', title: 'Customise this form' }, icon('settings', { size: 26 })),
+  // V3: many students at once from an Excel / CSV file (same form, same checks)
+  h('a', { href: `upload-student-bulk${location.search}`, class: 'custom-btn-outline ex-btn-lg px-4 text-decoration-none d-inline-flex align-items-center gap-2', title: 'Add many students at once from an Excel or CSV file' }, icon('upload', { size: 20 }), 'Upload Bulk'),
   saveBtn,
 );
 

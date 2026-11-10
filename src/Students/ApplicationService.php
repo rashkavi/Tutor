@@ -42,7 +42,7 @@ final class ApplicationService
     }
 
     /** Keys stored in student_custom_field_values: NIC, school and the tutor's own fields. */
-    private static function extraKeys(array $fields): array
+    public static function extraKeys(array $fields): array
     {
         return array_values(array_map(static fn ($f) => $f['key'], array_filter($fields, static fn ($f) => !empty($f['custom']) || in_array($f['key'], StudentFormSchema::EXTRA, true))));
     }
