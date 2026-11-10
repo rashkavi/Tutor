@@ -40,6 +40,7 @@ export class OptionDialog {
       } });
       const m = BsModal.open({
         title: option ? `Rename ${meta.one}` : `Add your own ${meta.one}`,
+        icon: option ? 'edit' : 'plus',
         subtitle: 'Only you see it. The default list stays the same for every tutor.',
         body: h('div', { class: 'd-flex flex-column' },
           h('label', { class: 'text-14 main-text required', for: id }, `${meta.one[0].toUpperCase()}${meta.one.slice(1)} name`),

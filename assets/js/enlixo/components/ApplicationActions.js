@@ -85,7 +85,7 @@ export class ApplicationActions {
           field('m-note', to === 'rejected' ? 'Reason' : 'What are you waiting for?', note, { required: true, help: 'Saved in the history and shown on the application.' }),
           h('div', { class: 'col-12' }, err));
       }
-      const go = BsModal.button(MOVE_LABEL[to], { primary: true, danger: to === 'rejected', onclick: async () => {
+      const go = BsModal.button(MOVE_LABEL[to], { primary: true, danger: to === 'rejected', success: to === 'approved', onclick: async () => {
         const text = note.value.trim();
         if (to !== 'approved' && !text) { err.textContent = 'Please fill this in.'; note.classList.add('is-invalid'); note.focus(); return; }
         if (classSel && !classSel.value) { err.textContent = 'Choose the class.'; classSel.classList.add('is-invalid'); classSel.focus(); return; }
@@ -101,6 +101,8 @@ export class ApplicationActions {
         }
       } });
       const m = BsModal.open({
+        icon: to === 'approved' ? 'user-check' : to === 'rejected' ? 'close' : 'hourglass',
+        tone: to === 'approved' ? 'success' : to === 'rejected' ? 'danger' : 'warning',
         title: to === 'approved' ? `Approve ${name}?` : to === 'rejected' ? `Reject ${name}?` : `Put ${name} on hold?`,
         subtitle: app.ref ?? app.ref_no ?? '',
         body,

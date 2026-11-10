@@ -263,6 +263,7 @@ function editBuiltIn(f) {
   } });
   const m = BsModal.open({
     title: `Edit ${f.default_label}`,
+    icon: 'edit',
     subtitle: `${f.typeName}${f.core ? ' · always on the form' : ''}`,
     body: h('div', { class: 'row gy-3' }, name.col, info.col, enter.col, ph?.col),
     footerStart: [BsModal.button('Use default', { onclick: () => { name.el.value = f.default_label; info.el.value = ''; enter.el.value = ''; if (ph) ph.el.value = ''; } })],
@@ -315,6 +316,7 @@ function editCustom(f, section = 'custom') {
 
   const m = BsModal.open({
     title: f ? `Edit ${f.label}` : 'Add your own field',
+    icon: f ? 'edit' : 'plus',
     subtitle: `It shows on the ${formName} and is saved with ${savedWith}.`,
     size: 'lg',
     body: h('div', { class: 'row gy-3' },

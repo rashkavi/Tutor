@@ -14,22 +14,16 @@ const INFO_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true
 export function fieldInfo(text, label, enter = '') {
   if (!text && !enter) return null;
   const btn = h('button', { type: 'button', class: 'ex-info-btn ex-info-sm', 'aria-label': `About ${label}: ${text} ${enter}`.trim(), html: INFO_SVG });
-  const card = h('div', { class: 'ex-help' },
-    text ? h('div', { class: 'ex-help-row' }, h('span', { class: 'ex-help-k' }, 'What it does'), h('span', {}, text)) : null,
-    enter ? h('div', { class: 'ex-help-row' }, h('span', { class: 'ex-help-k' }, 'What to enter'), h('span', {}, enter)) : null);
-  if (window.bootstrap?.Popover) {
-    queueMicrotask(() => new window.bootstrap.Popover(btn, { trigger: 'hover focus', placement: 'top', html: true, title: label, content: card, customClass: 'ex-help-pop', container: 'body' }));
-  } else {
-    btn.title = [text, enter].filter(Boolean).join(' ');
-  }
-  return btn;
+  // The same card as the V3 field info icon: field name, what it is, then what to enter.
+  return new Popover({ trigger: btn, align: 'start', className: 'ex-qg-pop', hover: true,
+    content: QuickGuide.card({ title: label, subtitle: 'Field guide', intro: text, points: enter ? [enter] : [] }) }).el;
 }
 
 /** (i) next to a section title: opens a small quick-guide card. */
 function sectionInfo(title, text) {
   if (!text) return null;
   const btn = h('button', { type: 'button', class: 'ex-info-btn', 'aria-label': `About ${title}`, html: INFO_SVG });
-  return new Popover({ trigger: btn, align: 'start', className: 'ex-qg-pop', content: QuickGuide.card({ title, intro: text }) }).el;
+  return new Popover({ trigger: btn, align: 'start', className: 'ex-qg-pop', content: QuickGuide.card({ title, intro: text }), hover: true }).el;
 }
 
 /**
