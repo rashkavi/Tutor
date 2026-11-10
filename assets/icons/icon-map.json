@@ -100,5 +100,9 @@
   "users": "users-group-rounded-linear",
   "download": "download-minimalistic-linear",
   "plus": "add-circle-linear",
-  "question": "question-circle-linear"
+  "question": "question-circle-linear",
+  "laptop": "laptop-linear",
+  "smartphone": "smartphone-linear",
+  "tablet": "tablet-linear",
+  "dot": "record-circle-linear"
 }

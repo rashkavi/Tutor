@@ -4304,3 +4304,12 @@ option {
         width: 15% !important;
     }
 }
+/* Side menu (V3): shown by default on desktop, the menu button slides it out */
+@media only screen and (min-width: 1200px) {
+  #sideMenu { width: 250px; min-width: 250px; transition: margin-left .4s cubic-bezier(.25, 1, .5, 1) !important; }
+  #sideMenu.collapsed { margin-left: -250px !important; }
+  .app-wrapper, .app-wrapper-full { transition: width .4s cubic-bezier(.25, 1, .5, 1) !important; }
+}
+/* Header: thin line between the theme and language switches; Solar icons sit level with the text */
+.ex-header-sep { display: inline-block; width: 1px; height: 20px; background: var(--sub-text, #8a94a6); opacity: .4; }
+header .ex-ico { display: inline-flex; align-items: center; }
