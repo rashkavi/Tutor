@@ -2052,3 +2052,6 @@ button:has(> iconify-icon[icon="mage:filter"])[aria-expanded="true"]::after {
 .td-bar > i.ok { background: var(--dark-green); }
 .td-bar > i.warn { background: var(--dark-orange); }
 [data-custom-theme="dark"] .td-bar { background: rgba(169, 180, 198, .18); }
+.td-chart-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.td-exam-link { font-size: 13px; }
+.td-reason { height: auto; min-height: 24px; padding: 2px 8px; font-size: 12px; white-space: nowrap; }
