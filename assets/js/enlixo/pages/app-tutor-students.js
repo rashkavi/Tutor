@@ -37,7 +37,7 @@ document.getElementById('students-actions').append(ActionMenu.button('Action', [
   { label: 'Add New Student', icon: 'user-add', href: 'add-student' },
   { label: 'Requested Students', icon: 'application', href: 'requested-students' },
   { label: 'Add Registered Student', icon: 'user', href: 'add-registered-student-to-class' },
-  { label: 'Bulk Upload (CSV)', icon: 'upload', href: 'upload-student-bulk' },
+  { label: 'Upload Students Bulk', icon: 'upload', href: 'upload-student-bulk' },
   gate && { label: 'Send WhatsApp Message', icon: 'communication', locked: gate.badge('comms.whatsapp'), onClick: gate.guard('comms.whatsapp', () => { location.href = 'message-center'; }) },
 ]));
 

@@ -1933,3 +1933,98 @@ button:has(> iconify-icon[icon="mage:filter"])[aria-expanded="true"]::after {
 [data-custom-theme="dark"] .custom-div .dark-theme { color: #8cb8ff; }
 /* Settings tables fit their card: the field name and its help wrap instead of pushing the last column out of view */
 .table-responsive > .table.ex-fit { min-width: 0; }
+
+/* ===== UPLOAD STUDENTS BULK (tutor/upload-student-bulk + app-tutor-student-bulk.js) =====
+   The V3 bulk upload (assets/css/bulk-upload.css + "USER FORM FILE UPLOAD" of V3 style.css), without borders:
+   blocks are told apart by a soft background; the drop zone turns light blue on hover / drag. Theme variables only. */
+.min-w-0 { min-width: 0; }
+.bu-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; list-style: none; margin: 0; padding: 0; }
+.bu-step { position: relative; display: flex; align-items: center; gap: 12px; min-width: 0; }
+.bu-step:not(:last-child)::after { content: ""; flex: 1 1 auto; height: 2px; min-width: 16px; background: var(--table-header-color); margin-right: 4px; transition: background-color .2s ease; }
+.bu-step.is-done:not(:last-child)::after { background: var(--dark-theme); }
+.bu-step-num { flex: 0 0 34px; width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--sub-text); background: var(--table-header-color); transition: all .2s ease; }
+.bu-step.is-active .bu-step-num { color: var(--dark-theme); background: var(--light-theme); box-shadow: 0 0 0 2px var(--dark-theme) inset; }
+.bu-step.is-done .bu-step-num { background: var(--dark-theme); color: #fff; font-size: 0; }
+.bu-step.is-done .bu-step-num::before { content: "\2713"; font-size: 15px; }
+.bu-step-text { display: flex; flex-direction: column; min-width: 0; flex: 0 1 auto; }
+.bu-step-title { font-size: 14px; font-weight: 600; color: var(--sub-text); white-space: nowrap; }
+.bu-step.is-active .bu-step-title, .bu-step.is-done .bu-step-title { color: var(--dark-color); }
+.bu-step-sub { font-size: 12px; color: var(--sub-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.bu-card-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
+.bu-card-icon { flex: 0 0 40px; width: 40px; height: 40px; border-radius: 10px; background: var(--light-theme); color: var(--dark-theme); display: flex; align-items: center; justify-content: center; }
+
+.uf-upload { position: relative; display: flex; flex-direction: column; gap: 8px; }
+.uf-upload-drop { flex: 1 1 auto; min-height: 168px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 24px 16px; text-align: center; cursor: pointer; background: var(--table-header-color); transition: background-color .15s ease, box-shadow .15s ease; }
+.uf-upload-drop:hover, .uf-upload-drop:focus-visible, .uf-upload.drag-over-effect .uf-upload-drop { background: var(--light-theme); box-shadow: 0 0 0 2px var(--dark-theme) inset; outline: none; }
+.uf-upload-icon { width: 48px; height: 48px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--custom-white); color: var(--dark-theme); margin-bottom: 4px; transition: transform .15s ease; }
+.uf-upload-drop:hover .uf-upload-icon, .uf-upload.drag-over-effect .uf-upload-icon { transform: translateY(-2px); }
+.uf-upload-text { font-size: 14px; color: var(--dark-color); }
+.uf-upload-browse { color: var(--dark-theme); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.uf-upload-hint { font-size: 12px; color: var(--sub-text); }
+.uf-file-card { display: flex; align-items: center; gap: 14px; min-height: 76px; padding: 14px 16px; background: var(--table-header-color); box-shadow: 3px 0 0 var(--dark-theme) inset; }
+.uf-upload.drag-over-effect .uf-file-card { background: var(--light-theme); }
+.uf-file-type { flex: 0 0 40px; width: 40px; height: 40px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: var(--light-green); color: var(--dark-green); }
+.uf-file-body { flex: 1 1 auto; min-width: 0; }
+.uf-file-name { font-size: 14px; font-weight: 600; color: var(--dark-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.uf-file-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 12px; color: var(--sub-text); margin-top: 2px; }
+.uf-dot { width: 3px; height: 3px; border-radius: 50%; background: currentColor; display: inline-block; }
+.uf-file-state { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; padding: 4px 9px; white-space: nowrap; }
+.uf-file-state.is-ready { background: var(--light-green); color: var(--dark-green); }
+.uf-file-state.is-saved { background: var(--light-theme); color: var(--dark-theme); }
+.uf-file-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 4px; }
+.uf-file-btn { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: transparent; color: var(--sub-text); cursor: pointer; transition: all .15s ease; }
+.uf-file-btn:hover, .uf-file-btn:focus-visible { color: var(--dark-theme); background: var(--light-theme); outline: none; }
+.uf-file-btn.is-danger:hover, .uf-file-btn.is-danger:focus-visible { color: var(--dark-red); background: var(--light-red); }
+
+.bu-tips { padding: 20px; background: var(--table-header-color); }
+.bu-tip-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.bu-tip-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--main-text-color); line-height: 1.45; }
+.bu-tip-list li > .ex-ico, .bu-tip-list li > svg { color: var(--dark-theme); flex: 0 0 auto; margin-top: 1px; }
+.bu-tip-list a { color: var(--dark-theme); font-weight: 600; text-decoration: none; }
+
+.bu-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; padding: 2px 10px; border-radius: 999px; background: var(--light-theme); color: var(--dark-theme); white-space: nowrap; }
+.bu-chip.is-warn { background: var(--light-orange); color: var(--dark-orange); }
+.bu-columns { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 16px; background: var(--table-header-color); }
+.bu-columns-label { font-size: 13px; font-weight: 600; color: var(--main-text-color); margin-right: 4px; }
+.bu-columns-note { flex-basis: 100%; font-size: 12px; color: var(--sub-text); }
+.bu-row-error { color: var(--dark-red); }
+.bu-import-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding-top: 16px; box-shadow: 0 -1px 0 var(--table-header-color); }
+.bu-import-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-left: auto; }
+.bu-import-actions > * { min-width: 160px; }
+
+.bu-ref { height: 100%; display: flex; flex-direction: column; background: var(--custom-white); box-shadow: 0 1px 3px rgba(15, 23, 42, .06), 0 4px 14px rgba(15, 23, 42, .05); }
+.bu-ref-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--table-header-color); font-size: 14px; font-weight: 600; color: var(--dark-color); }
+.bu-ref-head > .ex-ico, .bu-ref-head > svg { color: var(--dark-theme); }
+.bu-ref-body { padding: 4px 16px; max-height: 300px; overflow-y: auto; }
+.bu-ref-item { padding: 9px 0; }
+.bu-ref-item + .bu-ref-item { box-shadow: 0 -1px 0 var(--table-header-color); }
+
+.sbu-note { padding: 18px; background: var(--table-header-color); }
+.sbu-note-title { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--dark-color); margin-bottom: 10px; }
+.sbu-note-icon { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+.sbu-note.is-info .sbu-note-icon { background: var(--light-theme); color: var(--dark-theme); }
+.sbu-note.is-warning .sbu-note-icon { background: var(--light-orange); color: var(--dark-orange); }
+.sbu-note.is-danger .sbu-note-icon { background: var(--light-red); color: var(--dark-red); }
+.sbu-note-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.sbu-note-list li { font-size: 13px; color: var(--main-text-color); line-height: 1.5; }
+.sbu-col-name { white-space: nowrap; }
+.sbu-missing { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; background: var(--light-red); color: var(--dark-red); font-size: 14px; }
+.sbu-missing.is-warning { background: var(--light-orange); color: var(--dark-orange); }
+.sbu-missing > .ex-ico, .sbu-missing > svg { flex: 0 0 auto; margin-top: 1px; }
+.sbu-err { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.sbu-err + .sbu-err { margin-top: 6px; padding-top: 6px; box-shadow: 0 -1px 0 var(--table-header-color); }
+.sbu-err-col { font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--table-header-color); color: var(--main-text-color); white-space: nowrap; }
+.sbu-err-val { font-size: 12px; color: var(--sub-text); overflow-wrap: anywhere; }
+.sbu-err-val::before { content: "in file: "; }
+
+@media (max-width: 767.98px) {
+    .bu-steps { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .bu-step:not(:last-child)::after { display: none; }
+    .bu-step-sub { white-space: normal; }
+    .uf-file-card { flex-wrap: wrap; }
+    .uf-file-body { flex-basis: calc(100% - 56px); }
+    .uf-file-actions { margin-left: auto; }
+    .bu-import-actions { width: 100%; }
+    .bu-import-actions > * { flex: 1 1 0; min-width: 0; }
+}

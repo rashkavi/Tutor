@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Enlixo\Core;
 
 /** Standard envelope: { ok: true, data, meta } or { ok: false, error: { code, message, details } } */
-final class JsonResponse
+final class JsonResponse implements Responder
 {
     public function __construct(public readonly mixed $payload, public readonly int $status = 200)
     {

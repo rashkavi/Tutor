@@ -5,7 +5,7 @@ namespace Enlixo\Core;
 
 /**
  * Minimal router. Patterns like /api/v1/recordings/{kind}/{id}/heartbeat.
- * Handlers are callables (Request): JsonResponse. Middleware wrap handlers.
+ * Handlers are callables (Request): Responder (JsonResponse or FileResponse). Middleware wrap handlers.
  */
 final class Router
 {
@@ -31,7 +31,7 @@ final class Router
     public function put(string $p, callable $h): void { $this->add('PUT', $p, $h); }
     public function delete(string $p, callable $h): void { $this->add('DELETE', $p, $h); }
 
-    public function dispatch(Request $request): JsonResponse
+    public function dispatch(Request $request): Responder
     {
         try {
             foreach ($this->routes as $route) {

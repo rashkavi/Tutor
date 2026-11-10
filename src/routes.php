@@ -8,6 +8,7 @@ use Enlixo\Http\Controllers\ClassController;
 use Enlixo\Http\Controllers\EntitlementController;
 use Enlixo\Http\Controllers\RecordingController;
 use Enlixo\Http\Controllers\RoleController;
+use Enlixo\Http\Controllers\StudentBulkController;
 use Enlixo\Http\Controllers\StudentController;
 use Enlixo\Http\Controllers\ZoomWebhookController;
 
@@ -17,6 +18,7 @@ return static function (Router $router, App $app): void {
     $rec = new RecordingController($app);
     $zoom = new ZoomWebhookController($app);
     $students = new StudentController($app);
+    $bulk = new StudentBulkController($app);
     $apps = new ApplicationController($app, dirname(__DIR__) . '/assets/imgs/students');
     $classes = new ClassController($app, dirname(__DIR__) . '/assets/imgs/classes-covers');
 
@@ -25,6 +27,9 @@ return static function (Router $router, App $app): void {
     $router->get('/api/v1/tutor/students', $students->index(...));
     $router->post('/api/v1/tutor/students/status', $students->updateStatus(...));
     $router->post('/api/v1/tutor/students', $apps->addStudent(...));
+    $router->get('/api/v1/tutor/students/bulk', $bulk->info(...));
+    $router->get('/api/v1/tutor/students/bulk/template', $bulk->template(...));
+    $router->post('/api/v1/tutor/students/bulk', $bulk->upload(...));
     $router->get('/api/v1/tutor/student-form', $apps->form(...));
     $router->put('/api/v1/tutor/student-form', $apps->saveForm(...));
     $router->get('/api/v1/tutor/applications', $apps->index(...));
