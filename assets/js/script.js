@@ -42,35 +42,20 @@ $(window).on('load', function () {
 
     // Check if elements exist
     if (toggleBtn.length && sideMenu.length && appWrapper.length) {
-        // Initialize menu state from localStorage
-        const menuVisible = localStorage.getItem('menuVisible') !== 'false';
-        setMenuState(menuVisible);
-
-        // Toggle menu on click
-        toggleBtn.on('click', function () {
-            const isCurrentlyVisible = !sideMenu.hasClass('d-xl-block');
-            setMenuState(!isCurrentlyVisible);
-        });
-
-        function setMenuState(visible) {
-            //console.log(visible);
-            if (visible) {
-                // Show menu
-                sideMenu.removeClass('d-xl-block');
-                if (appWrapper.hasClass("app-wrapper") == true) {
-                    appWrapper.removeClass("app-wrapper");
-                    appWrapper.addClass("app-wrapper-full");
-                }
-            } else {
-                // Hide menu
-                sideMenu.addClass('d-xl-block');
-                if (appWrapper.hasClass("app-wrapper") == false) {
-                    appWrapper.removeClass("app-wrapper-full");
-                    appWrapper.addClass("app-wrapper");
-                }
-            }
-            localStorage.setItem('menuVisible', visible);
+        // V3: the side menu is shown by default on desktop and slides out with .collapsed
+        if ($(window).width() >= 1200) {
+            sideMenu.removeClass('d-none d-xl-block');
         }
+        const setMenuState = (visible) => {
+            sideMenu.toggleClass('collapsed', !visible);
+            appWrapper.toggleClass('app-wrapper', visible).toggleClass('app-wrapper-full', !visible);
+            localStorage.setItem('menuVisible', visible);
+        };
+        setMenuState(localStorage.getItem('menuVisible') !== 'false');
+
+        toggleBtn.on('click', function () {
+            setMenuState(sideMenu.hasClass('collapsed'));
+        });
     } else {
         console.error('Required elements not found');
     }

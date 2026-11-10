@@ -97,5 +97,12 @@
   "arrow-right": "arrow-right-linear",
   "calendar-empty": "calendar-minimalistic-linear",
   "teacher": "user-speak-rounded-linear",
-  "users": "users-group-rounded-linear"
+  "users": "users-group-rounded-linear",
+  "download": "download-minimalistic-linear",
+  "plus": "add-circle-linear",
+  "question": "question-circle-linear",
+  "laptop": "laptop-linear",
+  "smartphone": "smartphone-linear",
+  "tablet": "tablet-linear",
+  "dot": "record-circle-linear"
 }

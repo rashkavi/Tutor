@@ -86,6 +86,7 @@ export class ThumbnailMaker {
 
       const m = BsModal.open({
         title: 'Generate thumbnail',
+        icon: 'magic',
         subtitle: aiReady ? 'AI makes a cover from your class details. You can crop it before using it.' : 'We make a cover from your class details. You can crop it before using it.',
         size: 'lg',
         body: h('div', {},

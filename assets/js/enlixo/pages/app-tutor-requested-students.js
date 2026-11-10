@@ -151,6 +151,7 @@ async function openLink() {
   draw();
   const m = BsModal.open({
     title: 'Application Link',
+    icon: 'link',
     subtitle: 'One link for all your classes. Students pick the class on the form.',
     size: 'lg',
     body,

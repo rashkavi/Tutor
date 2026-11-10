@@ -37,6 +37,7 @@ export class ImageCropper {
       c.onEnter = () => apply.click();
       const m = BsModal.open({
         title,
+        icon: 'crop',
         subtitle: 'Drag the picture to move it. Pull a corner of the frame to resize it.',
         size: 'xl',
         static: true,

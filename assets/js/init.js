@@ -34,9 +34,9 @@
 
             const activeItem = document.querySelector(`.lang-item[data-lang="${lang}"]`);
             if (activeItem) {
-                const icon = activeItem.querySelector("iconify-icon").getAttribute("icon");
+                const icon = activeItem.querySelector("iconify-icon")?.getAttribute("icon");
                 const currentIcon = document.querySelector(".current-lang-icon");
-                if (currentIcon) currentIcon.setAttribute("icon", icon);
+                if (currentIcon && icon) currentIcon.setAttribute("icon", icon);
 
                 // Show checkmark
                 document.querySelectorAll(".lang-check").forEach(check => check.style.display = "none");

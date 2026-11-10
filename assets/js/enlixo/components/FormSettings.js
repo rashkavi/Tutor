@@ -111,7 +111,7 @@ function sectionPanel(key) {
           ? BsModal.button('Add your own field', { icon: ICON.plus, onclick: () => editCustom(null, key) }) : null,
         BsModal.button('Reset to Default', { icon: ICON.reset, onclick: () => resetSection(key) })),
       h('div', { class: 'table-responsive' },
-        h('table', { class: 'table ex-v3-table align-middle m-0' },
+        h('table', { class: 'table ex-v3-table ex-fit align-middle m-0' },
           h('thead', {}, h('tr', {},
             h('th', { scope: 'col', class: 'ex-col-order' }, 'Order'), h('th', { scope: 'col' }, 'Field'), h('th', { scope: 'col' }, 'Type'),
             h('th', { scope: 'col', class: 'text-center' }, 'Required'), h('th', { scope: 'col', class: 'text-center' }, 'Enabled'), h('th', { scope: 'col', class: 'text-center' }, 'Actions'))),
@@ -135,7 +135,7 @@ function fieldRow(f, i, rows) {
     onkeydown: (e) => { if (e.key === 'ArrowUp') { e.preventDefault(); move(i - 1); } if (e.key === 'ArrowDown') { e.preventDefault(); move(i + 1); } } });
   const tr = h('tr', { class: f.enabled ? '' : 'ex-row-off', draggable: 'true', 'data-key': f.key },
     h('td', { class: 'ex-col-order' }, grip),
-    h('td', {},
+    h('td', { class: 'cell-wrap', style: { minWidth: '220px' } },
       h('div', { class: 'd-flex align-items-center gap-2' },
         h('span', { class: 'text-14 main-text' }, f.label),
         f.core ? h('span', { class: 'ex-lock', title: 'Always on the form', 'aria-label': 'Always on the form', html: ICON.lock }) : null,
@@ -145,7 +145,7 @@ function fieldRow(f, i, rows) {
     h('td', { class: 'text-14 main-text' }, f.typeName),
     h('td', {}, toggle(`${f.label} required`, !!f.required, f.core || !f.canRequire || !f.enabled, (e) => setRequired(f, e.target.checked))),
     h('td', {}, toggle(`${f.label} on the form`, !!f.enabled, !f.canHide, (e) => setEnabled(f, e.target.checked))),
-    h('td', { class: 'text-center' }, h('button', { type: 'button', class: 'custom-btn ex-btn-sm px-4 border-0', disabled: !f.enabled || null, onclick: () => (f.custom ? editCustom(f) : editBuiltIn(f)) }, 'Edit')));
+    h('td', { class: 'text-center' }, h('button', { type: 'button', class: 'custom-btn ex-btn-sm px-3 border-0', disabled: !f.enabled || null, onclick: () => (f.custom ? editCustom(f) : editBuiltIn(f)) }, 'Edit')));
 
   // Drag to reorder (whole row; the grip shows where to hold)
   tr.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', f.key); e.dataTransfer.effectAllowed = 'move'; tr.classList.add('ex-dragging'); });
@@ -263,6 +263,7 @@ function editBuiltIn(f) {
   } });
   const m = BsModal.open({
     title: `Edit ${f.default_label}`,
+    icon: 'edit',
     subtitle: `${f.typeName}${f.core ? ' · always on the form' : ''}`,
     body: h('div', { class: 'row gy-3' }, name.col, info.col, enter.col, ph?.col),
     footerStart: [BsModal.button('Use default', { onclick: () => { name.el.value = f.default_label; info.el.value = ''; enter.el.value = ''; if (ph) ph.el.value = ''; } })],
@@ -315,6 +316,7 @@ function editCustom(f, section = 'custom') {
 
   const m = BsModal.open({
     title: f ? `Edit ${f.label}` : 'Add your own field',
+    icon: f ? 'edit' : 'plus',
     subtitle: `It shows on the ${formName} and is saved with ${savedWith}.`,
     size: 'lg',
     body: h('div', { class: 'row gy-3' },
@@ -350,7 +352,7 @@ function listPanel(list) {
         h('div', { class: 'position-relative ex-search-v3' }, h('span', { class: 'ex-search-ico', html: ICON.search, 'aria-hidden': 'true' }), search),
         mine.length < options.max_own ? BsModal.button(`Add ${meta.one}`, { icon: ICON.plus, onclick: () => addOption(list) }) : null),
       h('div', { class: 'table-responsive' },
-        h('table', { class: 'table ex-v3-table align-middle m-0' },
+        h('table', { class: 'table ex-v3-table ex-fit align-middle m-0' },
           h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, meta.title.slice(0, -1)), h('th', { scope: 'col' }, 'Who sees it'), h('th', { scope: 'col' }, 'Your classes using it'), h('th', { scope: 'col', class: 'text-center' }, 'Actions'))),
           body))));
 }
