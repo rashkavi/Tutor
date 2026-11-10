@@ -137,11 +137,11 @@ const initializeTheme2 = () => {
 
         // Update active button UI
         if (theme === 'light') {
-            lightBtn.classList.add('btn-primary');
-            darkBtn.classList.remove('btn-primary');
+            lightBtn?.classList.add('btn-primary');
+            darkBtn?.classList.remove('btn-primary');
         } else {
-            darkBtn.classList.add('btn-primary');
-            lightBtn.classList.remove('btn-primary');
+            darkBtn?.classList.add('btn-primary');
+            lightBtn?.classList.remove('btn-primary');
         }
     };
 
@@ -287,7 +287,7 @@ const initializeLanguage2 = () => {
             localStorage.setItem("lang", lang);
 
             // Update button label
-            dropdownButton.textContent = lang == "en" ? "English" : lang == "si" ? "සිංහල" : "தமிழ்";
+            if (dropdownButton) dropdownButton.textContent = lang == "en" ? "English" : lang == "si" ? "සිංහල" : "தமிழ்";
 
         } catch (err) {
             console.error("Error:", err);
