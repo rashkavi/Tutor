@@ -6,7 +6,7 @@ import { FilterBar } from './FilterBar.js';
 import { Pagination } from './Pagination.js';
 import { LoadingState } from './LoadingState.js';
 import { EmptyState } from './EmptyState.js';
-import { Popover } from './Popover.js';
+import { icon } from '../core/icons.js';
 import { Toast } from './Toast.js';
 
 /**
@@ -70,7 +70,7 @@ export class DataView {
     }
     if (this.#selectable) row2.append(this.#bulkBar());
 
-    this.el = h('div', { class: `ex-card ex-dv ex-root ${this.o.className ?? ''}` }, row1, row2.childNodes.length ? row2 : null, this.bodyEl, this.footEl);
+    this.el = h('div', { class: `ex-card ex-dv ex-root ${this.o.className ?? ''}` }, row1, this.filterRow ?? null, row2.childNodes.length ? row2 : null, this.bodyEl, this.footEl);
     target.append(this.el);
     this.load();
     return this;
@@ -89,14 +89,30 @@ export class DataView {
     return { q: this.state.q, sort: this.state.sort, dir: this.state.dir, ...this.state.filters, ...(this.o.params ?? {}) };
   }
 
+  /**
+   * V3 filters: an outlined toggle button next to the search. It slides a row of labelled
+   * dropdowns open below the search row (open at first when a filter is already set).
+   */
   #filterButton() {
-    this.filterBar = new FilterBar({ filters: this.o.filters, values: this.state.filters, stacked: true, onChange: (filters) => this.#change({ filters, page: 1 }) });
-    const panel = h('div', { class: 'ex-filter-panel' },
-      h('div', { class: 'ex-filter-panel-head' }, h('strong', {}, 'Filters'), h('button', { type: 'button', class: 'ex-link-btn', onclick: () => { this.filterBar.reset({}); this.#change({ filters: {}, page: 1 }); } }, 'Clear all')));
-    this.filterBar.mount(panel);
+    this.filterBar = new FilterBar({ filters: this.o.filters, values: this.state.filters, row: true, onChange: (filters) => this.#change({ filters, page: 1 }) });
+    const reset = h('button', { type: 'button', class: 'ex-filter-reset', title: 'Clear the filters', 'aria-label': 'Clear the filters', onclick: () => { this.filterBar.reset({}); this.#change({ filters: {}, page: 1 }); } }, icon('refresh', { size: 20 }));
+    const inner = h('div', { class: 'ex-filter-row-inner' }, h('div', { class: 'ex-filter-row-body' }));
+    this.filterBar.mount(inner.firstChild);
+    inner.firstChild.append(reset);
+    this.filterRow = h('div', { class: 'ex-filter-row', id: `ex-filters-${Math.random().toString(36).slice(2, 8)}` }, inner);
     this.filterBadge = h('span', { class: 'ex-filter-count', hidden: true });
-    const trigger = h('button', { type: 'button', class: 'ex-btn ex-btn-primary ex-btn-filter', 'aria-label': 'Filters' }, svg('sliders', 'ex-btn-icon'), this.filterBadge, svg('caret', 'ex-btn-caret'));
-    return new Popover({ trigger, content: panel, className: 'ex-popover-filters' }).el;
+    const chevron = h('span', { class: 'ex-filter-chev' }, icon('chevron-down', { size: 16 }));
+    const toggle = h('button', { type: 'button', class: 'ex-filter-toggle', 'aria-expanded': 'false', 'aria-controls': this.filterRow.id, title: 'Filters', 'aria-label': 'Filters' },
+      icon('sliders', { size: 24 }), chevron, this.filterBadge);
+    const setOpen = (open) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.classList.toggle('ex-open', open);
+      this.filterRow.classList.toggle('ex-open', open);
+      this.filterRow.inert = !open;
+    };
+    toggle.onclick = () => setOpen(!toggle.classList.contains('ex-open'));
+    setOpen(Object.keys(this.state.filters).length > 0);
+    return toggle;
   }
 
   #bulkBar() {

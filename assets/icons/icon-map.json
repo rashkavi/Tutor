@@ -90,5 +90,12 @@
   "students-active": "users-group-rounded-bold-duotone",
   "school": "square-academic-cap-2-linear",
   "inbox": "inbox-linear",
-  "dots": "menu-dots-bold"
+  "dots": "menu-dots-bold",
+  "sliders": "tuning-2-linear",
+  "calendar": "calendar-linear",
+  "arrow-left": "arrow-left-linear",
+  "arrow-right": "arrow-right-linear",
+  "calendar-empty": "calendar-minimalistic-linear",
+  "teacher": "user-speak-rounded-linear",
+  "users": "users-group-rounded-linear"
 }

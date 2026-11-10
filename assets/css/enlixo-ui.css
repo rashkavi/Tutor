@@ -763,3 +763,121 @@ table.ex-table { width: 100%; border-collapse: collapse; }
 .ex-done-ico { width: 72px; height: 72px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--light-green, #E9F6EB); color: #2e9e40; }
 .ex-image-panel.ex-square .ex-image-box { aspect-ratio: 1 / 1; }
 .ex-dv.ex-card { border: 0; box-shadow: none; } /* no borders on components; the table keeps its lines */
+
+/* =====================================================================
+   V3 filters (DataView), 2026-11-10: an outlined toggle next to the search opens a row of
+   labelled dropdowns below it, like an accordion. The arrow points up while it is open.
+   ===================================================================== */
+.ex-filter-toggle { position: relative; flex: none; height: var(--ex-control-h); min-width: 80px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--custom-white, #fff); color: var(--dark-theme, #0061D2); border: 1px solid var(--dark-theme, #0061D2); border-radius: 0; cursor: pointer; }
+.ex-filter-toggle:hover, .ex-filter-toggle.ex-open { background: var(--light-theme, #E8ECFF); }
+.ex-filter-toggle:focus-visible { outline: 2px solid var(--dark-theme, #0061D2); outline-offset: 2px; }
+.ex-filter-chev { display: inline-flex; transition: transform .2s ease; }
+.ex-filter-toggle.ex-open .ex-filter-chev { transform: rotate(180deg); }
+.ex-filter-toggle .ex-filter-count { top: -8px; right: -8px; }
+.ex-filter-row { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .25s ease; }
+.ex-filter-row.ex-open { grid-template-rows: 1fr; }
+.ex-filter-row-inner { overflow: hidden; min-height: 0; }
+.ex-filter-row-body { display: flex; align-items: flex-end; gap: 12px; padding: 16px 18px 0; }
+.ex-filters.ex-filters-row { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.ex-filter-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ex-filter-label { font-size: 13px; color: var(--main-text-color, #4E5566); }
+.ex-filters-row .form-select, .ex-filters-row .form-control { height: var(--ex-control-h); margin: 0; font-size: 14px; }
+.ex-filter-reset { flex: none; width: var(--ex-control-h); height: var(--ex-control-h); display: inline-grid; place-items: center; border: 0; border-radius: 50%; background: var(--light-color, #F5F7FA); color: var(--sub-text, #8C94A3); cursor: pointer; }
+.ex-filter-reset:hover { background: var(--light-theme, #E8ECFF); color: var(--dark-theme, #0061D2); }
+@media (max-width: 767.98px) { .ex-filter-row-body { flex-direction: column; align-items: stretch; } .ex-filter-reset { align-self: flex-end; } }
+@media (prefers-reduced-motion: reduce) { .ex-filter-row, .ex-filter-chev { transition: none; } }
+
+/* Secondary buttons look like the V3 outlined button everywhere: white, 1px blue line, blue text,
+   square corners, normal weight, same height as the main button. */
+.ex-btn { height: var(--ex-control-h); padding: 0 20px; border-radius: 0; border: 1px solid var(--dark-theme, #0061D2); background: var(--custom-white, #fff); color: var(--dark-theme, #0061D2); font-size: 15px; font-weight: 400; }
+.ex-btn:hover:not(:disabled) { background: var(--light-theme, #E8ECFF); }
+.ex-btn.ex-btn-primary { background: var(--dark-theme, #0061D2); border-color: var(--dark-theme, #0061D2); color: #fff; }
+.ex-btn.ex-btn-primary:hover:not(:disabled) { background: var(--main-button-hover, #0052b3); }
+.ex-btn.ex-btn-danger { color: var(--dark-red, #D85E44); border-color: var(--dark-red, #D85E44); }
+.ex-btn.ex-btn-ghost { border-color: transparent; background: transparent; }
+.ex-btn.ex-btn-sm { height: var(--ex-row-btn-h); padding: 0 12px; font-size: 13px; }
+.ex-btn.ex-btn-premium { border: 0; color: #3b2503; }
+.custom-outline-btn { font-weight: 400; }
+
+/* =====================================================================
+   Empty state, like V3: a round soft-blue icon, a bold title and a grey line under it.
+   ===================================================================== */
+.ex-empty { display: flex; flex-direction: column; align-items: center; gap: 0; text-align: center; padding: 48px 20px; color: var(--sub-text, #8C94A3); }
+.ex-empty .ex-empty-icon { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--light-theme, #E8ECFF); color: var(--dark-theme, #0061D2); font-size: 0; margin-bottom: 16px; }
+.ex-empty .ex-empty-title { margin: 0; font-size: 15px; font-weight: 600; color: var(--dark-color, #1D2026); }
+.ex-empty .ex-empty-text { margin: 6px 0 0; max-width: 420px; font-size: 13px; color: var(--sub-text, #8C94A3); }
+.ex-empty .ex-empty-action { margin-top: 18px; }
+.ex-empty-ico { border-radius: 50%; }
+[data-custom-theme="dark"] .ex-empty .ex-empty-icon, [data-custom-theme="dark"] .ex-empty-ico { background: rgba(0, 97, 210, .18); color: #9cc3ff; }
+
+/* =====================================================================
+   Time table calendar (tutor/js/eventCalender.js), like the V3 Lecture Schedule:
+   month grid, greyed days of the other months, today ringed, lecture cards with a status badge,
+   and a hover card with the details.
+   ===================================================================== */
+.ex-cal { --cal-line: var(--line-color, #E9EAF0); }
+.ex-cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.ex-cal-nav .custom-outline-btn { gap: 8px; }
+.ex-cal-title { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.ex-cal-title h2 { margin: 0; font-size: 22px; font-weight: 500; color: var(--dark-color, #1D2026); }
+.ex-cal-today-btn { border: 0; background: none; padding: 0; font-size: 13px; color: var(--dark-theme, #0061D2); text-decoration: underline; cursor: pointer; }
+.ex-cal-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-bottom: 14px; font-size: 12px; color: var(--sub-text, #8C94A3); }
+.ex-cal-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.ex-cal-legend-tip { margin-left: auto; }
+.ex-cal-scroll { overflow-x: auto; }
+.ex-cal-grid { display: grid; grid-template-columns: repeat(7, minmax(120px, 1fr)); min-width: 860px; border-top: 1px solid var(--cal-line); border-left: 1px solid var(--cal-line); }
+.ex-cal-dow { padding: 10px 8px; text-align: center; font-size: 13px; color: var(--main-text-color, #4E5566); border-right: 1px solid var(--cal-line); border-bottom: 1px solid var(--cal-line); background: var(--custom-white, #fff); }
+.ex-cal-cell { position: relative; min-height: 132px; padding: 6px 6px 8px; display: flex; flex-direction: column; gap: 6px; border-right: 1px solid var(--cal-line); border-bottom: 1px solid var(--cal-line); background: var(--custom-white, #fff); cursor: pointer; outline: none; }
+.ex-cal-cell:hover { background: var(--light-color, #F9FAFB); }
+.ex-cal-cell:focus-visible { box-shadow: inset 0 0 0 2px var(--dark-theme, #0061D2); }
+.ex-cal-cell.ex-out { background: var(--light-color, #F9FAFB); cursor: default; }
+.ex-cal-cell.ex-out .ex-cal-num { color: #C3C7D0; }
+.ex-cal-cell.ex-today { box-shadow: inset 0 0 0 2px var(--dark-theme, #0061D2); background: #F7F9FF; }
+.ex-cal-day { display: flex; align-items: center; justify-content: space-between; min-height: 26px; padding: 0 2px; }
+.ex-cal-num { font-size: 14px; color: var(--dark-color, #1D2026); }
+.ex-cal-cell.ex-today .ex-cal-num { width: 26px; height: 26px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--dark-theme, #0061D2); color: #fff; font-weight: 600; }
+.ex-cal-today { font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; color: var(--dark-theme, #0061D2); background: var(--light-theme, #E8ECFF); }
+
+/* a lecture inside a day */
+.ex-cal-ev { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; width: 100%; padding: 6px 8px 6px 10px; text-align: left; border: 0; border-left: 3px solid var(--st); background: var(--custom-white, #fff); box-shadow: 0 1px 4px rgba(29, 32, 38, .08); cursor: pointer; }
+.ex-cal-ev:hover, .ex-cal-ev:focus-visible { box-shadow: 0 3px 12px rgba(29, 32, 38, .14); outline: none; }
+.ex-cal-ev-title { font-size: 12px; line-height: 1.3; color: var(--dark-color, #1D2026); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ex-cal-ev-meta { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.ex-cal-ev-type { font-size: 11px; color: var(--sub-text, #8C94A3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ex-cal-ev-time { max-width: 100%; font-size: 11px; color: var(--sub-text, #8C94A3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ex-cal-more { border: 0; background: none; padding: 0 2px; text-align: left; font-size: 12px; color: var(--dark-theme, #0061D2); cursor: pointer; }
+.ex-cal-more:hover { text-decoration: underline; }
+
+/* status badge: outlined, small capitals, like V3 */
+.ex-cal-badge { display: inline-block; font-style: normal; font-size: 9.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; line-height: 1; padding: 3px 6px; color: var(--st); border: 1px solid var(--st); background: color-mix(in srgb, var(--st) 8%, transparent); white-space: nowrap; }
+.ex-st-upcoming { --st: #0061D2; }
+.ex-st-live { --st: #1E9E4A; }
+.ex-st-done { --st: #6E7485; }
+.ex-st-cancelled { --st: #D85E44; }
+.ex-st-postponed { --st: #E08A00; }
+.ex-st-leave { --st: #7A5AF8; }
+.ex-st-pending { --st: #B98A00; }
+.ex-cal-badge.ex-st-live::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 4px; border-radius: 50%; background: currentColor; vertical-align: 1px; animation: ex-cal-pulse 1.4s ease-in-out infinite; }
+@keyframes ex-cal-pulse { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .ex-cal-badge.ex-st-live::before { animation: none; } }
+
+/* hover card */
+.ex-cal-pop.popover { --bs-popover-max-width: 320px; --bs-popover-border-color: transparent; --bs-popover-border-radius: 0; --bs-popover-body-padding-x: 0; --bs-popover-body-padding-y: 0; box-shadow: 0 10px 30px rgba(29, 32, 38, .18); }
+.ex-cal-pop-card { width: 300px; border-top: 3px solid var(--st); padding: 14px 16px 12px; font-size: 13px; color: var(--dark-color, #1D2026); }
+.ex-cal-pop-head { display: flex; gap: 12px; align-items: flex-start; }
+.ex-cal-pop-head img { width: 64px; height: 40px; object-fit: cover; flex: none; background: var(--light-color, #F5F7FA); }
+.ex-cal-pop-title { font-weight: 600; line-height: 1.3; }
+.ex-cal-pop-sub { font-size: 12px; color: var(--sub-text, #8C94A3); margin-top: 2px; }
+.ex-cal-pop-when { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0 0; padding-bottom: 10px; border-bottom: 1px solid var(--line-color, #E9EAF0); font-size: 12px; color: var(--main-text-color, #4E5566); }
+.ex-cal-pop-when span, .ex-cal-pop-val { display: inline-flex; align-items: center; gap: 6px; }
+.ex-cal-pop-sec { padding: 10px 0; border-bottom: 1px solid var(--line-color, #E9EAF0); }
+.ex-cal-pop-label { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--sub-text, #8C94A3); margin-bottom: 4px; }
+.ex-cal-pop-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ex-cal-pop-chips span { font-size: 12px; padding: 2px 8px; color: var(--dark-theme, #0061D2); background: var(--light-theme, #E8ECFF); }
+.ex-cal-pop-foot { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; font-size: 11px; color: var(--sub-text, #8C94A3); }
+@media (max-width: 767.98px) { .ex-cal-nav .custom-outline-btn span { display: none; } .ex-cal-nav .custom-outline-btn { min-width: 48px; padding: 0 12px !important; } .ex-cal-legend-tip { display: none; } }
+[data-custom-theme="dark"] .ex-cal-cell.ex-today { background: rgba(0, 97, 210, .12); }
+[data-custom-theme="dark"] .ex-cal-cell.ex-out { background: rgba(255, 255, 255, .02); }
+/* the search box has its own clear button, so hide the browser's */
+.ex-search input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; display: none; }
