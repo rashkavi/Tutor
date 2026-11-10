@@ -1924,9 +1924,12 @@ button:has(> iconify-icon[icon="mage:filter"])[aria-expanded="true"]::after {
 .ex-pager .previous-button svg, .ex-pager .next-button svg { color: var(--dark-color); }
 .ex-pager .page-item button { border: 0; min-width: 40px; }
 
-.ex-v3-table .form-check-input { width: 18px; height: 18px; margin: 0; cursor: pointer; }
+.ex-v3-table :not(.form-switch) > .form-check-input { width: 18px; height: 18px; margin: 0; cursor: pointer; }
 
 /* Header buttons: the V3 width (an equal col-6 cell of the col-lg-4 header column, about 174 px) for every page */
 .ex-header-actions > .custom-btn, .ex-header-actions > .custom-btn-outline, .ex-header-actions > .custom-outline-btn,
 .ex-header-actions > .ex-popover-host > .custom-btn { min-width: 174px; }
 @media (min-width: 1400px) { .ex-header-actions > .custom-btn, .ex-header-actions > .custom-btn-outline, .ex-header-actions > .custom-outline-btn, .ex-header-actions > .ex-popover-host > .custom-btn { min-width: 210px; } }
+[data-custom-theme="dark"] .custom-div .dark-theme { color: #8cb8ff; }
+/* Settings tables fit their card: the field name and its help wrap instead of pushing the last column out of view */
+.table-responsive > .table.ex-fit { min-width: 0; }
