@@ -34,10 +34,10 @@ const setStatus = async (ids, status) => {
 
 // Header "Action" menu: locked items stay visible with the premium badge
 document.getElementById('students-actions').append(ActionMenu.button('Action', [
-  { label: 'Add New Student', href: 'add-student-to-class' },
-  { label: 'Add Registered Student', href: 'add-registered-student-to-class' },
-  { label: 'Bulk Upload (CSV)', href: 'upload-student-bulk' },
-  gate && { label: 'Send WhatsApp Message', locked: gate.badge('comms.whatsapp'), onClick: gate.guard('comms.whatsapp', () => { location.href = 'message-center'; }) },
+  { label: 'Add New Student', icon: 'user-add', href: 'add-student-to-class' },
+  { label: 'Add Registered Student', icon: 'user', href: 'add-registered-student-to-class' },
+  { label: 'Bulk Upload (CSV)', icon: 'upload', href: 'upload-student-bulk' },
+  gate && { label: 'Send WhatsApp Message', icon: 'communication', locked: gate.badge('comms.whatsapp'), onClick: gate.guard('comms.whatsapp', () => { location.href = 'message-center'; }) },
 ]));
 
 view = new DataView({
@@ -69,10 +69,10 @@ view = new DataView({
     { key: 'date', label: 'Admission Date', sortable: true, render: (s) => stamp(s.date_registered) },
     { key: 'status', label: 'Status', render: (s) => h('span', { class: `ex-status ${s.status === 'Active' ? '' : 'ex-off'}` }, s.status) },
     { key: 'actions', label: '', width: '48px', render: (s) => ActionMenu.kebab([
-      { label: 'Edit Student', href: `edit-student?student-id=${encodeURIComponent(s.id)}` },
+      { label: 'Edit Student', icon: 'edit', href: `edit-student?student-id=${encodeURIComponent(s.id)}` },
       s.status === 'Active'
-        ? { label: 'Mark as Inactive', danger: true, onClick: () => setStatus([s.id], '2').then(() => view.reload()).catch((e) => Toast.error(e.message)) }
-        : { label: 'Mark as Active', onClick: () => setStatus([s.id], '1').then(() => view.reload()).catch((e) => Toast.error(e.message)) },
+        ? { label: 'Mark as Inactive', icon: 'deactivate', danger: true, onClick: () => setStatus([s.id], '2').then(() => view.reload()).catch((e) => Toast.error(e.message)) }
+        : { label: 'Mark as Active', icon: 'activate', onClick: () => setStatus([s.id], '1').then(() => view.reload()).catch((e) => Toast.error(e.message)) },
     ], `Actions for ${fullName(s)}`) },
   ],
   empty: { icon: '🎓', title: 'No students yet', text: 'Add a student to one of your classes to see them here.', action: h('a', { class: 'ex-btn ex-btn-primary', href: 'add-student-to-class' }, 'Add New Student') },

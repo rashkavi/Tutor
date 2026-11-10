@@ -37,8 +37,9 @@ Every step reuses the shared kit (DataView, ActionMenu, page header, Form with i
 | # | Step | What the tutor gets | Status |
 |---|---|---|---|
 | 1 | **Class creation form** | One page: basics, how it runs (physical / online, weekly times, hall), fee, enrolment, cover. Info (i) icon on every field. Tutor can hide optional fields and add their own fields. | ✅ |
-| 1b | **Class form settings + covers** | Settings page (V3 layout): turn fields on/off, make required, rename, reorder, own fields per section, own exam types / subjects / mediums (only that tutor sees them). Cover: crop modal, "Generate thumbnail" (AI or a designed cover). | ✅ this step |
-| 2 | Classes list (V3 list layout) | Search, filter by exam type / year / subject / medium / status, cards or table, Action menu. | next |
+| 1b | **Class form settings + covers** | Settings page (V3 layout): turn fields on/off, make required, rename, reorder, own fields per section, own exam types / subjects / mediums (only that tutor sees them). Cover: crop modal, "Generate thumbnail" (AI or a designed cover). | ✅ |
+| 2 | **Classes list + Edit class** | Search, filter by exam type / year / subject / medium / status, Cards / Table / Details views, drag to set your own order, Action menu per class. Edit any class on the same form. | ✅ this step |
+| 2b | **Look and feel** | One icon set (Solar), V3 action menus, premium side menu (find a page, plan card, user card), (i) only on hard fields. | ✅ this step |
 | 3 | Class page | Tabs: Overview, Students, Timetable, Attendance, Payments, Recordings, Tutes, all scoped to the class. | |
 | 4 | Timetable | Week / list view, generated sessions, one-off extra or cancelled class, Zoom links. | |
 | 5 | Attendance | Mark per session (tick list + QR), absent list, export (GROW). | |
@@ -70,3 +71,17 @@ Every step reuses the shared kit (DataView, ActionMenu, page header, Form with i
 * Cover: every picture goes through the Crop Image modal (16:9). "Generate thumbnail" calls Gemini
   (`ai.gemini_api_key`, 10 a day per tutor) or, without a key, draws a designed cover in the browser.
 * UI rules for all pages: `docs/UI-STANDARD.md`.
+
+## Step 2 details: classes list and edit class
+
+* Page: Academic > Classes (`tutor/classes.php`), data from `GET /api/v1/tutor/classes/overview`.
+* Stat cards: active classes, students, expected fees each month, teaching hours each week.
+* Views: Cards, Table, Details. The choice is remembered on the device. "More" menu: Class form settings, Export CSV.
+* Order: drag a class (or its handle with the arrow keys) while "My order" is chosen and no filter is on.
+  Saved with `POST /api/v1/tutor/classes/order` into `classes.sort_order` (migration 004).
+* Deactivate / activate from the class menu (`POST /api/v1/tutor/classes/status`), with a confirm first.
+* Edit: `tutor/edit-class.php?class-id=ID`, same form as Create, filled in. Saving (`POST /api/v1/tutor/classes/{id}`):
+  * Unchanged weekly times are kept, so past class days stay linked. Removed or changed times end yesterday;
+    new ones start today (or on the first class date if that is later).
+  * A new fee changes the class's fee plan from now on; discounts and late fees stay.
+  * A new cover replaces the old file; "Remove" clears it.

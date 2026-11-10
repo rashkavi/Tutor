@@ -91,3 +91,22 @@ test('Gemini image client reads the image and rejects missing or fake images', f
     $e = T::throws(HttpException::class, fn () => $none->generate('x'));
     T::eq(503, $e?->status);
 });
+
+test('Edit class: weekly times keep, end, cancel and add correctly', function () {
+    $row = fn (int $id, int $day, string $s, string $e, string $from, int $lt = 1) => ['class_schedule_id' => $id, 'weekday' => $day, 'start_time' => $s, 'end_time' => $e, 'lecture_type_lecture_type_id' => $lt, 'valid_from' => $from];
+    $slot = fn (int $day, string $s, string $e, string $mode = 'physical', bool $zoom = false) => ['weekday' => $day, 'start' => $s, 'end' => $e, 'mode' => $mode, 'zoom' => $zoom];
+    $rows = [
+        $row(1, 6, '08:00:00', '10:00:00', '2026-01-01'),          // Saturday, kept
+        $row(2, 7, '08:00:00', '10:00:00', '2026-01-01'),          // Sunday, removed
+        $row(3, 1, '16:00:00', '18:00:00', '2026-12-01'),          // Monday, removed before it started
+        $row(4, 3, '18:00:00', '20:00:00', '2026-01-01', 2),       // Wednesday online, changed to physical
+    ];
+    $slots = [$slot(6, '08:00:00', '10:00:00', 'physical', true), $slot(3, '18:00:00', '20:00:00'), $slot(5, '15:00:00', '17:00:00')];
+    $p = \Enlixo\Classes\ClassFormRepository::planWeeklyTimes($rows, $slots, '2026-11-10', '2026-01-01');
+    T::eq([1 => true], $p['keep'], 'unchanged time is kept and its Zoom switch updated');
+    T::eq([2 => '2026-11-09', 4 => '2026-11-09'], $p['end'], 'removed and changed times end yesterday');
+    T::eq([3 => '2026-12-01'], $p['cancel'], 'a time that has not started yet is cancelled');
+    T::eq(2, count($p['add']), 'changed and new times are added');
+    T::eq('2026-11-10', $p['from'], 'new times start today');
+    T::eq('2027-01-05', \Enlixo\Classes\ClassFormRepository::planWeeklyTimes([], $slots, '2026-11-10', '2027-01-05')['from'], 'or on a later first class date');
+});

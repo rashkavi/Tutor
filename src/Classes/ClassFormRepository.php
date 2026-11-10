@@ -158,9 +158,146 @@ final class ClassFormRepository
         );
     }
 
-    public function nameTaken(int $tutorId, string $name): bool
+    public function nameTaken(int $tutorId, string $name, ?int $exceptClassId = null): bool
     {
-        return (bool) $this->db->value('SELECT 1 FROM classes WHERE tutor_id = :t AND class_name = :n LIMIT 1', ['t' => $tutorId, 'n' => $name]);
+        return (bool) $this->db->value('SELECT 1 FROM classes WHERE tutor_id = :t AND class_name = :n AND class_id <> :x LIMIT 1', ['t' => $tutorId, 'n' => $name, 'x' => $exceptClassId ?? 0]);
+    }
+
+    /**
+     * One of this tutor's classes in the shape the class form uses (same keys as the form values),
+     * plus `cover` (file name) and `status`. Null when it isn't theirs.
+     */
+    public function findForEdit(int $tutorId, int $classId): ?array
+    {
+        $c = $this->db->one('SELECT * FROM classes WHERE class_id = :id AND tutor_id = :t', ['id' => $classId, 't' => $tutorId]);
+        if ($c === null) {
+            return null;
+        }
+        $plan = $this->db->one('SELECT amount, due_date FROM class_payment_plans WHERE classes_class_id = :c ORDER BY class_payment_plan_id DESC LIMIT 1', ['c' => $classId]);
+        $slots = array_map(static fn (array $r) => [
+            'weekday' => (int) $r['weekday'], 'start' => substr((string) $r['start_time'], 0, 5), 'end' => substr((string) $r['end_time'], 0, 5),
+            'mode' => (int) $r['lecture_type_lecture_type_id'] === 2 ? 'online' : 'physical', 'zoom' => (bool) $r['auto_create_zoom'],
+        ], $this->activeSchedules($classId));
+        $values = [
+            'exam_type' => (string) $c['exam_type_exam_type_id'], 'year' => (string) $c['year_year_id'], 'subject' => (string) $c['subjects_subject_id'],
+            'medium' => (string) $c['medium_medium_id'], 'class_type' => $c['class_type'] ?? 'theory', 'name' => (string) $c['class_name'],
+            'description' => (string) ($c['description'] ?? ''), 'delivery_mode' => $c['delivery_mode'] ?? 'physical', 'location' => (string) ($c['location'] ?? ''),
+            'schedule' => $slots, 'auto_zoom' => $slots ? (bool) array_filter(array_column($slots, 'zoom')) : true, 'starts_on' => (string) ($c['starts_on'] ?? ''),
+            'is_free' => (bool) $c['is_free'], 'fee' => $plan ? (string) (0 + $plan['amount']) : '', 'due_day' => $plan ? (string) $plan['due_date'] : '10',
+            'enrollment_mode' => $c['enrollment_mode'] ?? 'approval', 'capacity' => $c['capacity'] === null ? '' : (string) $c['capacity'],
+        ];
+        foreach ($this->db->all('SELECT field_key, value FROM class_custom_field_values WHERE classes_class_id = :c', ['c' => $classId]) as $r) {
+            $values[$r['field_key']] = (string) $r['value'];
+        }
+        return ['id' => (int) $c['class_id'], 'values' => $values, 'cover' => (string) $c['class_cover'], 'status' => (int) $c['status_status_id']];
+    }
+
+    /** Weekly times in use now (not ended). */
+    private function activeSchedules(int $classId): array
+    {
+        return $this->db->all(
+            'SELECT * FROM class_schedules WHERE classes_class_id = :c AND status_status_id = 1 AND (valid_until IS NULL OR valid_until >= CURDATE()) ORDER BY weekday, start_time',
+            ['c' => $classId],
+        );
+    }
+
+    /** Saves the Edit Class form in one transaction (see ClassCreator::update). */
+    /**
+     * Works out what an edit does to a class's weekly times, without touching the database.
+     * Unchanged times are kept (their class days stay linked). Removed or changed times end yesterday;
+     * ones that had not started yet are cancelled. New times start today, or on the first class date if later.
+     *
+     * @param list<array<string, mixed>> $rows  active class_schedules rows
+     * @param list<array{weekday:int,start:string,end:string,mode:string,zoom:bool}> $slots  times on the form
+     * @return array{keep: array<int, bool>, end: array<int, string>, cancel: array<int, string>, add: list<array>, from: string}
+     */
+    public static function planWeeklyTimes(array $rows, array $slots, string $today, ?string $startsOn): array
+    {
+        $yesterday = (new \DateTimeImmutable($today))->modify('-1 day')->format('Y-m-d');
+        $plan = ['keep' => [], 'end' => [], 'cancel' => [], 'add' => [], 'from' => max($today, (string) ($startsOn ?: $today))];
+        $todo = $slots;
+        foreach ($rows as $row) {
+            $id = (int) $row['class_schedule_id'];
+            $mode = (int) $row['lecture_type_lecture_type_id'] === 2 ? 'online' : 'physical';
+            $match = null;
+            foreach ($todo as $i => $s) {
+                if ((int) $s['weekday'] === (int) $row['weekday'] && $s['start'] === $row['start_time'] && $s['end'] === $row['end_time'] && $s['mode'] === $mode) {
+                    $match = $i;
+                    break;
+                }
+            }
+            if ($match !== null) {
+                $plan['keep'][$id] = (bool) $todo[$match]['zoom'];
+                unset($todo[$match]);
+            } elseif ((string) $row['valid_from'] > $yesterday) {
+                $plan['cancel'][$id] = (string) $row['valid_from'];
+            } else {
+                $plan['end'][$id] = $yesterday;
+            }
+        }
+        $plan['add'] = array_values($todo);
+        return $plan;
+    }
+
+    public function update(int $tutorId, int $userId, int $classId, array $c, array $slots, ?array $fee, array $custom, array $customKeysOnForm, string $now): void
+    {
+        $this->db->transaction(function () use ($tutorId, $userId, $classId, $c, $slots, $fee, $custom, $customKeysOnForm, $now) {
+            $this->db->execute(
+                'UPDATE classes SET class_name = :name, medium_medium_id = :medium, year_year_id = :year, exam_type_exam_type_id = :exam, subjects_subject_id = :subject,
+                        class_cover = :cover, class_type = :type, description = :descr, delivery_mode = :mode, location = :loc, capacity = :cap,
+                        enrollment_mode = :enrol, starts_on = :starts, is_free = :free
+                  WHERE class_id = :id AND tutor_id = :tutor',
+                [
+                    'name' => $c['name'], 'medium' => $c['medium'], 'year' => $c['year'], 'exam' => $c['exam_type'], 'subject' => $c['subject'], 'cover' => $c['cover'] ?? '',
+                    'type' => $c['class_type'], 'descr' => $c['description'], 'mode' => $c['delivery_mode'], 'loc' => $c['location'], 'cap' => $c['capacity'],
+                    'enrol' => $c['enrollment_mode'], 'starts' => $c['starts_on'], 'free' => $c['is_free'] ? 1 : 0, 'id' => $classId, 'tutor' => $tutorId,
+                ],
+            );
+
+            // Weekly times: keep the unchanged ones (their class days stay linked), end the rest today, add the new ones.
+            $plan = self::planWeeklyTimes($this->activeSchedules($classId), $slots, substr($now, 0, 10), $c['starts_on'] ?? null);
+            foreach ($plan['keep'] as $id => $zoom) {
+                $this->db->execute('UPDATE class_schedules SET auto_create_zoom = :z WHERE class_schedule_id = :id', ['z' => $zoom ? 1 : 0, 'id' => $id]);
+            }
+            foreach ($plan['end'] as $id => $until) {
+                $this->db->execute('UPDATE class_schedules SET valid_until = :d WHERE class_schedule_id = :id', ['d' => $until, 'id' => $id]);
+            }
+            foreach ($plan['cancel'] as $id => $until) {
+                $this->db->execute('UPDATE class_schedules SET valid_until = :d, status_status_id = 2 WHERE class_schedule_id = :id', ['d' => $until, 'id' => $id]);
+            }
+            foreach ($plan['add'] as $s) {
+                $this->db->execute(
+                    'INSERT INTO class_schedules (classes_class_id, weekday, start_time, end_time, lecture_type_lecture_type_id, auto_create_zoom, valid_from, status_status_id, created_by)
+                     VALUES (:c, :d, :s, :e, :lt, :z, :from, 1, :by)',
+                    ['c' => $classId, 'd' => $s['weekday'], 's' => $s['start'], 'e' => $s['end'], 'lt' => $s['mode'] === 'online' ? 2 : 1, 'z' => $s['zoom'] ? 1 : 0, 'from' => $plan['from'], 'by' => $userId],
+                );
+            }
+
+            // Monthly fee: change the class's plan (discounts and late fees set in Payment Plans stay), or add one.
+            if ($fee !== null) {
+                $planId = $this->db->value('SELECT class_payment_plan_id FROM class_payment_plans WHERE classes_class_id = :c ORDER BY class_payment_plan_id DESC LIMIT 1', ['c' => $classId]);
+                if ($planId) {
+                    $this->db->execute('UPDATE class_payment_plans SET amount = :a, due_date = :due WHERE class_payment_plan_id = :id', ['a' => $fee['amount'], 'due' => $fee['due_day'], 'id' => $planId]);
+                } else {
+                    $this->db->execute(
+                        'INSERT INTO class_payment_plans (classes_class_id, amount, users_user_id, date_added, due_date, discount_type_discount_type_id, discount, discount_note, panelty_payment_option_panelty_payment_option_id)
+                         VALUES (:c, :a, :u, :at, :due, 1, 0, \'\', 1)',
+                        ['c' => $classId, 'a' => $fee['amount'], 'u' => $userId, 'at' => $now, 'due' => $fee['due_day']],
+                    );
+                }
+            }
+
+            // Own fields emptied on the form are cleared; values of fields not on the form (turned off) are kept.
+            foreach (array_diff($customKeysOnForm, array_keys($custom)) as $key) {
+                $this->db->execute('DELETE FROM class_custom_field_values WHERE classes_class_id = :c AND field_key = :k', ['c' => $classId, 'k' => $key]);
+            }
+            foreach ($custom as $key => $value) {
+                $this->db->execute(
+                    'INSERT INTO class_custom_field_values (classes_class_id, field_key, value) VALUES (:c, :k, :v) ON DUPLICATE KEY UPDATE value = VALUES(value)',
+                    ['c' => $classId, 'k' => $key, 'v' => $value],
+                );
+            }
+        });
     }
 
     /** Inserts the class, its weekly times, its monthly fee and custom values in one transaction. */

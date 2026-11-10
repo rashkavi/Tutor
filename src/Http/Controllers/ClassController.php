@@ -7,6 +7,7 @@ use Enlixo\App;
 use Enlixo\Classes\ClassCreator;
 use Enlixo\Classes\ClassFormRepository;
 use Enlixo\Classes\ClassFormSchema;
+use Enlixo\Classes\ClassListRepository;
 use Enlixo\Classes\ClassThumbnailService;
 use Enlixo\Core\HttpException;
 use Enlixo\Core\JsonResponse;
@@ -39,7 +40,16 @@ final class ClassController
             return $f;
         }, $all ? ClassFormSchema::allForTutor($settings) : ClassFormSchema::forTutor($settings));
 
+        $editing = null;
+        if ((int) $r->input('class', 0) > 0) {
+            $editing = $this->repo()->findForEdit($tutor, (int) $r->input('class'));
+            if ($editing === null) {
+                throw HttpException::notFound('This class was not found.');
+            }
+        }
+
         return JsonResponse::ok([
+            'class' => $editing,
             'sections' => ClassFormSchema::sections(),
             'fields' => $fields,
             'lookups' => $this->repo()->lookups($tutor),
@@ -61,6 +71,58 @@ final class ClassController
         $config = ClassFormSchema::sanitiseSettings($r->body);
         $this->repo()->saveSettings($auth->tenantId(), $config);
         return JsonResponse::ok($config);
+    }
+
+    /** POST /api/v1/tutor/classes/{id} (multipart, like store; remove_cover: true clears the cover) */
+    public function update(Request $r): JsonResponse
+    {
+        $auth = $r->auth();
+        $this->app->permissions()->require($auth, 'classes.manage');
+        $id = (int) $r->param('id');
+        $data = $r->body['data'] ?? null;
+        $in = is_string($data) ? json_decode($data, true) : $r->body;
+        if ($id <= 0 || !is_array($in)) {
+            throw new HttpException(400, 'bad_request', 'The form could not be read. Please reload and try again.');
+        }
+        $tutor = $auth->tenantId();
+        $result = (new ClassCreator($this->repo(), $this->coverDir))->update(
+            $tutor, $auth->userId, $id, $in, $r->files['cover'] ?? null, $this->app->entitlements()->for($tutor),
+            $this->app->clock()->now()->setTimezone(new \DateTimeZone('Asia/Colombo'))->format('Y-m-d H:i:s'),
+        );
+        return JsonResponse::ok($result);
+    }
+
+    /** GET /api/v1/tutor/classes/overview: every class with what the cards, table and details views show. */
+    public function overview(Request $r): JsonResponse
+    {
+        $auth = $r->auth();
+        $this->app->permissions()->require($auth, 'classes.view');
+        return JsonResponse::ok((new ClassListRepository($this->app->db()))->overview($auth->tenantId()));
+    }
+
+    /** POST /api/v1/tutor/classes/order {ids: [...]}: the order the tutor dragged the classes into. */
+    public function order(Request $r): JsonResponse
+    {
+        $auth = $r->auth();
+        $this->app->permissions()->require($auth, 'classes.manage');
+        $ids = array_values(array_filter(array_map('intval', (array) ($r->body['ids'] ?? [])), static fn (int $i) => $i > 0));
+        if (!$ids || count($ids) > 1000) {
+            throw HttpException::validation(['ids' => 'Send the classes in their new order.']);
+        }
+        return JsonResponse::ok(['saved' => (new ClassListRepository($this->app->db()))->saveOrder($auth->tenantId(), $ids)]);
+    }
+
+    /** POST /api/v1/tutor/classes/status {ids: [...], active: bool}: activate or deactivate classes. */
+    public function status(Request $r): JsonResponse
+    {
+        $auth = $r->auth();
+        $this->app->permissions()->require($auth, 'classes.manage');
+        $ids = array_values(array_filter(array_map('intval', (array) ($r->body['ids'] ?? [])), static fn (int $i) => $i > 0));
+        if (!$ids) {
+            throw HttpException::validation(['ids' => 'Choose at least one class.']);
+        }
+        $n = (new ClassListRepository($this->app->db()))->setStatus($auth->tenantId(), $ids, filter_var($r->body['active'] ?? false, FILTER_VALIDATE_BOOL));
+        return JsonResponse::ok(['updated' => $n]);
     }
 
     /** GET /api/v1/tutor/class-form/options: exam types, subjects and mediums with `own` and `used` (classes using it). */

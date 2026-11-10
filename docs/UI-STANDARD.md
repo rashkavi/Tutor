@@ -25,8 +25,10 @@ come out the same everywhere. Don't add one-off sizes or colours in a page.
 | 12px | `text-12 sub-text` | Help lines, subtitles, counts |
 | 12px red | `text-12 text-dark-red` | Field errors (under the field) |
 
-Required labels get the `required` class (red star). Every field label has an (i) from `fieldInfo(text, label)`;
-every section or panel title has one too.
+Required labels get the `required` class (red star). Section and panel titles have an (i).
+Field labels get an (i) **only when the field is hard to understand** (exam year, batch code, how students join).
+Easy fields (subject, medium, hall, description) have none. The (i) opens a small card with two lines:
+"What it does" and "What to enter". In a schema field that is `info` and `enter`; in JS `fieldInfo(info, label, enter)`.
 
 ## Buttons
 
@@ -47,6 +49,30 @@ every section or panel title has one too.
   inputs `form-control custom-input` / `form-select custom-select` (48px).
 * Sections are `mt-5` apart. Errors show under the field and the field gets `is-invalid`.
 * Pictures go through `ImageCropper.open()` (16:9 crop, zoom, rotate, flip, preview).
+
+## Icons
+
+One icon set everywhere: **Solar** (outline for normal, bold-duotone for the active menu group), served from our own
+files, no CDN. Use the names in `assets/icons/icon-map.json`, never a raw icon from another set.
+
+* JS: `icon('edit', { size: 20 })` from `assets/js/enlixo/core/icons.js`.
+* PHP: `enlixo_icon('edit', 20)` from `includes/enlixo/icons.php`.
+* New icon: add the name to `icon-map.json`, then run `node bin/build-icons.mjs <path to @iconify-json/solar/icons.json>`.
+
+Sizes: 18 in text and buttons, 20 in menus, 22 in the side menu, 24 in stat cards.
+
+## Action menus
+
+`ActionMenu.button('More', items)` in a header, `ActionMenu.kebab(items)` (three dots) in a row or card.
+White card, 10px corners, soft shadow, one outline icon and a short label per row, thin lines between rows.
+The risky item (Deactivate, Delete) is last and red, and asks with `BsModal.confirm` first. The menu opens below the
+button, or above it when there is no room.
+
+## Views and ordering
+
+A list that people browse (Classes) offers **Cards**, **Table** and **Details** with a segmented switch; the choice is
+remembered on the device. Drag and drop to change the order works only in "My order" with no search or filters, and
+the handle also moves with the arrow keys. Save the order on its own and show "Order saved."
 
 ## Modals
 

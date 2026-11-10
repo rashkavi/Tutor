@@ -24,6 +24,41 @@ final class ClassCreator
      */
     public function create(int $tutorId, int $userId, array $in, ?array $file, Entitlements $ent, string $now): array
     {
+        $p = $this->prepare($tutorId, $in, $file, $ent, null);
+        $p['class']['cover'] = $this->storeCover($file, $p['cover']);
+        $id = $this->repo->create($tutorId, $userId, $p['class'], $p['slots'], $p['fee'], $p['custom'], $now);
+        return ['id' => $id, 'name' => $p['class']['name'], 'slots' => count($p['slots']), 'fee' => $p['fee'] !== null];
+    }
+
+    /**
+     * Saves the Edit Class form. Weekly times that didn't change are kept (their class days stay linked);
+     * removed or changed ones end today and new ones start from today.
+     * `remove_cover: true` clears the cover; a new file replaces it; otherwise it stays.
+     */
+    public function update(int $tutorId, int $userId, int $classId, array $in, ?array $file, Entitlements $ent, string $now): array
+    {
+        $old = $this->repo->findForEdit($tutorId, $classId);
+        if ($old === null) {
+            throw HttpException::notFound('This class was not found.');
+        }
+        $p = $this->prepare($tutorId, $in, $file, $ent, $classId, $old['cover'] !== '');
+        $cover = $old['cover'];
+        if ($p['cover'] !== null) {
+            $cover = $this->storeCover($file, $p['cover']);
+        } elseif (filter_var($in['remove_cover'] ?? false, FILTER_VALIDATE_BOOL)) {
+            $cover = '';
+        }
+        $p['class']['cover'] = $cover;
+        $this->repo->update($tutorId, $userId, $classId, $p['class'], $p['slots'], $p['fee'], $p['custom'], $p['customKeys'], $now);
+        if ($cover !== $old['cover'] && $old['cover'] !== '' && preg_match('/^[a-z0-9]+\.(jpe?g|png|webp|svg)$/i', $old['cover'])) {
+            @unlink($this->coverDir . '/' . $old['cover']);
+        }
+        return ['id' => $classId, 'name' => $p['class']['name'], 'slots' => count($p['slots']), 'fee' => $p['fee'] !== null];
+    }
+
+    /** @return array{class:array, slots:list<array>, fee:?array, custom:array<string,string>, cover:?array{ext:string}} */
+    private function prepare(int $tutorId, array $in, ?array $file, Entitlements $ent, ?int $classId, bool $hasCover = false): array
+    {
         $settings = $this->repo->settings($tutorId);
         $fields = [];
         foreach (ClassFormSchema::forTutor($settings) as $f) {
@@ -152,7 +187,7 @@ final class ClassCreator
         }
         if (mb_strlen($name) > 100) {
             $errors['name'] = 'Keep the class name under 100 letters.';
-        } elseif ($name !== '' && $this->repo->nameTaken($tutorId, $name)) {
+        } elseif ($name !== '' && $this->repo->nameTaken($tutorId, $name, $classId)) {
             $errors['name'] = 'You already have a class with this name.';
         }
 
@@ -173,7 +208,7 @@ final class ClassCreator
             }
             $missing = match ($key) {
                 'schedule' => !$slots && !array_filter(array_keys($errors), static fn ($k) => str_starts_with((string) $k, 'schedule.')),
-                'cover' => $cover === null,
+                'cover' => $cover === null && !($hasCover && !filter_var($in['remove_cover'] ?? false, FILTER_VALIDATE_BOOL)),
                 default => $str($key) === '',
             };
             if ($missing) {
@@ -189,23 +224,29 @@ final class ClassCreator
             throw HttpException::validation($errors);
         }
 
-        $coverName = '';
-        if ($cover !== null) {
-            $coverName = bin2hex(random_bytes(8)) . $cover['ext'];
-            if (!is_dir($this->coverDir) || !move_uploaded_file($file['tmp_name'], $this->coverDir . '/' . $coverName)) {
-                if (!@rename($file['tmp_name'], $this->coverDir . '/' . $coverName)) {
-                    throw new HttpException(500, 'upload_failed', 'We could not save the cover image. Please try again.');
-                }
+        return [
+            'class' => [
+                'name' => $name, 'exam_type' => $ids['exam_type'], 'year' => $ids['year'], 'subject' => $ids['subject'], 'medium' => $ids['medium'],
+                'class_type' => $classType, 'description' => $description ?: null, 'delivery_mode' => $mode, 'location' => $location ?: null,
+                'capacity' => $capacity, 'enrollment_mode' => $enrol, 'starts_on' => $startsOn ?: null, 'is_free' => $isFree,
+            ],
+            'slots' => $slots, 'fee' => $fee, 'custom' => $custom, 'cover' => $cover,
+            'customKeys' => array_keys(array_filter($fields, static fn (array $f) => !empty($f['custom']))),
+        ];
+    }
+
+    private function storeCover(?array $file, ?array $cover): string
+    {
+        if ($cover === null || $file === null) {
+            return '';
+        }
+        $coverName = bin2hex(random_bytes(8)) . $cover['ext'];
+        if (!is_dir($this->coverDir) || !move_uploaded_file($file['tmp_name'], $this->coverDir . '/' . $coverName)) {
+            if (!@rename($file['tmp_name'], $this->coverDir . '/' . $coverName)) {
+                throw new HttpException(500, 'upload_failed', 'We could not save the cover image. Please try again.');
             }
         }
-
-        $id = $this->repo->create($tutorId, $userId, [
-            'name' => $name, 'exam_type' => $ids['exam_type'], 'year' => $ids['year'], 'subject' => $ids['subject'], 'medium' => $ids['medium'],
-            'class_type' => $classType, 'description' => $description ?: null, 'delivery_mode' => $mode, 'location' => $location ?: null,
-            'capacity' => $capacity, 'enrollment_mode' => $enrol, 'starts_on' => $startsOn ?: null, 'is_free' => $isFree, 'cover' => $coverName,
-        ], $slots, $fee, $custom, $now);
-
-        return ['id' => $id, 'name' => $name, 'slots' => count($slots), 'fee' => $fee !== null];
+        return $coverName;
     }
 
     private function int(mixed $raw, int $min, int $max, string $key, string $msg, array &$errors): ?int

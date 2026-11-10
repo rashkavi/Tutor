@@ -6,12 +6,21 @@ import { ImageCropper } from './ImageCropper.js';
 const DAYS = [[1, 'Monday'], [2, 'Tuesday'], [3, 'Wednesday'], [4, 'Thursday'], [5, 'Friday'], [6, 'Saturday'], [7, 'Sunday']];
 const INFO_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>';
 
-/** Small (i) next to a field label: hover/focus shows a Bootstrap tooltip, click shows the same text as a card (phones). */
-export function fieldInfo(text, label) {
-  if (!text) return null;
-  const btn = h('button', { type: 'button', class: 'ex-info-btn ex-info-sm', 'aria-label': `${label}: ${text}`, 'data-bs-toggle': 'tooltip', 'data-bs-title': text, html: INFO_SVG });
-  if (window.bootstrap?.Tooltip) queueMicrotask(() => new window.bootstrap.Tooltip(btn, { trigger: 'hover focus' }));
-  else btn.title = text;
+/**
+ * (i) next to a field label. Only fields that need explaining have one (the schema leaves it out of obvious fields).
+ * Hover, focus or tap shows a small card: what the field does, and what to enter.
+ */
+export function fieldInfo(text, label, enter = '') {
+  if (!text && !enter) return null;
+  const btn = h('button', { type: 'button', class: 'ex-info-btn ex-info-sm', 'aria-label': `About ${label}: ${text} ${enter}`.trim(), html: INFO_SVG });
+  const card = h('div', { class: 'ex-help' },
+    text ? h('div', { class: 'ex-help-row' }, h('span', { class: 'ex-help-k' }, 'What it does'), h('span', {}, text)) : null,
+    enter ? h('div', { class: 'ex-help-row' }, h('span', { class: 'ex-help-k' }, 'What to enter'), h('span', {}, enter)) : null);
+  if (window.bootstrap?.Popover) {
+    queueMicrotask(() => new window.bootstrap.Popover(btn, { trigger: 'hover focus', placement: 'top', html: true, title: label, content: card, customClass: 'ex-help-pop', container: 'body' }));
+  } else {
+    btn.title = [text, enter].filter(Boolean).join(' ');
+  }
   return btn;
 }
 
@@ -36,11 +45,13 @@ function sectionInfo(title, text) {
  * `showIf: [otherKey, [allowed values]]` hides a field until the other field matches.
  */
 export class FormBuilder {
-  constructor({ sections, fields, lookups = {}, values = {}, file = null, onChange = () => {}, lockBadge = () => null, onLocked = () => {}, onAddOption = null, onGenerateImage = null }) {
+  constructor({ sections, fields, lookups = {}, values = {}, file = null, imageUrl = null, onChange = () => {}, lockBadge = () => null, onLocked = () => {}, onAddOption = null, onGenerateImage = null }) {
     this.o = { sections, fields, lookups, onChange, lockBadge, onLocked, onAddOption, onGenerateImage };
     this.v = {};
     for (const f of fields) this.v[f.key] = values[f.key] ?? f.default ?? (f.type === 'schedule' ? [] : f.type === 'switch' ? false : '');
     this.file = file;
+    this.imageUrl = imageUrl; // the saved cover when editing
+    this.removed = false;
     this.rows = {};
   }
 
@@ -69,6 +80,8 @@ export class FormBuilder {
 
   values() { return { ...this.v }; }
   coverFile() { return this.file; }
+  /** Editing: the tutor removed the saved cover and chose no new one. */
+  coverRemoved() { return this.removed && !this.file; }
 
   set(key, value) {
     this.v[key] = value;
@@ -119,7 +132,7 @@ export class FormBuilder {
     const label = h('label', { class: `text-14 main-text ${f.required ? 'required' : ''}`, for: ['radio', 'schedule'].includes(f.type) ? null : id, id: `${id}-label` }, f.label);
     const addable = f.type === 'select' && this.o.onAddOption && ['exam_types', 'subjects', 'mediums'].includes(f.options);
     const col = h('div', { class: `${this.#colClass(f)} d-flex flex-column`, 'data-key': f.key },
-      h('div', { class: 'd-flex align-items-center gap-1' }, label, fieldInfo(f.info, f.label), f.locked ? this.o.lockBadge(f) : null,
+      h('div', { class: 'd-flex align-items-center gap-1' }, label, fieldInfo(f.info, f.label, f.enter), f.locked ? this.o.lockBadge(f) : null,
         addable ? h('button', { type: 'button', class: 'ex-link-add ms-auto', onclick: () => this.#addOption(f, id) }, '+ Add new') : null),
       this.#input(f, id),
       h('span', { class: 'ex-feedback text-dark-red text-12', role: 'alert' }));
@@ -214,6 +227,7 @@ export class FormBuilder {
 
     const show = (file) => {
       this.file = file;
+      if (!file && this.imageUrl) { this.imageUrl = null; this.removed = true; }
       fill(box, file ? h('img', { src: URL.createObjectURL(file), alt: 'Class cover preview' }) : empty());
       actions.classList.toggle('d-none', !file);
       this.set(f.key, file ? file.name : '');
@@ -230,10 +244,11 @@ export class FormBuilder {
       if (file.size > 15 * 1024 * 1024) { this.showErrors({ [f.key]: 'This picture is too big. Use one under 15 MB.' }); return; }
       crop(file);
     } });
-    const actions = h('div', { class: `d-flex justify-content-center gap-3 mt-2 ${this.file ? '' : 'd-none'}` },
-      h('button', { type: 'button', class: 'ex-link-add', onclick: () => crop(original ?? this.file) }, 'Crop again'),
+    const actions = h('div', { class: `d-flex justify-content-center gap-3 mt-2 ${this.file || this.imageUrl ? '' : 'd-none'}` },
+      h('button', { type: 'button', class: 'ex-link-add', onclick: () => crop(original ?? this.file ?? this.imageUrl) }, 'Crop again'),
       h('button', { type: 'button', class: 'ex-link-add text-dark-red', onclick: () => { original = null; show(null); } }, 'Remove image'));
     if (this.file) fill(box, h('img', { src: URL.createObjectURL(this.file), alt: 'Class cover preview' }));
+    else if (this.imageUrl) fill(box, h('img', { src: this.imageUrl, alt: 'Class cover' }));
 
     const generate = this.o.onGenerateImage
       ? h('button', { type: 'button', class: 'custom-outline-btn ex-btn-md w-100 mt-3 d-inline-flex align-items-center justify-content-center gap-2', onclick: async () => {
@@ -243,7 +258,7 @@ export class FormBuilder {
       : null;
 
     const col = h('div', { class: 'd-flex flex-column', 'data-key': f.key },
-      h('div', { class: 'd-flex align-items-center gap-1 mb-2' }, h('span', { class: `text-14 main-text ${f.required ? 'required' : ''}` }, f.label), fieldInfo(f.info, f.label)),
+      h('div', { class: 'd-flex align-items-center gap-1 mb-2' }, h('span', { class: `text-14 main-text ${f.required ? 'required' : ''}` }, f.label), fieldInfo(f.info, f.label, f.enter)),
       h('div', { class: 'ex-image-panel bl-solid p-3' },
         h('div', { class: 'position-relative' }, box,
           h('label', { class: 'upload-image text-white p-2 bottom-0 start-0 m-0 text-14 gap-2', for: id, role: 'button', tabindex: '0',
