@@ -75,7 +75,7 @@ if (!SessionUser::hasValidSession()) {
                                             <div class="row align-items-center p-0 m-0 g-0">
                                                 <div class="col-12 col-lg-8">
                                                     <div class="row">
-                                                        <span class="main-topic lh-lg" data-i18n="class-students"><?= $classData['class_name'] ?></span>
+                                                        <div class="d-flex align-items-center gap-2"><span class="main-topic lh-lg"><?= htmlspecialchars((string) $classData['class_name']) ?></span><button type="button" class="ex-info-btn" data-quick-guide="{&quot;title&quot;: &quot;Class Time Table&quot;, &quot;intro&quot;: &quot;The times of this class for the month.&quot;, &quot;points&quot;: [&quot;Point at a class for its details.&quot;, &quot;Use Previous and Next to move between months.&quot;]}" aria-label="Quick guide: Class Time Table"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg></button></div>
                                                         <nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
                                                             <ol class="breadcrumb m-0">
                                                                 <li class="breadcrumb-item"><a class="sub-text text-decoration-none cursor-pointer" href="./classes">Classes</a></li>
@@ -150,6 +150,7 @@ if (!SessionUser::hasValidSession()) {
                 <script src="<?= Project::getAssetsPath() ?>/js/functions.js?v=<?= Project::getVersion() ?>"></script>
                 <script src="js/eventCalender.js?v=<?= Project::getVersion() ?>"></script>
                 <script src="<?= Project::getAssetsPath() ?>/js/fileChooser.js?v=<?= Project::getVersion() ?>"></script>
+        <script type="module">import { QuickGuide } from '<?= Project::getAssetsPath() ?>/js/enlixo/components/QuickGuide.js'; QuickGuide.attachAll();</script>
             </body>
 
             </html>

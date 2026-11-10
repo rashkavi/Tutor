@@ -107,10 +107,10 @@ function generateCalendar(year, month) {
     let monthCount = 0;
     let html = `
       <div class="ex-cal-nav">
-        <button type="button" class="custom-outline-btn ex-btn-md px-4" onclick="prevMonthSchedule()">${calSvg.left}<span>Previous</span></button>
+        <button type="button" class="py-2 px-3 bl-solid br-8 d-flex align-items-center justify-content-center gap-1 component-theme previous-button" onclick="prevMonthSchedule()">${calSvg.left}<span class="text-14 main-text fw-semibold">Previous</span></button>
         <div class="ex-cal-title"><h2>${monthNames[month]} ${year}</h2>
           ${isThisMonth ? '' : '<button type="button" class="ex-cal-today-btn" onclick="todaySchedule()">Back to today</button>'}</div>
-        <button type="button" class="custom-outline-btn ex-btn-md px-4" onclick="nextMonthSchedule()"><span>Next</span>${calSvg.right}</button>
+        <button type="button" class="py-2 px-3 bl-solid br-8 d-flex align-items-center justify-content-center gap-1 component-theme next-button" onclick="nextMonthSchedule()"><span class="text-14 main-text fw-semibold">Next</span>${calSvg.right}</button>
       </div>
       <div class="ex-cal-legend" aria-label="What the colours mean">
         <span><i class="ex-cal-badge ex-st-live">Live</i> on now</span>
