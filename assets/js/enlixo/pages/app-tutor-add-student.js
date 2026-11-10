@@ -65,7 +65,7 @@ async function save() {
   saveBtn.textContent = 'Saving…';
   try {
     const { data } = await api.post('/tutor/students', body);
-    Toast.success(data.already_in_class ? `${data.name} is already in this class.` : data.existing ? `${data.name} already had an account, so we added them to the class.` : `${data.name} added.`);
+    Toast.success(data.existing ? `This WhatsApp number belongs to ${data.name}, so we added them to the class.` : `${data.name} added.`);
     setTimeout(() => { location.href = 'students'; }, 1200);
   } catch (e) {
     if (e instanceof FeatureLockedError) gate?.openUpgrade(e.details);

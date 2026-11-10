@@ -762,3 +762,4 @@ table.ex-table { width: 100%; border-collapse: collapse; }
 .ex-bar-head .ex-info-btn { color: #fff; }
 .ex-done-ico { width: 72px; height: 72px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--light-green, #E9F6EB); color: #2e9e40; }
 .ex-image-panel.ex-square .ex-image-box { aspect-ratio: 1 / 1; }
+.ex-dv.ex-card { border: 0; box-shadow: none; } /* no borders on components; the table keeps its lines */

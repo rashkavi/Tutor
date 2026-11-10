@@ -22,21 +22,22 @@ final class StudentRegistrar
     /**
      * @param array<string,string> $v      values from StudentFormValidator
      * @param list<string>         $extraKeys keys saved to student_custom_field_values (nic, school, own fields)
-     * @return array{student_id:int, existing:bool, already_in_class:bool}
+     * @return array{student_id:int, existing:bool, already_in_class:bool, existing_name:?string}
      */
-    public function register(int $tutorId, int $byUserId, array $v, array $extraKeys, ?string $photo, string $now): array
+    public function register(int $tutorId, int $byUserId, array $v, array $extraKeys, ?string $photo, string $now, bool $failIfInClass = false): array
     {
         $classId = (int) ($v['class_id'] ?? 0);
         if (!$this->db->value('SELECT 1 FROM classes WHERE class_id = :c AND tutor_id = :t', ['c' => $classId, 't' => $tutorId])) {
             throw HttpException::validation(['class_id' => 'Choose one of your classes.']);
         }
 
-        return $this->db->transaction(function () use ($tutorId, $byUserId, $v, $extraKeys, $photo, $now, $classId) {
-            $existing = $this->db->value(
-                'SELECT s.student_id FROM students s JOIN login_details ld ON ld.login_details_id = s.login_details_login_details_id
-                  WHERE ld.whatsapp = :w ORDER BY s.student_id LIMIT 1',
+        return $this->db->transaction(function () use ($tutorId, $byUserId, $v, $extraKeys, $photo, $now, $classId, $failIfInClass) {
+            $found = $this->db->one(
+                "SELECT s.student_id, CONCAT(ld.first_name, ' ', ld.last_name) name FROM students s JOIN login_details ld ON ld.login_details_id = s.login_details_login_details_id
+                  WHERE ld.whatsapp = :w ORDER BY s.student_id LIMIT 1",
                 ['w' => $v['whatsapp']],
             );
+            $existing = $found['student_id'] ?? null;
             if ($existing) {
                 $studentId = (int) $existing;
             } else {
@@ -44,6 +45,9 @@ final class StudentRegistrar
             }
 
             $inClass = (bool) $this->db->value('SELECT 1 FROM students_has_classes WHERE classes_class_id = :c AND students_student_id = :s', ['c' => $classId, 's' => $studentId]);
+            if ($inClass && $failIfInClass) {
+                throw HttpException::validation(['whatsapp' => "This WhatsApp number belongs to {$found['name']}, who is already in this class."]);
+            }
             if (!$inClass) {
                 $this->db->execute(
                     'INSERT INTO students_has_classes (classes_class_id, students_student_id, status_status_id, added_at, added_by) VALUES (:c, :s, 1, :at, :by)',
@@ -61,7 +65,7 @@ final class StudentRegistrar
                     ['s' => $studentId, 't' => $tutorId, 'k' => $key, 'v' => $v[$key]],
                 );
             }
-            return ['student_id' => $studentId, 'existing' => (bool) $existing, 'already_in_class' => $inClass];
+            return ['student_id' => $studentId, 'existing' => (bool) $existing, 'already_in_class' => $inClass, 'existing_name' => $found['name'] ?? null];
         });
     }
 

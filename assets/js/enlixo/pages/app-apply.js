@@ -63,7 +63,7 @@ function draw(d) {
     h('div', { class: 'ex-bar-section p-3 mb-4' }, h('div', { class: 'ex-apply-steps' }, steps.map(([t, s], i) => h('div', { class: 'ex-apply-step' },
       h('span', { class: 'ex-apply-num' }, String(i + 1)), h('div', {}, h('div', { class: 'text-14 main-text fw-medium' }, t), h('div', { class: 'text-12 sub-text' }, s)))))),
     host,
-    h('section', { class: 'ex-bar-section mb-2', 'aria-label': 'Confirm and Submit' },
+    h('section', { class: 'ex-bar-section ex-bsform mb-2', 'aria-label': 'Confirm and Submit' },
       h('div', { class: 'ex-bar-head' }, icon('check', { size: 20 }), h('span', {}, 'Confirm and Submit'), h('span', { class: 'ex-bar-sub d-none d-md-inline' }, 'Check your details before you send the application')),
       h('div', { class: 'p-4' },
         h('label', { class: 'text-14 main-text', for: 'a-message' }, 'Message to the tutor'), msg, honeypot,

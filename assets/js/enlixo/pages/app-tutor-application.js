@@ -95,7 +95,7 @@ function profile() {
       h('div', { class: 'ex-profile-photo' }, photo, h('span', { class: 'ex-profile-dot', style: { background: dotColor } })),
       h('div', { class: 'ex-profile-name mt-3' }, name),
       h('div', { class: 'text-12 sub-text' }, app.class_name ?? 'No class chosen'),
-      h('div', { class: 'd-flex justify-content-center gap-2 mt-3' }, h('span', { class: 'ex-tag-v3' }, icon('hashtag', { size: 14 }), `Ref. ${app.ref_no}`), statusPill(app.status)),
+      h('div', { class: 'd-flex justify-content-center gap-2 mt-3' }, h('span', { class: 'ex-tag-v3 gap-1' }, icon('hashtag', { size: 14 }), `Ref. ${app.ref_no}`), statusPill(app.status)),
       h('div', { class: 'd-flex gap-2 mt-4' },
         contact('phone', 'Call', mobile || app.whatsapp ? `tel:${mobile || app.whatsapp}` : null),
         contact('whatsapp', 'WhatsApp', wa ? `https://wa.me/${wa}` : null),
@@ -119,9 +119,6 @@ function answers() {
   const filled = shown.filter((f) => valueOf(f) !== null).length;
   const pct = shown.length ? Math.round((filled / shown.length) * 100) : 0;
   const sections = d.sections.map((s) => ({ s, fields: shown.filter((f) => f.section === s.key) })).filter((x) => x.fields.length);
-  const note = app.status_note && ['rejected', 'on_hold'].includes(app.status)
-    ? h('div', { class: `ex-note-box mt-3 ${app.status === 'rejected' ? 'ex-bad' : 'ex-wait'}` }, h('strong', {}, app.status === 'rejected' ? 'Reason: ' : 'Waiting for: '), app.status_note)
-    : null;
   const message = app.message ? h('div', { class: 'ex-panel-soft p-3 mt-3' }, h('div', { class: 'text-12 sub-text mb-1' }, 'Message from the student'), h('div', { class: 'text-14 main-text' }, app.message)) : null;
   return h('div', { class: 'component-theme p-4 h-100' },
     h('div', { class: 'd-flex flex-wrap align-items-start gap-3' },
@@ -134,7 +131,6 @@ function answers() {
         h('button', { type: 'button', class: 'custom-outline-btn ex-btn-sm px-3', onclick: () => { sections.forEach((x) => open.add(x.s.key)); draw(); } }, icon('expand', { size: 16 }), 'Expand all'),
         h('button', { type: 'button', class: 'custom-outline-btn ex-btn-sm px-3', onclick: () => { open.clear(); draw(); } }, icon('collapse', { size: 16 }), 'Collapse all'))),
     h('div', { class: 'mt-4' }, stepper()),
-    note,
     message,
     h('div', { class: 'mt-4' }, sections.map(({ s, fields }) => panel(s, fields))));
 }
@@ -187,7 +183,7 @@ function history() {
       h('span', { class: 'ex-count-pill' }, `${d.history.length} ${d.history.length === 1 ? 'Entry' : 'Entries'}`),
       h('div', { class: 'position-relative flex-grow-1' }, h('span', { class: 'position-absolute top-50 translate-middle-y sub-text', style: { left: '16px' } }, icon('search', { size: 18 })), search)),
     h('div', { class: 'table-responsive' },
-      h('table', { class: 'table ex-v3-table align-middle m-0' },
+      h('table', { class: 'table ex-v3-table align-middle m-0 text-14' },
         h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'User'), h('th', { scope: 'col' }, 'Date'), h('th', { scope: 'col' }, 'Action'), h('th', { scope: 'col' }, 'Remark'))),
         h('tbody', {}, rows.length ? rows.map((r) => h('tr', {},
           h('td', {}, h('div', { class: 'ex-person' }, h('span', { class: 'ex-avatar' }, fmt.initials(r.user_name ?? 'A P')), h('span', {}, who(r)))),

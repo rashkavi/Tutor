@@ -96,8 +96,8 @@ final class ApplicationService
         if (!$ent->canAddStudents()) {
             throw new HttpException(402, 'student_limit', "Your package allows {$ent->studentLimit} students and you have {$ent->studentCount}. Upgrade to add more.", ['feature' => 'students.registration']);
         }
-        $result = $this->registrar->register($tutorId, $userId, $values, self::extraKeys($fields), $this->storePhoto($photoFile, $photo), $now);
-        return $result + ['name' => trim($values['first_name'] . ' ' . $values['last_name'])];
+        $result = $this->registrar->register($tutorId, $userId, $values, self::extraKeys($fields), $this->storePhoto($photoFile, $photo), $now, true);
+        return $result + ['name' => $result['existing_name'] ?? trim($values['first_name'] . ' ' . $values['last_name'])];
     }
 
     /** Move an application. Approving registers the student in the chosen class. */
@@ -131,7 +131,7 @@ final class ApplicationService
             $fieldKeys = array_merge(StudentFormSchema::EXTRA, array_map(static fn ($f) => $f['key'], array_filter(StudentFormSchema::allForTutor($this->forms->settings($tutorId)), static fn ($f) => !empty($f['custom']))));
             $result = $this->registrar->register($tutorId, $userId, $values, $fieldKeys, $app['photo'] ?: null, $now);
             $studentId = $result['student_id'];
-            $remark = trim(($result['existing'] ? 'Already had an account; added to the class.' : 'Registered as a new student.') . ($note !== '' ? " $note" : ''));
+            $remark = trim(($result['already_in_class'] ? 'Already in this class.' : ($result['existing'] ? 'Already had an account (' . $result['existing_name'] . '); added to the class.' : 'Registered as a new student.')) . ($note !== '' ? " $note" : ''));
         }
         $this->apps->setStatus($id, $to, in_array($to, ['rejected', 'on_hold'], true) ? $note : null, $userId, $now, $studentId);
         $this->apps->addHistory($id, $userId, self::ACTION_NAMES[$to], $remark !== '' ? $remark : null, $now);
