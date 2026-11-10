@@ -18,7 +18,7 @@ Don't add `border: 1px` to a new component; use a background change for hover an
 |---|---|
 | Header card | `enlixo_form_header($title, $crumbs, $guide, $actionsId)` (forms, settings) or `enlixo_page_header()` (lists). Title, (i) quick guide, breadcrumb, buttons on the right. |
 | Content card | `<div class="component-theme p-4">`. Cards sit `mb-4` apart on the grey page. |
-| Stat cards | Row of `col-12 col-md-6 col-xl-3`, each `component-theme px-4 py-3`: `.ex-stat-num`, then `text-14 main-text` title, then `text-12 sub-text` note. |
+| Stat cards | Always `StatCard.row([...])` (`components/StatCard.js`), see **Stat cards** below. |
 | Settings layout | One `component-theme` card: left menu `.ex-side-nav` (`.ex-side-group` headings, `.ex-side-item` buttons, `.active`), right panel `p-4`. |
 | Lists | `DataView` (search, filters, export, per page, table). |
 
@@ -39,16 +39,37 @@ Easy fields (subject, medium, hall, description) have none. The (i) opens a smal
 
 ## Buttons
 
+**One size.** Every button is **48px high with 15px text**, the same height as the input boxes, search box, filter
+button and count pill, so a toolbar lines up like V3. `style.css` sets this for `custom-btn` / `custom-outline-btn`
+on every page (old pages too); `ex-btn-lg` and `ex-btn-md` are the same size and only kept so older code still works.
+
 | Height | Classes | For |
 |---|---|---|
-| 48px | `custom-btn ex-btn-lg` | The one main action in the page header (Save Class) |
-| 40px | `custom-btn ex-btn-md` / `custom-outline-btn ex-btn-md` | Modal footers, panel toolbars (Add, Reset to Default) |
-| 32px | `custom-btn ex-btn-sm` | Row actions in tables (Edit) |
+| 48px | `custom-btn` / `custom-outline-btn` (+ `ex-btn-md`) | Every button: page header, toolbars, forms, modals |
+| 32px | `custom-btn ex-btn-sm` / `custom-outline-btn ex-btn-sm` | Only inside a table row or a small panel tool (View, Edit, Expand all) |
 
 * One filled (`custom-btn`) button per area: the main action. Everything else is outline (`custom-outline-btn`).
 * Danger: `ex-btn-danger-fill` on the button (red) after a `BsModal.confirm`.
 * Small text links (Add new, Crop again): `.ex-link-add`.
 * In JS use `BsModal.button(text, { primary, icon, danger, onclick })`, which applies the rules above.
+* The size lives in one place: `--ex-control-h` and `--ex-row-btn-h` in `enlixo-ui.css`. Don't set a button height in a page.
+
+## Stat cards
+
+One card for every summary number, like the V3 dashboard: icon tile + label + ⋯ menu, big number, grey caption,
+and an optional mini bar chart (one series; the last bar, "now", is dark blue).
+
+```js
+StatCard.row([
+  { icon: 'application', label: 'Applications', value: 8, caption: '3 this month vs last month',
+    trend: StatCard.trend(thisMonth, lastMonth), bars: [{ label: 'Mon 3 Nov', value: 1 }, ...],
+    menu: [{ label: 'Show all', icon: 'filter', onClick }], onClick, selected },
+], { cols: 'col-12 col-md-6 col-xl-3' });   // 4 per row; use col-xl-4 for 3 per row
+```
+
+* Label in Title Case, caption one short line ("Waiting for a first look").
+* `onClick` when the card can filter the list under it (Requested Students); the chosen card gets a blue underline.
+* Only give a ⋯ menu when it has something useful (show these, open the page, copy the link). No empty menus.
 
 ## Forms
 

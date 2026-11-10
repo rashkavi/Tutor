@@ -635,3 +635,130 @@ table.ex-table { width: 100%; border-collapse: collapse; }
 /* style.css paints outline buttons white; keep them see-through in the dark theme */
 [data-custom-theme="dark"] .custom-outline-btn { background-color: transparent; }
 [data-custom-theme="dark"] .custom-outline-btn:hover { background-color: rgba(255, 255, 255, .04); }
+
+/* =====================================================================
+   One button size (docs/UI-STANDARD.md "Buttons"), 2026-11-10.
+   Every button, input, select, search box and count pill is 48px high with 15px text, so a toolbar lines up
+   like V3. The only smaller button is the one inside a table row (32px, .ex-btn-sm).
+   ===================================================================== */
+:root { --ex-control-h: 48px; --ex-row-btn-h: 32px; }
+.custom-btn, .custom-outline-btn, .custom-danger-btn,
+.ex-btn-lg, .ex-btn-md, .ex-btn-actions, .ex-btn-view { height: var(--ex-control-h); font-size: 15px; }
+.ex-btn-lg, .ex-btn-md { min-width: 128px; }
+.custom-btn.ex-btn-sm, .custom-outline-btn.ex-btn-sm, .ex-btn-actions.ex-btn-sm, .ex-btn-view.ex-btn-sm { height: var(--ex-row-btn-h); min-width: 0; font-size: 13px; }
+.ex-h40, .ex-filter { height: var(--ex-control-h) !important; }
+.ex-dv .ex-btn, .ex-count-pill, .ex-dv .ex-search .ex-input, .ex-dv .ex-per-page .ex-select, .ex-bulk .ex-select { height: var(--ex-control-h); }
+.ex-dv .ex-btn { font-size: 15px; }
+.ex-dv .ex-count-pill { font-size: 14px; }
+
+/* =====================================================================
+   Stat card (StatCard.js), the one summary card for every page, like V3:
+   icon tile + label + ⋯ menu, big number, a short caption, and an optional mini bar chart.
+   ===================================================================== */
+.ex-stat { position: relative; display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 18px 20px 16px; background: var(--custom-white, #fff); }
+.ex-stat-head { display: flex; align-items: center; gap: 12px; min-height: 32px; }
+.ex-stat-tile { width: 32px; height: 32px; flex: none; border-radius: 6px; display: grid; place-items: center; background: var(--light-theme, #E8ECFF); color: var(--dark-color, #1D2026); }
+[data-custom-theme="dark"] .ex-stat-tile { color: #cfe0ff; }
+.ex-stat-label { flex: 1; min-width: 0; font-size: 13px; color: var(--main-text-color, #4E5566); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ex-stat-menu { width: 28px; height: 28px; border: 0; border-radius: 6px; background: none; color: var(--sub-text, #8C94A3); display: inline-grid; place-items: center; cursor: pointer; }
+.ex-stat-menu:hover, .ex-stat-menu[aria-expanded="true"] { background: var(--light-color, #f9fafb); color: var(--dark-theme, #0061D2); }
+.ex-stat-body { display: flex; align-items: flex-end; gap: 12px; }
+.ex-stat-main { flex: 1; min-width: 0; }
+.ex-stat .ex-stat-value { font-size: 28px; font-weight: 700; line-height: 1.25; color: var(--dark-color, #1D2026); }
+.ex-stat-cap { font-size: 12px; color: var(--sub-text, #8C94A3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ex-stat-trend { font-weight: 600; margin-right: 6px; }
+.ex-stat-trend.ex-up { color: var(--dark-green, #48CD5D); }
+.ex-stat-trend.ex-down { color: var(--dark-red, #D85E44); }
+.ex-stat-trend.ex-flat { color: var(--dark-orange, #FF9500); }
+.ex-stat-bars { display: flex; align-items: flex-end; gap: 3px; height: 34px; flex: none; }
+.ex-stat-bars > span { width: 7px; min-height: 5px; border-radius: 2px 2px 0 0; background: var(--light-theme, #E8ECFF); }
+.ex-stat-bars > span.ex-now { background: var(--dark-theme, #0061D2); }
+.ex-stat.ex-clickable { cursor: pointer; transition: box-shadow .15s; }
+.ex-stat.ex-clickable:hover { box-shadow: 0 6px 18px rgba(16, 24, 40, .06); }
+.ex-stat.ex-selected { box-shadow: inset 0 -3px 0 var(--dark-theme, #0061D2); }
+.ex-stat.ex-clickable:focus-visible { outline: 2px solid var(--dark-theme, #0061D2); outline-offset: -2px; }
+
+/* status pills (Requested Students) */
+.ex-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 88px; height: 28px; padding: 0 12px; font-size: 12.5px; white-space: nowrap; }
+.ex-pill-pending { background: var(--light-orange, #FBEBDB); color: var(--dark-orange, #FF9500); }
+.ex-pill-in_review { background: var(--light-theme, #E8ECFF); color: var(--dark-theme, #0061D2); }
+.ex-pill-on_hold { background: var(--light-purple, #EFDEF7); color: var(--dark-purple, #AF52DE); }
+.ex-pill-approved { background: var(--light-green, #E9F6EB); color: #2e9e40; }
+.ex-pill-rejected { background: var(--light-red, #FFEBEB); color: var(--dark-red, #D85E44); }
+.ex-ref { font-size: 11.5px; color: var(--sub-text, #8C94A3); }
+
+/* application page: profile card */
+.ex-profile { background: var(--custom-white, #fff); }
+.ex-profile-banner { height: 112px; position: relative; overflow: hidden; background: linear-gradient(135deg, var(--dark-theme, #0061D2), #1e3a5f); }
+.ex-profile-banner::before, .ex-profile-banner::after { content: ""; position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .08); }
+.ex-profile-banner::before { width: 180px; height: 180px; right: -40px; top: -60px; }
+.ex-profile-banner::after { width: 110px; height: 110px; left: -30px; bottom: -60px; }
+.ex-profile-photo { width: 104px; height: 104px; border-radius: 50%; margin: -56px auto 0; position: relative; display: grid; place-items: center; background: var(--light-theme, #E8ECFF); color: var(--dark-theme, #0061D2); font-size: 30px; box-shadow: 0 0 0 5px var(--custom-white, #fff), 0 8px 20px rgba(16, 24, 40, .12); }
+.ex-profile-photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.ex-profile-dot { position: absolute; right: 6px; bottom: 8px; width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 0 3px var(--custom-white, #fff); }
+.ex-profile-name { font-size: 18px; font-weight: 600; color: var(--dark-color, #1D2026); }
+.ex-contact-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px; background: var(--light-color, #f9fafb); color: var(--main-text-color, #4E5566); font-size: 12.5px; text-decoration: none; }
+.ex-contact-btn:hover { background: var(--light-theme, #E8ECFF); color: var(--dark-theme, #0061D2); }
+.ex-contact-btn .ex-ico { color: var(--dark-theme, #0061D2); }
+.ex-info-line { display: flex; gap: 12px; align-items: center; padding: 10px 0; }
+.ex-info-line + .ex-info-line { box-shadow: inset 0 1px 0 var(--line-color, #E9EAF0); }
+.ex-info-ico { width: 36px; height: 36px; flex: none; display: grid; place-items: center; background: var(--light-theme, #E8ECFF); color: var(--dark-theme, #0061D2); }
+.ex-meta-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; padding: 6px 0; }
+.ex-meta-row > span:first-child { color: var(--sub-text, #8C94A3); }
+.ex-meta-row > span:last-child { color: var(--dark-color, #1D2026); text-align: right; }
+
+/* application page: progress + stepper */
+.ex-progress { height: 6px; background: var(--line-color, #E9EAF0); width: 160px; }
+.ex-progress > span { display: block; height: 100%; background: var(--dark-theme, #0061D2); }
+.ex-stepper { display: grid; grid-template-columns: repeat(4, 1fr); padding: 20px 8px 16px; background: var(--light-color, #f9fafb); }
+.ex-step { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 0 6px; }
+.ex-step::before { content: ""; position: absolute; top: 16px; left: calc(-50% + 22px); right: calc(50% + 22px); height: 2px; background: var(--line-color, #E9EAF0); }
+.ex-step:first-child::before { display: none; }
+.ex-step.ex-done::before, .ex-step.ex-bad::before { background: var(--dark-green, #48CD5D); }
+.ex-step-dot { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--custom-white, #fff); color: var(--sub-text, #8C94A3); font-size: 12px; box-shadow: inset 0 0 0 1px var(--line-color, #E9EAF0); position: relative; z-index: 1; }
+.ex-step.ex-done .ex-step-dot { background: var(--dark-green, #48CD5D); color: #fff; box-shadow: 0 0 0 4px var(--light-green, #E9F6EB); }
+.ex-step.ex-bad .ex-step-dot { background: var(--light-red, #FFEBEB); color: var(--dark-red, #D85E44); box-shadow: 0 0 0 4px #fff3f1; }
+.ex-step.ex-wait .ex-step-dot { background: var(--light-purple, #EFDEF7); color: var(--dark-purple, #AF52DE); box-shadow: 0 0 0 4px #f7effb; }
+.ex-step-title { font-size: 13px; color: var(--dark-color, #1D2026); margin-top: 4px; }
+.ex-step.ex-bad .ex-step-title { color: var(--dark-red, #D85E44); }
+.ex-step-sub { font-size: 11.5px; color: var(--sub-text, #8C94A3); max-width: 180px; }
+.ex-step:not(.ex-done):not(.ex-bad):not(.ex-wait) .ex-step-title { color: var(--sub-text, #8C94A3); }
+@media (max-width: 575.98px) { .ex-stepper { grid-template-columns: repeat(2, 1fr); row-gap: 18px; } .ex-step::before { display: none; } }
+
+/* application page: section panels (blue bar when open; grey block when closed, no borders) */
+.ex-acc { background: var(--light-color, #f9fafb); box-shadow: inset 3px 0 0 var(--dark-theme, #0061D2); }
+.ex-acc + .ex-acc { margin-top: 12px; }
+.ex-acc-head { width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px 18px; border: 0; background: none; color: var(--dark-color, #1D2026); font-size: 14px; text-align: left; cursor: pointer; }
+.ex-acc-ico { width: 34px; height: 34px; display: grid; place-items: center; background: var(--light-theme, #E8ECFF); color: var(--dark-theme, #0061D2); flex: none; }
+.ex-acc-count { margin-left: auto; font-size: 12px; color: var(--sub-text, #8C94A3); white-space: nowrap; }
+.ex-acc-chev { transition: transform .2s; color: var(--sub-text, #8C94A3); }
+.ex-acc.ex-open { box-shadow: none; }
+.ex-acc.ex-open .ex-acc-head { background: linear-gradient(90deg, var(--dark-theme, #0061D2), #1e3a5f); color: #fff; }
+.ex-acc.ex-open .ex-acc-ico { background: rgba(255, 255, 255, .15); color: #fff; }
+.ex-acc.ex-open .ex-acc-count, .ex-acc.ex-open .ex-acc-chev { color: rgba(255, 255, 255, .85); }
+.ex-acc.ex-open .ex-acc-chev { transform: rotate(180deg); }
+.ex-acc-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+.ex-acc-cell { padding: 14px 16px; box-shadow: inset -1px -1px 0 var(--line-color, #E9EAF0); min-width: 0; }
+.ex-acc-k { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--sub-text, #8C94A3); }
+.ex-acc-v { font-size: 14px; color: var(--dark-color, #1D2026); margin-top: 4px; overflow-wrap: anywhere; }
+.ex-acc-v.ex-empty-v { color: var(--sub-text, #8C94A3); font-style: italic; }
+@media (max-width: 991.98px) { .ex-acc-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 575.98px) { .ex-acc-grid { grid-template-columns: 1fr; } }
+.ex-note-box { padding: 12px 16px; font-size: 13px; }
+.ex-note-box.ex-bad { background: var(--light-red, #FFEBEB); color: #a8432e; }
+.ex-note-box.ex-wait { background: var(--light-purple, #EFDEF7); color: #7a2fa0; }
+
+/* public application form (apply.php) */
+.ex-apply { max-width: 920px; margin: 0 auto; padding: 32px 16px 24px; }
+.ex-apply-title { font-size: 24px; font-weight: 600; color: var(--dark-color, #1D2026); }
+.ex-apply-title::after { content: ""; display: block; width: 44px; height: 3px; margin: 10px auto 0; background: var(--dark-theme, #0061D2); }
+.ex-apply-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.ex-apply-step { display: flex; gap: 10px; padding: 14px; background: var(--light-color, #f9fafb); }
+.ex-apply-num { width: 26px; height: 26px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--dark-theme, #0061D2); color: #fff; font-size: 12px; }
+@media (max-width: 767.98px) { .ex-apply-steps { grid-template-columns: repeat(2, 1fr); } }
+.ex-bar-section { background: var(--custom-white, #fff); }
+.ex-bar-head { display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: var(--dark-theme, #0061D2); color: #fff; font-size: 14px; }
+.ex-bar-head .ex-bar-sub { margin-left: auto; font-size: 12px; opacity: .9; text-align: right; }
+.ex-bar-head .ex-info-btn { color: #fff; }
+.ex-done-ico { width: 72px; height: 72px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--light-green, #E9F6EB); color: #2e9e40; }
+.ex-image-panel.ex-square .ex-image-box { aspect-ratio: 1 / 1; }

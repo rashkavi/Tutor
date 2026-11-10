@@ -4,6 +4,7 @@ require_once '../includes/UserClass.php';
 require_once '../includes/UserPermissionsClass.php';
 require_once '../includes/connection.php';
 require_once '../includes/Project.php';
+require_once '../includes/enlixo/stat-card.php';
 
 require_once './api/automatedClassFee.php';
 require_once './api/automatedPaneltyPayment.php';
@@ -78,6 +79,7 @@ if (!SessionUser::hasValidSession()) {
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/skeleton.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/dashboard.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
+        <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
 
         <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
         <script src="<?= Project::getAssetsPath() ?>/plugins/jquery/jquery-3.7.1.min.js"></script>
@@ -157,48 +159,16 @@ if (!SessionUser::hasValidSession()) {
                             <div class="col-12 m-0">
                                 <div class="row g-4 p-0 m-0">
                                     <div class="col-12 col-md-6 col-xl-3">
-                                        <div class="courier-kpi total">
-                                            <div class="icon">
-                                                <iconify-icon icon="eos-icons:product-classes-outlined" width="22"></iconify-icon>
-                                            </div>
-                                            <div>
-                                                <div class="label">Classes</div>
-                                                <div class="value"><?= $cardData['total_class_count'] ?></div>
-                                            </div>
-                                        </div>
+                                        <?php enlixo_stat_card('classes', 'Classes', (string) $cardData['total_class_count'], 'Your classes', [['Open classes', 'classes']]); ?>
                                     </div>
                                     <div class="col-12 col-md-6 col-xl-3">
-                                        <div class="courier-kpi delivered">
-                                            <div class="icon">
-                                                <iconify-icon icon="ph:student" width="22"></iconify-icon>
-                                            </div>
-                                            <div>
-                                                <div class="label">Students</div>
-                                                <div class="value"><?= $cardData['total_engaged_students_count'] ?></div>
-                                            </div>
-                                        </div>
+                                        <?php enlixo_stat_card('students', 'Students', (string) $cardData['total_engaged_students_count'], 'In your classes', [['Registered students', 'students'], ['Requested students', 'requested-students']]); ?>
                                     </div>
                                     <div class="col-12 col-md-6 col-xl-3">
-                                        <div class="courier-kpi transit">
-                                            <div class="icon">
-                                                <iconify-icon icon="ci:wavy-check" width="22"></iconify-icon>
-                                            </div>
-                                            <div>
-                                                <div class="label">Total Income</div>
-                                                <div class="value">LKR <?= number_format($cardData['total_income'], 2) ?></div>
-                                            </div>
-                                        </div>
+                                        <?php enlixo_stat_card('money', 'Total Income', 'LKR ' . number_format((float) $cardData['total_income'], 2), 'Accepted payments', [['Open payments', 'payments']]); ?>
                                     </div>
                                     <div class="col-12 col-md-6 col-xl-3">
-                                        <div class="courier-kpi pending">
-                                            <div class="icon">
-                                                <iconify-icon icon="carbon:pending" width="22"></iconify-icon>
-                                            </div>
-                                            <div>
-                                                <div class="label">Awaiting Payments</div>
-                                                <div class="value">LKR <?= number_format($cardData['awaiting_total'], 2) ?></div>
-                                            </div>
-                                        </div>
+                                        <?php enlixo_stat_card('hourglass', 'Awaiting Payments', 'LKR ' . number_format((float) $cardData['awaiting_total'], 2), 'Not paid yet', [['Open payments', 'payments']]); ?>
                                     </div>
                                 </div>
                             </div>

@@ -21,8 +21,9 @@ class load_side_menu
                     ['Create a Class', null, 'create-class', '', []],
                 ]],
                 ['Students', null, null, 'students', ['Students'], [
-                    ['All Students', null, 'students', '', []],
-                    ['Add New Student', null, 'add-student-to-class', '', []],
+                    ['Registered Students', null, 'students', '', []],
+                    ['Requested Students', null, 'requested-students', '', ['Requested Students']],
+                    ['Add New Student', null, 'add-student', '', ['Add New Student']],
                     ['Add Registered Student', null, 'add-registered-student-to-class', '', []],
                     ['Bulk Upload', null, 'upload-student-bulk', '', []],
                 ]],
@@ -38,6 +39,7 @@ class load_side_menu
             ]],
             ['Settings', 'settings', null, '', [], [
                 ['Class Form', null, 'class-form-settings', '', ['Class Form']],
+                ['Student Form', null, 'student-form-settings', '', ['Student Form']],
                 ['Plans & Billing', null, 'pricing', '', ['Pricing']],
                 ['Integrations', null, 'intergrations', 'intergrations', ['Intergrations']],
             ]],

@@ -571,7 +571,7 @@ body {
 .custom-btn {
     background-color: var(--dark-theme);
     color: white;
-    font-size: var(--font-size-17);
+    font-size: var(--font-size-15);
     height: 48px;
     border-radius: 0px;
     cursor: pointer;
@@ -586,7 +586,7 @@ body {
 .custom-danger-btn {
     background-color: var(--dark-red);
     color: white;
-    font-size: var(--font-size-17);
+    font-size: var(--font-size-15);
     height: 48px;
     border-radius: 0px;
     cursor: pointer;
@@ -632,7 +632,7 @@ body {
 .custom-outline-btn {
     background-color: white;
     color: var(--dark-theme);
-    font-size: var(--font-size-16);
+    font-size: var(--font-size-15);
     height: 48px;
     border-radius: 0px;
     cursor: pointer;

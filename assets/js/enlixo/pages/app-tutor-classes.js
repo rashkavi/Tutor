@@ -8,6 +8,7 @@ import { QuickGuide } from '../components/QuickGuide.js';
 import { ActionMenu } from '../components/Popover.js';
 import { BsModal } from '../components/BsModal.js';
 import { Toast } from '../components/Toast.js';
+import { StatCard } from '../components/StatCard.js';
 
 const api = new ApiClient();
 const root = document.getElementById('classes-root');
@@ -95,15 +96,13 @@ function stats() {
     const [a, b] = [t.start, t.end].map((x) => x.split(':').map(Number));
     return m + ((b[0] * 60 + b[1]) - (a[0] * 60 + a[1])) / 60;
   }, 0), 0);
-  const card = (ico, n, title, sub) => h('div', { class: 'col-12 col-md-6 col-xl-3' },
-    h('div', { class: 'component-theme px-4 py-3 h-100 d-flex align-items-center gap-3' },
-      h('span', { class: 'ex-stat-ico' }, icon(ico, { size: 22 })),
-      h('div', {}, h('div', { class: 'ex-stat-num' }, n), h('div', { class: 'text-14 main-text' }, title), h('div', { class: 'text-12 sub-text' }, sub))));
-  return h('div', { class: 'row g-3 mb-4' },
-    card('classes', String(active.length), 'Active classes', `${all.length - active.length} inactive`),
-    card('students', String(students), 'Students', 'active in your classes'),
-    card('money', money(income), 'Expected each month', 'monthly fee × students'),
-    card('clock', `${Math.round(hours * 10) / 10} h`, 'Teaching each week', `${active.reduce((n, c) => n + c.times.length, 0)} weekly class times`));
+  const showStatus = (status) => [{ label: status ? `Show ${status} classes` : 'Show all classes', icon: 'filter', onClick: () => { state.filters.status = status; draw(); } }];
+  return StatCard.row([
+    { icon: 'classes', label: 'Active Classes', value: active.length, caption: `${all.length - active.length} inactive`, menu: [...showStatus('active'), ...showStatus('inactive')] },
+    { icon: 'students', label: 'Students', value: students, caption: 'Active in your classes', menu: [{ label: 'Open students', icon: 'students', href: 'students' }] },
+    { icon: 'money', label: 'Expected Each Month', value: money(income), caption: 'Monthly fee × students' },
+    { icon: 'clock', label: 'Teaching Each Week', value: `${Math.round(hours * 10) / 10} h`, caption: `${active.reduce((n, c) => n + c.times.length, 0)} weekly class times`, menu: [{ label: 'Open the timetable', icon: 'timetable', href: 'time-table' }] },
+  ]);
 }
 
 // ---------- toolbar: search and filters ----------
