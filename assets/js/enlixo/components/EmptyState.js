@@ -13,19 +13,20 @@ const EMOJI = { '📭': 'inbox', '📝': 'application', '🎓': 'students', '�
 export class EmptyState {
   static empty({ icon = 'inbox', title = 'Nothing here yet', text = '', action = null } = {}) {
     const name = ICONS[icon] ? icon : EMOJI[icon] ?? 'inbox';
-    return h('div', { class: 'ex-empty' },
-      h('div', { class: 'ex-empty-icon', 'aria-hidden': 'true' }, solar(name, { size: 28 })),
-      h('p', { class: 'ex-empty-title' }, title),
-      text ? h('p', { class: 'ex-empty-text' }, text) : null,
-      action ? h('div', { class: 'ex-empty-action' }, action) : null);
+    // V3 markup (emptyStateHtml() in the V3 functions.js): .empty-state > .empty-state-icon + -title + -text
+    return h('div', { class: 'empty-state' },
+      h('div', { class: 'empty-state-icon', 'aria-hidden': 'true' }, solar(name, { size: 28 })),
+      h('div', { class: 'empty-state-title' }, title),
+      text ? h('div', { class: 'empty-state-text' }, text) : null,
+      action ? h('div', { class: 'mt-3' }, action) : null);
   }
 
   static noResults(onClear) {
     return EmptyState.empty({
       icon: 'search',
-      title: 'No matches',
-      text: 'Try a different search word or clear the filters.',
-      action: onClear && h('button', { type: 'button', class: 'custom-outline-btn ex-btn-md px-4', onclick: onClear }, 'Clear search and filters'),
+      title: 'No matching results',
+      text: 'Try changing the search or filters.',
+      action: onClear && h('button', { type: 'button', class: 'custom-btn-outline px-4', onclick: onClear }, 'Clear search and filters'),
     });
   }
 
@@ -34,7 +35,7 @@ export class EmptyState {
       icon: 'danger',
       title: 'Couldn\'t load this',
       text: message,
-      action: onRetry && h('button', { type: 'button', class: 'custom-btn ex-btn-md px-4 border-0', onclick: onRetry }, 'Try again'),
+      action: onRetry && h('button', { type: 'button', class: 'custom-btn px-4', onclick: onRetry }, 'Try again'),
     });
   }
 }

@@ -56,11 +56,17 @@ if (!SessionUser::hasValidSession()) {
 
                         <div class="col-12 d-flex flex-column p-0 m-0 g-0 contentBodyArea vh-100" id="real-list">
                             <div class="row p-4 m-0 g-0">
-                                <div class="col-12 p-0">
-                                    <?php enlixo_page_header('Registered Students', 'Everyone in your classes. New applications wait in Requested Students.', '', '', 'Everyone enrolled in at least one of your classes. Status is per class: making a student inactive here only affects your classes.', 'students-actions'); ?>
-                                </div>
+                                <?php enlixo_form_header('Registered Students', [['Students', null], ['Registered Students', null]], [
+                                    'intro' => 'Everyone in your classes. New applications wait in Requested Students.',
+                                    'points' => [
+                                        'Search by name, e-mail, mobile or WhatsApp, or filter by class and status.',
+                                        'Status is per class: making a student inactive here only affects your classes.',
+                                        'Tick students and use "Update ticked students" to change many at once.',
+                                        'Use Action to add a student or upload many students from a file.',
+                                    ],
+                                ], 'students-actions'); ?>
 
-                                <div class="col-12 p-0 component-theme" id="students-list"></div>
+                                <div class="col-12 p-0" id="students-list"></div>
                             </div>
                             <div class="flex-grow-1"></div>
                             <footer>

@@ -61,6 +61,7 @@ final class Router
     /** Database problems that mean "setup is not finished" get a message that says what to do. */
     private static function setupError(\PDOException $e): HttpException
     {
+        error_log('Database: ' . $e->getMessage()); // the cause stays in the server log; the person sees what to do
         $state = (string) ($e->errorInfo[0] ?? $e->getCode());
         $driverCode = (int) ($e->errorInfo[1] ?? 0);
         if (in_array($driverCode, [1044, 1045, 1049, 2002, 2005], true) || $state === '08001' || $state === 'HY000' && str_contains($e->getMessage(), 'connect')) {

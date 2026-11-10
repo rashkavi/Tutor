@@ -34,10 +34,10 @@ export class FilterBar extends Component {
 
   render() {
     if (this.props.row) {
-      // V3 filter row under the search: a label over each dropdown, side by side
-      return h('div', { class: 'ex-filters ex-filters-row' }, this.props.filters.map((f) => {
+      // V3 filter row (table_toolbar): every filter col-lg-2 with a small label above it; the wrapper adds no box of its own
+      return h('div', { class: 'd-contents' }, this.props.filters.map((f) => {
         const id = `ex-f-${f.key}`;
-        return h('div', { class: 'ex-filter-field' }, h('label', { class: 'ex-filter-label', for: id }, f.label), this.#select(f, id));
+        return h('div', { class: 'col-12 col-md-4 col-lg-2 d-flex flex-column justify-content-end' }, h('label', { class: 'text-12 sub-text mb-1', for: id }, f.label), this.#select(f, id));
       }));
     }
     if (this.props.stacked) {
