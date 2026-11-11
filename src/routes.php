@@ -5,6 +5,7 @@ use Enlixo\App;
 use Enlixo\Core\Router;
 use Enlixo\Http\Controllers\ApplicationController;
 use Enlixo\Http\Controllers\ClassController;
+use Enlixo\Http\Controllers\DashboardController;
 use Enlixo\Http\Controllers\EntitlementController;
 use Enlixo\Http\Controllers\RecordingController;
 use Enlixo\Http\Controllers\RoleController;
@@ -23,6 +24,11 @@ return static function (Router $router, App $app): void {
     $classes = new ClassController($app, dirname(__DIR__) . '/assets/imgs/classes-covers');
 
     $router->get('/api/v1/me/access', $access->show(...));
+
+    $dashboard = new DashboardController($app);
+    $router->get('/api/v1/tutor/dashboard', $dashboard->show(...));
+    $router->get('/api/v1/tutor/exam-dates', $dashboard->examDates(...));
+    $router->put('/api/v1/tutor/exam-dates', $dashboard->saveExamDates(...));
 
     $router->get('/api/v1/tutor/students', $students->index(...));
     $router->post('/api/v1/tutor/students/status', $students->updateStatus(...));
