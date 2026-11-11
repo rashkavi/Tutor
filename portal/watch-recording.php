@@ -1,242 +1,95 @@
 <?php
+// Watch a class recording (student), laid out like the ENLIXO V3 student portal recording view: the player with its
+// class and status under it, "About this recording", the class notes of that day and more recordings of the class.
+// The player rules are unchanged: watch-time limit (recording-guard.php), Recording Types player, old links, Bunny.
 require_once '../includes/UserClass.php';
 require_once "../includes/connection.php";
 require_once "../includes/UserPermissionsClass.php";
 require_once "../includes/Project.php";
 require_once "../includes/enlixo/recording-player.php";
+require_once "../includes/enlixo/student-recordings.php";
 if (!SessionUser::ifUserIsStudent()) {
     header("Location: ./index");
-} else {
+    exit;
+}
+$sessionUserObject = SessionUser::getCurrentUserObject('Student');
+$studentId = (int) $sessionUserObject['student_id'];
+$recording_id = (int) ($_GET['recording-id'] ?? 0);
+$kind = 'lecture';
 
-    $sessionUserObject = SessionUser::getCurrentUserObject('Student');
-
-    if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['recording-id']) && !empty($_GET['recording-id'])) {
-
-        $recording_id = (int) $_GET["recording-id"]; // int cast: this value goes into SQL below
-
-      
-        $query = "SELECT * FROM `lecture_recording` 
-                                                INNER JOIN `time_table` ON `lecture_recording`.`time_table_time_table_id` = `time_table`.`time_table_id`
-                                                INNER JOIN `classes` ON `time_table`.`classes_class_id` = `classes`.`class_id`
-                                                INNER JOIN `year` ON `classes`.`year_year_id` = `year`.`year_id`
-                                                INNER JOIN `exam_type` ON `classes`.`exam_type_exam_type_id` = `exam_type`.`exam_type_id`
-                                                WHERE  `lecture_recording`.`lecture_recording_id` = '" . $recording_id . "'
-                                                AND `classes`.`class_id`  IN (SELECT `classes_class_id` FROM `students_has_classes` WHERE `students_student_id` = '" . $sessionUserObject["student_id"] . "')";
-
-        $recording = Database::search($query);
-        if ($recording->num_rows == 0) {
-            header("Location: ./class-recordings");
-        } else {
-            $recordingData = $recording->fetch_assoc();
-            function formatDuration(int $minutes): string
-            {
-                if ($minutes <= 0) {
-                    return '0m';
-                }
-
-                $hours = intdiv($minutes, 60);
-                $remainingMinutes = $minutes % 60;
-
-                if ($hours > 0 && $remainingMinutes > 0) {
-                    return "{$hours}h {$remainingMinutes}m";
-                }
-
-                if ($hours > 0) {
-                    return "{$hours}h";
-                }
-
-                return "{$remainingMinutes}m";
-            }
-
-?>
-            <!DOCTYPE html>
-            <html lang="en">
-
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <meta name="robots" content="noindex, nofollow">
-                <title>Class Recordings - Student Dashboard | <?= Project::getBaseName() ?></title>
-
-                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/style.css?v=<?= Project::getVersion() ?>">
-                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/skeleton.css?v=<?= Project::getVersion() ?>">
-                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/intergration-card.css?v=<?= Project::getVersion() ?>">
-                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
-                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
-                <link href="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.css" rel="stylesheet">
-
-                <script src="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.js"></script>
-                <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-                <script src="<?= Project::getAssetsPath() ?>/js/init.js?v=<?= Project::getVersion() ?>"></script>
-            </head>
-
-            <body class="overflow-hidden">
-                <div class="notifications"></div>
-                <div class="col-12 vh-100 container-fluid overflow-hidden content-container">
-                    <div id="appContainer" class="row p-0">
-                        <div id="sideMenu" class="d-none d-xl-block d-flex flex-column sideMenuArea p-0 vh-100">
-                            <?php
-                            include "includes/side-menu.php";
-                            load_side_menu::load("Classes");
-                            ?>
-                        </div>
-                        <div id="app-wrapper" class="app-wrapper p-0 m-0">
-                            <div class="row p-0 m-0 g-0">
-                                <div class="col-12 p-0 m-0 g-0">
-                                    <?php
-                                    include "includes/header.php";
-                                    selectItem::setSelected("Classes");
-                                    ?>
-                                </div>
-                                <div class="container p-4 m-0" id="skeleton-list">
-                                    <?php
-                                    include '../includes/components/skeleton-header.php';
-                                    include '../includes/components/skeleton-class-card.php'; ?>
-                                </div>
-                                <div class="col-12 d-flex flex-column p-0 m-0 g-0 contentBodyArea vh-100 d-none" id="real-list">
-                                    <div class="row p-4 m-0 g-0">
-                                        <div class="col-12 px-4 py-3 component-theme mb-4">
-                                            <div class="row align-items-center p-0 m-0 g-0">
-                                                <div class="col-12 col-lg-8">
-                                                    <div class="row">
-                                                        <span class="main-topic lh-lg" data-i18n="">Watch Recordings</span>
-                                                        <nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
-                                                            <ol class="breadcrumb m-0">
-                                                                <li class="breadcrumb-item"><a class="sub-text text-decoration-none cursor-pointer" data-i18n="" href="./class-recordings">Class Recordings</a></li>
-                                                                <li class="breadcrumb-item"><a class="sub-text text-decoration-none cursor-pointer" data-i18n="">Watch Recording</a></li>
-                                                            </ol>
-                                                        </nav>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <?php
-                                        $attachment = Database::search("SELECT * FROM `attachments` WHERE `time_table_time_table_id` = '" . $recordingData["time_table_id"] . "'");
-                                        if ($attachment->num_rows > 0) {
-                                        ?>
-                                            <div class="col-12 component-theme p-3 mb-3">
-                                                <div class="d-flex">
-                                                    <div class="flex-grow-1">
-                                                        <span class="sub-topic">Recording Attachments</span>
-                                                        <div class="col-12 px-1 mt-2">
-                                                            <div class="row">
-                                                                <?php
-                                                                while ($attachmentData = $attachment->fetch_assoc()) {
-                                                                    if (!empty($attachmentData["attachment"]) && file_exists(Project::getAssetsPath() . "/uploads/lectures-attachments/" . $attachmentData["attachment"])) {
-                                                                        $ext = strtolower(pathinfo($attachmentData["attachment"], PATHINFO_EXTENSION));
-                                                                ?>
-                                                                        <div class="col-12 col-md-6 my-3 file-item cursor-pointer" onclick="viewLectureAttachment('<?php echo $attachmentData['attachment'] ?>', '<?php echo $attachmentData['attachment_name'] ?>')">
-                                                                            <div class="p-3 bl-solid">
-                                                                                <div class="d-flex">
-                                                                                    <img src="<?= Project::getAssetsPath() ?>/imgs/icons/<?= $ext ?>.png" alt="Lecture Attachment" class="h-48 w-auto">
-                                                                                    <div class="d-flex flex-column px-4">
-                                                                                        <span class="name"><?php echo $attachmentData["attachment_name"] ?></span>
-                                                                                        <span class="text-muted text-12">Click to view</span>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                <?php
-                                                                    }
-                                                                }
-                                                                ?>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        <?php
-                                        }
-                                        ?>
-
-                                        <div class="col-12 py-4 px-4 pe-4 component-theme">
-                                            <div class="row p-0 m-0 g-0 align-content-center">
-
-                                                <?php
-                                                // Watch-time limit (includes/enlixo/recording-guard.php): when the time is used up or expired,
-                                                // the player is never sent to the browser.
-                                                $guardKind = 'lecture';
-                                                $guardRecordingId = $recording_id;
-                                                $guardStudentId = (int) $sessionUserObject["student_id"];
-                                                $recordingGuard = require '../includes/enlixo/recording-guard.php';
-                                                ?>
-                                                <?php if (!$recordingGuard['can_play']): ?>
-                                                    <?= $recordingGuard['lock_html'] ?>
-                                                <?php elseif (($typedPlayer = enlixo_recording_player($recordingData, (string) ($recordingData['recording_title'] ?? ''), $recordingGuard['meter_html'])) !== null): ?>
-                                                    <?= $typedPlayer ?>
-                                                <?php elseif ($recordingData['integrations_integration_id'] == null): ?>
-                                                    <?= $recordingData["recording_link"]; ?>
-                                                    <?php else:
-
-                                                    $bunnyData = Database::search("SELECT * FROM `video_intergration` 
-                                                WHERE `integrations_integration_id` = '" . $recordingData["integrations_integration_id"] . "'");
-
-                                                    if ($bunnyData->num_rows > 0) {
-                                                        $bunnyData = $bunnyData->fetch_assoc();
-                                                    ?>
-                                                        <div class="video-wrapper">
-                                                            <div class="video-loader" id="videoLoader">
-                                                                <div class="modern-spinner"></div>
-                                                            </div>
-
-                                                            <!-- Iframe (hidden initially) -->
-                                                            <iframe
-                                                                id="videoIframe"
-                                                                src="https://iframe.mediadelivery.net/embed/<?= $bunnyData['lib_id'] ?>/<?= $recordingData['recording_link'] ?>"
-                                                                style="width:100%; height:500px; border:0; display:none;"
-                                                                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-                                                                allowfullscreen>
-                                                            </iframe>
-                                                        </div>
-                                                        <?= $recordingGuard['meter_html'] ?>
-                                                    <?php
-                                                    }
-                                                    ?>
-
-
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1"></div>
-                                    <footer>
-                                        <?php include '../includes/footer.php' ?>
-                                    </footer>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <script src="<?= Project::getAssetsPath() ?>/plugins/bootstrap/js/bootstrap.bundle.min.js?v=<?= Project::getVersion() ?>"></script>
-                <script src="<?= Project::getAssetsPath() ?>/plugins/jquery/jquery-3.7.1.min.js"></script>
-                <script src="<?= Project::getAssetsPath() ?>/js/script.js?v=<?= Project::getVersion() ?>"></script>
-                <script src="js/functions.js?v=<?= Project::getVersion() ?>"></script>
-
-                <script type="module" src="<?= Project::getAssetsPath() ?>/js/enlixo/pages/app-watch-recording.js?v=<?= Project::getVersion() ?>"></script>
-                <script>
-                    document.addEventListener("DOMContentLoaded", function() {
-                        toggleSkeleton();
-                        const iframe = document.getElementById("videoIframe");
-                        const loader = document.getElementById("videoLoader");
-
-                        if (iframe) {
-                            iframe.onload = function() {
-                                loader.style.opacity = "0";
-                                setTimeout(() => loader.style.display = "none", 400);
-                                iframe.style.display = "block";
-                            };
-                        }
-                    });
-                </script>
-
-            </body>
-
-            </html>
-<?php
-        }
+$recording = Database::search("SELECT * FROM `lecture_recording`
+    INNER JOIN `time_table` ON `lecture_recording`.`time_table_time_table_id` = `time_table`.`time_table_id`
+    INNER JOIN `classes` ON `time_table`.`classes_class_id` = `classes`.`class_id`
+    WHERE `lecture_recording`.`lecture_recording_id` = '" . $recording_id . "'
+    AND `classes`.`class_id` IN (SELECT `classes_class_id` FROM `students_has_classes` WHERE `students_student_id` = '" . $studentId . "' AND `status_status_id` = 1)");
+$recordingData = $recording ? $recording->fetch_assoc() : null;
+$all = $recordingData ? sr_lecture_recordings($studentId, (int) $recordingData['class_id']) : [];
+$rec = null;
+foreach ($all as $r) {
+    if ($r['id'] === $recording_id) {
+        $rec = $r;
     }
 }
+if ($recordingData === null || $rec === null) {
+    header("Location: ./recordings");
+    exit;
+}
+$more = array_slice(array_values(array_filter($all, fn ($r) => $r['id'] !== $recording_id)), 0, 4);
+
+$files = [];
+$att = Database::search("SELECT `attachment`, `attachment_name` FROM `attachments` WHERE `time_table_time_table_id` = '" . (int) $recordingData['time_table_id'] . "'");
+while ($att && ($a = $att->fetch_assoc())) {
+    $files[] = [(string) $a['attachment'], (string) $a['attachment_name']];
+}
+
+[, $badge, $badgeClass] = sr_lecture_state($rec);
+$watchText = ['watched' => ['Watched', 'is-good'], 'attended' => ['Attended the class', 'is-good'], 'absent' => ['Missed the class', 'is-warn'], 'none' => ['Not watched yet', '']][$rec['watch']];
+$lock = $rec['lock'];
+$available = $lock['state'] === 'open'
+    ? ($lock['expire_text'] !== '' ? 'Until ' . $lock['expire_text'] . ($lock['days_left'] === 0 ? ' (last day)' : ' (' . $lock['days_left'] . ($lock['days_left'] === 1 ? ' day' : ' days') . ' left)') : 'No end date')
+    : ($lock['state'] === 'locked' ? 'Opens ' . $lock['unlock_text'] : 'Closed on ' . $lock['expire_text']);
+
+$lf = ['title' => $rec['title'], 'menu' => 'Class Recordings', 'js' => ['js/watch.js'], 'modules' => [Project::getAssetsPath() . '/js/enlixo/pages/app-watch-recording.js']];
+include __DIR__ . '/includes/learning-frame-top.php';
+sl_page_title($rec['title'], [
+    ['Class Recordings', './recordings'],
+    [$rec['class'], './recordings?class=' . $rec['class_id']],
+    [$rec['date_text'], null],
+], '', '<a class="custom-outline-btn" href="./time-table-class-details?time-table-id=' . $rec['time_table_id'] . '">' . enlixo_icon('calendar', 18) . 'Class Day Details</a>');
 ?>
+                            <div class="ac-grid-2">
+                                <div class="ac-stack">
+<?php include __DIR__ . '/includes/watch-player.php'; ?>
+                                    <div class="ac-card">
+                                        <div class="sr-tags mb-2">
+                                            <span class="ac-badge <?= $lock['watchable'] ? 'is-good' : ($lock['state'] === 'expired' ? 'is-bad' : 'is-purple') ?>"><?= $lock['watchable'] ? 'Available' : ($lock['state'] === 'expired' ? 'Expired' : 'Opens later') ?></span>
+                                            <span class="ac-badge <?= $watchText[1] ?>"><?= sl_e($watchText[0]) ?></span>
+                                            <span class="sr-kind"><?= sl_e($rec['type']) ?> recording</span>
+                                        </div>
+                                        <h2 class="sr-view-title"><?= sl_e($rec['class']) ?></h2>
+                                        <div class="sr-meta">
+                                            <span><?= enlixo_icon('calendar', 15, 'sl-ico') ?><?= sl_e($rec['date_text']) ?></span>
+                                            <?php if ($rec['time_text'] !== '') { ?><span><?= enlixo_icon('clock', 15, 'sl-ico') ?><?= sl_e($rec['time_text']) ?></span><?php } ?>
+                                            <?php if ($rec['tutor'] !== '') { ?><span><?= enlixo_icon('teacher', 15, 'sl-ico') ?><?= sl_e($rec['tutor']) ?></span><?php } ?>
+                                        </div>
+                                        <?php if (trim(strip_tags($rec['description'])) !== '') { ?><p class="sr-description"><?= nl2br(sl_e(trim(strip_tags($rec['description'])))) ?></p><?php } ?>
+                                    </div>
+                                </div>
+
+                                <div class="ac-stack">
+                                    <div class="ac-card">
+                                        <div class="ac-card-head"><h2 class="ac-card-title">About this recording</h2></div>
+                                        <?php sr_facts([
+                                            ['check', 'Availability', $available],
+                                            ['play', 'Your status', $watchText[0]],
+                                            ['hourglass', 'Length', $rec['duration']],
+                                            ['recordings', 'Plays on', $rec['type']],
+                                            ['upload', 'Added', $rec['added_at'] ? date('j M Y', strtotime($rec['added_at'])) : ''],
+                                        ]); ?>
+                                    </div>
+                                    <?php sr_files($files, 'lectures-attachments'); ?>
+                                    <?php sr_more($more, 'lecture', './recordings?class=' . $rec['class_id']); ?>
+                                </div>
+                            </div>
+<?php
+include __DIR__ . '/includes/learning-frame-bottom.php';
