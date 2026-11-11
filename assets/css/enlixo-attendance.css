@@ -57,7 +57,8 @@
 
 /* ---- manual marking buttons (one size: 32 px inside table rows) */
 .at-mark { height: 32px; padding: 0 12px; font-size: 13px; border: 0; background: var(--table-header-color); color: var(--sub-text); }
-.at-mark:hover { color: var(--main-text-color); }
+.at-mark:hover:not(:disabled) { color: var(--main-text-color); }
+.at-mark:disabled { opacity: .6; cursor: not-allowed; }
 .at-mark-present.on, .at-mark-joined.on { background: var(--light-green); color: var(--dark-green); font-weight: 600; }
 .at-mark-late.on { background: var(--light-orange); color: var(--dark-orange); font-weight: 600; }
 .at-mark-absent.on { background: var(--light-red); color: var(--dark-red); font-weight: 600; }

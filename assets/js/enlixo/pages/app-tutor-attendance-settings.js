@@ -47,12 +47,12 @@ function methods(p) {
     tiles, errLine('methods'),
     h('div', { class: 'row gx-4 mt-4' },
       h('div', { class: 'col-md-6' }, field('Open first', def, { required: true, info: 'The tab Mark Attendance opens on. Pick the way you use most, for example QR Code if students scan at the door.' }), errLine('default_method')),
-      h('div', { class: 'col-md-6' }, field('What the code holds', sel([['student_id', 'Student ID, for example ST02405']], s.code, { disabled: true }), { info: 'The QR code and the barcode on a student card hold the Student ID, so a printed card and the card in the app both work. The Student ID is also printed under the code, so you can type it when a card does not scan.' }))),
+      h('div', { class: 'col-md-6' }, field('What the code holds', sel([['student_id', 'Student ID, for example ST02405']], s.code, { disabled: true }), { info: 'The QR code and the barcode on a student card hold the Student ID, so a printed card and the card in the app both work. The Student ID is also printed under the code, so you can type it when a card does not scan. Set its format on the Student IDs & Cards tab.' }))),
     h('div', { class: 'ad-soft p-3 d-flex gap-3 align-items-start mt-2' },
       h('span', { class: 'ad-todo-icon' }, icon('id-card', { size: 20 })),
       h('div', { class: 'flex-grow-1' },
         h('div', { class: 'text-14 main-text fw-semibold d-flex align-items-center gap-2' }, 'Student ID cards', lockBadge('id.cards')),
-        h('div', { class: 'text-12 sub-text' }, 'The code on a student ID card follows what you tick here: a QR code for QR Code, a barcode for Barcode. Make and print the cards on the Student ID Cards tab.'))),
+        h('div', { class: 'text-12 sub-text' }, 'The code on a student ID card follows what you tick here: a QR code for QR Code, a barcode for Barcode. Set the Student ID format and print the cards on the Student IDs & Cards tab.'))),
     saveBtn('Save Changes', async () => {
       await put(p, { part: 'methods', methods: picked, default_method: def.value, code: 'student_id', summary: `Ways to mark: ${Object.keys(picked).filter((k) => picked[k]).map((k) => METHODS[k].label).join(', ') || 'none'}` }, 'Saved. Mark Attendance now shows these tabs.');
     }));
@@ -109,21 +109,46 @@ function scanned(p) {
 
 // ------------------------------------------------------------------ Student ID Cards (GROW; START sees a locked sample)
 const SAMPLE_TUTOR = { name: 'Mr. K. R. Perera', subject: 'Combined Mathematics', phone: '0771234567' };
-const SAMPLE_STUDENT = { sid: 'ST02405', name: 'Kavindu Perera', classes: ['Theory 2026', 'Paper 2027'] };
+const SAMPLE_STUDENT = { name: 'Kavindu Perera', classes: ['Theory 2026', 'Paper 2027'] };
+const formatId = (f) => `${f.prefix}${String(f.next).padStart(Number(f.digits) || 0, '0')}`;
 
 async function idCards(p) {
   const on = has('id.cards');
   const m = D.settings.methods;
+  const f = { ...D.settings.ids };
   const codes = [m.qr ? 'a QR code' : null, m.barcode ? 'a barcode' : null].filter(Boolean);
   if (m.barcode) await loadBarcode().catch(() => null);
-  const cls = sel([['', 'All classes'], ...D.classes.map((c) => [c.id, c.name])], '', { 'data-key': 'class' });
 
+  // --- Student ID format (every plan: the QR code and barcode hold the Student ID)
+  const example = h('div', { class: 'ad-soft p-3 d-flex gap-3 align-items-start mt-2' });
+  const preview = h('div', { class: 'ad-soft p-4 d-flex flex-column align-items-center gap-3' });
+  const drawPreview = () => {
+    const sid = formatId(f);
+    fill(example, h('span', { class: 'ad-todo-icon' }, icon('id-card', { size: 20 })), h('div', {},
+      h('div', { class: 'text-14 main-text fw-semibold' }, `The next new student gets ${sid}`),
+      h('div', { class: 'text-12 sub-text' }, 'Students you already have keep their Student ID, so cards already printed keep working. The ID is also the card number in the QR code and the barcode.')));
+    fill(preview, h('div', { class: 'text-12 sub-text fw-semibold text-uppercase align-self-start' }, on ? 'How a card looks' : 'Sample card'),
+      idCard({ ...SAMPLE_STUDENT, sid }, SAMPLE_TUTOR, m, { sample: !on }));
+  };
+  const inp = (key, attrs) => h('input', { class: 'form-control custom-input', value: f[key], 'data-key': key, oninput: (e) => { f[key] = key === 'prefix' ? e.target.value.toUpperCase() : e.target.value; drawPreview(); }, ...attrs });
+  const fmt = h('div', {},
+    h('div', { class: 'sub-topic mb-1 d-flex align-items-center gap-2' }, 'Student ID format', infoTip('Every student gets a Student ID when they join. It is shown on Students and Student Fees, printed on the ID card and held in the QR code and the barcode.', 'Student ID format')),
+    h('div', { class: 'text-12 sub-text mb-3' }, 'How the Student ID of a new student is made: the letters first, then the number.'),
+    h('div', { class: 'row gx-3' },
+      h('div', { class: 'col-md-4' }, field('Letters in front', inp('prefix', { placeholder: 'Enter letters, for example ST', 'data-limit': '10', maxlength: 10 }), { required: true, info: 'Put in front of every Student ID, for example ST or your initials. 1 to 10 letters, numbers, / or -. For example MATHS- gives MATHS-00125.' })),
+      h('div', { class: 'col-md-4' }, field('Digits in the number', sel([[3, '3 digits (001)'], [4, '4 digits (0001)'], [5, '5 digits (00001)'], [6, '6 digits (000001)']], f.digits, { 'data-key': 'digits', onchange: (e) => { f.digits = Number(e.target.value); drawPreview(); } }), { required: true, info: 'The number is filled with zeros in front to this length, so every ID is the same length. 5 digits: 125 becomes 00125.' })),
+      h('div', { class: 'col-md-4' }, field('Next number', inp('next', { type: 'number', min: 1, placeholder: 'Enter a number, for example 1' }), { required: true, info: 'The number the next new student gets; it goes up by one for each student. It must be higher than any number already used with these letters, so no two students share an ID.' }))),
+    example,
+    saveBtn('Save Student ID Format', () => put(p, { part: 'ids', ids: f, summary: `Student ID format: ${formatId(f)} next` }, 'Saved. New students get IDs in this format.')));
+
+  // --- ID cards (GROW; START sees a locked sample)
+  const cls = sel([['', 'All classes'], ...D.classes.map((c) => [c.id, c.name])], '', { 'data-key': 'class' });
   const generate = guard('id.cards', async () => {
     let data;
     try { ({ data } = await api.get('/tutor/attendance/id-cards', cls.value ? { class: cls.value } : {})); } catch (e) { Toast.error(e.message); return; }
     if (!data.students.length) { Toast.error('No active students in this class.'); return; }
     if (m.barcode) await loadBarcode().catch(() => null);
-    const cards = data.students.map((s) => idCard(s, data.tutor, m));
+    const cards = data.students.map((st) => idCard(st, data.tutor, m));
     const className = cls.value ? cls.selectedOptions[0].textContent : 'All classes';
     const md = BsModal.open({
       title: 'Student ID Cards', subtitle: [className, plural(cards.length, 'card')], icon: 'id-card', size: 'xl',
@@ -134,12 +159,7 @@ async function idCards(p) {
       ],
     });
   });
-
-  const preview = h('div', { class: 'ad-soft p-4 d-flex flex-column align-items-center gap-3' },
-    h('div', { class: 'text-12 sub-text fw-semibold text-uppercase align-self-start' }, on ? 'How a card looks' : 'Sample card'),
-    idCard(SAMPLE_STUDENT, SAMPLE_TUTOR, m, { sample: !on }));
-
-  const left = h('div', { class: 'col-12 col-xl-6' },
+  const cards = h('div', { class: 'mt-5' },
     h('div', { class: 'sub-topic mb-1 d-flex align-items-center gap-2' }, 'Student ID cards', lockBadge('id.cards'),
       infoTip('A card for every student with their name, Student ID and classes. Students show it at the class and it is scanned to mark attendance.', 'Student ID cards')),
     h('div', { class: 'text-12 sub-text mb-3' }, on ? 'Make cards for one class or for every student, then print them.' : 'Making and printing cards is on GROW. Here is how a card looks.'),
@@ -152,7 +172,9 @@ async function idCards(p) {
     on ? field('Class', cls, { info: 'Pick a class to make cards only for its students, or All classes for every active student. A student in two classes gets one card with both classes.' }) : null,
     h('div', { class: 'd-flex justify-content-end mt-4' },
       h('button', { type: 'button', class: 'custom-btn px-5 d-inline-flex align-items-center gap-2', onclick: generate }, on ? icon('printer', { size: 18 }) : icon('lock', { size: 18 }), 'Make ID Cards')));
-  p.append(h('div', { class: 'row g-4' }, left, h('div', { class: 'col-12 col-xl-6' }, preview)));
+
+  drawPreview();
+  p.append(h('div', { class: 'row g-4' }, h('div', { class: 'col-12 col-xl-7' }, fmt, cards), h('div', { class: 'col-12 col-xl-5' }, h('div', { class: 'at-sticky' }, preview))));
 }
 
 // ------------------------------------------------------------------ Times & Rules
@@ -197,7 +219,7 @@ async function load() {
     new Tabs({ tabs: [
       { id: 'methods', label: 'Ways to Mark', render: methods },
       { id: 'scan', label: 'When a Student Is Scanned', render: scanned },
-      { id: 'cards', label: 'Student ID Cards', render: idCards },
+      { id: 'cards', label: 'Student IDs & Cards', render: idCards },
       { id: 'times', label: 'Times & Rules', render: times },
       { id: 'log', label: 'Activity Log', badge: D.log.length, render: log },
     ] }).mount(card);

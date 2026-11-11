@@ -18,7 +18,10 @@ const dayLabel = (s) => new Date(`${s}T00:00:00`).toLocaleDateString('en-GB', { 
 function rng(seed) { let s = seed; return () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646; }
 // The tutor's name and subject printed on the ID cards (step B: from the tutor profile).
 export const TUTOR = { name: 'Mr. K. R. Perera', subject: 'Combined Mathematics', phone: '0771234567' };
-const OWNER = new URLSearchParams(globalThis.location?.search ?? '').get('as') !== 'assistant';
+const QS = new URLSearchParams(globalThis.location?.search ?? '');
+// Preview who is signed in: ?as=assistant = an assistant with "Mark attendance"; add &can=correct for "Correct finished class days".
+const OWNER = QS.get('as') !== 'assistant';
+const CAN_CORRECT = OWNER || QS.get('can') === 'correct';
 const err = (message, details = {}, status = 400, code = 'validation') => Object.assign(new Error(message), { details, status, code });
 
 // When each class meets (weekday 0 = Sunday). Online classes are Zoom classes: joining marks "Joined Online" by itself.
@@ -38,6 +41,7 @@ export class AttendanceMock {
       times: { open_before: 30, close_after: 30, late_after: 15, repeat_seconds: 60 },
       auto_absent: true,
       code: 'student_id',
+      ids: { prefix: 'ST', digits: 5, next: 2470 },
     };
     const r = rng(77);
     this.sessions = [];
@@ -311,6 +315,7 @@ export class AttendanceMock {
     out.window = { opens: hm(toMin(s.start) - this.settings.times.open_before), closes: hm(toMin(s.end) + this.settings.times.close_after) };
     out.settings = this.settings;
     out.owner = OWNER;
+    out.can_correct = CAN_CORRECT;
     out.sample_codes = out.roster.filter((x) => !x.record).slice(0, 40).map((x) => x.student.sid);
     return out;
   }
@@ -350,6 +355,7 @@ export class AttendanceMock {
   mark(id, b) {
     const s = this.sessions.find((x) => x.id === id);
     if (this.state(s) === 'upcoming') throw err('This class has not started yet.');
+    if (this.state(s) === 'done' && !CAN_CORRECT) throw err('Correcting a finished class day needs the permission "Correct finished class days". Ask the tutor to give it to your role in Settings → Roles.', {}, 403, 'forbidden');
     const ids = (b.students ?? [b.student]).map(Number).filter(Boolean);
     if (!ids.length) throw err('Choose a student.');
     if (b.status && !['present', 'late', 'absent', 'joined', 'watched'].includes(b.status)) throw err('Choose Present, Late or Absent.');
@@ -389,6 +395,17 @@ export class AttendanceMock {
       check('late_after', 0, 120, 'Enter minutes from 0 to 120, for example 15.');
       check('repeat_seconds', 5, 600, 'Enter seconds from 5 to 600, for example 60.');
       if (!Object.keys(errors).length) { s.times = Object.fromEntries(Object.entries(t).map(([k, v]) => [k, Number(v)])); s.auto_absent = !!b.auto_absent; }
+    } else if (b.part === 'ids') {
+      const prefix = String(b.ids?.prefix ?? '').trim().toUpperCase();
+      const digits = Number(b.ids?.digits); const next = Number(b.ids?.next);
+      if (!/^[A-Z0-9/\-]{1,10}$/.test(prefix)) errors.prefix = 'Use 1 to 10 letters, numbers, / or -, for example ST or MATHS-.';
+      if (![3, 4, 5, 6].includes(digits)) errors.digits = 'Choose 3 to 6 digits.';
+      // the highest number already given with this prefix (sample students are ST02400 - ST02469)
+      const used = prefix === 'ST' ? 2469 : 0;
+      if (!Number.isInteger(next) || next < 1) errors.next = 'Enter a whole number, for example 1.';
+      else if (next <= used) errors.next = `ST${String(used).padStart(5, '0')} is already used. Start from ${used + 1} or higher.`;
+      else if (String(next).length > digits) errors.next = `${next} has more than ${digits} digits. Choose more digits or a smaller number.`;
+      if (!Object.keys(errors).length) s.ids = { prefix, digits, next };
     }
     if (Object.keys(errors).length) throw err('Please check the highlighted fields.', errors);
     this.settings = s;

@@ -68,7 +68,7 @@ function stats() {
 
 function context() {
   const w = S.window;
-  const note = S.state === 'live' ? `Scanning is open until ${ampm(w.closes)}` : S.state === 'done' ? 'Finished. Use Manual to correct a mark.' : `Scanning opens at ${ampm(w.opens)}`;
+  const note = S.state === 'live' ? `Scanning is open until ${ampm(w.closes)}` : S.state === 'done' ? (S.can_correct === false ? 'Finished. You can look, but not change the marks.' : 'Finished. Use Manual to correct a mark.') : `Scanning opens at ${ampm(w.opens)}`;
   return h('div', { class: 'col-12 component-theme p-3 mb-4 d-flex flex-wrap align-items-center gap-3' },
     h('span', { class: 'ad-todo-icon' }, icon(S.mode === 'Online' ? 'online' : 'physical', { size: 22 })),
     h('div', { class: 'min-w-0' }, h('div', { class: 'sub-topic text-truncate' }, S.class.name), h('div', { class: 'text-13 sub-text' }, `${longDay(S.date)} · ${ampm(S.start)} - ${ampm(S.end)} · ${S.mode}`)),
@@ -168,10 +168,15 @@ function manualTab(p) {
   const filters = [['all', 'All'], ['none', 'Not Marked'], ['present', 'Present'], ['late', 'Late'], ['absent', 'Absent'], ['owes', 'Owes Fees']];
   const seg = h('div', { class: 'ad-seg flex-wrap' }, filters.map(([v, t]) => h('label', {}, h('input', { type: 'radio', name: 'mm-filter', value: v, checked: manualFilter === v, onchange: () => { manualFilter = v; drawRoster(); } }), t)));
   const search = h('input', { class: 'form-control custom-input', type: 'search', placeholder: 'Search students by name or Student ID', value: manualQ, oninput: (e) => { manualQ = e.target.value.toLowerCase(); clearTimeout(search.t); search.t = setTimeout(drawRoster, 300); } });
+  const locked = S.state === 'done' && S.can_correct === false;
   p.append(
+    locked ? h('div', { class: 'ad-soft p-3 d-flex gap-3 align-items-start mb-3' },
+      h('span', { class: 'ad-todo-icon' }, icon('lock', { size: 20 })),
+      h('div', {}, h('div', { class: 'text-14 main-text fw-semibold' }, 'This class day is finished'),
+        h('div', { class: 'text-12 sub-text' }, 'Your role cannot correct finished class days. The tutor can give the permission "Correct finished class days" to your role in Settings → Roles.'))) : null,
     h('div', { class: 'mb-2' }, search), h('div', { class: 'mb-3' }, seg),
     rosterHost,
-    h('div', { class: 'd-flex flex-wrap justify-content-end gap-2 mt-3' },
+    locked ? null : h('div', { class: 'd-flex flex-wrap justify-content-end gap-2 mt-3' },
       h('button', { type: 'button', class: 'custom-btn-outline px-4', onclick: () => bulk('present') }, 'Mark Listed Present'),
       h('button', { type: 'button', class: 'custom-btn-outline px-4', onclick: () => bulk('absent') }, 'Mark Listed Absent')));
   drawRoster();
@@ -190,7 +195,8 @@ async function bulk(status) {
 function drawRoster() {
   if (!rosterHost) return;
   const rows = listed();
-  const btn = (r, st, text) => h('button', { type: 'button', class: `at-mark at-mark-${st}${r.record?.status === st ? ' on' : ''}`, 'aria-pressed': String(r.record?.status === st), onclick: () => markOne(r.student.id, r.record?.status === st ? '' : st) }, text);
+  const lockedRow = S.state === 'done' && S.can_correct === false;
+  const btn = (r, st, text) => h('button', { type: 'button', disabled: lockedRow, class: `at-mark at-mark-${st}${r.record?.status === st ? ' on' : ''}`, 'aria-pressed': String(r.record?.status === st), onclick: () => markOne(r.student.id, r.record?.status === st ? '' : st) }, text);
   fill(rosterHost, simpleTable([
     { label: 'Student', render: (r) => h('button', { type: 'button', class: 'bg-transparent border-0 p-0 text-start', title: 'Show this student', onclick: async () => { const { data } = await api.get(`/tutor/attendance/sessions/${S.id}/students/${r.student.id}`); showCard({ result: 'view', message: 'Picked from the list', card: data, from: 'manual' }); } },
       person(r.student.name, [r.student.sid, r.record?.time ? `${ampm(r.record.time)} · ${r.record.method}` : null].filter(Boolean).join(' · '))) },

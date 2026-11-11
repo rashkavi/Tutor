@@ -12,7 +12,7 @@ Pages (shared tutor frame, V3 look, Solar icons, no borders):
 | --- | --- |
 | `tutor/attendance-dashboard.php` | Day / Week / Month / Custom range + arrows, class picker. Live class strip, six stat cards (rate with trend, class days held, present, late, absent, watched recording), Attendance by Day chart (by class for one day, by week for ranges over 31 days), status donut, class rates, Students to Follow Up (missed 2+ in a row, with fees owed), tabs Class Days / Students with search, filters and CSV export. |
 | `tutor/mark-attendance.php` | No class day: today's classes (Start / Continue / Opens at ...) and the last 7 days to correct. A class day: context strip, stat cards, tabs for the ways switched on (QR Code, Barcode, Manual), the Scanned Student card and Recent Scans, Finish Class (rest = Absent). |
-| `tutor/attendance-settings.php` | Ways to Mark (tick QR / Barcode / Manual, at least one, which tab opens first), When a Student Is Scanned (what the card shows, students who owe fees: mark and show / ask / do not mark until paid, count as owing, minimum months, only the tutor may override, sound) with a live preview, Student ID Cards (GROW: make cards for one class or all students and print them on A4; START: a locked sample card), Times & Rules (opens before, closes after, late after, same card ignored for, mark the rest Absent), Activity Log. |
+| `tutor/attendance-settings.php` | Ways to Mark (tick QR / Barcode / Manual, at least one, which tab opens first), When a Student Is Scanned (what the card shows, students who owe fees: mark and show / ask / do not mark until paid, count as owing, minimum months, only the tutor may override, sound) with a live preview, Student IDs & Cards (Student ID format on every plan: letters, digits, next number, new students only; ID cards on GROW: make cards for one class or all students and print them on A4; START: a locked sample card), Times & Rules (opens before, closes after, late after, same card ignored for, mark the rest Absent), Activity Log. |
 
 Scanned Student card: banner (Marked Present / Late / Already Marked / Fees Due: Mark Present? / Not Marked /
 Not in This Class / Not Found), name + Student ID + classes + how and when marked, Fees Due (total, month chips,
@@ -44,6 +44,10 @@ recorded from the card clears them. `attendance-common.js` (chips, period maths,
 - Cron: after a class ends, mark the rest Absent when the setting is on.
 - Plan locks: marking on every plan; Attendance Analytics charts and Export on GROW and up (`reports.attendance`, `attendance.export`);
   Student ID Cards on GROW and up (`id.cards`, added to `FeatureCatalog`), `GET /tutor/attendance/id-cards?class=`.
+- `tutor_student_id_format` (prefix up to 10 of A-Z 0-9 / -, 3 - 6 digits, next number): new students take the next
+  number under a lock; the next number must be higher than any number already used with the prefix. Existing IDs never change.
+- Permission `attendance.correct` ("Correct finished class days", added to `PermissionCatalog`): `mark` on a finished
+  class day is refused without it (the tutor always has it). Preview: `?as=assistant` (without) and `&can=correct` (with).
 - Owner check on the server: `scan` with `force` and `mark` of a student who owes fees are refused (403 / 409) unless
   the signed-in user is the tutor; an assistant's scan answer carries `can_override: false`.
 
@@ -54,8 +58,5 @@ recorded from the card clears them. `attendance-common.js` (chips, period maths,
 3. START cannot make cards, but sees a sample card template, locked with the GROW badge and the upgrade dialog.
 4. Late counts as attended.
 5. Watching the recording later stays "Watched Recording" and does not count as attended.
-
-## Still open
-
-- QR / barcode content = the Student ID (ST02405), or a separate card number that can be replaced when a card is lost?
-- Who may correct a finished class day, and for how many days?
+6. The card number is the Student ID. The tutor sets the Student ID format in Settings.
+7. Finished class days can be corrected by anyone whose role has the permission "Correct finished class days". No day limit.
