@@ -61,6 +61,10 @@ final class RecordingAccessService
             $expiresAt = $override?->expiresAt ?? $rule->expiresAt;
             $availableFrom = $rule->availableFrom;
         }
+        // "Opens on" of the recording itself is on every plan; the later of the two dates wins.
+        if ($rec->unlockAt !== null && ($availableFrom === null || $rec->unlockAt > $availableFrom)) {
+            $availableFrom = $rec->unlockAt;
+        }
 
         $state = match (true) {
             $availableFrom !== null && $now < $availableFrom => WatchStatus::NOT_YET,
@@ -119,7 +123,9 @@ final class RecordingAccessService
         return match ($s->state) {
             WatchStatus::EXHAUSTED => 'You have used all the watch time for this recording. Ask your tutor if you need more time.',
             WatchStatus::EXPIRED => 'This recording has expired.',
-            WatchStatus::NOT_YET => 'This recording is not available yet.',
+            WatchStatus::NOT_YET => $s->availableFrom !== null
+                ? 'This recording opens on ' . $s->availableFrom->format('D, j M Y') . ' at ' . $s->availableFrom->format('g:i A') . '.'
+                : 'This recording is not available yet.',
             WatchStatus::NO_ACCESS => 'You are not enrolled in this class.',
             default => 'This recording is locked.',
         };

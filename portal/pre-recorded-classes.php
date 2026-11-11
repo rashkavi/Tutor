@@ -3,6 +3,7 @@ require_once '../includes/UserClass.php';
 require_once "../includes/connection.php";
 require_once "../includes/UserPermissionsClass.php";
 require_once "../includes/Project.php";
+require_once "../includes/enlixo/recording-player.php";
 if (!SessionUser::ifUserIsStudent()) {
     header("Location: ./index");
 } else {
@@ -163,6 +164,7 @@ if (!SessionUser::ifUserIsStudent()) {
                                                                     <span class="subject-text">
                                                                         <?= date("Y-m-d h:i A", strtotime($recording['added_at'])) ?>
                                                                     </span>
+                                                                        <?= enlixo_recording_opens_html($recording['unlock_at'] ?? null) ?>
                                                                     <h5 class="class-title">
                                                                         <?= $recording["title"]; ?>
                                                                     </h5>

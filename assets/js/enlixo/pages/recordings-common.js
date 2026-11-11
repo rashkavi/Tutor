@@ -126,4 +126,67 @@ export function player(rec) {
     h('a', { class: 'custom-btn px-4 text-decoration-none d-inline-flex align-items-center gap-2', href: rec.url, target: '_blank', rel: 'noopener' }, icon('share', { size: 18 }), `Open in ${rec.type.name}`));
 }
 
+/**
+ * "Where is the video?": recording type tiles, the link with a live check, and the passcode.
+ * Used by the Add / Edit Recording dialog and the pre-recorded class form (tutor/add-pre-recorded-class.php).
+ * v = { type, link, passcode }. onVideo({ title, minutes }) is called when a connected Bunny library sent the
+ * video details, so the form can fill the title and length.
+ * Returns { el, values(): { type, link, passcode } }. Field keys for errors: type, link, passcode.
+ */
+export function linkPicker(types, v, { onVideo } = {}) {
+  const inp = (key, attrs = {}) => h('input', { class: 'form-control custom-input', 'data-key': key, id: `rc-${key}`, value: v[key] ?? '', ...attrs });
+  const link = inp('link', { placeholder: 'Paste the recording link', 'data-limit': '600', maxlength: 600, autocomplete: 'off' });
+  const passcode = inp('passcode', { placeholder: 'Enter the passcode, if the link asks for one', 'data-limit': '100', maxlength: 100, autocomplete: 'off' });
+  const linkState = h('div', { class: 'rc-link-state d-none', role: 'status' });
+  const linkNote = h('div', { class: 'rc-note d-none' });
+  const linkHelp = h('div', { class: 'text-12 sub-text mt-1' });
+  const typePick = h('div', { class: 'rc-types', role: 'radiogroup', 'aria-label': 'Where the video is kept', 'data-key': 'type', id: 'rc-type-pick' },
+    types.map((t) => h('label', { class: 'rc-type' },
+      h('input', { type: 'radio', name: 'rc-type', value: t.id, checked: String(t.id) === String(v.type), onchange: () => { drawLinkHelp(); checkLink(); } }),
+      platformTile(t.platform_key, 16), h('span', { class: 'text-truncate' }, t.name))));
+  const typeOf = () => types.find((t) => String(t.id) === String(typePick.querySelector('input:checked')?.value));
+
+  const drawLinkHelp = () => {
+    const t = typeOf();
+    const bunnyId = t?.platform_key === 'bunny' && t.bunny_library_id;
+    link.placeholder = bunnyId ? 'Paste the Bunny video link, or only its video ID'
+      : t?.link_example ? `Paste the link, for example ${t.link_example}` : 'Paste the recording link';
+    fill(linkHelp, !t ? '' : [
+      t.embeddable ? 'Students watch it inside ENLIXO.' : `Students get a button that opens ${t.name} in a new tab.`,
+      bunnyId ? ` Connected to your Bunny library ${t.bunny_library_id}${t.bunny_connected ? ': we check the video and fill in its length.' : '.'}` : '',
+    ].join(''));
+  };
+
+  let checkSeq = 0;
+  const checkLink = async () => {
+    const t = typeOf();
+    linkNote.classList.add('d-none');
+    if (!t || !link.value.trim()) { linkState.classList.add('d-none'); return; }
+    const seq = ++checkSeq;
+    try {
+      const { data: r } = await api.post('/tutor/recording-types/check', { type: t.id, link: link.value });
+      if (seq !== checkSeq) return;
+      linkState.className = `rc-link-state ${r.ok ? 'ok' : 'bad'}`;
+      const found = r.video ? ` Bunny video found${r.video.title ? `: "${r.video.title}"` : ''}${r.video.minutes ? `, ${minutes(r.video.minutes)}` : ''}.` : '';
+      fill(linkState, icon(r.ok ? 'check' : 'danger', { size: 16 }), h('span', {}, r.ok ? `Link checked.${found}` : r.error,
+        r.suggest ? h('button', { type: 'button', class: 'btn btn-link p-0 ms-1 align-baseline', style: { fontSize: '12px' }, onclick: () => { typePick.querySelector(`input[value="${r.suggest}"]`)?.click(); } }, 'Use that type') : null));
+      if (r.note) { fill(linkNote, icon('info', { size: 16 }), h('span', {}, r.note)); linkNote.classList.remove('d-none'); }
+      if (r.ok && r.video) onVideo?.(r.video);
+    } catch { linkState.classList.add('d-none'); }
+  };
+  let linkTimer;
+  link.addEventListener('input', () => { clearTimeout(linkTimer); linkTimer = setTimeout(checkLink, 600); });
+
+  const el = h('div', {},
+    h('div', { class: 'mb-3' }, h('label', { class: 'text-14 main-text mb-2 d-inline-flex align-items-center gap-2 required', for: 'rc-type-pick' }, 'Where is the video?',
+      infoTip('The website the recording is kept on. Each has its own link check. Add or switch off websites in Settings → Recording Types.', 'Where is the video?')),
+    typePick, h('div', { class: 'text-12 text-dark-red mt-1 d-none', 'data-err': 'rc-type-pick' })),
+    field('Recording link', link, { required: true, info: 'Copy the share link of the video and paste it here. An embed code (<iframe ...>) works too. For a connected Bunny library the video ID alone is enough. We keep only the clean link, so the video always plays the same way.' }),
+    h('div', { class: 'mt-n2 mb-3' }, linkState, linkNote, linkHelp),
+    field('Passcode', passcode, { info: 'Only if the link asks for a passcode, for example a Zoom cloud recording. Students see it with a Copy button next to the video.' }));
+  drawLinkHelp();
+  if (link.value) checkLink();
+  return { el, values: () => ({ type: Number(typeOf()?.id ?? 0), link: link.value, passcode: passcode.value }) };
+}
+
 export { h, fill, icon, BsModal, Toast, infoTip, EmptyState, cell, field };

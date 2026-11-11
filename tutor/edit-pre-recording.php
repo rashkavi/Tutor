@@ -12,7 +12,7 @@ if (!SessionUser::ifUserIsTutor()) {
 
     if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['recording-id']) && !empty($_GET['recording-id'])) {
 
-        $recording_id = $_GET["recording-id"];
+        $recording_id = (int) $_GET["recording-id"]; // int cast: used in SQL below
 
         $query = "SELECT *,`integrations_integration_id` AS 'bunny_lib' FROM `pre_recordings`
         INNER JOIN `classes` ON `pre_recordings`.`classes_class_id` = `classes`.`class_id` 
@@ -43,7 +43,9 @@ if (!SessionUser::ifUserIsTutor()) {
                 <script src="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.js"></script>
                 <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
                 <script src="<?= Project::getAssetsPath() ?>/js/init.js?v=<?= Project::getVersion() ?>"></script>
-            </head>
+                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
+    <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-recordings.css?v=<?= Project::getVersion() ?>">
+</head>
 
             <body class="overflow-hidden" onload="initializeAddPreRecording();">
                 <div class="notifications"></div>
@@ -153,55 +155,14 @@ if (!SessionUser::ifUserIsTutor()) {
                                                             </div>
                                                             <span class="text-12 text-dark-red" id="rec-cover-feedback"></span>
                                                         </div>
-                                                        <div class="col-12 d-flex flex-column mb-4">
-                                                            <label class="text-16 main-text required" for="">Recording Type</label>
-                                                            <div class="d-flex gap-4 px-2 mt-4">
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input text-20 mt-0 mb-0 me-2" type="checkbox" name="lectureType" id="youtube-check-box" <?= $recordingData['bunny_lib'] == null ? "checked" : '' ?>>
-                                                                    <label class="text-16 sub-text mx-2">You Tube</label>
-                                                                </div>
-                                                                <div class="form-check option-locked">
-                                                                    <input class="form-check-input text-20 mt-0 mb-0 me-2"
-                                                                        type="checkbox"
-                                                                        name="lectureType"
-                                                                        id="video-check-box"
-                                                                        disabled>
-
-                                                                    <label class="text-16 sub-text mx-2 d-flex align-items-center gap-2">
-                                                                        Video
-                                                                        <span class="pro-badge">
-                                                                            <iconify-icon icon="solar:crown-bold-duotone" width="14"></iconify-icon>
-                                                                            PRO
-                                                                        </span>
-                                                                    </label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-12 d-flex flex-column mb-4 <?= $recordingData['bunny_lib'] != null ? "d-none" : '' ?>" id="youtube-link-area">
-                                                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                                <label class="text-16 main-text required mb-0" for="link">YouTube Iframe Link</label>
-                                                                <span id="youtube-guide-info"></span>
-                                                            </div>
-                                                            <textarea name="link" class="form-control custom-input mt-2" rows="3" id="link"><?= $recordingData['recording_link'] ?></textarea>
-                                                            <span id="link-feedback" class="text-dark-red text-12"></span>
-                                                        </div>
-
-                                                        <div class="col-12 d-flex flex-column <?= $recordingData['bunny_lib'] == null ? "d-none" : '' ?>" id="video-area">
-                                                            <label class="text-16 main-text required">Recording Video</label>
-                                                            <div class="p-5 d-flex flex-column bl-solid align-items-center justify-content-center w-100 h-auto cursor-pointer mt-2" id="video-drop-zone">
-                                                                <img src="../assets/imgs/icons/cloud.png" alt="cloud">
-                                                                <span>Drag & Drop your files here</span>
-                                                                <span>OR</span>
-                                                                <button class="custom-btn px-4" id="video-browse-btn">Select Files</button>
-                                                                <input type="file" class="d-none" id="video-input-field" accept=".mp4">
-                                                                <div class="col-12 px-1 mt-4">
-                                                                    <div class="row" id="video-preview-list">
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <span id="attachment-feedback" class="text-dark-red text-12"></span>
-                                                            <!-- File upload input field for PDF, Word, and PowerPoint files -->
+                                                        <!-- Where the video is: Settings -> Recording Types (assets/js/enlixo/pages/app-tutor-pre-recording-link.js) -->
+                                                        <div class="col-12" id="rec-link-field" data-type="<?= (int) ($recordingData['tutor_recording_types_id'] ?? 0) ?>"
+                                                            data-link="<?= htmlspecialchars((string) ($recordingData['recording_url'] ?? ''), ENT_QUOTES) ?>"
+                                                            data-old-link="<?= htmlspecialchars(empty($recordingData['recording_url']) && empty($recordingData['bunny_lib']) ? (string) ($recordingData['recording_link'] ?? '') : '', ENT_QUOTES) ?>"
+                                                            data-passcode="<?= htmlspecialchars((string) ($recordingData['access_passcode'] ?? ''), ENT_QUOTES) ?>"
+                                                            data-unlock="<?= !empty($recordingData['unlock_at']) ? date('Y-m-d\TH:i', strtotime($recordingData['unlock_at'])) : '' ?>"
+                                                            data-upload="<?= !empty($recordingData['bunny_lib']) && empty($recordingData['tutor_recording_types_id']) ? '1' : '0' ?>">
+                                                            <div class="sub-text text-14">Loading recording types…</div>
                                                         </div>
 
                                                         <div class="col-12 d-flex flex-column">
@@ -365,7 +326,7 @@ if (!SessionUser::ifUserIsTutor()) {
                 <script src="js/functions.js?v=<?= Project::getVersion() ?>"></script>
                 <script src="js/createInfo.js?v=<?= Project::getVersion() ?>"></script>
                 <script src="<?= Project::getAssetsPath() ?>/js/fileChooser.js?v=<?= Project::getVersion() ?>"></script>
-                <script src="<?= Project::getAssetsPath() ?>/js/videoFileChooser.js?v=<?= Project::getVersion() ?>"></script>
+                <script type="module" src="<?= Project::getAssetsPath() ?>/js/enlixo/pages/app-tutor-pre-recording-link.js?v=<?= Project::getVersion() ?>"></script>
             </body>
 
             </html>

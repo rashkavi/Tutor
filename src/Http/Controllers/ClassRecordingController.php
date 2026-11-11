@@ -26,7 +26,7 @@ final class ClassRecordingController
 
     private function types(): RecordingTypeRepository
     {
-        return new RecordingTypeRepository($this->app->db());
+        return $this->app->recordingTypes();
     }
 
     private function recordings(): ClassRecordingRepository

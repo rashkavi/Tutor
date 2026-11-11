@@ -18,7 +18,7 @@ final class PdoRecordingRepository implements RecordingRepository
         // NOTE: the existing `duration` columns are treated as MINUTES. Confirm with the live app.
         $row = $kind === 'lecture'
             ? $this->db->one(
-                'SELECT lr.lecture_recording_id AS id, lr.recording_title AS title, lr.duration, c.class_id, c.tutor_id
+                'SELECT lr.lecture_recording_id AS id, lr.recording_title AS title, lr.duration, lr.unlock_at, c.class_id, c.tutor_id
                    FROM lecture_recording lr
                    JOIN time_table tt ON tt.time_table_id = lr.time_table_time_table_id
                    JOIN classes c ON c.class_id = tt.classes_class_id
@@ -26,13 +26,14 @@ final class PdoRecordingRepository implements RecordingRepository
                 ['id' => $id],
             )
             : $this->db->one(
-                'SELECT pr.pre_recording_id AS id, pr.title, pr.duration, c.class_id, c.tutor_id
+                'SELECT pr.pre_recording_id AS id, pr.title, pr.duration, pr.unlock_at, c.class_id, c.tutor_id
                    FROM pre_recordings pr JOIN classes c ON c.class_id = pr.classes_class_id
                   WHERE pr.pre_recording_id = :id',
                 ['id' => $id],
             );
 
-        return $row ? new RecordingInfo($kind, (int) $row['id'], (int) $row['class_id'], (int) $row['tutor_id'], $row['title'], (int) $row['duration'] * 60) : null;
+        return $row ? new RecordingInfo($kind, (int) $row['id'], (int) $row['class_id'], (int) $row['tutor_id'], $row['title'], (int) $row['duration'] * 60,
+            !empty($row['unlock_at']) ? new \DateTimeImmutable($row['unlock_at']) : null) : null;
     }
 
     public function studentEnrolled(int $studentId, int $classId): bool

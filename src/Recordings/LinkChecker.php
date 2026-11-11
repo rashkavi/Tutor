@@ -15,7 +15,7 @@ final class LinkChecker
     /** platform key => [label, plays inside the page?, help shown in Settings] */
     public const PLATFORMS = [
         'youtube' => ['YouTube', true, 'YouTube video links (unlisted videos work too). Playlists are not accepted.'],
-        'bunny' => ['Bunny Stream', true, 'Links from your Bunny Stream library (iframe.mediadelivery.net).'],
+        'bunny' => ['Bunny Stream', true, 'Bunny Stream video links (embed, play or dashboard link). Connect your library and the video ID alone is enough.'],
         'drive' => ['Google Drive', true, 'A video file shared from Google Drive ("Anyone with the link").'],
         'vimeo' => ['Vimeo', true, 'Vimeo video links, private links with a hash too.'],
         'zoom' => ['Zoom cloud recording', false, 'Zoom cloud recording share links (/rec/share/ or /rec/play/). Zoom does not allow playing inside the page.'],
@@ -89,6 +89,9 @@ final class LinkChecker
         if (trim($input) === '') {
             return $fail('Paste the link of the recording');
         }
+        if (($type['platform_key'] ?? '') === 'bunny') {
+            return self::bunny($type, $input, $fail);
+        }
         $raw = self::extractUrl($input);
         if ($raw === null) {
             return $fail(mb_strlen(trim($input)) > self::MAX_LINK
@@ -124,13 +127,6 @@ final class LinkChecker
                         : "That is not a $name video link.$example");
                 }
                 return ['ok' => true, 'url' => "https://www.youtube.com/embed/$id", 'error' => ''];
-
-            case 'bunny':
-                if (!in_array($host, ['iframe.mediadelivery.net', 'player.mediadelivery.net'], true)
-                    || !preg_match('#^/(embed|play)/(\d{1,10})/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/?$#i', $path, $m)) {
-                    return $bad();
-                }
-                return ['ok' => true, 'url' => "https://iframe.mediadelivery.net/embed/{$m[2]}/" . strtolower($m[3]), 'error' => ''];
 
             case 'drive':
                 if ($host !== 'drive.google.com') {
@@ -191,6 +187,37 @@ final class LinkChecker
                 return $keep();
         }
         return $fail('This recording type is not set up correctly. Check Settings > Recording Types.');
+    }
+
+    /** Bunny: any Bunny link or only the video ID (when the type is connected to a library) -> the embed link. */
+    private static function bunny(array $type, string $input, \Closure $fail): array
+    {
+        $name = (string) $type['name'];
+        $lib = (int) ($type['bunny_library_id'] ?? 0);
+        $b = BunnyStream::parse($input);
+        if ($b === null) {
+            return $fail("That is not a $name video link. In Bunny open the video and copy its embed link" . ($lib ? ' or its video ID.' : '.'));
+        }
+        if ($b['library'] === null) {
+            if (!$lib) {
+                return $fail("Only a video ID was pasted. Paste the full link, or connect your Bunny library to $name in Settings > Recording Types so the ID is enough.");
+            }
+            $b['library'] = $lib;
+        } elseif ($lib && $b['library'] !== $lib) {
+            return $fail("This video is in Bunny library {$b['library']}, but $name is connected to library $lib. Paste a video from library $lib, or add another Bunny type for that library.");
+        }
+        return ['ok' => true, 'url' => BunnyStream::embedUrl($b['library'], $b['guid']), 'error' => '', 'bunny' => $b];
+    }
+
+    /**
+     * What the old recording_link column gets, so pages that still print it keep working: our own iframe for
+     * types that play in the page, otherwise a button that opens the link.
+     */
+    public static function playerHtml(string $url, string $title, bool $embeddable): string
+    {
+        return $embeddable
+            ? self::embedHtml($url, $title)
+            : '<a href="' . htmlspecialchars($url, ENT_QUOTES) . '" target="_blank" rel="noopener" class="custom-btn px-4 text-decoration-none">Open the recording</a>';
     }
 
     /** The iframe we build ourselves for an embeddable link (typed HTML is never stored or shown). */

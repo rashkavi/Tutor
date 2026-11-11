@@ -291,9 +291,7 @@ final class ClassRecordingRepository
         ];
         $linkSql = '';
         if (!$keepUpload) {
-            $player = $type['embeddable']
-                ? LinkChecker::embedHtml($check['url'], $title)
-                : '<a href="' . htmlspecialchars($check['url'], ENT_QUOTES) . '" target="_blank" rel="noopener" class="custom-btn px-4 text-decoration-none">Open the recording</a>';
+            $player = LinkChecker::playerHtml($check['url'], $title, $type['embeddable']);
             $p += ['type' => $type['id'], 'url' => $check['url'], 'player' => $player];
             $linkSql = ', tutor_recording_types_id = :type, recording_url = :url, recording_link = :player, integrations_integration_id = NULL';
         }

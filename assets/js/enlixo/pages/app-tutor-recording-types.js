@@ -53,6 +53,7 @@ function row(t) {
     h('div', { class: 'rc-info' },
       h('div', { class: 'rc-name' }, t.name,
         tag(t.embeddable ? 'Plays in the page' : 'Opens in a new tab', t.embeddable ? 'ok' : 'new-tab'),
+        t.platform_key === 'bunny' && t.bunny_library_id ? tag(`Library ${t.bunny_library_id}${t.bunny_connected ? ' connected' : ''}`, 'ok') : null,
         t.used ? tag(plural(t.used, 'recording')) : null,
         t.active ? null : tag('Off', 'off')),
       h('div', { class: 'rc-meta' }, [t.platform_label, t.allowed_hosts, t.link_example].filter(Boolean).join(' · '))),
@@ -82,10 +83,31 @@ function edit(t) {
   const hosts = h('input', { class: 'form-control custom-input', 'data-key': 'allowed_hosts', value: v.allowed_hosts, placeholder: 'Enter the websites, for example dropbox.com, onedrive.com', 'data-limit': '255', maxlength: 255 });
   const example = h('input', { class: 'form-control custom-input', 'data-key': 'link_example', value: v.link_example, placeholder: 'Enter an example link, for example https://zoom.us/rec/share/abc', 'data-limit': '255', maxlength: 255 });
   const help = h('div', { class: 'ad-soft p-3 d-flex gap-3 align-items-start mb-3' });
+  // Bunny Stream: connect the tutor's library (the API key is never sent back, only whether one is saved)
+  const lib = h('input', { class: 'form-control custom-input', 'data-key': 'bunny_library_id', value: v.bunny_library_id ?? '', inputmode: 'numeric', placeholder: 'Enter the Library ID, for example 123456', 'data-limit': '10', maxlength: 10, autocomplete: 'off' });
+  const key = h('input', { class: 'form-control custom-input', 'data-key': 'bunny_api_key', type: 'password', autocomplete: 'new-password',
+    placeholder: v.bunny_connected ? 'Saved. Leave empty to keep it, or paste a new key' : 'Paste the API key of the library', 'data-limit': '100', maxlength: 100 });
+  let disconnect = false;
+  const bunnyState = h('div', { class: 'text-12 mb-3' });
+  const drawBunnyState = () => fill(bunnyState, v.bunny_library_id && !disconnect
+    ? h('span', { class: 'd-inline-flex align-items-center gap-2 flex-wrap' }, h('span', { class: 'rc-tag ok' }, `Connected to library ${v.bunny_library_id}${v.bunny_connected ? ' with an API key' : ''}`),
+      h('button', { type: 'button', class: 'btn btn-link p-0 text-12', onclick: () => { disconnect = true; lib.value = ''; key.value = ''; drawBunnyState(); } }, 'Disconnect'))
+    : h('span', { class: 'sub-text' }, disconnect ? 'Will be disconnected when you save. Bunny links with the full address keep working.' : 'Not connected. Full Bunny links still work.'));
+  const bunnyWrap = h('div', { class: 'ad-soft p-3 mb-3' },
+    h('div', { class: 'sub-topic mb-1 d-flex align-items-center gap-2' }, 'Connect your Bunny library',
+      infoTip('Optional. With the Library ID, pasting only the video ID is enough and videos from another library are stopped. With the API key too, we confirm the video exists, warn while Bunny is still processing it and fill in its title and length. We only read from Bunny, never change anything.', 'Connect your Bunny library')),
+    h('div', { class: 'text-12 sub-text mb-3' }, 'In Bunny open Stream, choose your library and open API. Copy the Video Library ID and the API Key.'),
+    bunnyState,
+    h('div', { class: 'row gx-3' },
+      h('div', { class: 'col-md-5' }, field('Library ID', lib, { info: 'The number of your Bunny Stream video library, shown as "Video Library ID" on the API page of the library. For example 123456.' })),
+      h('div', { class: 'col-md-7' }, field('API key', key, { info: 'The API Key on the same page (not your account key). It is checked with Bunny before it is saved, stored encrypted and never shown again. Leave empty if you only want the Library ID.' }))));
+  lib.addEventListener('input', () => { if (lib.value) { disconnect = false; drawBunnyState(); } });
+  drawBunnyState();
   const hostsWrap = h('div', {}, field('Allowed websites', hosts, { required: true, info: 'Links of this type must be on one of these websites. Separate them with commas. A website also covers its parts, so dropbox.com accepts www.dropbox.com.' }));
   const drawHelp = () => {
     const p = D.platforms.find((x) => x.key === platform.value);
     hostsWrap.classList.toggle('d-none', platform.value !== 'custom');
+    bunnyWrap.classList.toggle('d-none', platform.value !== 'bunny');
     fill(help, platformTile(p?.key ?? 'custom'), h('div', {},
       h('div', { class: 'text-14 main-text fw-semibold' }, p ? `${p.label}: ${p.embeddable ? 'plays in the page' : 'opens in a new tab'}` : 'Choose where the recordings are kept'),
       h('div', { class: 'text-12 sub-text' }, p ? p.help : 'This decides how a pasted link is checked and how students watch it.')));
@@ -94,7 +116,7 @@ function edit(t) {
   const body = h('div', {},
     field('Name', name, { required: true, info: 'The name you and your students see, for example "Zoom" or "My Google Drive". Up to 60 characters.' }),
     field('Where the recordings are kept', platform, { required: true, info: t?.used ? `${plural(t.used, 'recording')} use this type, so this cannot change. Add a new type for another website.` : 'Pick the website. Each one has its own link check, so a wrong or mixed-up link is stopped before it is saved. Pick Other website to allow any website you list.' }),
-    help, hostsWrap,
+    help, hostsWrap, bunnyWrap,
     field('Example link', example, { info: 'Shown as the hint in the link box when you add a recording, so you remember what to copy. It must pass the check of this type. Leave it empty if you do not need a hint.' }));
   clearOnEdit(body);
   drawHelp();
@@ -105,7 +127,8 @@ function edit(t) {
       primary: true,
       onclick: async (e) => {
         const btn = e.currentTarget; btn.disabled = true;
-        const payload = { name: name.value, platform_key: platform.value, allowed_hosts: hosts.value, link_example: example.value };
+        const payload = { name: name.value, platform_key: platform.value, allowed_hosts: hosts.value, link_example: example.value,
+          bunny_library_id: lib.value.trim(), bunny_api_key: key.value.trim(), bunny_disconnect: disconnect };
         try {
           const { data } = await (isNew ? api.post('/tutor/recording-types', payload) : api.put(`/tutor/recording-types/${t.id}`, payload));
           D.types = data.types;
@@ -141,7 +164,8 @@ const tester = (() => {
       result.className = `rc-result ${r.ok ? 'ok' : 'bad'}`;
       fill(result, icon(r.ok ? 'check' : 'danger', { size: 20 }), h('div', { class: 'min-w-0' },
         h('div', { class: 'fw-semibold' }, r.ok ? `This ${r.type} link is fine` : 'This link would be stopped'),
-        h('div', { class: 'text-13 text-break' }, r.ok ? `Saved as ${r.url}. ${r.embeddable ? 'Students watch it inside ENLIXO.' : 'Students get a button that opens it in a new tab.'}` : r.error),
+        r.note ? h('div', { class: 'text-13' }, r.note) : null,
+        h('div', { class: 'text-13 text-break' }, r.ok ? `${r.video ? `Bunny video found${r.video.title ? `: "${r.video.title}"` : ''}, ${r.video.minutes} min. ` : ''}Saved as ${r.url}. ${r.embeddable ? 'Students watch it inside ENLIXO.' : 'Students get a button that opens it in a new tab.'}` : r.error),
         r.suggest ? h('button', { type: 'button', class: 'btn btn-link p-0 text-13', onclick: () => { type.value = String(r.suggest); drawTypes(); check(); } }, 'Check it as that type') : null));
     } catch (e) { Toast.error(e.message); }
   };

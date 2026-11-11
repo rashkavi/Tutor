@@ -53,3 +53,12 @@
 /* player in the watch dialog */
 .rc-player { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; }
 .rc-player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* student / parent watch pages (includes/enlixo/recording-player.php) */
+.rc-watch-lock, .rc-watch-open { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; min-height: 320px; padding: 32px 16px; background: var(--table-header-color); }
+.rc-watch-icon { width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--light-theme); color: var(--dark-theme); margin-bottom: 4px; }
+.rc-watch-pass { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 16px; padding: 12px 14px; background: var(--table-header-color); color: var(--dark-color); }
+.rc-watch-code { font-size: 16px; font-weight: 600; color: var(--dark-color); background: var(--custom-white); padding: 4px 10px; letter-spacing: .5px; }
+.rc-copy { padding: 4px 14px; font-size: 13px; }
+.rc-opens { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; padding: 2px 8px; background: var(--light-theme); color: var(--dark-theme); }
+.rc-note { font-size: 12px; margin-top: 6px; display: flex; gap: 6px; align-items: flex-start; color: #E08600; }

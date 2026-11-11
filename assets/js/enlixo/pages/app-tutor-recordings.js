@@ -8,7 +8,7 @@ import { ActionMenu } from '../components/Popover.js';
 import { QuickGuide } from '../components/QuickGuide.js';
 import {
   api, has, lockBadge, gate, h, fill, icon, BsModal, Toast, infoTip, EmptyState, cell, field, plural, platformTile, stateChip,
-  dayText, shortDay, ampm, stamp, minutes, logTable, player, showFieldErrors, clearOnEdit,
+  dayText, shortDay, ampm, stamp, minutes, logTable, player, showFieldErrors, clearOnEdit, linkPicker,
 } from './recordings-common.js';
 
 QuickGuide.attachAll();
@@ -194,9 +194,6 @@ function edit(rec) {
   const title = inp('title', { placeholder: 'Enter a title, for example Week 4: Integration', 'data-limit': '100', maxlength: 100 });
   const desc = h('textarea', { class: 'form-control custom-input', 'data-key': 'description', rows: 3, placeholder: 'Enter what the class covered (optional), for example the lessons and page numbers', 'data-limit': '1000', maxlength: 1000 }, v.description);
   const duration = inp('duration', { type: 'number', min: 1, max: 900, placeholder: 'Enter the length in minutes, for example 120' });
-  const link = inp('link', { placeholder: 'Paste the recording link', 'data-limit': '600', maxlength: 600 });
-  const linkState = h('div', { class: 'rc-link-state d-none', role: 'status' });
-  const passcode = inp('passcode', { placeholder: 'Enter the passcode, if the link asks for one', 'data-limit': '100', maxlength: 100 });
   const unlock = inp('unlock_at', { type: 'datetime-local', placeholder: 'Choose the day and time students can start watching' });
   const expire = inp('expire_date', { type: 'date', placeholder: 'Choose the last day students can watch', disabled: !canExpire && !v.expire_date, min: new Date().toISOString().slice(0, 10) });
 
@@ -226,46 +223,20 @@ function edit(rec) {
   cls.addEventListener('change', () => drawDays(''));
   day.addEventListener('change', drawDayHint);
 
-  // where the video is
-  const typeOf = () => types.find((t) => String(t.id) === String(typePick.querySelector('input:checked')?.value));
-  const typePick = h('div', { class: 'rc-types', role: 'radiogroup', 'aria-label': 'Where the video is kept', 'data-key': 'type', id: 'rc-type-pick' },
-    types.map((t) => h('label', { class: 'rc-type' },
-      h('input', { type: 'radio', name: 'rc-type', value: t.id, checked: String(t.id) === String(v.type), onchange: () => { drawLinkHelp(); checkLink(); } }),
-      platformTile(t.platform_key, 16), h('span', { class: 'text-truncate' }, t.name))));
-  const linkHelp = h('div', { class: 'text-12 sub-text mt-1' });
-  const drawLinkHelp = () => {
-    const t = typeOf();
-    link.placeholder = t?.link_example ? `Paste the link, for example ${t.link_example}` : 'Paste the recording link';
-    fill(linkHelp, t ? (t.embeddable ? 'Students watch it inside ENLIXO.' : `Students get a button that opens ${t.name} in a new tab.`) : '');
-  };
-  let checkSeq = 0;
-  const checkLink = async () => {
-    const t = typeOf();
-    if (!t || !link.value.trim()) { linkState.classList.add('d-none'); return; }
-    const seq = ++checkSeq;
-    try {
-      const { data: r } = await api.post('/tutor/recording-types/check', { type: t.id, link: link.value });
-      if (seq !== checkSeq) return;
-      linkState.className = `rc-link-state ${r.ok ? 'ok' : 'bad'}`;
-      fill(linkState, icon(r.ok ? 'check' : 'danger', { size: 16 }), h('span', {}, r.ok ? 'Link checked.' : r.error,
-        r.suggest ? h('button', { type: 'button', class: 'btn btn-link p-0 ms-1 align-baseline', style: { fontSize: '12px' }, onclick: () => { typePick.querySelector(`input[value="${r.suggest}"]`)?.click(); } }, 'Use that type') : null));
-    } catch { linkState.classList.add('d-none'); }
-  };
-  let linkTimer;
-  link.addEventListener('input', () => { clearTimeout(linkTimer); linkTimer = setTimeout(checkLink, 600); });
+  // where the video is (shared with the pre-recorded class form)
+  const picker = linkPicker(types, v, {
+    onVideo: (info) => {
+      if (!title.value.trim() && info.title) title.value = info.title;
+      if (!String(duration.value).trim() && info.minutes) duration.value = info.minutes;
+    },
+  });
 
   const sec = (text, info) => h('div', { class: 'sub-topic mt-2 mb-3 d-flex align-items-center gap-2' }, text, info ? infoTip(info, text) : null);
   const where = keepUpload
     ? h('div', { class: 'ad-soft p-3 d-flex gap-3 align-items-start mb-3' }, platformTile('upload'), h('div', {},
       h('div', { class: 'text-14 main-text fw-semibold' }, 'Uploaded video'),
       h('div', { class: 'text-12 sub-text' }, 'This video was uploaded before and stays as it is. You can change the details below.')))
-    : h('div', {},
-      h('div', { class: 'mb-3' }, h('label', { class: 'text-14 main-text mb-2 d-inline-flex align-items-center gap-2 required', for: 'rc-type-pick' }, 'Where is the video?',
-        infoTip('The website the recording is kept on. Each has its own link check. Add or switch off websites in Settings → Recording Types.', 'Where is the video?')),
-      typePick, h('div', { class: 'text-12 text-dark-red mt-1 d-none', 'data-err': 'rc-type-pick' })),
-      field('Recording link', link, { required: true, info: 'Copy the share link of the video and paste it here. An embed code (<iframe ...>) works too. We keep only the clean link, so the video always plays the same way.' }),
-      h('div', { class: 'mt-n2 mb-3' }, linkState, linkHelp),
-      field('Passcode', passcode, { info: 'Only if the link asks for a passcode, for example a Zoom cloud recording. Students see it next to the button.' }));
+    : picker.el;
 
   const body = h('div', {},
     sec('Class day', 'The class and the day this recording is from. Students of that class see it in the app.'),
@@ -285,7 +256,6 @@ function edit(rec) {
         canExpire ? null : h('span', { class: 'position-absolute top-0 end-0' }, lockBadge('recordings.expiry'))))));
 
   clearOnEdit(body);
-  drawLinkHelp();
   drawDays(v.day);
   const m = BsModal.open({
     title: isNew ? 'Add a Recording' : 'Edit Recording', subtitle: isNew ? 'Share a class day with your students' : [rec.class.name, dayText(rec.day.date)],
@@ -296,7 +266,7 @@ function edit(rec) {
         const btn = e.currentTarget; btn.disabled = true;
         const payload = {
           class: Number(cls.value) || 0, day: Number(day.value) || 0, title: title.value, description: desc.value, duration: duration.value,
-          type: Number(typeOf()?.id ?? 0), link: link.value, passcode: passcode.value, unlock_at: unlock.value, expire_date: expire.value,
+          ...picker.values(), unlock_at: unlock.value, expire_date: expire.value,
         };
         try {
           await (isNew ? api.post('/tutor/recordings', payload) : api.put(`/tutor/recordings/${rec.id}`, payload));

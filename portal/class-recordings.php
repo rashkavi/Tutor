@@ -3,6 +3,7 @@ require_once '../includes/UserClass.php';
 require_once "../includes/connection.php";
 require_once "../includes/UserPermissionsClass.php";
 require_once "../includes/Project.php";
+require_once "../includes/enlixo/recording-player.php";
 if (!SessionUser::ifUserIsStudent()) {
     header("Location: ./index");
 } else {
@@ -123,7 +124,8 @@ if (!SessionUser::ifUserIsStudent()) {
                                                 `lecture_recording`.`duration`,
                                                 `integrations_integration_id` AS 'bunny_lib',
                                                 `lecture_recording_id`,
-                                                `lecture_recording`.`added_at`
+                                                `lecture_recording`.`added_at`,
+                                                `lecture_recording`.`unlock_at`
 
                                                  FROM `lecture_recording` 
                                                 INNER JOIN `time_table` ON `lecture_recording`.`time_table_time_table_id` = `time_table`.`time_table_id`
@@ -166,6 +168,7 @@ if (!SessionUser::ifUserIsStudent()) {
                                                                         <span class="subject-text">
                                                                             <?= date("Y-m-d h:i A", strtotime($recording['added_at'])) ?>
                                                                         </span>
+                                                                        <?= enlixo_recording_opens_html($recording['unlock_at'] ?? null) ?>
                                                                         <h5 class="class-title js-trim" data-full-title="<?= $recording['recording_title'] ?>">
                                                                             <?= $recording["recording_title"]; ?>
                                                                         </h5>
