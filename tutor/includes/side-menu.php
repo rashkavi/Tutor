@@ -31,9 +31,8 @@ class load_side_menu
                 ['Attendance', null, 'attendance', 'attendance', ['Attendance']],
             ]],
             ['Finance', 'finance', null, '', [], [
-                ['Payments', null, 'payments', 'payments', ['Payments']],
-                ['My Subscription', null, 'subscription', '', ['My Subscription']],
-                ['Billing', null, 'billing', 'billing', ['Billing']],
+                ['Student Fees', null, 'fees', '', ['Student Fees', 'Payments']],
+                ['My Subscription', null, 'subscription', '', ['My Subscription', 'Billing']],
             ]],
             ['Communication', 'communication', null, '', [], [
                 ['Message Center', null, 'message-center', 'message-center', ['Message Center']],
@@ -41,6 +40,7 @@ class load_side_menu
             ['Settings', 'settings', null, '', [], [
                 ['Class Form', null, 'class-form-settings', '', ['Class Form']],
                 ['Student Form', null, 'student-form-settings', '', ['Student Form']],
+                ['Fees & Receipts', null, 'fee-settings', '', ['Fee Settings']],
                 ['Plans & Billing', null, 'pricing', '', ['Pricing']],
                 ['Integrations', null, 'intergrations', 'intergrations', ['Intergrations']],
             ]],
