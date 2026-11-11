@@ -138,5 +138,10 @@
   "sound": "volume-loud-linear",
   "history": "history-linear",
   "user-cross": "user-cross-rounded-linear",
-  "late": "alarm-linear"
+  "late": "alarm-linear",
+  "toast-success": "check-circle-bold",
+  "toast-error": "close-circle-bold",
+  "toast-warning": "danger-circle-bold",
+  "toast-info": "info-circle-bold",
+  "x": "close-linear"
 }

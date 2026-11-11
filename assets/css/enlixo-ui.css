@@ -41,7 +41,7 @@
 }
 
 /* Typography helpers, scoped (no global element styles) */
-.ex-root, .ex-modal, .ex-toasts { font-family: var(--ex-font); color: var(--text); }
+.ex-root, .ex-modal { font-family: var(--ex-font); color: var(--text); }
 .ex-root a, .ex-modal a { text-decoration: none; }
 .ex-h1 { font-size: 22px; font-weight: 700; margin: 0; }
 .ex-root h2, .ex-modal h2 { font-size: 17px; font-weight: 650; margin: 0; }
@@ -190,11 +190,6 @@ table.ex-table { width: 100%; border-collapse: collapse; }
 .ex-upgrade-plan { margin-top: 14px; padding: 14px; border-radius: var(--radius); background: var(--surface-2); text-align: left; }
 @keyframes fade { from { opacity: 0; } }
 @keyframes pop { from { transform: translateY(8px) scale(.98); opacity: 0; } }
-.ex-toasts { position: fixed; top: 76px; right: 20px; display: grid; gap: 8px; z-index: 60; pointer-events: none; }
-.ex-toast { pointer-events: auto; }
-.ex-toast { background: var(--text); color: var(--surface); padding: 10px 14px; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); font-weight: 500; animation: pop .2s ease; max-width: 360px; }
-.ex-toast.ex-error { background: var(--danger); color: #fff; }
-.ex-toast.ex-success { background: var(--success); color: #fff; }
 
 /* ---------- Meter ---------- */
 .ex-meter { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }

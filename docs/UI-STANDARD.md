@@ -167,9 +167,21 @@ Previous (`previous-button`) on the left, numbered `page-item`s in the middle, N
   title and one grey line. In a table it is a row inside `tbody`. With a search or filter on: "No matching results"
   + "Try changing the search or filters." and a Clear button.
 * Error: message + `custom-btn` "Try again".
-* Feedback after an action: `Toast.success()` / `Toast.error()` (top right).
+* Feedback after an action: ALWAYS a toast, never `alert()`, an inline "Saved" line or a Bootstrap `.alert`.
+  New pages: `Toast.success()` / `Toast.error()` / `Toast.warning()` / `Toast.info()` (`components/Toast.js`); older
+  pages: `showToast('success' | 'error' | 'warning' | 'info', message)` (`assets/js/script.js`). Both draw the V3 toast
+  (style.css "toster CSS"): white card top right, coloured line on the left, Solar round icon, bold title
+  (Success / Error / Warning / Info), the message in grey, a close X and a line along the bottom that runs down
+  (3 s, errors and warnings 5 s, paused while the mouse is on it). Messages are shown as text, never as HTML.
+  A field problem stays under its field (red border + message); an error that is not about one field is a toast.
 
 ## Side menu and header
+
+The side menu (`tutor/includes/side-menu.php`, `admin/includes/side-menu.php`, styles `assets/css/enlixo-nav.css`) is the
+V3 side menu: flat rows with square corners (no rounded pills or icon tiles), the open page / group = light blue row
+with a 4 px blue bar inside its left edge, sub pages hang from a thin tree line (a tick to every item, the current page
+blue), a group inside a group is bold with its arrow on the right, and opening a group closes the other groups at the
+same level (accordion). No scrollbar is shown.
 
 Like V3 the side menu is open by default on desktop; the menu button in the header slides it out
 (`#sideMenu.collapsed`, remembered in `localStorage.menuVisible`, `assets/js/script.js`). The header uses Solar icons

@@ -83,7 +83,7 @@ class load_side_menu
         foreach ($children as $child) {
             $active = self::isActive($child, $selected, $page);
             if (!empty($child[5])) {
-                echo '<li><details class="ex-subgroup"' . ($active ? ' open' : '') . '><summary class="ex-subnav-link' . ($active ? ' ex-in' : '') . '">' . self::label($child) . '<span class="ex-chev" aria-hidden="true"></span></summary>';
+                echo '<li><details class="ex-subgroup"' . ($active ? ' open' : '') . '><summary class="ex-subnav-link' . ($active ? ' ex-in' : '') . '">' . self::label($child) . enlixo_icon('chevron-down', 16, 'ex-chev') . '</summary>';
                 self::renderChildren($child[5], $selected, $page, $depth + 1);
                 echo '</details></li>';
             } else {
@@ -125,7 +125,7 @@ class load_side_menu
 
     private static function groupHead(array $item, bool $active, bool $isLink): string
     {
-        return enlixo_icon($item[1] . ($active ? '-active' : ''), 20, 'ex-nav-tile') . self::label($item)
+        return enlixo_icon($item[1], 20, 'ex-nav-tile') . self::label($item)
             . ($isLink ? '' : enlixo_icon('chevron-down', 16, 'ex-chev'));
     }
 
@@ -151,7 +151,6 @@ class load_side_menu
             </div>
 
             <div class="flex-grow-1 overflow-auto ex-sidenav-scroll">
-                <div class="ex-nav-caption">Menu</div>
                 <?php foreach (self::menu() as $item) {
                     $active = self::isActive($item, $selected, $page);
                     if (empty($item[5])) { ?>
@@ -212,6 +211,14 @@ class load_side_menu
                     });
                     empty.hidden = !q || shown > 0;
                 };
+                // V3 accordion: opening a group closes the other groups at the same level, so one long group never pushes the rest out of view
+                nav.addEventListener('toggle', (e) => {
+                    const d = e.target;
+                    if (!(d instanceof HTMLDetailsElement) || !d.open || nav.classList.contains('ex-finding')) return;
+                    const level = d.closest('li') ? d.closest('ul') : d.parentElement;
+                    level.querySelectorAll(':scope > details[open], :scope > li > details[open]').forEach((o) => { if (o !== d) o.open = false; });
+                    d.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }, true);
                 input.addEventListener('input', filter);
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') { const first = links.find((a) => !a.closest('[hidden]')); if (first) location.href = first.href; }

@@ -1,5 +1,6 @@
 import { h, fill } from '../core/dom.js';
 import { BsModal } from './BsModal.js';
+import { Toast } from './Toast.js';
 
 const SPARK = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2Zm7 12 .9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14Z"/></svg>';
 const STYLES = [
@@ -69,6 +70,7 @@ export class ThumbnailMaker {
           image = null;
           empty();
           error.textContent = e.message;
+          Toast.error(e.message);
           if (e.code === 'ai_not_configured') aiReady = false;
         } finally {
           busy = false;

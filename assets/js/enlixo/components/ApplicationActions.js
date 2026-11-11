@@ -96,7 +96,9 @@ export class ApplicationActions {
           Toast.success(to === 'approved' ? `${name} is now your student.` : to === 'rejected' ? 'Application rejected.' : 'Put on hold.');
           m.close();
         } catch (e) {
-          err.textContent = Object.values(e.details?.fields ?? {}).join(' ') || e.message;
+          const fieldMsg = Object.values(e.details?.fields ?? {}).join(' ');
+          err.textContent = fieldMsg || e.message;
+          if (!fieldMsg) Toast.error(e.message);
           go.disabled = false;
         }
       } });
