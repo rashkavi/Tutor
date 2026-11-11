@@ -10,7 +10,7 @@ import {
 
 // Step A (preview): sample data in the browser. Step B: drop the transport and the PHP API (src/Fees) answers.
 export const PREVIEW = true;
-export const api = new ApiClient(PREVIEW ? { transport: new FeesMock() } : {});
+export const api = new ApiClient(PREVIEW ? { transport: FeesMock.shared() } : {});
 export const gate = await FeatureGate.load(api).catch(() => null);
 export const has = (key) => !gate || gate.has(key);
 export const lockBadge = (key) => gate?.badge(key) ?? null;

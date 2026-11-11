@@ -128,5 +128,15 @@
   "warning": "danger-triangle-linear",
   "stop": "stop-circle-linear",
   "sale": "sale-linear",
-  "wallet": "wallet-linear"
+  "wallet": "wallet-linear",
+  "qr": "qr-code-linear",
+  "barcode": "barcode-linear",
+  "scan": "code-scan-linear",
+  "checklist": "checklist-minimalistic-linear",
+  "camera": "camera-linear",
+  "keyboard": "keyboard-linear",
+  "sound": "volume-loud-linear",
+  "history": "history-linear",
+  "user-cross": "user-cross-rounded-linear",
+  "late": "alarm-linear"
 }
