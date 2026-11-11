@@ -29,12 +29,12 @@ const section = (title, info, ...body) => h('div', { class: 'component-theme p-4
 const radio = (name, value, checked) => h('input', { type: 'radio', name, value, checked, onchange: summary });
 
 // ---------- 1. tutor details ----------
-const details = section('Tutor Details', 'Who the tutor is and how to reach them. The e-mail address gets the link to set a password.',
+const details = section('Tutor Details', 'Who the tutor is and how to reach them. The tutor signs in with this e-mail address: the first time, the sign-in page sends a code and asks them to set a password.',
   h('div', { class: 'row gx-4 gy-3' },
-    fieldEl('title', 'Title', select([['1', 'Mr.'], ['2', 'Ms.'], ['3', 'Mrs.'], ['4', 'Dr.'], ['5', 'Rev.']]), { required: true }),
+    fieldEl('title', 'Title', select(L.titles.map((t) => [String(t.id), t.name])), { required: true }),
     fieldEl('first_name', 'First Name', input('Enter the first name', { 'data-limit': '45' }), { required: true }),
     fieldEl('last_name', 'Last Name', input('Enter the last name', { 'data-limit': '45' }), { required: true }),
-    fieldEl('email', 'E-mail Address', input('Enter the e-mail address', { type: 'email', 'data-limit': 'email' }), { required: true, info: 'The tutor signs in with this address and gets the "set your password" link here. For example ruwan.perera@gmail.com.' }),
+    fieldEl('email', 'E-mail Address', input('Enter the e-mail address', { type: 'email', 'data-limit': 'email' }), { required: true, info: 'The tutor signs in with this address and gets invoices and payment reminders here. It must not be used by another account. For example ruwan.perera@gmail.com.' }),
     fieldEl('mobile', 'Mobile Number', input('Enter the mobile number', { type: 'tel', 'data-limit': '15' }), { required: true, info: 'A Sri Lankan mobile number for calls about billing. 10 digits, for example 0771234567.' }),
     fieldEl('whatsapp', 'WhatsApp Number', input('Enter the WhatsApp number', { type: 'tel', 'data-limit': '15' }), { info: 'Payment reminders and invoices are also sent here. Leave empty when it is the same as the mobile number.' }),
     fieldEl('brand', 'Institute / Class Name', input('Enter the name students know the classes by', { 'data-limit': '100' }), { info: 'Shown on invoices and on the tutor\'s student pages. For example Perera Physics Academy.' }),
@@ -83,7 +83,7 @@ const startChoice = (value, title, text, checked) => h('div', { class: 'col-12 c
 const trialBox = h('div', { class: 'row gx-4 gy-3 mt-1' },
   fieldEl('trial_days', 'Trial Length (days)', input('Enter the number of days', { type: 'number', min: 1, max: 60, value: R.trial_days }), { required: true, info: `How many days the tutor can use ENLIXO Tutor free. The default comes from Trial & Billing Rules (${R.trial_days} days).` }),
   h('div', { class: 'col-12 col-lg-8 d-flex align-items-end' }, h('div', { class: 'ad-soft p-3 w-100 text-13 main-text' },
-    `During the trial the tutor gets every ${plan(R.trial_plan).name} feature for up to ${R.trial_student_cap} students. No payment is needed. Reminders go out 3 days and 1 day before it ends.`)));
+    `During the trial the tutor gets every ${plan(R.trial_plan).name} feature for up to ${R.trial_student_cap} students. No payment is needed. The first invoice is made 3 days before the trial ends.`)));
 const paidBox = h('div', { class: 'row gx-4 gy-3 mt-1 d-none' },
   fieldEl('start_date', 'First Day of the Plan', input('Choose the first day', { type: 'date', value: plusDays(0) }), { required: true }),
   fieldEl('paid_now', 'Payment', select([['no', 'Not paid yet: send the invoice'], ['bank', 'Already paid by bank transfer'], ['cash', 'Already paid in cash']]), { required: true, info: 'If the tutor already paid, the first invoice is marked paid now. Otherwise it is sent and waits for the slip.' }),
@@ -97,9 +97,7 @@ const startSection = section('How to Start', 'Free trial: no payment now. Paid f
     startChoice('trial', 'Free trial', `${R.trial_days} days free on ${plan(R.trial_plan).name}, then choose a plan`, true),
     startChoice('paid', 'Paid from today', 'The first invoice is made now'),
     startChoice('comp', 'Complimentary', 'Free until a date you choose')),
-  trialBox, paidBox, compBox,
-  h('div', { class: 'form-check form-switch ex-switch-bs mt-3' }, h('input', { type: 'checkbox', class: 'form-check-input', role: 'switch', id: 'at-welcome', checked: true }),
-    h('label', { class: 'text-14 main-text', for: 'at-welcome' }, 'Send the welcome e-mail with the link to set a password')));
+  trialBox, paidBox, compBox);
 function showStart() {
   const v = val('start');
   trialBox.classList.toggle('d-none', v !== 'trial');
@@ -119,7 +117,8 @@ function summary() {
   const months = yearly ? 12 : 1;
   const packCost = p.pack_price ? n * p.pack_price * months : 0;
   const picked = [...root.querySelectorAll('input[name="addon"]:checked')].map((x) => L.addons.find((a) => a.key === x.value));
-  const addonCost = picked.reduce((a, x) => a + (x.price && x.model !== 'One-time' ? x.price * months : x.price && x.model === 'One-time' ? x.price : 0), 0);
+  const monthlyAddon = (x) => x.price && !['One-time', 'Pay as you go', 'Per conversation'].includes(x.model);
+  const addonCost = picked.reduce((a, x) => a + (monthlyAddon(x) ? x.price * months : 0), 0);
   const total = planCost + packCost + addonCost;
   packs.disabled = !p.pack_price;
   yearlyNote.textContent = `Yearly saves ${lkr(p.yearly_discount * 12)} on ${p.name}`;
@@ -127,9 +126,9 @@ function summary() {
   const name = `${inputs.first_name.value} ${inputs.last_name.value}`.trim() || 'New tutor';
   const days = Math.max(1, Number(inputs.trial_days.value) || R.trial_days);
   const steps = {
-    trial: [`${name} gets every ${plan(R.trial_plan).name} feature for ${plural(days, 'day')} (up to ${R.trial_student_cap} students).`, `The trial ends on ${day(plusDays(days))}. Reminders go out 3 days and 1 day before.`, `To continue, the tutor pays the first ${p.name} invoice of ${lkr(total)}.`],
+    trial: [`${name} gets every ${plan(R.trial_plan).name} feature for ${plural(days, 'day')} (up to ${R.trial_student_cap} students).`, `The trial ends on ${day(plusDays(days))}. The first ${p.name} invoice of ${lkr(total)} is made 3 days before and shows on the tutor's My Subscription page.`, `Not paid ${plural(R.grace_days, 'day')} after the trial ends: the account is paused until the slip is approved.`],
     paid: [`The first invoice of ${lkr(total)} is made today for ${yearly ? '12 months' : '1 month'}.`, inputs.paid_now.value === 'no' ? `It is due on ${day(inputs.start_date.value)}; the tutor uploads the slip on their Billing page.` : 'It is marked paid, so the plan starts at once.', `Next renewal: ${day(plusMonths(months))}.`],
-    comp: [`${name} uses ${p.name} free until ${day(inputs.comp_until.value)}.`, 'No invoice is made. A reminder goes out 7 days before the free period ends.'],
+    comp: [`${name} uses ${p.name} free until ${day(inputs.comp_until.value)}.`, `No invoice now. The first invoice is made ${plural(R.invoice_days_before, 'day')} before the free period ends.`],
   }[start];
   const row = (a, b) => h('div', { class: 'ad-sum-row' }, h('span', { class: 'sub-text' }, a), h('span', { class: 'main-text fw-medium text-end' }, b));
   fill(sumBox,
@@ -139,7 +138,7 @@ function summary() {
     row('Students', `Up to ${p.limit + (p.pack_price ? n * 50 : 0)}`),
     row(yearly ? 'Plan, 12 months' : 'Plan, 1 month', `${lkr(planCost)}${customOn.checked && inputs.custom_price.value ? ' (custom)' : ''}`),
     packCost ? row(`Extra students, ${n} × 50`, lkr(packCost)) : null,
-    ...picked.map((a) => row(a.name, a.price ? lkr(a.model === 'One-time' ? a.price : a.price * months) : 'by usage')),
+    ...picked.map((a) => row(a.name, monthlyAddon(a) ? lkr(a.price * months) : a.model === 'One-time' ? `${lkr(a.price)} once, billed apart` : 'by usage')),
     h('div', { class: 'ad-sum-row' }, h('span', { class: 'main-text fw-semibold' }, start === 'comp' ? 'To pay' : 'Each invoice'), h('span', { class: 'main-topic' }, start === 'comp' ? lkr(0) : lkr(total))),
     h('div', { class: 'text-14 main-text fw-semibold mt-4 mb-2' }, 'What happens when you save'),
     h('ol', { class: 'ad-steps' }, steps.map((s, i) => h('li', {}, h('span', { class: 'ad-step-dot' }, String(i + 1)), h('span', {}, s)))),
@@ -148,12 +147,12 @@ function summary() {
 
 async function save() {
   const body = Object.fromEntries(Object.entries(inputs).map(([k, el]) => [k, el.value]));
-  Object.assign(body, { plan: val('plan'), cycle: val('cycle'), start: val('start'), addons: [...root.querySelectorAll('input[name="addon"]:checked')].map((x) => x.value), custom_price: customOn.checked ? body.custom_price : '', welcome: document.getElementById('at-welcome').checked });
+  Object.assign(body, { plan: val('plan'), cycle: val('cycle'), start: val('start'), addons: [...root.querySelectorAll('input[name="addon"]:checked')].map((x) => x.value), custom_price: customOn.checked ? body.custom_price : '', custom_price_reason: customOn.checked ? body.custom_price_reason : '' });
   root.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
   root.querySelectorAll('[id$="-err"]').forEach((el) => el.classList.add('d-none'));
   try {
     const { data } = await api.post('/admin/tutors', body);
-    Toast.success(`${body.first_name} ${body.last_name} added.${body.welcome ? ' The welcome e-mail is on its way.' : ''}`);
+    Toast.success(`${body.first_name} ${body.last_name} added. They can sign in with ${body.email}.`);
     setTimeout(() => { location.href = `tutor-details?tutor-id=${data.id}`; }, 900);
   } catch (e) {
     const errs = e.details ?? {};

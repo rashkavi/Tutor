@@ -2,6 +2,22 @@
 require_once "../includes/nav-item.php";
 require_once __DIR__ . "/../../includes/enlixo/icons.php";
 
+// Admin side billing (migration 007): while the subscription is suspended or cancelled the tutor can only open
+// Finance -> My Subscription (to pay); every other page sends them there. The API refuses the same calls (api/v1/index.php).
+if (isset($sessionUserObject['user_id']) && class_exists('SessionUser') && SessionUser::ifUserIsTutor()
+    && basename((string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH), '.php') !== 'subscription') {
+    try {
+        $enlixoSub = Database::search("SELECT `status` FROM `users_has_payment_plans` WHERE `users_user_id` = '" . (int) $sessionUserObject['user_id'] . "' ORDER BY `users_has_payment_plan_id` DESC LIMIT 1");
+        $enlixoSub = $enlixoSub ? $enlixoSub->fetch_assoc() : null;
+    } catch (\Throwable $e) {
+        $enlixoSub = null; // before migration 007
+    }
+    if ($enlixoSub && in_array($enlixoSub['status'] ?? '', ['suspended', 'cancelled'], true)) {
+        echo '<script>location.replace("subscription");</script></body></html>';
+        exit;
+    }
+}
+
 /**
  * Tutor side menu, grouped like the ENLIXO V3 portal:
  *   Dashboard / Academic ▾ (Classes, Students ▾, Time Table, Attendance) / Finance ▾ / Communication ▾ / Settings ▾

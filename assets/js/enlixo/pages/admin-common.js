@@ -2,17 +2,16 @@
 // status chips, money and dates, panels, the subscription card, invoice and payment dialogs, table columns.
 // Both sides draw billing with these, so a tutor sees exactly what the admin sees.
 import { h, fill } from '../core/dom.js';
-import { ApiClient } from '../core/ApiClient.js';
+import { ApiClient, DEFAULT_API_BASE } from '../core/ApiClient.js';
 import { icon } from '../core/icons.js';
 import { BsModal } from '../components/BsModal.js';
 import { Toast } from '../components/Toast.js';
 import { infoTip } from '../components/InfoTip.js';
 import { EmptyState } from '../components/EmptyState.js';
-import { AdminMock } from '../mock/AdminMock.js';
 
-// Step A (preview): sample data in the browser. Step B: drop the transport and the PHP API answers.
-export const PREVIEW = true;
-export const api = new ApiClient(PREVIEW ? { transport: new AdminMock() } : {});
+// Real data from /api/v1 (src/Platform). PREVIEW stays for pages that still want the grey sample-data strip.
+export const PREVIEW = false;
+export const api = new ApiClient();
 
 export const lkr = (n) => `LKR ${Math.round(Number(n) || 0).toLocaleString('en-LK')}`;
 export const short = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}K` : String(n));
@@ -82,11 +81,12 @@ export function subscriptionCard(t, plan, { actions = null, forTutor = false } =
   const yearly = t.cycle === 'yearly';
   const price = yearly ? (t.price - plan.yearly_discount) * 12 : t.price;
   let when;
-  if (t.status === 'trial') when = [`Free trial ends ${day(t.trial_ends)}`, `${inDays(t.trial_ends)}. ${forTutor ? 'Choose a plan to keep everything.' : 'Then the tutor must choose a plan and pay.'}`];
+  if (t.status === 'trial') when = [`Free trial ends ${day(t.trial_ends)}`, `${inDays(t.trial_ends)}. ${forTutor ? `Then ${plan.name} at ${lkr(price)} ${yearly ? 'a year' : 'a month'}; the invoice comes 3 days before.` : `Then ${plan.name}; the first invoice is made 3 days before.`}`];
   else if (t.status === 'complimentary') when = [`Free until ${day(t.period_end)}`, 'Complimentary access given by ENLIXO'];
   else if (t.status === 'cancelled') when = ['Subscription ended', `on ${day(t.period_end)}`];
-  else if (t.status === 'suspended') when = ['Suspended', forTutor ? 'Pay the open invoice to switch everything back on.' : 'Classes are paused until the invoice is paid.'];
+  else if (t.status === 'suspended') when = ['Suspended', forTutor ? 'Pay the open invoice to switch everything back on.' : (t.status_reason?.startsWith('Admin: ') ? `By ENLIXO: ${t.status_reason.slice(7)}` : 'Classes are paused until the invoice is paid.')];
   else if (t.status === 'overdue') when = [`Payment was due ${day(t.period_end)}`, `${inDays(t.period_end)}. Suspended after the grace period.`];
+  else if (t.cancel_at_period_end) when = [`Ends ${day(t.period_end)}`, `${inDays(t.period_end)}. The subscription was cancelled; no new invoice.`];
   else when = [`Renews ${day(t.period_end)}`, t.status === 'due' ? `${inDays(t.period_end)}. The invoice is open.` : inDays(t.period_end)];
 
   return h('div', { class: 'component-theme p-4' },
@@ -95,7 +95,8 @@ export function subscriptionCard(t, plan, { actions = null, forTutor = false } =
         h('span', { class: `ad-plan-tile ad-plan-${t.plan}` }, icon('crown', { size: 24 })),
         h('div', {},
           h('div', { class: 'd-flex align-items-center gap-2' }, h('span', { class: 'main-topic' }, `${plan.name} plan`), chip(t.status)),
-          h('div', { class: 'text-14 sub-text' }, t.status === 'trial' ? `All ${plan.name} features while the trial runs` : `${lkr(price)} ${yearly ? 'a year' : 'a month'}${t.custom_price ? ' · custom price' : ''}`))),
+          h('div', { class: 'text-14 sub-text' }, t.status === 'trial' ? 'Free trial with every feature of the trial plan' : t.status === 'complimentary' ? 'Free access given by ENLIXO' : `${lkr(price)} ${yearly ? 'a year' : 'a month'}${t.custom_price ? ' · custom price' : ''}`),
+          t.next_plan ? h('div', { class: 'text-12 sub-text' }, `Moves to ${t.next_plan.toUpperCase()} at the next renewal`) : null)),
       actions),
     h('div', { class: 'row g-3 mt-2' },
       h('div', { class: 'col-12 col-md-6' }, h('div', { class: 'ad-soft p-3 h-100' },
@@ -108,7 +109,7 @@ export function subscriptionCard(t, plan, { actions = null, forTutor = false } =
         h('div', { class: 'text-12 sub-text mt-1' }, t.extra_packs ? `${t.limit} = ${plan.limit} in the plan + ${t.extra_packs} × 50 extra` : t.status === 'trial' ? 'Trial limit' : `${plan.limit} in the plan`)))),
     h('div', { class: 'd-flex flex-wrap gap-2 mt-3 align-items-center' },
       h('span', { class: 'text-12 sub-text me-1' }, 'Add-ons:'),
-      t.addons.length ? t.addons.map((a) => h('span', { class: 'ad-tag' }, { zoom: 'ENVIIZ Zoom Account', streaming: 'ENVIIZ Secure Streaming', gateway: 'ENVIIZ Payment Gateway' }[a] ?? a)) : h('span', { class: 'text-12 sub-text' }, 'None'),
+      (t.addon_names ?? t.addons).length ? (t.addon_names ?? t.addons).map((a) => h('span', { class: 'ad-tag' }, a)) : h('span', { class: 'text-12 sub-text' }, 'None'),
       t.custom_price ? h('span', { class: 'ad-tag ad-tag-purple', title: t.custom_price }, `Custom price: ${t.custom_price}`) : null));
 }
 
@@ -134,10 +135,27 @@ export function invoiceDialog(inv, { admin = false, onPay = null, reload = () =>
   }
   const start = [print];
   if (open && admin) {
-    start.push(BsModal.button('Send Reminder', { onclick: async () => { await api.post(`/admin/tutors/${inv.tutor_id}/remind`, { invoice: inv.id }); Toast.success(`Reminder sent to ${inv.tutor}.`); } }));
+    start.push(BsModal.button('Send Reminder', { onclick: () => sendReminder(inv.tutor_id) }));
     start.push(BsModal.button('Void', { danger: true, onclick: () => { m.close(); voidInvoice(inv, reload); } }));
   }
   m = BsModal.open({ title: inv.number, subtitle: [inv.tutor, inv.plan, day(inv.issued)], icon: 'invoice', body, size: 'lg', footerStart: start, footerEnd: end });
+}
+
+/** Payment reminder e-mail (the server says whether the e-mail went out). */
+export async function sendReminder(tutorId) {
+  try {
+    const { data } = await api.post(`/admin/tutors/${tutorId}/remind`, {});
+    (data.sent === false ? Toast.error : Toast.success)(data.message);
+  } catch (e) { Toast.error(e.message); }
+}
+
+/** Runs a save; field errors go under the fields of the dialog, anything else becomes an error toast. */
+export async function trySave(root, fn) {
+  try { return await fn(); } catch (e) {
+    if (e.details && Object.keys(e.details).length) showErrors(root, e.details);
+    Toast.error(e.message);
+    return undefined;
+  }
 }
 
 /** Field with label, (i) and an error line, the FIN.form look. */
@@ -155,7 +173,7 @@ export const showErrors = (root, map) => {
 
 function recordPayment(inv, reload) {
   const amount = h('input', { class: 'form-control custom-input', type: 'number', value: inv.total - inv.paid, placeholder: 'Enter the amount received', 'data-key': 'amount' });
-  const method = h('select', { class: 'form-select custom-select', 'data-key': 'method' }, ['Bank transfer', 'Cash', 'Cheque', 'Card'].map((x) => h('option', { value: x }, x)));
+  const method = h('select', { class: 'form-select custom-select', 'data-key': 'method' }, ['Bank transfer', 'Bank deposit', 'Cash', 'Cheque', 'Card'].map((x) => h('option', { value: x }, x)));
   const date = h('input', { class: 'form-control custom-input', type: 'date', value: new Date().toISOString().slice(0, 10), 'data-key': 'date', placeholder: 'Choose the day the money arrived' });
   const ref = h('input', { class: 'form-control custom-input', placeholder: 'Enter the bank reference or cheque number', 'data-key': 'reference', 'data-limit': 'text' });
   const body = h('div', { class: 'row gx-3' },
@@ -165,7 +183,11 @@ function recordPayment(inv, reload) {
     h('div', { class: 'col-md-6' }, field('Reference', ref, { info: 'Bank reference, cheque number or receipt book number, so finance can find it later. For example 004512.' })));
   const m = BsModal.open({ title: 'Record a Payment', subtitle: [inv.number, inv.tutor, lkr(inv.total)], icon: 'wallet', body, footerEnd: [
     BsModal.button('Cancel', { onclick: () => m.close() }),
-    BsModal.button('Save Payment', { primary: true, onclick: async () => { await api.post(`/admin/invoices/${inv.id}/payments`, {}); m.close(); Toast.success('Payment recorded. The invoice is paid and the tutor is active.'); reload(); } }),
+    BsModal.button('Save Payment', { primary: true, onclick: async () => {
+      const ok = await trySave(m.el, () => api.post(`/admin/invoices/${inv.id}/payments`, { amount: amount.value, method: method.value, date: date.value, reference: ref.value }));
+      if (!ok) return;
+      m.close(); Toast.success(Number(amount.value) >= inv.total - inv.paid ? 'Payment recorded. The invoice is paid and the tutor is active.' : 'Payment recorded. The invoice is part paid.'); reload();
+    } }),
   ] });
 }
 
@@ -176,7 +198,8 @@ async function voidInvoice(inv, reload) {
     BsModal.button('Cancel', { onclick: () => m.close() }),
     BsModal.button('Void Invoice', { primary: true, danger: true, onclick: async () => {
       if (!reason.value.trim()) { showErrors(m.el, { reason: 'Give a reason. It is kept with the invoice.' }); return; }
-      await api.post(`/admin/invoices/${inv.id}/void`, { reason: reason.value }); m.close(); Toast.success('Invoice void.'); reload();
+      if (!await trySave(m.el, () => api.post(`/admin/invoices/${inv.id}/void`, { reason: reason.value }))) return;
+      m.close(); Toast.success('Invoice void.'); reload();
     } }),
   ] });
 }
@@ -193,21 +216,27 @@ export const invoiceColumns = ({ admin = true, open = (r) => invoiceDialog(r, { 
 ].filter(Boolean);
 
 // ---------------------------------------------------------------- payments
+export const slipUrl = (p, admin) => `${DEFAULT_API_BASE}${admin ? `/admin/payments/${p.id}/slip` : `/tutor/subscription/payments/${p.id}/slip`}`;
+
 export function paymentDialog(p, { admin = false, reload = () => {} } = {}) {
+  const url = slipUrl(p, admin);
+  const preview = h('img', { class: 'ad-slip-img', alt: `Bank slip of ${p.ref}`, src: url });
+  preview.addEventListener('error', () => preview.replaceWith(h('div', { class: 'd-flex flex-column align-items-center' }, icon('receipt', { size: 40 }), h('div', { class: 'text-14 main-text fw-medium mt-2' }, 'PDF slip'))));
   const slip = p.slip
-    ? h('div', { class: 'ad-slip' }, icon('receipt', { size: 40 }), h('div', { class: 'text-14 main-text fw-medium mt-2' }, 'Bank slip'), h('div', { class: 'text-12 sub-text' }, `${p.ref}.jpg · uploaded ${day(p.date)}`))
-    : h('div', { class: 'ad-slip' }, icon('wallet', { size: 40 }), h('div', { class: 'text-14 main-text fw-medium mt-2' }, `${p.method}, recorded by the admin`));
+    ? h('div', { class: 'ad-slip' }, preview, h('a', { class: 'custom-btn-outline px-4 mt-3 text-decoration-none', href: url, target: '_blank', rel: 'noopener' }, 'Open Slip'))
+    : h('div', { class: 'ad-slip' }, icon('wallet', { size: 40 }), h('div', { class: 'text-14 main-text fw-medium mt-2' }, `${p.method}, recorded by ENLIXO`));
   const body = h('div', {},
     hero('Amount', lkr(p.amount), chip(p.status), `${p.method} · ${day(p.date)}`),
     h('div', { class: 'row g-4' },
-      h('div', { class: 'col-md-6' }, facts([['Tutor', p.tutor, true], ['For invoice', p.invoice, true], ['Reference', p.ref], ['Paid on', day(p.date)], ['Checked by', p.checked_by ?? 'Not checked yet', true], p.reason && ['Reason', p.reason, true]])),
+      h('div', { class: 'col-md-6' }, facts([['Tutor', p.tutor, true], ['For invoice', p.invoice, true], ['Payment', p.ref], ['Paid on', day(p.date)], ['Slip reference', p.reference || '-', true], ['Checked by', p.checked_by ?? 'Not checked yet', true], p.reason && ['Reason', p.reason, true]])),
       h('div', { class: 'col-md-6' }, slip)));
   let m;
   const end = [BsModal.button('Close', { onclick: () => m.close() })];
   if (admin && p.status === 'waiting') {
     end.unshift(BsModal.button('Reject', { danger: true, onclick: () => { m.close(); rejectPayment(p, reload); } }));
     end.push(BsModal.button('Approve', { success: true, onclick: async () => {
-      await api.post(`/admin/payments/${p.id}/approve`, {}); m.close(); Toast.success(`Approved. ${p.invoice} is paid and ${p.tutor} is active.`); reload();
+      if (!await trySave(m.el, () => api.post(`/admin/payments/${p.id}/approve`, {}))) return;
+      m.close(); Toast.success(`Approved. ${p.invoice} is paid and ${p.tutor} is active.`); reload();
     } }));
   }
   m = BsModal.open({ title: `Payment ${p.ref}`, subtitle: [p.tutor, p.invoice], icon: 'receipt', body, size: 'lg', footerEnd: end });
@@ -217,13 +246,13 @@ function rejectPayment(p, reload) {
   const reason = h('select', { class: 'form-select custom-select', 'data-key': 'reason' },
     h('option', { value: '' }, '- Select -'),
     ['The slip amount does not match the invoice', 'The slip is not clear', 'The money has not reached our account', 'The slip was used before', 'Other'].map((x) => h('option', { value: x }, x)));
-  const note = h('textarea', { class: 'form-control custom-input', rows: 3, placeholder: 'Add a note for the tutor (optional)', 'data-limit': '200' });
+  const note = h('textarea', { class: 'form-control custom-input', rows: 3, placeholder: 'Add a note for the tutor', 'data-key': 'note', 'data-limit': '200' });
   const body = h('div', {}, h('p', { class: 'text-14 sub-text' }, 'The tutor sees the reason on their Billing page and can upload the slip again.'),
     field('Reason', reason, { required: true }), field('Note to the tutor', note));
   const m = BsModal.open({ title: 'Reject this Payment?', subtitle: [p.ref, p.tutor, lkr(p.amount)], icon: 'danger', tone: 'danger', body, footerEnd: [
     BsModal.button('Cancel', { onclick: () => m.close() }),
     BsModal.button('Reject Payment', { primary: true, danger: true, onclick: async () => {
-      try { await api.post(`/admin/payments/${p.id}/reject`, { reason: reason.value }); } catch (e) { showErrors(m.el, e.details ?? {}); return; }
+      if (!await trySave(m.el, () => api.post(`/admin/payments/${p.id}/reject`, { reason: reason.value, note: note.value }))) return;
       m.close(); Toast.success('Payment rejected. The tutor has been told why.'); reload();
     } }),
   ] });

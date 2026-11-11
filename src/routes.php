@@ -8,6 +8,7 @@ use Enlixo\Http\Controllers\ClassController;
 use Enlixo\Http\Controllers\ClassRecordingController;
 use Enlixo\Http\Controllers\DashboardController;
 use Enlixo\Http\Controllers\EntitlementController;
+use Enlixo\Http\Controllers\PlatformController;
 use Enlixo\Http\Controllers\RecordingController;
 use Enlixo\Http\Controllers\RoleController;
 use Enlixo\Http\Controllers\StudentBulkController;
@@ -89,4 +90,33 @@ return static function (Router $router, App $app): void {
     $router->post('/api/v1/student/recordings/heartbeat', $rec->heartbeat(...));
 
     $router->post('/api/v1/webhooks/zoom', $zoom->handle(...));
+
+    // Admin side (platform owner): tutors, subscriptions, invoices, payments, plans and rules (docs/ADMIN-PLAN.md)
+    $pf = new PlatformController($app);
+    $router->get('/api/v1/admin/dashboard', $pf->dashboard(...));
+    $router->get('/api/v1/admin/lookups', $pf->lookups(...));
+    $router->get('/api/v1/admin/tutors', $pf->tutors(...));
+    $router->post('/api/v1/admin/tutors', $pf->addTutor(...));
+    $router->get('/api/v1/admin/tutors/{id}', $pf->tutor(...));
+    $router->post('/api/v1/admin/tutors/{id}/{action}', $pf->tutorAction(...));
+    $router->get('/api/v1/admin/invoices', $pf->invoices(...));
+    $router->post('/api/v1/admin/invoices/{id}/payments', $pf->recordPayment(...));
+    $router->post('/api/v1/admin/invoices/{id}/void', $pf->voidInvoice(...));
+    $router->get('/api/v1/admin/payments', $pf->payments(...));
+    $router->get('/api/v1/admin/payments/{id}/slip', $pf->adminSlip(...));
+    $router->post('/api/v1/admin/payments/{id}/approve', $pf->approve(...));
+    $router->post('/api/v1/admin/payments/{id}/reject', $pf->reject(...));
+    $router->get('/api/v1/admin/plans', $pf->plans(...));
+    $router->put('/api/v1/admin/plans/{key}', $pf->savePlan(...));
+    $router->put('/api/v1/admin/addons/{key}', $pf->saveAddon(...));
+    $router->put('/api/v1/admin/billing-rules', $pf->saveRules(...));
+    $router->post('/api/v1/admin/bank-accounts', $pf->saveBank(...));
+    $router->put('/api/v1/admin/bank-accounts/{id}', $pf->saveBank(...));
+    $router->delete('/api/v1/admin/bank-accounts/{id}', $pf->deleteBank(...));
+
+    // The tutor's side of the same bill: Finance -> My Subscription
+    $router->get('/api/v1/tutor/subscription', $pf->mySubscription(...));
+    $router->post('/api/v1/tutor/subscription/payments', $pf->uploadSlip(...));
+    $router->post('/api/v1/tutor/subscription/change', $pf->changeMyPlan(...));
+    $router->get('/api/v1/tutor/subscription/payments/{id}/slip', $pf->mySlip(...));
 };

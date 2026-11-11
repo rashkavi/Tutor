@@ -14,9 +14,40 @@ final class PdoEntitlementRepository implements EntitlementRepository
     {
     }
 
+    /** The live subscription row (migration 007), or null on an older database. */
+    private function subscription(int $tutorId): ?array
+    {
+        try {
+            return $this->db->one(
+                'SELECT uhp.status, uhp.extra_packs, pp.plan_key FROM users_has_payment_plans uhp
+                   JOIN payment_plans pp ON pp.payment_plan_id = uhp.payment_plans_payment_plan_id
+                  WHERE uhp.users_user_id = :tutor ORDER BY uhp.users_has_payment_plan_id DESC LIMIT 1',
+                ['tutor' => $tutorId],
+            );
+        } catch (\PDOException) {
+            return null;
+        }
+    }
+
+    /** Trial & Billing Rules (Admin -> Plans & Billing), defaults when not saved yet. */
+    private function trialRules(): array
+    {
+        try {
+            $saved = json_decode((string) $this->db->value("SELECT setting_value FROM platform_settings WHERE setting_key = 'rules'"), true);
+        } catch (\PDOException) {
+            $saved = null;
+        }
+        return ['plan' => (string) ($saved['trial_plan'] ?? 'pro'), 'cap' => (int) ($saved['trial_student_cap'] ?? 30)];
+    }
+
     public function activePlanKey(int $tutorId): string
     {
-        // Prefer the plan with an accepted payment covering today; otherwise the latest assigned plan.
+        // Admin side billing (migration 007): a free trial gets the trial plan's features, everyone else their plan.
+        $sub = $this->subscription($tutorId);
+        if ($sub !== null && $sub['status'] !== null) {
+            return $sub['status'] === 'trial' ? $this->trialRules()['plan'] : (string) $sub['plan_key'];
+        }
+        // Before migration 007: prefer the plan with an accepted payment covering today; otherwise the latest assigned plan.
         $key = $this->db->value(
             'SELECT pp.plan_key
                FROM users_has_payment_plans uhp
@@ -50,6 +81,16 @@ final class PdoEntitlementRepository implements EntitlementRepository
     {
         $limit = $this->db->value('SELECT student_limit FROM payment_plans WHERE plan_key = :plan', ['plan' => $planKey]);
         return $limit === null ? null : (int) $limit;
+    }
+
+    public function tutorStudentLimit(int $tutorId, string $planKey): ?int
+    {
+        $sub = $this->subscription($tutorId);
+        if ($sub !== null && $sub['status'] === 'trial') {
+            return $this->trialRules()['cap'];
+        }
+        $limit = $this->planStudentLimit($planKey);
+        return $limit === null || $sub === null ? $limit : $limit + (int) $sub['extra_packs'] * 50;
     }
 
     public function activeAddonFeatureKeys(int $tutorId): array

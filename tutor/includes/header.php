@@ -266,7 +266,7 @@
                     <?php
                     if (empty($tutorPaymentPlan['users_has_payment_plans_payment_id'])) {
                     ?>
-                        <button class="btn upgrade-plan-btn mt-3 w-100" id="upgradePlanBtn" onclick="window.location.href='billing'">
+                        <button class="btn upgrade-plan-btn mt-3 w-100" id="upgradePlanBtn" onclick="window.location.href='subscription'">
 
                             Proceed to Payment
                         </button>
