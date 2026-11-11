@@ -5,6 +5,7 @@ use Enlixo\App;
 use Enlixo\Core\Router;
 use Enlixo\Http\Controllers\ApplicationController;
 use Enlixo\Http\Controllers\ClassController;
+use Enlixo\Http\Controllers\ClassRecordingController;
 use Enlixo\Http\Controllers\DashboardController;
 use Enlixo\Http\Controllers\EntitlementController;
 use Enlixo\Http\Controllers\RecordingController;
@@ -65,6 +66,23 @@ return static function (Router $router, App $app): void {
     $router->post('/api/v1/tutor/roles', $roles->store(...));
     $router->put('/api/v1/tutor/roles/{id}', $roles->update(...));
     $router->delete('/api/v1/tutor/roles/{id}', $roles->destroy(...));
+
+    // Settings -> Recording Types and Academic -> Class Recordings (fixed paths before /{id})
+    $recs = new ClassRecordingController($app);
+    $router->get('/api/v1/tutor/recording-types', $recs->typeIndex(...));
+    $router->post('/api/v1/tutor/recording-types', $recs->typeSave(...));
+    $router->post('/api/v1/tutor/recording-types/order', $recs->typeOrder(...));
+    $router->post('/api/v1/tutor/recording-types/check', $recs->checkLink(...));
+    $router->put('/api/v1/tutor/recording-types/{id}', $recs->typeSave(...));
+    $router->post('/api/v1/tutor/recording-types/{id}/status', $recs->typeStatus(...));
+    $router->delete('/api/v1/tutor/recording-types/{id}', $recs->typeDelete(...));
+    $router->get('/api/v1/tutor/recordings', $recs->index(...));
+    $router->post('/api/v1/tutor/recordings', $recs->save(...));
+    $router->get('/api/v1/tutor/recordings/overview', $recs->overview(...));
+    $router->get('/api/v1/tutor/recordings/days', $recs->days(...));
+    $router->get('/api/v1/tutor/recordings/{id}', $recs->show(...));
+    $router->put('/api/v1/tutor/recordings/{id}', $recs->save(...));
+    $router->delete('/api/v1/tutor/recordings/{id}', $recs->destroy(...));
 
     $router->get('/api/v1/student/recordings/{kind}/{id}/status', $rec->status(...));
     $router->post('/api/v1/student/recordings/{kind}/{id}/start', $rec->start(...));

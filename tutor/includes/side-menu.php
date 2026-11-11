@@ -28,6 +28,7 @@ class load_side_menu
                     ['Upload Students Bulk', null, 'upload-student-bulk', '', ['Upload Students Bulk']],
                 ]],
                 ['Time Table', null, 'time-table', 'time-table', ['Time Table']],
+                ['Class Recordings', null, 'recordings', '', ['Class Recordings']],
                 ['Attendance', null, null, 'attendance', ['Attendance'], [
                     ['Attendance Dashboard', null, 'attendance-dashboard', '', ['Attendance Dashboard']],
                     ['Mark Attendance', null, 'mark-attendance', '', ['Mark Attendance']],
@@ -45,6 +46,7 @@ class load_side_menu
                 ['Student Form', null, 'student-form-settings', '', ['Student Form']],
                 ['Fees & Receipts', null, 'fee-settings', '', ['Fee Settings']],
                 ['Attendance', null, 'attendance-settings', '', ['Attendance Settings']],
+                ['Recording Types', null, 'recording-types', '', ['Recording Types']],
                 ['Plans & Billing', null, 'pricing', '', ['Pricing']],
                 ['Integrations', null, 'intergrations', 'intergrations', ['Intergrations']],
             ]],
