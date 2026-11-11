@@ -15,16 +15,18 @@ const PLAN_FEATURES = {
   'fees.class_based': 'start', 'payments.bank_tracking': 'start', 'payments.manual_approval': 'start', 'reports.basic': 'start',
   'payments.online_card': 'grow', 'comms.whatsapp': 'grow', 'comms.sms': 'grow', 'reports.payments': 'grow',
   'payments.arrears': 'pro', 'fees.advanced': 'pro', 'payments.parent_dashboard': 'pro',
-  'attendance.manual': 'start', 'attendance.qr': 'start', 'reports.attendance': 'grow', 'attendance.export': 'grow',
+  'attendance.manual': 'start', 'attendance.qr': 'start', 'reports.attendance': 'grow', 'attendance.export': 'grow', 'id.cards': 'grow',
 };
 const NAMES = {
   'payments.online_card': ['Online Card Payments', 'Students pay their fee by card from the app.'],
   'comms.whatsapp': ['WhatsApp Reminders', 'Send fee reminders to many students at once on WhatsApp.'],
+  'comms.sms': ['SMS Reminders', 'Send fee reminders by SMS.'],
   'reports.payments': ['Payment Analytics', 'Income trends and collection rates.'],
   'payments.arrears': ['Arrears Tracking', 'See who owes what, for every month and every class.'],
   'fees.advanced': ['Free Cards & Discounts', 'Free cards, half cards and discounts for single students.'],
   'reports.attendance': ['Attendance Analytics', 'Attendance charts per day, week and class.'],
   'attendance.export': ['Attendance Reports Export', 'Download attendance lists as CSV / Excel.'],
+  'id.cards': ['Student ID Cards', 'Make and print ID cards with each student\'s QR code or barcode.'],
 };
 const PLANS = { start: { name: 'START', price: 'LKR 2,500 – 3,000 / month' }, grow: { name: 'GROW', price: 'LKR 5,000 – 6,000 / month' }, pro: { name: 'PRO', price: 'LKR 8,000 – 10,000 / month' } };
 const RANK = { start: 1, grow: 2, pro: 3 };

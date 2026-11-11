@@ -143,12 +143,16 @@ export function scanCard(res, { settings, onMark = null, onPaid = () => {}, onSk
   }
   if (s.phone) parts.push(h('div', { class: 'at-sec d-flex justify-content-between align-items-center' }, cell(c.student.whatsapp, 'WhatsApp'), h('a', { class: 'custom-btn-outline px-4 text-decoration-none', href: waLink(c.student.whatsapp, ''), target: '_blank' }, 'Message')));
 
-  if (onMark && res.result === 'ask') {
+  const ownerOnly = h('div', { class: 'at-sec' }, h('div', { class: 'text-13 sub-text d-flex align-items-center gap-2' }, icon('lock', { size: 16 }),
+    'Only the tutor can mark a student who owes fees. Record the payment, or ask the tutor.'));
+  if (onMark && ['ask', 'blocked'].includes(res.result) && res.can_override === false) {
+    parts.push(ownerOnly);
+  } else if (onMark && res.result === 'ask') {
     parts.push(h('div', { class: 'at-sec d-flex gap-2' },
       h('button', { type: 'button', class: 'custom-btn flex-grow-1', onclick: () => onMark('present', true) }, 'Mark Present'),
       h('button', { type: 'button', class: 'custom-btn-outline flex-grow-1', onclick: () => onSkip?.() }, 'Do Not Mark')));
   } else if (onMark && res.result === 'blocked') {
-    parts.push(h('div', { class: 'at-sec' }, h('div', { class: 'text-12 sub-text mb-2' }, 'Your setting: students who owe fees are not marked until they pay. Record the payment, or mark this student anyway.'),
+    parts.push(h('div', { class: 'at-sec' }, h('div', { class: 'text-12 sub-text mb-2' }, 'Your setting: students who owe fees are not marked until they pay. Record the payment, or mark this student anyway. Only you can do this; assistants cannot.'),
       h('button', { type: 'button', class: 'custom-btn-outline w-100', onclick: () => onMark('present', true) }, 'Mark Present Anyway')));
   }
   return h('div', { class: `at-card at-card-${tone}` }, parts);

@@ -2,8 +2,9 @@
 // its own (PUT /tutor/attendance-settings { part, ..., summary }) and every change goes to the Activity Log.
 import { Tabs } from '../components/Tabs.js';
 import { QuickGuide } from '../components/QuickGuide.js';
+import { idCard, loadBarcode, printCards } from './id-card.js';
 import {
-  api, has, lockBadge, h, fill, icon, cell, field, showErrors, simpleTable, Toast, infoTip, EmptyState, previewNote, METHODS, scanCard, ampm,
+  api, has, lockBadge, guard, BsModal, plural, h, fill, icon, cell, field, showErrors, simpleTable, Toast, infoTip, EmptyState, previewNote, METHODS, scanCard, ampm,
 } from './attendance-common.js';
 
 QuickGuide.attachAll();
@@ -50,8 +51,8 @@ function methods(p) {
     h('div', { class: 'ad-soft p-3 d-flex gap-3 align-items-start mt-2' },
       h('span', { class: 'ad-todo-icon' }, icon('id-card', { size: 20 })),
       h('div', { class: 'flex-grow-1' },
-        h('div', { class: 'text-14 main-text fw-semibold d-flex align-items-center gap-2' }, 'Student ID cards', lockBadge('id.digital')),
-        h('div', { class: 'text-12 sub-text' }, has('id.digital') ? 'Every student has a card with the QR code and the barcode in the ENLIXO app. Printed cards come from Students → Print ID Cards (next step).' : 'The card in the ENLIXO app is on GROW. On START, print the cards from Students → Print ID Cards (next step).'))),
+        h('div', { class: 'text-14 main-text fw-semibold d-flex align-items-center gap-2' }, 'Student ID cards', lockBadge('id.cards')),
+        h('div', { class: 'text-12 sub-text' }, 'The code on a student ID card follows what you tick here: a QR code for QR Code, a barcode for Barcode. Make and print the cards on the Student ID Cards tab.'))),
     saveBtn('Save Changes', async () => {
       await put(p, { part: 'methods', methods: picked, default_method: def.value, code: 'student_id', summary: `Ways to mark: ${Object.keys(picked).filter((k) => picked[k]).map((k) => METHODS[k].label).join(', ') || 'none'}` }, 'Saved. Mark Attendance now shows these tabs.');
     }));
@@ -96,10 +97,62 @@ function scanned(p) {
     h('div', { class: 'row gx-3 mt-3' },
       h('div', { class: 'col-md-6' }, field('Count as owing', sel([['overdue', 'Only months past the due date'], ['any', 'Every unpaid month, this month too']], s.owing.count, { onchange: (e) => { s.owing.count = e.target.value; } }), { info: 'Past the due date: a November fee due on 10 November counts from 11 November. Every unpaid month: it counts from the day the fee is created.' })),
       h('div', { class: 'col-md-6' }, field('Owing at least', sel([[1, '1 month'], [2, '2 months'], [3, '3 months']], s.owing.min_months, { onchange: (e) => { s.owing.min_months = Number(e.target.value); } }), { info: 'For example 2 months: a student who owes only one month is marked as usual; the rule starts from the second month.' }))),
+    h('div', { class: 'ad-soft p-3 d-flex gap-3 align-items-start mt-3' },
+      h('span', { class: 'ad-todo-icon' }, icon('lock', { size: 20 })),
+      h('div', {}, h('div', { class: 'text-14 main-text fw-semibold' }, 'Only you can mark a student who owes fees'),
+        h('div', { class: 'text-12 sub-text' }, 'Mark Present and Mark Present Anyway are shown only to you. Assistants who mark attendance see the fees due and can record the payment, but cannot mark the student until it is paid.'))),
     rule('Sound on scan', 'A short high beep when a student is marked, a low beep when something needs you.', sw(s.sound, { onchange: (e) => { s.sound = e.target.checked; } })),
     saveBtn('Save Changes', () => put(p, { part: 'card', card: s.card, owing: s.owing, sound: s.sound, summary: `Scan card and fee rule saved (${{ show: 'Mark and show the fees', ask: 'Ask before marking', block: 'Do not mark until paid' }[s.owing.action]})` }, 'Saved.')));
   p.append(h('div', { class: 'row g-4' }, left, h('div', { class: 'col-12 col-xl-5' }, preview)));
   draw();
+}
+
+// ------------------------------------------------------------------ Student ID Cards (GROW; START sees a locked sample)
+const SAMPLE_TUTOR = { name: 'Mr. K. R. Perera', subject: 'Combined Mathematics', phone: '0771234567' };
+const SAMPLE_STUDENT = { sid: 'ST02405', name: 'Kavindu Perera', classes: ['Theory 2026', 'Paper 2027'] };
+
+async function idCards(p) {
+  const on = has('id.cards');
+  const m = D.settings.methods;
+  const codes = [m.qr ? 'a QR code' : null, m.barcode ? 'a barcode' : null].filter(Boolean);
+  if (m.barcode) await loadBarcode().catch(() => null);
+  const cls = sel([['', 'All classes'], ...D.classes.map((c) => [c.id, c.name])], '', { 'data-key': 'class' });
+
+  const generate = guard('id.cards', async () => {
+    let data;
+    try { ({ data } = await api.get('/tutor/attendance/id-cards', cls.value ? { class: cls.value } : {})); } catch (e) { Toast.error(e.message); return; }
+    if (!data.students.length) { Toast.error('No active students in this class.'); return; }
+    if (m.barcode) await loadBarcode().catch(() => null);
+    const cards = data.students.map((s) => idCard(s, data.tutor, m));
+    const className = cls.value ? cls.selectedOptions[0].textContent : 'All classes';
+    const md = BsModal.open({
+      title: 'Student ID Cards', subtitle: [className, plural(cards.length, 'card')], icon: 'id-card', size: 'xl',
+      body: h('div', {}, h('div', { class: 'text-13 sub-text mb-3' }, 'Check the cards, then print them on A4 (8 cards a page). Cut along the dashed lines.'), h('div', { class: 'idc-grid' }, cards)),
+      footerEnd: [
+        BsModal.button('Close', { onclick: () => md.close() }),
+        BsModal.button('Print Cards', { primary: true, onclick: () => { if (!printCards(cards, `Student ID Cards · ${className}`)) Toast.error('Allow pop-ups for this site to print the cards.'); } }),
+      ],
+    });
+  });
+
+  const preview = h('div', { class: 'ad-soft p-4 d-flex flex-column align-items-center gap-3' },
+    h('div', { class: 'text-12 sub-text fw-semibold text-uppercase align-self-start' }, on ? 'How a card looks' : 'Sample card'),
+    idCard(SAMPLE_STUDENT, SAMPLE_TUTOR, m, { sample: !on }));
+
+  const left = h('div', { class: 'col-12 col-xl-6' },
+    h('div', { class: 'sub-topic mb-1 d-flex align-items-center gap-2' }, 'Student ID cards', lockBadge('id.cards'),
+      infoTip('A card for every student with their name, Student ID and classes. Students show it at the class and it is scanned to mark attendance.', 'Student ID cards')),
+    h('div', { class: 'text-12 sub-text mb-3' }, on ? 'Make cards for one class or for every student, then print them.' : 'Making and printing cards is on GROW. Here is how a card looks.'),
+    h('div', { class: 'ad-soft p-3 d-flex gap-3 align-items-start mb-3' },
+      h('span', { class: 'ad-todo-icon' }, icon(m.qr ? 'qr' : m.barcode ? 'barcode' : 'id-card', { size: 20 })),
+      h('div', {}, h('div', { class: 'text-14 main-text fw-semibold' }, codes.length ? `The card has ${codes.join(' and ')}` : 'The card has no code'),
+        h('div', { class: 'text-12 sub-text' }, codes.length
+          ? 'It follows the ways you tick on the Ways to Mark tab. The code holds the Student ID, which is also printed on the card.'
+          : 'You mark by hand only. Tick QR Code or Barcode on the Ways to Mark tab to put a code on the card.'))),
+    on ? field('Class', cls, { info: 'Pick a class to make cards only for its students, or All classes for every active student. A student in two classes gets one card with both classes.' }) : null,
+    h('div', { class: 'd-flex justify-content-end mt-4' },
+      h('button', { type: 'button', class: 'custom-btn px-5 d-inline-flex align-items-center gap-2', onclick: generate }, on ? icon('printer', { size: 18 }) : icon('lock', { size: 18 }), 'Make ID Cards')));
+  p.append(h('div', { class: 'row g-4' }, left, h('div', { class: 'col-12 col-xl-6' }, preview)));
 }
 
 // ------------------------------------------------------------------ Times & Rules
@@ -144,6 +197,7 @@ async function load() {
     new Tabs({ tabs: [
       { id: 'methods', label: 'Ways to Mark', render: methods },
       { id: 'scan', label: 'When a Student Is Scanned', render: scanned },
+      { id: 'cards', label: 'Student ID Cards', render: idCards },
       { id: 'times', label: 'Times & Rules', render: times },
       { id: 'log', label: 'Activity Log', badge: D.log.length, render: log },
     ] }).mount(card);

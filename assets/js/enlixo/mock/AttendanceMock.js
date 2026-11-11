@@ -16,6 +16,9 @@ const nowHm = () => new Date().toTimeString().slice(0, 5);
 const label = (key, long = false) => new Date(`${key}-01T00:00:00`).toLocaleDateString('en-GB', long ? { month: 'long', year: 'numeric' } : { month: 'short' });
 const dayLabel = (s) => new Date(`${s}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 function rng(seed) { let s = seed; return () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646; }
+// The tutor's name and subject printed on the ID cards (step B: from the tutor profile).
+export const TUTOR = { name: 'Mr. K. R. Perera', subject: 'Combined Mathematics', phone: '0771234567' };
+const OWNER = new URLSearchParams(globalThis.location?.search ?? '').get('as') !== 'assistant';
 const err = (message, details = {}, status = 400, code = 'validation') => Object.assign(new Error(message), { details, status, code });
 
 // When each class meets (weekday 0 = Sunday). Online classes are Zoom classes: joining marks "Joined Online" by itself.
@@ -211,6 +214,13 @@ export class AttendanceMock {
     if ((m = route.match(/^\/tutor\/attendance\/sessions\/(\d+)\/students\/(\d+)$/)) && method === 'GET') return { data: this.card(Number(m[2]), this.sessions.find((s) => s.id === Number(m[1]))) };
     if (method === 'GET' && route === '/tutor/attendance-settings') return { data: { settings: this.settings, log: this.log, classes: CLASSES.map((c) => ({ id: c.id, name: c.name, schedule: `${WEEKDAY[SLOTS[c.id][0]]} ${SLOTS[c.id][1]}`, mode: c.mode })) } };
     if (method === 'PUT' && route === '/tutor/attendance-settings') return { data: this.saveSettings(b) };
+    if (method === 'GET' && route === '/tutor/attendance/id-cards') {
+      if (!this.fees.has('id.cards')) throw Object.assign(err('Student ID Cards are on GROW.', { feature: 'id.cards' }, 403), { code: 'feature_locked' });
+      const ens = this.fees.enrolments.filter((e) => e.status === 'active' && (!q.class || e.class === Number(q.class)));
+      const ids = [...new Set(ens.map((e) => e.student))];
+      const students = ids.map((id) => { const st = this.student(id); return { ...this.#person(st), classes: this.fees.enrolments.filter((e) => e.student === id && e.status === 'active').map((e) => this.cls(e.class).short) }; }).sort((a, z) => a.name.localeCompare(z.name));
+      return { data: { tutor: TUTOR, students } };
+    }
     throw err(`No sample data for ${method} ${route}.`, {}, 404);
   }
 
@@ -300,6 +310,7 @@ export class AttendanceMock {
     }).sort((a, b) => a.student.name.localeCompare(b.student.name));
     out.window = { opens: hm(toMin(s.start) - this.settings.times.open_before), closes: hm(toMin(s.end) + this.settings.times.close_after) };
     out.settings = this.settings;
+    out.owner = OWNER;
     out.sample_codes = out.roster.filter((x) => !x.record).slice(0, 40).map((x) => x.student.sid);
     return out;
   }
@@ -328,8 +339,10 @@ export class AttendanceMock {
     if (card.record && ATTENDED.includes(card.record.status)) return { result: 'already', message: `${st.name} was already marked at ${card.record.time}.`, card };
     const o = this.settings.owing;
     const owes = card.fees.count >= o.min_months && card.fees.total > 0;
-    if (owes && o.action === 'ask' && !b.force) return { result: 'ask', message: `${st.name} owes ${card.fees.count} month${card.fees.count === 1 ? '' : 's'}. Mark present?`, card };
-    if (owes && o.action === 'block' && !b.force) return { result: 'blocked', message: `Not marked: ${st.name} must pay the fees first.`, card };
+    if (owes && b.force && !OWNER) throw err('Only the tutor can mark a student who owes fees.', {}, 403, 'owner_only');
+    if (owes && !OWNER && o.action !== 'show') return { result: 'blocked', message: `Not marked: ${st.name} owes fees. Only the tutor can mark this student.`, card, can_override: false };
+    if (owes && o.action === 'ask' && !b.force) return { result: 'ask', message: `${st.name} owes ${card.fees.count} month${card.fees.count === 1 ? '' : 's'}. Mark present?`, card, can_override: true };
+    if (owes && o.action === 'block' && !b.force) return { result: 'blocked', message: `Not marked: ${st.name} must pay the fees first.`, card, can_override: true };
     const rec = this.#setRec(s, st.id, 'present', b.method === 'barcode' ? 'Barcode' : b.method === 'manual' ? 'Manual' : 'QR');
     return { result: rec.status === 'late' ? 'late' : 'marked', message: rec.status === 'late' ? `${st.name}: Late, ${rec.late_min} min after the start` : `${st.name}: Present`, card: this.card(st.id, s), counts: this.#counts(s) };
   }
@@ -341,9 +354,9 @@ export class AttendanceMock {
     if (!ids.length) throw err('Choose a student.');
     if (b.status && !['present', 'late', 'absent', 'joined', 'watched'].includes(b.status)) throw err('Choose Present, Late or Absent.');
     const o = this.settings.owing;
-    if (b.status && ATTENDED.includes(b.status) && o.action === 'block' && !b.force && ids.length === 1) {
+    if (b.status && ATTENDED.includes(b.status) && (o.action === 'block' || !OWNER) && o.action !== 'show' && ids.length === 1 && (!b.force || !OWNER)) {
       const owed = this.owed(ids[0]);
-      if (owed.count >= o.min_months && owed.total > 0) throw err('This student must pay the fees first.', { card: this.card(ids[0], s) }, 409, 'fees_due');
+      if (owed.count >= o.min_months && owed.total > 0) throw err(OWNER ? 'This student must pay the fees first.' : 'This student owes fees. Only the tutor can mark them.', { card: this.card(ids[0], s), can_override: OWNER }, 409, 'fees_due');
     }
     ids.forEach((sid) => {
       if (b.status === 'late' && !(b.late_min > 0)) { this.records.set(`${s.id}:${sid}`, { status: 'late', time: nowHm(), method: 'Manual', late_min: Math.max(1, nowMin() - toMin(s.start)), by: 'You' }); return; }

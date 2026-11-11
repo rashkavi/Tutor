@@ -128,7 +128,7 @@ async function markOne(studentId, status, force = false, students = null) {
       showCard({ result: st === 'late' ? 'late' : ['present', 'joined'].includes(st) ? 'marked' : 'view', message: st ? `Marked ${word} by hand` : 'Mark removed', card: data.card, from: 'manual' });
     }
   } catch (e) {
-    if (e.code === 'fees_due' || e.details?.card) showCard({ result: 'blocked', message: e.message, card: e.details.card, from: 'manual' });
+    if (e.code === 'fees_due' || e.details?.card) showCard({ result: 'blocked', message: e.message, card: e.details.card, can_override: e.details.can_override, from: 'manual' });
     else Toast.error(e.message);
   }
 }
