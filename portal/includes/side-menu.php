@@ -12,6 +12,7 @@ class load_side_menu
             ["Classes", "material-symbols:team-dashboard-outline", "classes", "classes"],
             ["Time Table", "fluent-mdl2:date-time", "time-table", "time-table"],
             ["Attendance", "gg:check-o", "attendance", "attendance"],
+            ["Class Recordings", "solar:videocamera-record-linear", "recordings", "recordings"],
             ["Pre Recorded Classes", "icon-park-outline:video", "pre-recorded-classes", "pre-recorded-classes"],
             ["Tutes", "lsicon:constitute-outline", "tutes", "tutes"],
             ["Payments", "f7:wallet", "payments", "payments"],

@@ -153,11 +153,11 @@ if (!SessionUser::ifUserIsStudent()) {
                                                                                     <iconify-icon icon="solar:calendar-date-broken" width="20" height="20" class="sub-text-color me-3"></iconify-icon>
                                                                                     Class Time Table</a></li>
                                                                             <hr class="mt-1 mb-1 mb-0 me-2 mx-2">
-                                                                            <li><a class="dropdown-item text-14 main-text d-flex align-items-center" href="class-recordings?class-id=<?= $class['class_id']; ?>">
+                                                                            <li><a class="dropdown-item text-14 main-text d-flex align-items-center" href="recordings?class=<?= (int) $class['class_id']; ?>">
                                                                                     <iconify-icon icon="gravity-ui:video" width="20" height="20" class="sub-text me-3"></iconify-icon>
                                                                                     Recordings</a></li>
                                                                             <hr class="mt-1 mb-1 mb-0 me-2 mx-2">
-                                                                            <li><a class="dropdown-item text-14 main-text d-flex align-items-center" href="class-pre-recordings?class-id=<?= $class['class_id']; ?>">
+                                                                            <li><a class="dropdown-item text-14 main-text d-flex align-items-center" href="pre-recorded-classes?class=<?= (int) $class['class_id']; ?>">
                                                                                     <iconify-icon icon="streamline:live-video" width="20" height="20" class="sub-text me-3"></iconify-icon>
                                                                                     Pre-Recorded Classes</a></li>
                                                                             <hr class="mt-1 mb-1 mb-0 me-2 mx-2">
