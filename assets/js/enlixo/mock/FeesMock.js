@@ -4,7 +4,7 @@
 // ?plan=start or ?plan=grow on any fee page shows the package locks.
 const FIRST = ['Sahan', 'Nethmi', 'Kavindu', 'Tharushi', 'Dulaj', 'Imasha', 'Yasiru', 'Sachini', 'Hasitha', 'Dinithi', 'Pasindu', 'Methmi', 'Ravindu', 'Senuri', 'Chamod', 'Hiruni', 'Oshada', 'Nadeesha', 'Lakshan', 'Ishini', 'Vihanga', 'Anjali', 'Kalana', 'Piumi'];
 const LAST = ['Perera', 'Silva', 'Fernando', 'Jayasinghe', 'Bandara', 'Gunawardena', 'Rathnayake', 'Herath', 'Dissanayake', 'Wickramasinghe', 'Kumara', 'Weerasinghe'];
-const CLASSES = [
+export const CLASSES = [
   { id: 11, name: '2026 A/L Combined Maths Theory', short: 'Theory 2026', fee: 3000, due_day: 10, mode: 'Physical' },
   { id: 12, name: '2026 A/L Combined Maths Revision', short: 'Revision 2026', fee: 2500, due_day: 10, mode: 'Online' },
   { id: 13, name: '2027 A/L Combined Maths Theory', short: 'Theory 2027', fee: 2800, due_day: 5, mode: 'Physical' },
@@ -15,6 +15,7 @@ const PLAN_FEATURES = {
   'fees.class_based': 'start', 'payments.bank_tracking': 'start', 'payments.manual_approval': 'start', 'reports.basic': 'start',
   'payments.online_card': 'grow', 'comms.whatsapp': 'grow', 'comms.sms': 'grow', 'reports.payments': 'grow',
   'payments.arrears': 'pro', 'fees.advanced': 'pro', 'payments.parent_dashboard': 'pro',
+  'attendance.manual': 'start', 'attendance.qr': 'start', 'reports.attendance': 'grow', 'attendance.export': 'grow',
 };
 const NAMES = {
   'payments.online_card': ['Online Card Payments', 'Students pay their fee by card from the app.'],
@@ -22,6 +23,8 @@ const NAMES = {
   'reports.payments': ['Payment Analytics', 'Income trends and collection rates.'],
   'payments.arrears': ['Arrears Tracking', 'See who owes what, for every month and every class.'],
   'fees.advanced': ['Free Cards & Discounts', 'Free cards, half cards and discounts for single students.'],
+  'reports.attendance': ['Attendance Analytics', 'Attendance charts per day, week and class.'],
+  'attendance.export': ['Attendance Reports Export', 'Download attendance lists as CSV / Excel.'],
 };
 const PLANS = { start: { name: 'START', price: 'LKR 2,500 – 3,000 / month' }, grow: { name: 'GROW', price: 'LKR 5,000 – 6,000 / month' }, pro: { name: 'PRO', price: 'LKR 8,000 – 10,000 / month' } };
 const RANK = { start: 1, grow: 2, pro: 3 };
@@ -37,6 +40,9 @@ function rng(seed) { let s = seed; return () => ((s = (s * 16807) % 2147483647) 
 const err = (message, details = {}, status = 400) => Object.assign(new Error(message), { details, status });
 
 export class FeesMock {
+  /** One sample world per page, so Attendance (AttendanceMock) and the fee dialogs see the same students and fees. */
+  static shared() { return (FeesMock.instance ??= new FeesMock()); }
+
   constructor() {
     const r = rng(19);
     const pick = (a) => a[Math.floor(r() * a.length)];
