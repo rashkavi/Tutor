@@ -32,6 +32,7 @@ class load_side_menu
             ]],
             ['Finance', 'finance', null, '', [], [
                 ['Payments', null, 'payments', 'payments', ['Payments']],
+                ['My Subscription', null, 'subscription', '', ['My Subscription']],
                 ['Billing', null, 'billing', 'billing', ['Billing']],
             ]],
             ['Communication', 'communication', null, '', [], [
