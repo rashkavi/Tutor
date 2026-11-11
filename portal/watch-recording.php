@@ -3,6 +3,7 @@ require_once '../includes/UserClass.php';
 require_once "../includes/connection.php";
 require_once "../includes/UserPermissionsClass.php";
 require_once "../includes/Project.php";
+require_once "../includes/enlixo/recording-player.php";
 if (!SessionUser::ifUserIsStudent()) {
     header("Location: ./index");
 } else {
@@ -163,6 +164,8 @@ if (!SessionUser::ifUserIsStudent()) {
                                                 ?>
                                                 <?php if (!$recordingGuard['can_play']): ?>
                                                     <?= $recordingGuard['lock_html'] ?>
+                                                <?php elseif (($typedPlayer = enlixo_recording_player($recordingData, (string) ($recordingData['recording_title'] ?? ''), $recordingGuard['meter_html'])) !== null): ?>
+                                                    <?= $typedPlayer ?>
                                                 <?php elseif ($recordingData['integrations_integration_id'] == null): ?>
                                                     <?= $recordingData["recording_link"]; ?>
                                                     <?php else:

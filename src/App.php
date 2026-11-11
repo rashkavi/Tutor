@@ -13,6 +13,7 @@ use Enlixo\Entitlements\PdoEntitlementRepository;
 use Enlixo\Http\Client\CurlHttpClient;
 use Enlixo\Recordings\PdoRecordingRepository;
 use Enlixo\Recordings\RecordingAccessService;
+use Enlixo\Recordings\RecordingTypeRepository;
 use Enlixo\Roles\PdoAuditLogger;
 use Enlixo\Roles\PdoRoleRepository;
 use Enlixo\Roles\PermissionService;
@@ -72,6 +73,12 @@ final class App
             new PdoRecordingRepository($this->db()), $this->entitlements(), $this->clock(),
             $c['heartbeat_seconds'], $c['heartbeat_grace_seconds'], $c['default_multiplier'], $c['warn_at_ratio'],
         ));
+    }
+
+    /** Settings -> Recording Types (class recordings and pre-recorded classes). */
+    public function recordingTypes(): RecordingTypeRepository
+    {
+        return $this->once('rectypes', fn () => new RecordingTypeRepository($this->db(), $this->crypto()));
     }
 
     public function schedule(): ScheduleService

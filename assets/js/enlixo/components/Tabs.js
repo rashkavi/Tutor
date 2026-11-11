@@ -20,6 +20,16 @@ export class Tabs {
     return this;
   }
 
+  /** Open a tab from code (unknown ids are ignored). */
+  show(id) {
+    if (this.tabs.some((t) => t.id === id)) this.#show(id);
+  }
+
+  /** Draw the open tab again (after its data or a badge changed). */
+  refresh() {
+    this.#show(this.active);
+  }
+
   #show(id) {
     this.active = id;
     const params = new URLSearchParams(location.search);
