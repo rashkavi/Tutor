@@ -265,7 +265,7 @@ export const paymentColumns = ({ admin = true, reload = () => {} } = {}) => [
   { key: 'date', label: 'Paid On', sortable: true, render: (r) => cell(day(r.date)) },
   { key: 'method', label: 'Method', render: (r) => cell(r.method) },
   { key: 'amount', label: 'Amount', sortable: true, render: (r) => cell(lkr(r.amount)) },
-  { key: 'status', label: 'Status', render: (r) => h('div', { class: 'd-flex flex-column align-items-start gap-1' }, chip(r.status), r.reason ? h('span', { class: 'text-12 sub-text cell-wrap' }, r.reason) : null) },
+  { key: 'status', label: 'Status', render: (r) => h('div', { class: 'd-flex flex-column align-items-start gap-1' }, chip(r.status), r.reason ? h('span', { class: 'text-12 sub-text', style: 'white-space: normal; max-width: 220px;' }, r.reason) : null) },
   { key: 'view', label: '', width: '110px', render: (r) => h('button', { type: 'button', class: 'custom-btn ex-btn-sm px-3', onclick: () => paymentDialog(r, { admin, reload }) }, admin && r.status === 'waiting' ? 'Check' : 'View') },
 ].filter(Boolean);
 
