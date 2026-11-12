@@ -258,7 +258,7 @@ final class PlatformController
 
     // ------------------------------------------------------------ e-mail (the legacy PHPMailer setup)
 
-    private static function mail(string $to, string $name, string $subject, string $html): bool
+    public static function mail(string $to, string $name, string $subject, string $html): bool
     {
         $root = dirname(__DIR__, 3);
         try {

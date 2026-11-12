@@ -7,6 +7,16 @@ QuickGuide.attachAll();
 const root = document.getElementById('add-tutor');
 const { data: L } = await api.get('/admin/lookups');
 const R = L.rules;
+// Approving an online sign-up request (Requested Tutors → Approve): the form starts with the request's details,
+// and saving makes the tutor through POST /admin/tutor-requests/{id}/approve, which also closes the request.
+const requestId = Number(new URLSearchParams(location.search).get('request')) || null;
+let REQ = null;
+if (requestId) {
+  try {
+    REQ = (await api.get(`/admin/tutor-requests/${requestId}`)).data;
+    if (REQ.status !== 'pending') { Toast.error(`This request was already ${REQ.status}.`); REQ = null; }
+  } catch (e) { Toast.error(e.message); }
+}
 const plan = (k) => L.plans.find((p) => p.key === k);
 const today = new Date(new Date().toDateString());
 const plusDays = (n) => new Date(today.getTime() + n * 86400000).toISOString().slice(0, 10);
@@ -142,7 +152,7 @@ function summary() {
     h('div', { class: 'ad-sum-row' }, h('span', { class: 'main-text fw-semibold' }, start === 'comp' ? 'To pay' : 'Each invoice'), h('span', { class: 'main-topic' }, start === 'comp' ? lkr(0) : lkr(total))),
     h('div', { class: 'text-14 main-text fw-semibold mt-4 mb-2' }, 'What happens when you save'),
     h('ol', { class: 'ad-steps' }, steps.map((s, i) => h('li', {}, h('span', { class: 'ad-step-dot' }, String(i + 1)), h('span', {}, s)))),
-    h('button', { type: 'button', class: 'custom-btn w-100 mt-3', onclick: save }, 'Add Tutor'));
+    h('button', { type: 'button', class: 'custom-btn w-100 mt-3', onclick: save }, REQ ? 'Approve and Add Tutor' : 'Add Tutor'));
 }
 
 async function save() {
@@ -151,8 +161,8 @@ async function save() {
   root.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
   root.querySelectorAll('[id$="-err"]').forEach((el) => el.classList.add('d-none'));
   try {
-    const { data } = await api.post('/admin/tutors', body);
-    Toast.success(`${body.first_name} ${body.last_name} added. They can sign in with ${body.email}.`);
+    const { data } = await api.post(REQ ? `/admin/tutor-requests/${REQ.id}/approve` : '/admin/tutors', body);
+    Toast.success(`${body.first_name} ${body.last_name} added. They can sign in with ${body.email}.${REQ ? (data.mailed ? ' A welcome e-mail was sent.' : ' The welcome e-mail could not be sent; tell them by phone.') : ''}`);
     setTimeout(() => { location.href = `tutor-details?tutor-id=${data.id}`; }, 900);
   } catch (e) {
     const errs = e.details ?? {};
@@ -165,9 +175,28 @@ async function save() {
 
 document.getElementById('add-tutor-actions').append(
   h('a', { class: 'ex-gear', href: 'plans?tab=rules', title: 'Trial & Billing Rules', 'aria-label': 'Trial & Billing Rules' }, icon('settings', { size: 30 })),
-  h('button', { type: 'button', class: 'custom-btn px-5', onclick: save }, 'Add Tutor'));
+  h('button', { type: 'button', class: 'custom-btn px-5', onclick: save }, REQ ? 'Approve and Add Tutor' : 'Add Tutor'));
 
-fill(root, previewNote(), h('div', { class: 'row g-4' },
+if (REQ) {
+  const set = (k, val) => { if (inputs[k] && val !== null && val !== undefined && val !== '') inputs[k].value = String(val); };
+  set('title', REQ.title_id); set('first_name', REQ.first_name); set('last_name', REQ.last_name); set('email', REQ.email);
+  set('mobile', REQ.mobile); if (REQ.whatsapp && REQ.whatsapp !== REQ.mobile) set('whatsapp', REQ.whatsapp);
+  set('brand', REQ.institute); set('subject', REQ.subject); set('note', `Online request ${REQ.ref}`);
+  [planCards, cycle, addons].forEach((n) => n.querySelectorAll('input').forEach((x) => {
+    if (x.name === 'plan' && REQ.plan) x.checked = x.value === REQ.plan;
+    if (x.name === 'cycle') x.checked = x.value === REQ.cycle;
+    if (x.name === 'addon') x.checked = REQ.addons.includes(x.value);
+  }));
+}
+const reqBanner = REQ ? h('div', { class: 'col-12 ad-soft p-3 mb-4 d-flex align-items-center gap-3 flex-wrap' },
+  icon('application', { size: 22 }),
+  h('div', { class: 'flex-grow-1' },
+    h('div', { class: 'text-14 main-text fw-semibold' }, `Approving request ${REQ.ref} from ${REQ.name}`),
+    h('div', { class: 'text-13 sub-text' }, [REQ.subject, REQ.mode_label, REQ.district, REQ.students ? `~${REQ.students} students` : null, `asked for ${(REQ.plan ?? '').toUpperCase()} ${REQ.cycle}`].filter(Boolean).join(' · '),
+      REQ.addons.length ? ` · add-ons: ${REQ.addons.join(', ').replaceAll('_', ' ')}` : ''),
+    REQ.message ? h('div', { class: 'text-13 main-text mt-1' }, `"${REQ.message}"`) : null),
+  h('a', { class: 'custom-btn-outline px-3 d-inline-flex align-items-center text-decoration-none', href: `requested-users?request=${REQ.id}` }, 'View request')) : null;
+fill(root, previewNote(), reqBanner, h('div', { class: 'row g-4' },
   h('div', { class: 'col-12 col-xl-8' }, details, planSection, startSection),
   h('div', { class: 'col-12 col-xl-4' }, sumBox)));
 summary();

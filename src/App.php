@@ -109,6 +109,11 @@ final class App
         return $this->once('pbill', fn () => new PlatformBilling($this->db(), $this->platformCatalog(), $this->platformSettings(), dirname(__DIR__) . '/assets/uploads/users-payment-slips', $this->today()));
     }
 
+    public function tutorRequests(): \Enlixo\Platform\TutorRequests
+    {
+        return $this->once('treq', fn () => new \Enlixo\Platform\TutorRequests($this->db(), $this->platformCatalog(), $this->platformSettings()));
+    }
+
     public function platformDashboard(): PlatformDashboard
     {
         return $this->once('pdash', fn () => new PlatformDashboard($this->db(), $this->platformBilling(), $this->platformCatalog(), $this->today()));

@@ -14,6 +14,7 @@ use Enlixo\Http\Controllers\RoleController;
 use Enlixo\Http\Controllers\StudentBulkController;
 use Enlixo\Http\Controllers\StudentController;
 use Enlixo\Http\Controllers\TuteController;
+use Enlixo\Http\Controllers\TutorRequestController;
 use Enlixo\Http\Controllers\ZoomWebhookController;
 
 return static function (Router $router, App $app): void {
@@ -49,6 +50,16 @@ return static function (Router $router, App $app): void {
     $router->post('/api/v1/tutor/application-link', $apps->updateLink(...));
     $router->get('/api/v1/public/apply/{token}', $apps->publicForm(...));
     $router->post('/api/v1/public/apply/{token}', $apps->publicApply(...));
+
+    // Online tutor sign-up (tutor-registration-application.php) and the admin's Requested Tutors page
+    $treq = new TutorRequestController($app);
+    $router->get('/api/v1/public/tutor-signup', $treq->info(...));
+    $router->post('/api/v1/public/tutor-signup', $treq->submit(...));
+    $router->get('/api/v1/admin/tutor-requests', $treq->index(...));
+    $router->get('/api/v1/admin/tutor-requests/{id}', $treq->show(...));
+    $router->post('/api/v1/admin/tutor-requests/{id}/approve', $treq->approve(...));
+    $router->post('/api/v1/admin/tutor-requests/{id}/reject', $treq->reject(...));
+    $router->post('/api/v1/admin/tutor-requests/{id}/reopen', $treq->reopen(...));
     $router->get('/api/v1/tutor/classes', $students->classes(...));
     $router->post('/api/v1/tutor/classes', $classes->store(...));
     $router->get('/api/v1/tutor/class-form', $classes->form(...));
