@@ -4441,3 +4441,7 @@ header .ex-ico { display: inline-flex; align-items: center; }
 /* the older createInfo pop-up now holds the Quick guide card itself: no extra frame, padding or arrow */
 .create-info-popover.ex-qg-float { padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; width: 340px; }
 .create-info-popover.ex-qg-float::before, .create-info-popover.ex-qg-float::after { display: none; }
+
+/* A list (DataView) placed inside a card that already has padding: no second card and no second p-4 gap */
+.component-theme .ex-dv.component-theme,
+.ex-hd-panel .ex-dv.component-theme { padding: 0 !important; background: transparent !important; border: 0 !important; box-shadow: none !important; }
