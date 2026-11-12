@@ -215,6 +215,65 @@
     update();
   }
 
+
+  // ---------- language demo: the same screen in Sinhala, Tamil and English ----------
+  const demo = $('#lp-lang-demo');
+  if (demo) {
+    const W = {
+      dashboard: ['උපකරණ පුවරුව', 'முகப்பு', 'Dashboard'],
+      classes: ['පන්ති', 'வகுப்புகள்', 'Classes'],
+      timetable: ['කාල සටහන', 'நேர அட்டவணை', 'Time Table'],
+      attendance: ['පැමිණීම', 'வருகை', 'Attendance'],
+      payments: ['ගෙවීම්', 'கட்டணங்கள்', 'Payments'],
+      recordings: ['පටිගත කිරීම්', 'பதிவுகள்', 'Recordings'],
+      hello: ['ආයුබෝවන්, කවින්දි', 'வணக்கம், கவிந்தி', 'Hello, Kavindi'],
+      today: ['අද පන්ති 2ක්', 'இன்று 2 வகுப்புகள்', '2 classes today'],
+      present: ['පැමිණ ඇත', 'வருகை', 'Present'],
+      students: ['සිසුන්', 'மாணவர்கள்', 'Students'],
+      classes3: ['පන්ති 3', '3 வகுப்புகள்', '3 classes'],
+      next: ['ඊළඟ පන්තිය', 'அடுத்த வகுப்பு', 'Next class'],
+      join: ['එක්වන්න', 'சேரவும்', 'Join'],
+      fees: ['ගෙවිය යුතු ගාස්තු', 'செலுத்த வேண்டிய கட்டணம்', 'Fees to pay'],
+      paynow: ['දැන් ගෙවන්න', 'இப்போது செலுத்தவும்', 'Pay now'],
+      tutes: ['නිබන්ධන', 'குறிப்புகள்', 'Tutes'],
+      new: ['අලුත්', 'புதியது', 'New'],
+      watch: ['නරඹන්න', 'பார்க்கவும்', 'Watch'],
+    };
+    const idx = { si: 0, ta: 1, en: 2 };
+    const btns = $$('.lp-ld-switch button', demo);
+    const ink = $('.lp-ld-ink', demo);
+    const app = $('.lp-ld-app', demo);
+    const moveLdInk = (b) => { if (b && ink) { ink.style.width = `${b.offsetWidth}px`; ink.style.transform = `translateX(${b.offsetLeft - 4}px)`; } };
+    const setLang = (lang) => {
+      const i = idx[lang];
+      btns.forEach((b) => { const on = b.dataset.lang === lang; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
+      moveLdInk(btns.find((b) => b.dataset.lang === lang));
+      app.setAttribute('lang', lang);
+      app.classList.add('swap');
+      setTimeout(() => {
+        $$('[data-k]', app).forEach((el) => { el.textContent = W[el.dataset.k]?.[i] ?? ''; });
+        app.classList.remove('swap');
+      }, reduce ? 0 : 220);
+    };
+    setLang('si');
+    addEventListener('load', () => moveLdInk($('.lp-ld-switch .on', demo)));
+    addEventListener('resize', () => moveLdInk($('.lp-ld-switch .on', demo)));
+    let langTimer = null;
+    const order = ['si', 'ta', 'en'];
+    const startAuto = () => {
+      if (reduce || langTimer) return;
+      langTimer = setInterval(() => { const cur = btns.find((b) => b.classList.contains('on'))?.dataset.lang; setLang(order[(order.indexOf(cur) + 1) % 3]); }, 2600);
+    };
+    btns.forEach((b) => b.addEventListener('click', () => { clearInterval(langTimer); langTimer = -1; setLang(b.dataset.lang); }));
+    new IntersectionObserver(([en]) => { if (en.isIntersecting && langTimer === null) startAuto(); }, { threshold: 0.4 }).observe(demo);
+  }
+
+  // ---------- footer: big word follows the mouse ----------
+  const word = $('.lp-foot-word');
+  if (word && !reduce && fine) {
+    word.addEventListener('pointermove', (e) => { const r = word.getBoundingClientRect(); word.style.setProperty('--fx', `${((e.clientX - r.left) / r.width) * 100}%`); });
+  }
+
   // ---------- monthly / yearly prices ----------
   const tween = (el, to) => {
     const from = Number(el.textContent.replace(/,/g, '')) || 0;
