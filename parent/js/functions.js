@@ -266,22 +266,9 @@ const signIn = (btn, mobile) => {
 }
 
 const signOut = () => {
-    fetch("api/signOut.php", {
-        method: "GET",
-    })
-        .then((response) => response.text())
-        .then((data) => {
-            if (data.error) {
-                localStorage.removeItem('theme');
-                localStorage.removeItem("welcomeAlertShown");
-                showToast("error", data.error);
-            } else {
-                window.location.reload();
-            }
-        })
-        .catch((error) => {
-            showToast("error", "An error occured. Please try again later.");
-        });
+    // A normal page load (not fetch), so the server's redirect to the sign-in page always happens.
+    try { localStorage.removeItem("welcomeAlertShown"); } catch (e) { /* storage blocked */ }
+    window.location.href = "api/signOut.php";
 }
 
 const savePayment = (id) => {

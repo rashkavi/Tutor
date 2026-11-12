@@ -1,3 +1,11 @@
+
+// Every page can sign out, also pages that don't load their folder's js/functions.js (which defines signOut too).
+if (typeof window.signOut !== 'function') {
+    window.signOut = () => {
+        try { localStorage.removeItem("welcomeAlertShown"); } catch (e) { /* storage blocked */ }
+        window.location.href = "api/signOut.php";
+    };
+}
 const BASE_STUDENT_PORTAL_URL = "https://portal.enviiz.com";
 const SORT_NONE = 0;
 const SORT_ASC = 1;

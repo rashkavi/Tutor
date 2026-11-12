@@ -12,7 +12,8 @@ if (!SessionUser::ifUserIsStudent()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Student');
 
     // one-time "just signed in" cookie from the sign-in API; the greeting below replaces the old welcome banner
-    if (isset($_COOKIE['enviiz_lms_student_login'])) {
+    $justSignedIn = isset($_COOKIE['enviiz_lms_student_login']);
+    if ($justSignedIn) {
         setcookie('enviiz_lms_student_login', '', time() - 3600, '/');
     }
 
@@ -87,6 +88,7 @@ if (!SessionUser::ifUserIsStudent()) {
                                 enlixo_dash_error($dashError);
                             } else {
                                 $t = $dash['totals'];
+                                enlixo_dash_welcome($justSignedIn, trim(($sessionUserObject['user_fname'] ?? '') . ' ' . ($sessionUserObject['user_lname'] ?? '')), 'Welcome back! Your classes, time table, recordings, tutes and fees are all in one place.');
                                 enlixo_dash_head(enlixo_dash_greeting($sessionUserObject['user_fname'] ?? ''), date('l, j F Y'), array_merge(
                                     [['My Classes', 'classes', 'classes']],
                                     $t['due_count'] ? [['Pay Fees', 'payments', 'payments', true]] : [],

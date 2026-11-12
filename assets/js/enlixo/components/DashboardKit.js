@@ -31,6 +31,18 @@ export class DashboardKit {
         primary));
   }
 
+  /**
+   * "Welcome, Nimal Perera!" card shown once, right after signing in (white card, blue left edge, close button).
+   * The dashboard page passes data-welcome="1" when the sign-in cookie was there.
+   */
+  static welcome(name, text) {
+    const card = h('div', { class: 'col-12 ex-welcome mb-4', role: 'status' },
+      h('button', { type: 'button', class: 'ex-welcome-close', 'aria-label': 'Close', onclick: () => card.remove() }, '×'),
+      h('h2', { class: 'ex-welcome-title' }, `Welcome, ${name || 'back'}!`),
+      h('p', { class: 'ex-welcome-text' }, text));
+    return card;
+  }
+
   /** Same order as the page: greeting, 4 stat cards, a wide + narrow panel, three panels. */
   static skeleton() {
     const bone = (w, hgt = 12, extra = {}) => h('span', { class: 'ex-skeleton d-block', style: { width: w, height: `${hgt}px`, ...extra } });

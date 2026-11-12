@@ -61,6 +61,21 @@ function enlixo_dash_error(?Throwable $e = null): void
     <?php
 }
 
+/** "Welcome, Name!" card shown once, right after signing in (same as DashboardKit.welcome() on the tutor and admin dashboards). */
+function enlixo_dash_welcome(bool $show, string $name, string $text): void
+{
+    if (!$show) {
+        return;
+    }
+    ?>
+    <div class="col-12 ex-welcome mb-4" role="status">
+        <button type="button" class="ex-welcome-close" aria-label="Close" onclick="this.parentElement.remove()">&times;</button>
+        <h2 class="ex-welcome-title">Welcome, <?= enlixo_dash_e(trim($name) !== '' ? trim($name) : 'back') ?>!</h2>
+        <p class="ex-welcome-text"><?= enlixo_dash_e($text) ?></p>
+    </div>
+    <?php
+}
+
 /**
  * Greeting card at the top (no separate "Dashboard" header card): greeting, today's date, an optional line,
  * buttons on the right. Same markup as DashboardKit.greeting() on the tutor and admin dashboards.

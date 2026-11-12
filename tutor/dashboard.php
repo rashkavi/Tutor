@@ -69,6 +69,7 @@ if (!SessionUser::hasValidSession()) {
 
                                 <div class="col-12 p-0" id="tutor-dashboard"
                                     data-name="<?= htmlspecialchars((string) ($sessionUserObject['user_fname'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                    data-full-name="<?= htmlspecialchars(trim(($sessionUserObject['user_fname'] ?? '') . ' ' . ($sessionUserObject['user_lname'] ?? '')), ENT_QUOTES, 'UTF-8') ?>"
                                     data-welcome="<?= $justSignedIn ? '1' : '0' ?>"></div>
                             </div>
                             <div class="flex-grow-1"></div>

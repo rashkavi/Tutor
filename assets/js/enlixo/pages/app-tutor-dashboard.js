@@ -266,7 +266,7 @@ async function load() {
   fill(root, DashboardKit.skeleton());
   try {
     const d = (await api.get('/tutor/dashboard')).data;
-    fill(root, today(d), stats(d), ...charts(d), ...lists(d), performance(d));
+    fill(root, root.dataset.welcome === '1' ? DashboardKit.welcome(root.dataset.fullName || root.dataset.name, 'Welcome back! Your classes, students, fees and attendance are all here. Check what needs you today below.') : null, today(d), stats(d), ...charts(d), ...lists(d), performance(d));
     drawCharts(d);
   } catch (e) {
     fill(root, h('div', { class: 'component-theme p-4' }, EmptyState.error(e.message, load)));

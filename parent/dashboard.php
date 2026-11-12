@@ -11,7 +11,8 @@ if (!SessionUser::ifUserIsParent()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Parent');
 
     // one-time "just signed in" cookie from the sign-in API; the greeting below replaces the old welcome banner
-    if (isset($_COOKIE['enviiz_lms_parent_login'])) {
+    $justSignedIn = isset($_COOKIE['enviiz_lms_parent_login']);
+    if ($justSignedIn) {
         setcookie('enviiz_lms_parent_login', '', time() - 3600, '/');
     }
 
@@ -93,6 +94,7 @@ if (!SessionUser::ifUserIsParent()) {
                             if (!$dash) {
                                 enlixo_dash_error($dashError);
                             } elseif (!$children) {
+                                enlixo_dash_welcome($justSignedIn, trim(($sessionUserObject['user_fname'] ?? '') . ' ' . ($sessionUserObject['user_lname'] ?? '')), "Welcome back! Follow your children's classes, attendance and fees in one place.");
                                 enlixo_dash_head(enlixo_dash_greeting($sessionUserObject['user_fname'] ?? ''), date('l, j F Y'));
                                 echo '<div class="col-12 component-theme p-4">';
                                 enlixo_dash_empty('No child is linked to your number yet. Ask the tutor to add your WhatsApp number to your child as the parent.', 'students');

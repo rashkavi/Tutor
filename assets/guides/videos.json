@@ -1,0 +1,52 @@
+{
+  "_how_to": [
+    "Video links for the (i) Quick guide on each page. Paste a YouTube link (https://youtu.be/... or https://www.youtube.com/watch?v=...).",
+    "Leave a link empty and that guide shows no video. Changes show after a page refresh; no code change is needed.",
+    "pages: the page's own guide, named folder/page (tutor/classes = tutor/classes.php).",
+    "help: the small (i) next to one field, named by the field's guide id (the same id on every page that has it)."
+  ],
+  "pages": {
+    "admin/add-tutor": "",
+    "admin/dashboard": "",
+    "admin/invoices": "",
+    "admin/plans": "",
+    "admin/tutor-details": "",
+    "admin/tutor-payments": "",
+    "admin/tutors": "",
+    "tutor/add-student": "",
+    "tutor/add-tute": "",
+    "tutor/attendance-dashboard": "",
+    "tutor/attendance-settings": "",
+    "tutor/class-details": "",
+    "tutor/class-form-settings": "",
+    "tutor/classes": "",
+    "tutor/couriered-tute": "",
+    "tutor/create-class": "",
+    "tutor/edit-class": "",
+    "tutor/fee-settings": "",
+    "tutor/fees": "",
+    "tutor/mark-attendance": "",
+    "tutor/recording-types": "",
+    "tutor/recordings": "",
+    "tutor/requested-students": "",
+    "tutor/student-application": "",
+    "tutor/student-fees": "",
+    "tutor/student-form-settings": "",
+    "tutor/students": "",
+    "tutor/subscription": "",
+    "tutor/upload-student-bulk": ""
+  },
+  "help": {
+    "add-gurdian-guide-info": "",
+    "add-recurring-lecture-guide-info": "",
+    "due-date-info": "",
+    "duration-guide-info": "",
+    "expire-date-guide-info": "",
+    "secured-guide-info": "",
+    "select-date-guide-info": "",
+    "tute-payment-guide-info": "",
+    "tute-titles-guide-info": "",
+    "unsecured-guide-info": "",
+    "youtube-guide-info": ""
+  }
+}

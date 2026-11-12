@@ -171,6 +171,16 @@ Edit Class opens `edit-class` (the old edit pop-up is gone).
 Not done yet: the old `tutor/api/addTute.php` is no longer used by the page but is still on the server; the parent side
 does not show tute parcels yet; no automatic SMS/WhatsApp when a parcel is sent.
 
+## Sign out, info icons and welcome card (done 2026-11-12)
+
+* **Sign out works for every role.** `includes/enlixo/sign-out.php` is used by `tutor/`, `admin/`, `portal/` and `parent/`
+  `api/signOut.php`. Before: the parent was never signed out (`hasValidSession()` only knows tutors and admins), the admin
+  sign-out signed out the tutor instead, and pages without `js/functions.js` had no `signOut()` at all. Now each folder
+  signs out only its own role (admin and tutor in one browser stay separate), marks the device inactive, and goes to
+  that folder's sign-in page with a normal page load. `assets/js/script.js` gives every page a `signOut()`.
+* **Info icons**: one design and one video file (see docs/UI-STANDARD.md "Info icons and videos").
+* **Welcome card** after signing in on all four dashboards.
+
 ## Open questions for Rashmi
 1. Recording limit default: is **3 × video length** right, or do you want a fixed number of views like V3?
 2. Plan that unlocks custom roles: the pricing sheet doesn't mention staff roles. I put it in **GROW and PRO** (START only has the Owner role). OK?

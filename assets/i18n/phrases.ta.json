@@ -398,6 +398,14 @@
   "Pre-Recorded": "முன்பதிவு",
   "active in this class": "இந்த வகுப்பில் செயலில்",
   "Nothing is waiting for you in this class.": "இந்த வகுப்பில் உங்களுக்காக எதுவும் காத்திருக்கவில்லை.",
+  "Quick guide": "விரைவு வழிகாட்டி",
+  "Help": "உதவி",
+  "Watch the video guide": "வீடியோ வழிகாட்டியைப் பார்க்கவும்",
+  "Close the video": "வீடியோவை மூடு",
+  "Welcome back! Your classes, students, fees and attendance are all here. Check what needs you today below.": "மீண்டும் வருக! உங்கள் வகுப்புகள், மாணவர்கள், கட்டணம், வருகை அனைத்தும் இங்கே. இன்று செய்ய வேண்டியவற்றைக் கீழே பாருங்கள்.",
+  "Welcome back! Your classes, time table, recordings, tutes and fees are all in one place.": "மீண்டும் வருக! உங்கள் வகுப்புகள், நேர அட்டவணை, பதிவுகள், குறிப்புகள், கட்டணம் அனைத்தும் ஒரே இடத்தில்.",
+  "Welcome back! Follow your children's classes, attendance and fees in one place.": "மீண்டும் வருக! உங்கள் பிள்ளைகளின் வகுப்புகள், வருகை, கட்டணம் அனைத்தையும் ஒரே இடத்தில் பாருங்கள்.",
+  "Welcome back! See how ENLIXO Tutor is doing today: tutors, trials, payments and what needs you.": "மீண்டும் வருக! இன்று ENLIXO Tutor நிலை: ஆசிரியர்கள், சோதனைகள், கட்டணங்கள், உங்களுக்கான பணிகள்.",
   "attended": "கலந்துகொண்டது",
   "present": "வருகை",
   "more": "அதிகம்",
@@ -571,6 +579,10 @@
   [
    "^(\\d+) students? (?:will get a parcel.*|can download it\\.)$",
    "$1 மாணவர்கள்"
+  ],
+  [
+   "^Welcome, (.+)!$",
+   "வரவேற்கிறோம், $1!"
   ],
   [
    "^Today, (.+)$",

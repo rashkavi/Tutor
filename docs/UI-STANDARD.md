@@ -51,6 +51,21 @@ name and one line, the price big with a small "LKR" and "/ month", the yearly pr
 action at the bottom in the plan's colour. The tutor's own plan has a "Your plan" ribbon, a soft tint and a coloured frame.
 Monthly / Yearly is one switch (`.ex-plan-cycle`) with the yearly saving on it.
 
+## Info icons and videos
+
+One (i) design everywhere: a small blue (i), and a card with a dark-blue header (title + "Quick guide" or "Help"),
+a short text, a checklist and, when it has one, a video with a red play button that plays over the page.
+* Page guide: the (i) next to the page title, from `enlixo_form_header($title, $crumbs, ['intro' => ..., 'points' => [...]])`.
+  It works on every page by itself (`assets/js/enlixo/quick-guide-auto.js`, loaded by `init.js`).
+* Field or panel help: `infoTip(text, label)` in JS, `CreateInfo` on older pages. Only where a label is not clear on its own.
+* **Video links live in one file: `assets/guides/videos.json`.** `pages` is named folder/page (`tutor/classes`), `help` by
+  the field's guide id (`duration-guide-info`). Paste a YouTube link; an empty link = no video. No code change needed.
+
+## Welcome card
+
+Right after signing in, each dashboard shows "Welcome, Name!" once: a white card with a 5px blue left edge, one line
+of text and a close button (`DashboardKit.welcome()` in JS, `enlixo_dash_welcome()` in PHP).
+
 ## Language
 
 Write plain English in the page; `assets/js/i18n-auto.js` translates it by its exact wording. Add every new label to

@@ -119,7 +119,7 @@ async function load() {
   fill(root, DashboardKit.skeleton());
   try {
     const { data } = await api.get('/admin/dashboard');
-    fill(root, greeting(data), previewNote(), stats(data), ...charts(data), lists(data), recent(data));
+    fill(root, root.dataset.welcome === '1' ? DashboardKit.welcome(root.dataset.fullName, 'Welcome back! See how ENLIXO Tutor is doing today: tutors, trials, payments and what needs you.') : null, greeting(data), previewNote(), stats(data), ...charts(data), lists(data), recent(data));
     if (window.Chart) drawCharts(data); else window.addEventListener('load', () => drawCharts(data), { once: true });
   } catch (e) {
     fill(root, EmptyState.error(e.message, load));
