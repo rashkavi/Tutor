@@ -101,19 +101,38 @@ Status: ✅ done in this branch · 🟡 started · ⬜ to do
 
 ## Dashboards (done 2026-11-12)
 
-All four are drawn by PHP from `DashboardRepository` (prepared statements), with the same parts in the same order:
-header card (greeting + main buttons) → stat cards → today's classes / attendance bars / month calendar → tables.
+The tutor and admin dashboards are main's API pages (`app-tutor-dashboard.js`, `app-admin-dashboard.js`). The student and parent
+dashboards are drawn by PHP from `DashboardRepository`. All four now look the same:
+
+* **No "Dashboard › Overview" header card.** The top of the page is a greeting card ("Good morning, Nimal", today's date, one line
+  about today) that also holds the Action menu and the main button (Start Class, Pay Fees).
+* **Four stat cards to a row** on large screens, each with its own light colour (blue, green, orange, purple; `StatCard` `tone`).
+  The tutor's "Waiting for You" and "Classes This Week" cards were dropped from the row because they have their own panels below;
+  the admin's "Overdue" and "Slips to Check" are in "Waiting for You".
+* **Loading:** a skeleton in the shape of the page (`DashboardKit.skeleton()`), light grey with a shimmer. The student and parent pages
+  come from PHP, so they show at once with no skeleton.
 
 | Role | Stat cards | Extra |
 |---|---|---|
-| Tutor | Active classes, students, income this month (vs last month), fees to collect | "Needs your attention": slips to approve, overdue fees, class days of the last 7 days with no attendance. Recent payments. Quick notes (kept in the browser). |
-| Admin | Active tutors, students, active classes, package income this month | "Needs your attention": tutor requests, package payments to approve. New tutors per month, tutors per package, latest requests and package payments. |
 | Student | My classes, classes this week, attendance (6 weeks), fees to pay | Fees to pay with "Pay now", recent payments, my classes. |
 | Parent | Children (or classes for one child), classes this week, attendance, fees to pay | Child switcher (`?child=ID`, only the parent's own children), one card per child, fees to pay with "Pay now". |
 
 Rules used: paid = payment status 3 or 8; attended = attendance status 2 or 4 (watched the recording); for students a past class
 day with no mark counts as missed (same as the Attendance page). The calendar holds class days from 2 months back to 3 months ahead.
-No Chart.js or other CDN script is needed on these pages. If the data can't be read, the page shows "We couldn't load your dashboard" and the menu still works.
+
+## Classes as premium cards (done 2026-11-12)
+
+Tutor → Classes opens in the **Cards** view (rows and table are still there). Student and parent Classes use the same card
+(`includes/enlixo/class-card.php`): cover or a drawn cover in the exam colour, "2027 • A/L" pill (pink A/L, orange O/L, purple
+Scholarship), subject, name, medium and students, blue "View Class", round edit and ⋯ buttons.
+
+## Language (done 2026-11-12)
+
+Sinhala and Tamil were hidden in the tutor and student language menus, and only elements with a `data-i18n` key changed, once,
+on page load. Now `assets/js/i18n-auto.js` (loaded by `init.js` on every page) translates every piece of text on the page,
+including text drawn later by JavaScript, from `assets/i18n/phrases.si.json` / `phrases.ta.json` plus the old key files.
+Add wording in `bin/i18n-phrases.py` and run `python3 bin/i18n-phrases.py`. Names, class names and other data typed by people stay
+as they are. Chart labels inside the charts are not translated yet.
 
 Not done yet: notes are saved per browser, not in the database; the student and parent "Today's classes" rows don't show a Zoom join button.
 

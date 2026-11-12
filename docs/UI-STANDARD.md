@@ -24,10 +24,25 @@ Don't add `border: 1px` to a new component; use a background change for hover an
 
 ## Dashboards
 
-Built from `includes/enlixo/dashboard.php`, the same for every role: `enlixo_dash_head()` (greeting + buttons), `enlixo_dash_stats()`,
-`enlixo_dash_sessions()` (today + coming up), `enlixo_dash_attendance()` / `enlixo_dash_bars()` (bars, blue = present, red = absent, always with a legend
-and a hover card), `enlixo_dash_calendar()`, `enlixo_dash_payments()`, `enlixo_dash_attention()`. Every card has an empty state that says what to do next.
+Same parts, same order, for every role:
+1. **Greeting card** at the top (no separate header card): greeting, date, one line about today, the Action menu and the one main button.
+   JS: `DashboardKit.greeting()`. PHP: `enlixo_dash_head()`.
+2. **Stat cards**, four to a row on large screens (`col-12 col-md-6 col-xl-3`), one light colour each: `StatCard` with `tone`
+   (`blue`, `green`, `orange`, `red`, `purple`, `teal`); PHP `enlixo_dash_stats()` picks blue, green, orange, purple in order.
+3. Panels (charts, today's classes, calendar), then lists and tables. Every card has an empty state that says what to do next.
+
 Status pills: green = done, orange = waiting, red = overdue or rejected, always with the word.
+
+## Class cards
+
+`.ex-pcard`: 16:9 cover (or a drawn cover in the exam colour), the "2027 • A/L" pill top right, subject in small capitals, the class
+name (two lines at most), medium and students, then a line and the blue pill "View Class" with round edit / ⋯ buttons.
+JS: `gridView()` in `app-tutor-classes.js`. PHP: `enlixo_class_card()`.
+
+## Language
+
+Write plain English in the page; `assets/js/i18n-auto.js` translates it by its exact wording. Add every new label to
+`bin/i18n-phrases.py` with its Sinhala and Tamil, and run it. Put `data-no-i18n` on anything that must not change (names typed by people).
 
 ## Text
 
@@ -169,7 +184,7 @@ Previous (`previous-button`) on the left, numbered `page-item`s in the middle, N
 
 ## Loading, empty and error states
 
-* Loading: Bootstrap `placeholder-glow` blocks in the shape of the page.
+* Loading: grey blocks in the shape of the page (`.ex-skeleton`, or Bootstrap `placeholder-glow`, which now looks the same: light grey with a shimmer, never dark blocks).
 * Empty: `EmptyState.empty({ title, text, action })` = V3 `.empty-state`: the `inbox` icon in a soft circle, a bold
   title and one grey line. In a table it is a row inside `tbody`. With a search or filter on: "No matching results"
   + "Try changing the search or filters." and a Clear button.

@@ -15,10 +15,11 @@ import { Popover, ActionMenu } from './Popover.js';
  *
  * - `onClick` makes the whole card a button (e.g. filter the list below); `selected` marks the active one.
  * - `menu` items are ActionMenu items. No menu, no ⋯ (never an empty menu).
+ * - `tone`: 'blue' | 'green' | 'orange' | 'red' | 'purple' | 'teal' gives the card a light colour (dashboards use one per card).
  * - `bars`: one series, oldest first; the last bar (now) is dark blue, the rest light (V3 renderMiniCharts()).
  */
 export class StatCard {
-  static card({ icon: ico = 'info', label, value, caption = '', trend = null, bars = null, menu = null, onClick = null, selected = false }) {
+  static card({ icon: ico = 'info', label, value, caption = '', trend = null, bars = null, menu = null, onClick = null, selected = false, tone = '' }) {
     const menuBtn = menu?.length
       ? new Popover({
         trigger: h('button', { type: 'button', class: 'stats-mini-menu', 'aria-label': `${label}: more` }, icon('dots', { size: 18 })),
@@ -37,7 +38,7 @@ export class StatCard {
     const change = trend ? h('span', { class: `stats-mini-change ${{ up: 'positive', down: 'negative' }[trend.dir] ?? 'neutral'}` }, trend.text) : null;
 
     return h('div', {
-      class: `stats-mini-card h-100${onClick ? ' ex-clickable' : ''}${selected ? ' ex-selected' : ''}`,
+      class: `stats-mini-card h-100${tone ? ` stats-tone-${tone}` : ''}${onClick ? ' ex-clickable' : ''}${selected ? ' ex-selected' : ''}`,
       role: onClick ? 'button' : null, tabindex: onClick ? '0' : null, 'aria-pressed': onClick ? String(!!selected) : null,
       onclick: onClick, onkeydown: onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(e); } } : null,
     },

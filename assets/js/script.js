@@ -201,6 +201,7 @@ const initializeLanguage = () => {
 
             // Save language
             localStorage.setItem("lang", lang);
+            window.EnlixoI18n?.apply(lang); // the rest of the page (assets/js/i18n-auto.js)
 
             // Update dropdown checkmarks
             if (langItems.length == 0) return;
@@ -285,6 +286,7 @@ const initializeLanguage2 = () => {
 
             // Save selected language
             localStorage.setItem("lang", lang);
+            window.EnlixoI18n?.apply(lang); // the rest of the page (assets/js/i18n-auto.js)
 
             // Update button label
             if (dropdownButton) dropdownButton.textContent = lang == "en" ? "English" : lang == "si" ? "සිංහල" : "தமிழ்";

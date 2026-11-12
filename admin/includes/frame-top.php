@@ -3,6 +3,7 @@
  * Shared frame of the new admin pages (like V3's finance-frame-top.php). Set $ap, then include at TOP LEVEL:
  *   $ap = ['title' => 'Tutors', 'menu' => 'Tutors', 'crumbs' => [['Tutors', null]], 'guide' => [...], 'actions' => 'tutors-actions', 'root' => 'tutors-page'];
  *   include 'includes/frame-top.php';   ...page body (optional)...   include 'includes/frame-bottom.php';
+ * 'header' => false leaves out the header card (the dashboard draws a greeting card instead).
  * The page script ($ap['js'], an ES module in assets/js/enlixo/pages/) draws everything inside #$ap['root'].
  */
 require_once __DIR__ . '/../../includes/UserClass.php';
@@ -55,5 +56,7 @@ $apE = static fn ($s): string => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-
                     <div class="container p-4 m-0 d-none" id="skeleton-list"></div>
                     <div class="col-12 d-flex flex-column p-0 m-0 g-0 contentBodyArea vh-100" id="real-list">
                         <div class="row p-4 m-0 g-0">
-                            <?php enlixo_form_header($ap['title'], $ap['crumbs'], $ap['guide'] ?? [], $ap['actions'] ?? 'page-actions'); ?>
+                            <?php if ($ap['header'] ?? true) { // the dashboard has a greeting card instead
+                                enlixo_form_header($ap['title'], $ap['crumbs'], $ap['guide'] ?? [], $ap['actions'] ?? 'page-actions');
+                            } ?>
                             <div class="col-12 p-0" id="<?= $apE($ap['root'] ?? 'admin-page') ?>" <?= $ap['attrs'] ?? '' ?>></div>

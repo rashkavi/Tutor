@@ -1,7 +1,7 @@
 // Admin → Dashboard (admin/dashboard.php). V3 dashboard order: header card → stat cards → chart panels → lists.
 // Data: GET /admin/dashboard (one request).
 import { StatCard } from '../components/StatCard.js';
-import { ActionMenu } from '../components/Popover.js';
+import { DashboardKit } from '../components/DashboardKit.js';
 import { QuickGuide } from '../components/QuickGuide.js';
 import { api, h, fill, icon, lkr, short, day, inDays, plural, panel, chip, cell, person, meter, simpleTable, previewNote, paymentDialog, EmptyState } from './admin-common.js';
 
@@ -12,12 +12,12 @@ const T = () => ({ tick: dark() ? '#A9B4C6' : '#6E7485', grid: dark() ? 'rgba(16
 const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 
 QuickGuide.attachAll();
-document.getElementById('dashboard-actions').append(ActionMenu.button('Action', [
+const ACTIONS = [
   { label: 'Add Tutor', icon: 'user-add', href: 'add-tutor' },
   { label: 'Check Payment Slips', icon: 'receipt', href: 'tutor-payments?status=waiting' },
   { label: 'Invoices', icon: 'invoice', href: 'invoices' },
   { label: 'Plans & Prices', icon: 'plans', href: 'plans' },
-]));
+];
 
 const chartBox = (id, round = false) => h('div', { class: `ad-chart-box ${round ? 'ad-chart-round' : 'flex-grow-1'}` }, h('canvas', { id }));
 const draw = (id, cfg) => { const el = document.getElementById(id); if (el && window.Chart) new window.Chart(el, cfg); };
@@ -35,16 +35,25 @@ const legend = (rows, colors) => {
     h('span', { class: 'text-12 sub-text', style: { width: '40px', textAlign: 'right' } }, `${pct(r.value, total)}%`))));
 };
 
+// Header: greeting with what needs the admin today, and the Action menu (no separate header card).
+function greeting(d) {
+  const s = d.stats;
+  const todo = (d.todo ?? []).reduce((n, t) => n + (Number(t.count) || 0), 0);
+  const line = todo
+    ? [h('b', {}, plural(todo, 'thing')), ' waiting for you', s.slips.value ? [', including ', h('b', {}, plural(s.slips.value, 'payment slip')), ' to check.'] : '.']
+    : ['Nothing is waiting for you. ', h('b', {}, plural(s.paying.value, 'paying tutor')), ' and ', h('b', {}, plural(s.trials.value, 'tutor')), ' on a free trial.'];
+  return DashboardKit.greeting({ name: root.dataset.name, line, actions: ACTIONS, iconName: 'dashboard' });
+}
+
+// Four cards, one colour each. Overdue invoices and slips to check are in "Waiting for You" below.
 function stats(d) {
   const s = d.stats;
   return StatCard.row([
-    { icon: 'tutors', label: 'Paying Tutors', value: s.paying.value, trend: { text: `+${s.paying.new}`, dir: 'up' }, caption: 'joined or converted this month', bars: s.paying.bars, menu: [{ label: 'Open tutors', icon: 'view', href: 'tutors' }] },
-    { icon: 'hourglass', label: 'On Free Trial', value: s.trials.value, trend: s.trials.ending ? { text: `${s.trials.ending} ending`, dir: 'down' } : null, caption: 'ending in the next 3 days', bars: s.trials.bars, menu: [{ label: 'Show trials', icon: 'filter', href: 'tutors?status=trial' }] },
-    { icon: 'growth', label: 'Monthly Revenue (MRR)', value: lkr(s.mrr.value), trend: StatCard.trend(s.mrr.value, s.mrr.before), caption: 'against last month', bars: s.mrr.bars },
-    { icon: 'wallet', label: 'Collected This Month', value: lkr(s.collected.value), caption: `${pct(s.collected.value, s.collected.expected)}% of ${lkr(s.collected.expected)} due`, bars: s.collected.bars, menu: [{ label: 'Open payments', icon: 'view', href: 'tutor-payments' }] },
-    { icon: 'warning', label: 'Overdue', value: lkr(s.overdue.value), trend: s.overdue.tutors ? { text: plural(s.overdue.tutors, 'tutor'), dir: 'down' } : null, caption: 'past the due date, not paid', menu: [{ label: 'Show overdue invoices', icon: 'filter', href: 'invoices?status=overdue' }] },
-    { icon: 'receipt', label: 'Slips to Check', value: s.slips.value, caption: s.slips.value ? `${lkr(s.slips.amount)} waiting for approval` : 'all checked', menu: [{ label: 'Check slips', icon: 'view', href: 'tutor-payments?status=waiting' }] },
-  ], { cols: 'col-12 col-md-6 col-xl-4' });
+    { tone: 'blue', icon: 'tutors', label: 'Paying Tutors', value: s.paying.value, trend: { text: `+${s.paying.new}`, dir: 'up' }, caption: 'joined or converted this month', bars: s.paying.bars, menu: [{ label: 'Open tutors', icon: 'view', href: 'tutors' }] },
+    { tone: 'purple', icon: 'hourglass', label: 'On Free Trial', value: s.trials.value, trend: s.trials.ending ? { text: `${s.trials.ending} ending`, dir: 'down' } : null, caption: 'ending in the next 3 days', bars: s.trials.bars, menu: [{ label: 'Show trials', icon: 'filter', href: 'tutors?status=trial' }] },
+    { tone: 'green', icon: 'growth', label: 'Monthly Revenue (MRR)', value: lkr(s.mrr.value), trend: StatCard.trend(s.mrr.value, s.mrr.before), caption: 'against last month', bars: s.mrr.bars },
+    { tone: 'orange', icon: 'wallet', label: 'Collected This Month', value: lkr(s.collected.value), caption: `${pct(s.collected.value, s.collected.expected)}% of ${lkr(s.collected.expected)} due`, bars: s.collected.bars, menu: [{ label: 'Open payments', icon: 'view', href: 'tutor-payments' }] },
+  ], { cols: 'col-12 col-md-6 col-xl-3' });
 }
 
 function charts(d) {
@@ -107,10 +116,10 @@ function recent(d) {
 }
 
 async function load() {
-  fill(root, h('div', { class: 'placeholder-glow' }, h('span', { class: 'placeholder col-12', style: { height: '140px' } })));
+  fill(root, DashboardKit.skeleton());
   try {
     const { data } = await api.get('/admin/dashboard');
-    fill(root, previewNote(), stats(data), ...charts(data), lists(data), recent(data));
+    fill(root, greeting(data), previewNote(), stats(data), ...charts(data), lists(data), recent(data));
     if (window.Chart) drawCharts(data); else window.addEventListener('load', () => drawCharts(data), { once: true });
   } catch (e) {
     fill(root, EmptyState.error(e.message, load));

@@ -65,16 +65,7 @@ if (!SessionUser::hasValidSession()) {
 
                         <div class="col-12 d-flex flex-column p-0 m-0 g-0 contentBodyArea vh-100" id="real-list">
                             <div class="row p-4 m-0 g-0">
-                                <?php enlixo_form_header('Dashboard', [['Dashboard', null], ['Overview', null]], [
-                                    'intro' => 'Your classes, students and fees at a glance. Everything that needs you today is at the top.',
-                                    'points' => [
-                                        'Today: your classes for today with Start Class / Mark Attendance.',
-                                        'Cards: students, fees collected, unpaid fees, attendance, things waiting for you, classes this week.',
-                                        'Charts: fee collection, this month\'s fees, attendance, students per class, students joining and leaving.',
-                                        'Students to follow up: absent many times or not paid, with a WhatsApp button.',
-                                        'Class performance: every class side by side. Search, filter and export it.',
-                                    ],
-                                ], 'dashboard-actions'); ?>
+                                <?php // no header card: the greeting card at the top (DashboardKit.greeting) is the header and holds the Action menu ?>
 
                                 <div class="col-12 p-0" id="tutor-dashboard"
                                     data-name="<?= htmlspecialchars((string) ($sessionUserObject['user_fname'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"

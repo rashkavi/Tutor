@@ -1,4 +1,13 @@
 (function () {
+    // Whole-page translation (assets/js/i18n-auto.js): loaded next to this file on every page, so text drawn later
+    // by JavaScript follows the chosen language too, not only elements with data-i18n.
+    const me = document.currentScript && document.currentScript.src;
+    if (me && !window.EnlixoI18n) {
+        const s = document.createElement('script');
+        s.src = me.replace(/init\.js(\?.*)?$/, 'i18n-auto.js$1');
+        document.head.appendChild(s);
+    }
+
     const savedTheme = localStorage.getItem('theme') || 'light';
 
     document.documentElement.setAttribute('data-bs-theme', savedTheme);

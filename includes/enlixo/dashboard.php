@@ -62,52 +62,57 @@ function enlixo_dash_error(?Throwable $e = null): void
 }
 
 /**
- * Header card: greeting, a grey line under it, buttons on the right.
+ * Greeting card at the top (no separate "Dashboard" header card): greeting, today's date, an optional line,
+ * buttons on the right. Same markup as DashboardKit.greeting() on the tutor and admin dashboards.
  * @param list<array{0:string,1:string,2?:string,3?:bool}> $actions [label, link, icon, filled]
  */
-function enlixo_dash_head(string $title, string $subtitle, array $actions = []): void
+function enlixo_dash_head(string $title, string $subtitle, array $actions = [], string $line = '', string $icon = 'calendar'): void
 {
     ?>
-    <div class="col-12 px-4 py-3 component-theme mb-4">
-        <div class="d-flex flex-wrap align-items-center gap-3">
-            <div class="flex-grow-1 min-w-0">
-                <h1 class="main-topic lh-lg m-0"><?= enlixo_dash_e($title) ?></h1>
-                <p class="text-14 sub-text m-0"><?= enlixo_dash_e($subtitle) ?></p>
-            </div>
-            <?php if ($actions) { ?>
-                <div class="d-flex flex-wrap gap-2">
-                    <?php foreach ($actions as $a) { ?>
-                        <a class="<?= !empty($a[3]) ? 'custom-btn' : 'custom-outline-btn' ?> ex-btn-md ex-hd-btn" href="<?= enlixo_dash_e($a[1]) ?>">
-                            <?= !empty($a[2]) ? enlixo_icon($a[2], 18) : '' ?><span><?= enlixo_dash_e($a[0]) ?></span>
-                        </a>
-                    <?php } ?>
-                </div>
-            <?php } ?>
+    <div class="col-12 ex-greet mb-4">
+        <span class="ex-greet-icon" aria-hidden="true"><?= enlixo_icon($icon, 24) ?></span>
+        <div class="ex-greet-text">
+            <h1 class="ex-greet-title"><?= enlixo_dash_e($title) ?></h1>
+            <div class="ex-greet-date"><?= enlixo_dash_e($subtitle) ?></div>
+            <?php if ($line !== '') { ?><div class="ex-greet-line"><?= $line /* built by the page with enlixo_dash_e() */ ?></div><?php } ?>
         </div>
+        <?php if ($actions) { ?>
+            <div class="ex-greet-actions">
+                <?php foreach ($actions as $a) { ?>
+                    <a class="<?= !empty($a[3]) ? 'custom-btn' : 'custom-outline-btn' ?> ex-btn-md ex-hd-btn" href="<?= enlixo_dash_e($a[1]) ?>">
+                        <?= !empty($a[2]) ? enlixo_icon($a[2], 18) : '' ?><span><?= enlixo_dash_e($a[0]) ?></span>
+                    </a>
+                <?php } ?>
+            </div>
+        <?php } ?>
     </div>
     <?php
 }
 
 /**
- * Row of stat cards.
- * @param list<array{icon:string, value:string, title:string, note?:string, href?:string, tone?:string}> $cards tone: '' | 'warn' | 'good'
+ * Row of stat cards, four to a row on large screens, each with its own light colour
+ * (same .stats-mini-card markup as StatCard.js on the tutor and admin dashboards).
+ * @param list<array{icon:string, value:string, title:string, note?:string, href?:string, color?:string, alert?:bool}> $cards
+ *        color: blue | green | orange | red | purple | teal (default: blue, green, orange, purple in order)
+ *        alert: shows the note in red (something is overdue)
  */
 function enlixo_dash_stats(array $cards): void
 {
-    $col = count($cards) === 3 ? 'col-12 col-md-4' : 'col-12 col-md-6 col-xl-3';
+    $colors = ['blue', 'green', 'orange', 'purple'];
     ?>
     <div class="col-12 mb-4">
-        <div class="row g-4">
-            <?php foreach ($cards as $c) {
-                $tag = !empty($c['href']) ? 'a' : 'div'; ?>
-                <div class="<?= $col ?>">
-                    <<?= $tag ?> class="component-theme px-4 py-3 d-flex align-items-center gap-3 h-100 ex-hd-stat"<?= $tag === 'a' ? ' href="' . enlixo_dash_e($c['href']) . '"' : '' ?>>
-                        <span class="ex-stat-ico<?= !empty($c['tone']) ? ' ex-hd-tone-' . enlixo_dash_e($c['tone']) : '' ?>"><?= enlixo_icon($c['icon'], 24) ?></span>
-                        <span class="min-w-0 d-block">
-                            <span class="ex-stat-num d-block text-truncate"><?= enlixo_dash_stat_value($c['value']) ?></span>
-                            <span class="text-14 main-text d-block"><?= enlixo_dash_e($c['title']) ?></span>
-                            <?php if (!empty($c['note'])) { ?><span class="text-12 sub-text d-block"><?= enlixo_dash_e($c['note']) ?></span><?php } ?>
+        <div class="row g-3">
+            <?php foreach (array_values($cards) as $i => $c) {
+                $tag = !empty($c['href']) ? 'a' : 'div';
+                $color = $c['color'] ?? $colors[$i % 4]; ?>
+                <div class="col-12 col-md-6 col-xl-3">
+                    <<?= $tag ?> class="stats-mini-card stats-tone-<?= enlixo_dash_e($color) ?> h-100 d-block text-decoration-none ex-hd-stat"<?= $tag === 'a' ? ' href="' . enlixo_dash_e($c['href']) . '"' : '' ?>>
+                        <span class="stats-mini-top">
+                            <span class="stats-mini-left"><span class="stats-mini-icon"><?= enlixo_icon($c['icon'], 18) ?></span><span class="stats-mini-title"><?= enlixo_dash_e($c['title']) ?></span></span>
+                            <?php if ($tag === 'a') { ?><span class="ex-hd-go" aria-hidden="true"><?= enlixo_icon('chevron-right', 16) ?></span><?php } ?>
                         </span>
+                        <span class="stats-mini-value d-block<?= strlen($c['value']) > 9 ? ' is-long' : '' ?>"><?= enlixo_dash_stat_value($c['value']) ?></span>
+                        <?php if (!empty($c['note'])) { ?><span class="stats-mini-period d-block<?= !empty($c['alert']) ? ' ex-hd-alert' : '' ?>"><?= enlixo_dash_e($c['note']) ?></span><?php } ?>
                     </<?= $tag ?>>
                 </div>
             <?php } ?>
@@ -437,24 +442,14 @@ function enlixo_dash_payments(array $rows, array $o): void
     <?php
 }
 
-/** Grey blocks shown until the page has loaded (toggleSkeleton() swaps #skeleton-list and #real-list). */
+/**
+ * These dashboards are drawn by PHP, so the content is ready with the page. The old page swapped a grey skeleton
+ * for the content only after every picture and font had loaded (toggleSkeleton() on window load), which showed
+ * a wrong-shaped grey page first. The empty #skeleton-list keeps toggleSkeleton() happy.
+ */
 function enlixo_dash_skeleton(): void
 {
-    ?>
-    <div class="col-12 p-4 w-100 m-0 placeholder-glow" id="skeleton-list" aria-hidden="true">
-        <div class="component-theme px-4 py-3 mb-4"><span class="placeholder col-4 d-block mb-2"></span><span class="placeholder placeholder-xs col-3"></span></div>
-        <div class="row g-4 mb-4">
-            <?php for ($i = 0; $i < 4; $i++) { ?>
-                <div class="col-12 col-md-6 col-xl-3"><div class="component-theme px-4 py-4"><span class="placeholder col-5 d-block mb-2"></span><span class="placeholder placeholder-xs col-8"></span></div></div>
-            <?php } ?>
-        </div>
-        <div class="row g-4">
-            <?php foreach ([5, 4, 3] as $w) { ?>
-                <div class="col-12 col-xl-<?= $w ?>"><div class="component-theme p-4 ex-hd-skel"><span class="placeholder col-6 d-block mb-3"></span><span class="placeholder col-12 d-block mb-2"></span><span class="placeholder col-10 d-block mb-2"></span><span class="placeholder col-11 d-block"></span></div></div>
-            <?php } ?>
-        </div>
-    </div>
-    <?php
+    echo '<div class="d-none" id="skeleton-list"></div>';
 }
 
 /** Stylesheets and scripts every dashboard needs, in the same order as the other new pages. */

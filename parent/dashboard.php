@@ -87,7 +87,7 @@ if (!SessionUser::ifUserIsParent()) {
 
                     <?php enlixo_dash_skeleton(); ?>
 
-                    <div class="col-12 d-flex flex-column contentBodyArea vh-100 d-none" id="real-list">
+                    <div class="col-12 d-flex flex-column contentBodyArea vh-100" id="real-list">
                         <div class="row p-4 m-0 g-0">
                             <?php
                             if (!$dash) {
@@ -120,10 +120,10 @@ if (!SessionUser::ifUserIsParent()) {
                                     $childId || !$several
                                         ? ['icon' => 'classes', 'value' => (string) $t['classes'], 'title' => 'Classes', 'note' => 'Classes ' . $who . ' has joined', 'href' => 'classes']
                                         : ['icon' => 'students', 'value' => (string) count($children), 'title' => 'Children', 'note' => $t['classes'] . ($t['classes'] === 1 ? ' class' : ' classes') . ' in total', 'href' => 'my-children'],
-                                    ['icon' => 'timetable', 'value' => (string) $t['week_sessions'], 'title' => 'Classes this week', 'note' => 'Monday to Sunday', 'href' => 'time-table'],
+                                    ['icon' => 'timetable', 'value' => (string) $t['week_sessions'], 'title' => 'Classes this week', 'color' => 'teal', 'note' => 'Monday to Sunday', 'href' => 'time-table'],
                                     ['icon' => 'attendance', 'value' => $dash['rate'] === null ? '-' : $dash['rate'] . '%', 'title' => 'Attendance', 'href' => 'attendance',
-                                        'tone' => $dash['rate'] !== null && $dash['rate'] >= 80 ? 'good' : '', 'note' => $dash['rate'] === null ? 'No class days yet' : 'Last 6 weeks, recordings count'],
-                                    ['icon' => 'payments', 'value' => enlixo_dash_money($t['due']), 'title' => 'Fees to pay', 'tone' => $t['due_count'] ? 'warn' : 'good', 'href' => 'payments',
+                                        'color' => 'purple', 'note' => $dash['rate'] === null ? 'No class days yet' : 'Last 6 weeks, recordings count'],
+                                    ['icon' => 'payments', 'value' => enlixo_dash_money($t['due']), 'title' => 'Fees to pay', 'color' => $t['due_count'] ? 'orange' : 'green', 'alert' => $t['overdue_count'] > 0, 'href' => 'payments',
                                         'note' => $t['due_count'] === 0 ? 'Everything is paid' : $t['due_count'] . ($t['due_count'] === 1 ? ' fee' : ' fees') . ' to pay' . ($t['overdue_count'] ? ', ' . $t['overdue_count'] . ' overdue' : '')],
                                 ]);
 
