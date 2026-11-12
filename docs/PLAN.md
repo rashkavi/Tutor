@@ -168,7 +168,7 @@ students, fees this month, attendance (4 weeks) and the next class; attendance p
 attention" (slips to approve, students who have not paid, parcels to send); links to everything in the class with counts.
 Edit Class opens `edit-class` (the old edit pop-up is gone).
 
-Not done yet: the old `tutor/api/addTute.php` is no longer used by the page but is still on the server; the parent side
+The old `tutor/api/addTute.php` and its `addTute()` JS function are removed. Not done yet: the parent side
 does not show tute parcels yet; no automatic SMS/WhatsApp when a parcel is sent.
 
 ## Open questions for Rashmi
