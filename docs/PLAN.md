@@ -82,7 +82,7 @@ Status: ✅ done in this branch · 🟡 started · ⬜ to do
 |---|------|--------|
 | 7.1 | CSRF, rate limiting on login and heartbeat | ⬜ |
 | 7.2 | Webhook log table + retry worker | ⬜ |
-| 7.3 | Parent dashboard child switcher | ⬜ |
+| 7.3 | Parent dashboard child switcher | ✅ (`parent/dashboard?child=ID`) |
 
 ## Moving the real pages (started 2026-11-09)
 | Page | Status |
@@ -91,11 +91,50 @@ Status: ✅ done in this branch · 🟡 started · ⬜ to do
 | `portal/watch-recording.php`, `portal/watch-pre-recording.php`: watch-time meter + lock (PRO only), enrolment check on pre-recordings | ✅ |
 | ENLIXO V3 layout: grouped side menu (Academic / Finance / Communication / Settings), header card with Action menu, count + search + filter dropdown + Export Report, Results Per Page, "Update ticked" bulk action, ticked table with sort icons. Applied to Students | ✅ |
 | Create a Class (`tutor/create-class.php`): one page with weekly times + fee, (i) info on every field, "Customise form" (hide fields, add own fields). See docs/TUTOR-PRODUCT-PLAN.md step 1 | ✅ |
+| Dashboards for all four roles (`tutor/`, `admin/`, `portal/`, `parent/dashboard.php`): real numbers only (the sample chart, calendar and parent figures are gone), one shared kit (`includes/enlixo/dashboard.php`, `Enlixo\Dashboard\DashboardRepository`, `app-dashboard.js`). See "Dashboards" below | ✅ |
+| Admin side menu lists only pages that exist in `admin/` | ✅ |
 | `tutor/payments`, `tutor/attendance`, `tutor/class-students`, `tutor/time-table` | ⬜ next |
 | Student portal: timetable + recordings grouped by class | ⬜ |
 | Tutor settings: custom roles page | ⬜ |
 | Zoom weekly schedule UI | ⬜ |
 | Lock badges in the side menu | ⬜ |
+
+## Dashboards (done 2026-11-12)
+
+The tutor and admin dashboards are main's API pages (`app-tutor-dashboard.js`, `app-admin-dashboard.js`). The student and parent
+dashboards are drawn by PHP from `DashboardRepository`. All four now look the same:
+
+* **No "Dashboard › Overview" header card.** The top of the page is a greeting card ("Good morning, Nimal", today's date, one line
+  about today) that also holds the Action menu and the main button (Start Class, Pay Fees).
+* **Four stat cards to a row** on large screens, each with its own light colour (blue, green, orange, purple; `StatCard` `tone`).
+  The tutor's "Waiting for You" and "Classes This Week" cards were dropped from the row because they have their own panels below;
+  the admin's "Overdue" and "Slips to Check" are in "Waiting for You".
+* **Loading:** a skeleton in the shape of the page (`DashboardKit.skeleton()`), light grey with a shimmer. The student and parent pages
+  come from PHP, so they show at once with no skeleton.
+
+| Role | Stat cards | Extra |
+|---|---|---|
+| Student | My classes, classes this week, attendance (6 weeks), fees to pay | Fees to pay with "Pay now", recent payments, my classes. |
+| Parent | Children (or classes for one child), classes this week, attendance, fees to pay | Child switcher (`?child=ID`, only the parent's own children), one card per child, fees to pay with "Pay now". |
+
+Rules used: paid = payment status 3 or 8; attended = attendance status 2 or 4 (watched the recording); for students a past class
+day with no mark counts as missed (same as the Attendance page). The calendar holds class days from 2 months back to 3 months ahead.
+
+## Classes as premium cards (done 2026-11-12)
+
+Tutor → Classes opens in the **Cards** view (rows and table are still there). Student and parent Classes use the same card
+(`includes/enlixo/class-card.php`): cover or a drawn cover in the exam colour, "2027 • A/L" pill (pink A/L, orange O/L, purple
+Scholarship), subject, name, medium and students, blue "View Class", round edit and ⋯ buttons.
+
+## Language (done 2026-11-12)
+
+Sinhala and Tamil were hidden in the tutor and student language menus, and only elements with a `data-i18n` key changed, once,
+on page load. Now `assets/js/i18n-auto.js` (loaded by `init.js` on every page) translates every piece of text on the page,
+including text drawn later by JavaScript, from `assets/i18n/phrases.si.json` / `phrases.ta.json` plus the old key files.
+Add wording in `bin/i18n-phrases.py` and run `python3 bin/i18n-phrases.py`. Names, class names and other data typed by people stay
+as they are. Chart labels inside the charts are not translated yet.
+
+Not done yet: notes are saved per browser, not in the database; the student and parent "Today's classes" rows don't show a Zoom join button.
 
 ## Open questions for Rashmi
 1. Recording limit default: is **3 × video length** right, or do you want a fixed number of views like V3?

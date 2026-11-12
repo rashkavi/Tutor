@@ -17,11 +17,11 @@ const COVERS = new URL('../../../imgs/classes-covers/', import.meta.url).href;
 const DAYS = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const TYPE = { theory: 'Theory', revision: 'Revision', paper: 'Paper class', other: 'Other' };
 const MODE = { physical: 'Physical', online: 'Online', hybrid: 'Physical & online' };
-const VIEWS = [['rows', 'Rows', 'view-rows'], ['table', 'Table', 'view-details'], ['grid', 'Grid', 'view-cards']];
+const VIEWS = [['grid', 'Cards', 'view-cards'], ['rows', 'Rows', 'view-rows'], ['table', 'Table', 'view-details']];
 
 const state = {
   classes: [],
-  view: VIEWS.some(([k]) => k === localStorage.getItem('enlixo.classes.view')) ? localStorage.getItem('enlixo.classes.view') : 'rows',
+  view: VIEWS.some(([k]) => k === localStorage.getItem('enlixo.classes.view2')) ? localStorage.getItem('enlixo.classes.view2') : 'grid',
   q: '',
   filters: { exam: '', year: '', subject: '', medium: '', status: '' },
 };
@@ -36,10 +36,15 @@ skeleton();
 load();
 
 function skeleton() {
-  fill(root, h('div', { class: 'placeholder-glow' },
-    h('div', { class: 'row g-3 mb-4' }, [0, 1, 2, 3].map(() => h('div', { class: 'col-12 col-md-6 col-xl-3' }, h('span', { class: 'placeholder col-12', style: { height: '92px' } })))),
-    h('span', { class: 'placeholder col-12 mb-4', style: { height: '72px' } }),
-    [0, 1, 2, 3].map(() => h('span', { class: 'placeholder col-12 mb-2', style: { height: '76px' } }))));
+  // grey blocks in the shape of the page: 4 stat cards, the toolbar, then cards
+  const bone = (w, hgt, extra = {}) => h('span', { class: 'ex-skeleton d-block', style: { width: w, height: `${hgt}px`, ...extra } });
+  fill(root, h('div', { 'aria-busy': 'true', 'aria-label': 'Loading your classes' },
+    h('div', { class: 'row g-3 mb-4' }, [0, 1, 2, 3].map(() => h('div', { class: 'col-12 col-md-6 col-xl-3' },
+      h('div', { class: 'ex-skel-card ex-skel-stat' }, bone('45%', 12, { marginBottom: '18px' }), bone('35%', 26, { marginBottom: '10px' }), bone('65%', 10))))),
+    h('div', { class: 'ex-skel-card mb-4' }, bone('100%', 40)),
+    h('div', { class: 'row g-4' }, [0, 1, 2, 3].map(() => h('div', { class: 'col-12 col-md-6 col-xl-4 col-xxl-3' },
+      h('div', { class: 'ex-pcard' }, bone('100%', 0, { aspectRatio: '16 / 9', height: 'auto', borderRadius: 0 }),
+        h('div', { class: 'ex-pcard-body' }, bone('30%', 10), bone('80%', 16), bone('60%', 12), bone('100%', 40, { marginTop: '12px', borderRadius: '20px' }))))))));
 }
 
 async function load() {
@@ -167,7 +172,7 @@ function viewBar() {
     h('div', { class: 'ms-auto d-flex align-items-center gap-2' },
       h('div', { class: 'ex-view-switch', role: 'group', 'aria-label': 'View' }, VIEWS.map(([key, label, ico]) => h('button', {
         type: 'button', class: `ex-view-btn ${state.view === key ? 'active' : ''}`, 'aria-pressed': String(state.view === key), title: label, 'aria-label': `${label} view`,
-        onclick: () => { state.view = key; localStorage.setItem('enlixo.classes.view', key); draw(); },
+        onclick: () => { state.view = key; localStorage.setItem('enlixo.classes.view2', key); draw(); },
       }, icon(ico, { size: 18 }))))));
 }
 
@@ -184,10 +189,10 @@ const subtitle = (c) => `${c.year} ${c.exam} · ${c.subject} · ${c.medium}`;
 const facts = (c) => [c.times.length ? c.times.map(timeText).join(', ') : 'No weekly times yet', `${c.students} ${c.students === 1 ? 'student' : 'students'}`, feeText(c)].join(' · ');
 const inactiveTag = (c) => (c.active ? null : h('span', { class: 'ex-tag-off' }, 'Inactive'));
 
-/** V3 "Actions" dropdown (orange) for one class. */
-function actions(c, size = 'md') {
+/** Everything you can do with one class (the orange "Actions" menu and the ⋯ on a card). */
+function menuItems(c) {
   const id = encodeURIComponent(c.id);
-  return ActionMenu.button('Actions', [
+  return [
     { label: 'Edit', icon: 'edit', href: `edit-class?class-id=${id}` },
     { label: 'Students', icon: 'students', href: `class-students?class-id=${id}` },
     { label: 'Time Table', icon: 'timetable', href: `class-time-table?class-id=${id}` },
@@ -199,7 +204,12 @@ function actions(c, size = 'md') {
     c.active
       ? { label: 'Deactivate', icon: 'deactivate', danger: true, onClick: () => setActive(c, false) }
       : { label: 'Activate', icon: 'activate', onClick: () => setActive(c, true) },
-  ], { className: `ex-btn-actions ex-btn-${size}` });
+  ];
+}
+
+/** V3 "Actions" dropdown (orange) for one class. */
+function actions(c, size = 'md') {
+  return ActionMenu.button('Actions', menuItems(c), { className: `ex-btn-actions ex-btn-${size}` });
 }
 const viewBtn = (c, size = 'md') => h('a', { href: detailsUrl(c), class: `custom-btn ex-btn-${size} ex-btn-view border-0` }, 'View');
 
@@ -256,16 +266,43 @@ function tableView(list) {
         h('td', {}, h('div', { class: 'd-flex justify-content-end gap-2' }, actions(c, 'sm'), viewBtn(c, 'sm')))))))));
 }
 
-/** Picture-first grid. */
+/** Colour of the "2027 • A/L" pill and of the cover drawn for a class without a picture. */
+const examTone = (c) => {
+  const e = `${c.exam}`.toLowerCase();
+  return e.includes('a/l') || e.includes('advanced') ? 'pink' : e.includes('o/l') || e.includes('ordinary') ? 'orange' : e.includes('scholar') ? 'purple' : 'blue';
+};
+
+/** Cover for a class without a picture: a soft gradient with the subject, so no card shows a grey "no image" box. */
+function pcardCover(c) {
+  const drawn = () => h('span', { class: `ex-pcard-art tone-${examTone(c)}`, 'aria-hidden': 'true' },
+    h('span', { class: 'ex-pcard-art-letter' }, (c.subject || c.name || '?').trim().charAt(0).toUpperCase()),
+    h('span', { class: 'ex-pcard-art-name' }, c.subject));
+  if (!c.cover) return drawn();
+  const img = h('img', { src: COVERS + encodeURIComponent(c.cover), alt: '', loading: 'lazy' });
+  img.addEventListener('error', () => img.replaceWith(drawn()), { once: true });
+  return img;
+}
+
+/** Premium picture-first cards (default view): pill with year and exam, subject, name, medium and students, View Class. */
 function gridView(list) {
-  return h('div', { class: 'ex-sort-list row g-3' }, list.map((c) => h('div', { class: 'col-12 col-md-6 col-xl-4 col-xxl-3', 'data-id': String(c.id) },
-    h('article', { class: `ex-grid-card h-100 ${c.active ? '' : 'ex-inactive'}` },
-      h('div', { class: 'ex-grid-cover' }, h('a', { href: detailsUrl(c), tabindex: '-1' }, cover(c)), grip(c)),
-      h('div', { class: 'ex-grid-body' },
-        h('a', { href: detailsUrl(c), class: 'ex-list-title' }, c.name, inactiveTag(c)),
-        h('div', { class: 'ex-list-sub' }, subtitle(c)),
-        h('div', { class: 'ex-list-sub' }, facts(c)),
-        h('div', { class: 'ex-grid-actions' }, actions(c), viewBtn(c)))))));
+  return h('div', { class: 'ex-sort-list row g-4' }, list.map((c) => h('div', { class: 'col-12 col-md-6 col-xl-4 col-xxl-3', 'data-id': String(c.id) },
+    h('article', { class: `ex-pcard h-100 ${c.active ? '' : 'ex-inactive'}` },
+      h('div', { class: 'ex-pcard-cover' },
+        h('a', { href: detailsUrl(c), tabindex: '-1', 'aria-hidden': 'true' }, pcardCover(c)),
+        h('span', { class: `ex-pcard-pill tone-${examTone(c)}` }, `${c.year} • ${c.exam}`),
+        grip(c)),
+      h('div', { class: 'ex-pcard-body' },
+        h('span', { class: 'ex-pcard-subject' }, c.subject, c.active ? null : h('span', { class: 'ex-pcard-off' }, 'Inactive')),
+        h('a', { href: detailsUrl(c), class: 'ex-pcard-title' }, c.name),
+        h('div', { class: 'ex-pcard-meta' },
+          h('span', {}, icon('language', { size: 18 }), c.medium),
+          h('span', {}, icon('user', { size: 18 }), `${c.students}${c.capacity ? ` / ${c.capacity}` : ''} ${c.students === 1 ? 'Student' : 'Students'}`)),
+        h('div', { class: 'ex-pcard-when' }, icon('clock', { size: 15 }), c.times.length ? c.times.map(timeText).join(', ') : 'No weekly times yet', h('span', { class: 'ex-pcard-fee' }, feeText(c))),
+        h('div', { class: 'ex-pcard-foot' },
+          h('a', { href: detailsUrl(c), class: 'ex-pcard-view' }, icon('view', { size: 18 }), 'View Class'),
+          h('div', { class: 'ex-pcard-tools' },
+            h('a', { href: `edit-class?class-id=${encodeURIComponent(c.id)}`, class: 'ex-pcard-round', title: 'Edit class', 'aria-label': `Edit ${c.name}` }, icon('edit', { size: 18 })),
+            ActionMenu.kebab(menuItems(c), `More for ${c.name}`))))))));
 }
 
 // ---------- ordering ----------

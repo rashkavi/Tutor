@@ -6,6 +6,7 @@ import { ApiClient } from '../core/ApiClient.js';
 import { icon } from '../core/icons.js';
 import { StatCard } from '../components/StatCard.js';
 import { ActionMenu } from '../components/Popover.js';
+import { DashboardKit } from '../components/DashboardKit.js';
 import { QuickGuide } from '../components/QuickGuide.js';
 import { EmptyState } from '../components/EmptyState.js';
 import { DataView } from '../components/DataView.js';
@@ -25,12 +26,12 @@ const perc = (v) => (v === null || v === undefined ? '-' : `${v}%`);
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 QuickGuide.attachAll();
-document.getElementById('dashboard-actions').append(ActionMenu.button('Action', [
+const ACTIONS = [
   { label: 'Create a Class', icon: 'add', href: 'create-class' },
   { label: 'Add New Student', icon: 'user-add', href: 'add-student' },
   { label: 'Mark Attendance', icon: 'attendance', href: 'attendance' },
   { label: 'Send a Message', icon: 'send', href: 'message-center' },
-]));
+];
 
 // ---------- small building blocks (V3 dashboard panels) ----------
 const panel = (title, info, body, { link = null, cls = '' } = {}) => h('div', { class: `component-theme p-4 h-100 d-flex flex-column ${cls}` },
@@ -60,23 +61,20 @@ const legendTop = { position: 'top', align: 'end', labels: { color: T().tick, bo
 // ---------- sections ----------
 function today(d) {
   const next = d.today.find((c) => !c.done);
-  const hour = new Date().getHours();
-  const hello = `${hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'}${root.dataset.name ? `, ${root.dataset.name}` : ''}.`;
   const waiting = d.waiting.total ? [' ', h('b', {}, plural(d.waiting.total, 'thing')), ' waiting for you.'] : '';
   const line = d.today.length
     ? ['You have ', h('b', {}, `${plural(d.today.length, 'class', 'classes')} today`),
       next ? ['. Next: ', h('b', {}, next.name), `, ${next.time} (${next.mode}).`] : '. All done for today.', waiting]
     : ['No classes today.', waiting];
-  return h('div', { class: 'col-12 component-theme p-4 mb-4' },
-    h('div', { class: 'd-flex flex-wrap align-items-center p-3 bg-light-theme td-today' },
-      h('span', { class: 'td-today-icon' }, icon('calendar', { size: 22 })),
-      h('div', { class: 'flex-grow-1 text-14 main-text' },
-        h('div', { class: 'fw-semibold text-dark-color' }, hello),
-        h('div', {}, line),
-        h('div', { class: 'd-flex flex-wrap align-items-center gap-2 mt-2' },
-          d.exams.map((x) => h('span', { class: 'td-countdown', title: `${x.name} starts ${fmt.date(x.date)}` }, icon('hourglass', { size: 16 }), h('b', {}, plural(x.days, 'day')), ` to the ${x.name} exam`)),
-          h('button', { type: 'button', class: 'ex-link-add td-exam-link', onclick: () => examDates() }, d.exams.length ? 'Exam dates' : 'Add your exam dates for a countdown'))),
-      next ? link(next.href, next.external, { class: 'custom-btn px-4 d-inline-flex align-items-center gap-2 text-decoration-none' }, icon(next.mode === 'Online' ? 'online' : 'attendance', { size: 18 }), next.mode === 'Online' ? 'Start Class' : 'Mark Attendance') : null));
+  return DashboardKit.greeting({
+    name: root.dataset.name,
+    line,
+    extra: h('div', { class: 'd-flex flex-wrap align-items-center gap-2 mt-2' },
+      d.exams.map((x) => h('span', { class: 'td-countdown', title: `${x.name} starts ${fmt.date(x.date)}` }, icon('hourglass', { size: 16 }), h('b', {}, plural(x.days, 'day')), ` to the ${x.name} exam`)),
+      h('button', { type: 'button', class: 'ex-link-add td-exam-link', onclick: () => examDates() }, d.exams.length ? 'Exam dates' : 'Add your exam dates for a countdown')),
+    actions: ACTIONS,
+    primary: next ? link(next.href, next.external, { class: 'custom-btn px-4 d-inline-flex align-items-center gap-2 text-decoration-none' }, icon(next.mode === 'Online' ? 'online' : 'attendance', { size: 18 }), next.mode === 'Online' ? 'Start Class' : 'Mark Attendance') : null,
+  });
 }
 
 async function examDates() {
@@ -109,21 +107,23 @@ async function examDates() {
 
 function stats(d) {
   const s = d.stats;
+  // Four cards, one colour each. "Waiting for You" and "Next 7 Days" have their own panels further down;
+  // without fees (staff who can't see money) those two take the place of the fee cards.
   const cards = [
-    { icon: 'students', label: 'Active Students', value: s.students.value, trend: s.students.now ? { text: `+${s.students.now}`, dir: 'up' } : null,
+    { tone: 'blue', icon: 'students', label: 'Active Students', value: s.students.value, trend: s.students.now ? { text: `+${s.students.now}`, dir: 'up' } : null,
       caption: s.students.left === null ? 'joined this month' : `joined this month, ${s.students.left} left`, bars: s.students.bars, menu: [{ label: 'Open students', icon: 'view', href: 'students' }] },
-    d.money && { icon: 'payments', label: 'Fees Collected', value: lkr(s.collected.value), trend: null,
-      caption: s.collected.expected ? `${pct(s.collected.value, s.collected.expected)}% of ${lkr(s.collected.expected)} this month` : 'no fees due this month', bars: s.collected.bars, menu: [{ label: 'Open payments', icon: 'view', href: 'payments' }] },
-    d.money && { icon: 'danger', label: 'Unpaid Fees', value: lkr(s.unpaid.value), trend: s.unpaid.students ? { text: plural(s.unpaid.students, 'student'), dir: 'down' } : null,
-      caption: s.unpaid.students ? `${s.unpaid.overdue} owe 2 months or more` : 'everyone has paid', bars: s.unpaid.bars, menu: [{ label: 'Open payments', icon: 'view', href: 'payments' }] },
-    { icon: 'attendance', label: 'Attendance', value: perc(s.attendance.value), trend: s.attendance.value !== null && s.attendance.before !== null ? StatCard.trend(s.attendance.value, s.attendance.before) : null,
+    d.money ? { tone: 'green', icon: 'payments', label: 'Fees Collected', value: lkr(s.collected.value), trend: null,
+      caption: s.collected.expected ? `${pct(s.collected.value, s.collected.expected)}% of ${lkr(s.collected.expected)} this month` : 'no fees due this month', bars: s.collected.bars, menu: [{ label: 'Open payments', icon: 'view', href: 'payments' }] }
+      : { tone: 'green', icon: 'bell', label: 'Waiting for You', value: d.waiting.total, caption: d.waiting.total ? d.waiting.items.map((w) => `${w.count} ${w.short}`).join(' · ') : 'all caught up',
+        menu: d.waiting.items.length ? d.waiting.items.map((w) => ({ label: w.label, icon: w.icon, href: w.href })) : null },
+    d.money ? { tone: 'orange', icon: 'danger', label: 'Unpaid Fees', value: lkr(s.unpaid.value), trend: s.unpaid.students ? { text: plural(s.unpaid.students, 'student'), dir: 'down' } : null,
+      caption: s.unpaid.students ? `${s.unpaid.overdue} owe 2 months or more` : 'everyone has paid', bars: s.unpaid.bars, menu: [{ label: 'Open payments', icon: 'view', href: 'payments' }] }
+      : { tone: 'orange', icon: 'timetable', label: 'Classes This Week', value: s.week.value, trend: s.week.value ? { text: `${s.week.hours} hours`, dir: 'flat' } : null,
+        caption: s.week.value ? `${s.week.online} online, ${s.week.physical} physical` : 'nothing on the time table', bars: s.week.bars, menu: [{ label: 'Open time table', icon: 'view', href: 'time-table' }] },
+    { tone: 'purple', icon: 'attendance', label: 'Attendance', value: perc(s.attendance.value), trend: s.attendance.value !== null && s.attendance.before !== null ? StatCard.trend(s.attendance.value, s.attendance.before) : null,
       caption: s.attendance.value === null ? 'no finished classes in the last 4 weeks' : 'last 4 weeks, watched recordings count', bars: s.attendance.bars, menu: [{ label: 'Open attendance', icon: 'view', href: 'attendance' }] },
-    { icon: 'bell', label: 'Waiting for You', value: d.waiting.total, caption: d.waiting.total ? d.waiting.items.map((w) => `${w.count} ${w.short}`).join(' · ') : 'all caught up',
-      menu: d.waiting.items.length ? d.waiting.items.map((w) => ({ label: w.label, icon: w.icon, href: w.href })) : null },
-    { icon: 'timetable', label: 'Classes This Week', value: s.week.value, trend: s.week.value ? { text: `${s.week.hours} hours`, dir: 'flat' } : null,
-      caption: s.week.value ? `${s.week.online} online, ${s.week.physical} physical` : 'nothing on the time table', bars: s.week.bars, menu: [{ label: 'Open time table', icon: 'view', href: 'time-table' }] },
   ];
-  return StatCard.row(cards, { cols: `col-12 col-md-6 ${d.money ? 'col-xl-4' : 'col-xl-3'}` });
+  return StatCard.row(cards, { cols: 'col-12 col-md-6 col-xl-3' });
 }
 
 function charts(d) {
@@ -263,7 +263,7 @@ function performance(d) {
 }
 
 async function load() {
-  fill(root, h('div', { class: 'row g-3 mb-4 placeholder-glow' }, [0, 1, 2, 3, 4, 5].map(() => h('div', { class: 'col-12 col-md-6 col-xl-4' }, h('span', { class: 'placeholder col-12', style: { height: '118px' } })))));
+  fill(root, DashboardKit.skeleton());
   try {
     const d = (await api.get('/tutor/dashboard')).data;
     fill(root, today(d), stats(d), ...charts(d), ...lists(d), performance(d));
