@@ -788,7 +788,18 @@ final class PlatformBilling
                     $this->log($tutorId, 'extend', sprintf('Trial extended by %d days, now ends %s', $days, Lifecycle::addDays($base, $days)), $reason, ['trial_ends' => $s['trial_ends_at']], ['trial_ends' => Lifecycle::addDays($base, $days)], $by);
                     return 'Trial extended.';
                 case 'plan':
-                    return $this->changePlan($s, (string) ($in['plan'] ?? ''), $byTutor ? $s['billing_cycle'] : (($in['cycle'] ?? '') === 'yearly' ? 'yearly' : 'monthly'), $by, $byTutor);
+                    // a tutor may choose monthly / yearly only while no paid period runs (the change then applies to the first invoice)
+                    $paying = $s['period_end'] !== null && $s['period_end'] > $this->today && in_array($s['status'], ['active', 'due'], true);
+                    $cycle = isset($in['cycle']) && (!$byTutor || !$paying) ? ($in['cycle'] === 'yearly' ? 'yearly' : 'monthly') : (string) $s['billing_cycle'];
+                    $msg = $this->changePlan($s, (string) ($in['plan'] ?? ''), $cycle, $by, $byTutor);
+                    if (!empty($in['pay_now'])) {
+                        $s = $this->db->one('SELECT * FROM users_has_payment_plans WHERE users_has_payment_plan_id = :id', $id);
+                        $this->payNow($s, $by);
+                    }
+                    return $msg;
+                case 'pay_now':
+                    $this->payNow($s, $by);
+                    return 'Your invoice is ready. Pay it and upload the slip.';
                 case 'packs':
                     $packs = (int) ($in['packs'] ?? -1);
                     if ($packs < 0 || $packs > 20) {
@@ -845,6 +856,32 @@ final class PlatformBilling
         });
         $this->tickTutor($tutorId);
         return $msg;
+    }
+
+    /**
+     * The tutor wants to pay before the daily job would make the invoice (a trial or complimentary period, or a paid
+     * period close to its end): make the next period invoice now, starting on the renewal day. Nothing happens
+     * when an invoice is already open.
+     */
+    private function payNow(array $s, int $by): void
+    {
+        $open = (int) $this->db->value("SELECT COUNT(*) FROM platform_invoices WHERE users_has_payment_plan_id = :s AND status IN ('open','part')", ['s' => $s['users_has_payment_plan_id']]);
+        if ($open > 0) {
+            return;
+        }
+        if (in_array($s['status'], ['cancelled', 'suspended'], true) || (int) $s['cancel_at_period_end'] === 1) {
+            throw new HttpException(409, 'conflict', 'Please call ENLIXO to start your subscription again.');
+        }
+        $renewal = Lifecycle::renewalDate($s) ?? $this->today;
+        $from = max($renewal, $this->today);
+        if ($s['status'] === 'active' && Lifecycle::daysBetween($this->today, $from) > 31) {
+            throw new HttpException(409, 'conflict', sprintf('Your plan is paid until %s. The next invoice comes before then.', $from));
+        }
+        $exists = (int) $this->db->value("SELECT COUNT(*) FROM platform_invoices WHERE users_has_payment_plan_id = :s AND kind = 'period' AND period_from = :f AND status <> 'void'", ['s' => $s['users_has_payment_plan_id'], 'f' => $from]);
+        if ($exists > 0) {
+            throw new HttpException(409, 'conflict', 'This period is already paid.');
+        }
+        $this->issuePeriodInvoice($s, $from, $by);
     }
 
     private function changePlan(array $s, string $key, string $cycle, int $by, bool $byTutor): string

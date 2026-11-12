@@ -63,7 +63,7 @@ class load_side_menu
                 ['Fees & Receipts', null, 'fee-settings', '', ['Fee Settings']],
                 ['Attendance', null, 'attendance-settings', '', ['Attendance Settings']],
                 ['Recording Types', null, 'recording-types', '', ['Recording Types']],
-                ['Plans & Billing', null, 'pricing', '', ['Pricing']],
+                ['Plans & Billing', null, 'subscription?tab=plans', '', ['Pricing']],
                 ['Integrations', null, 'intergrations', 'intergrations', ['Intergrations']],
             ]],
         ];
@@ -183,7 +183,7 @@ class load_side_menu
 
             <?php if ($plan) {
                 $pct = $plan['limit'] ? min(100, (int) round($plan['count'] / max(1, $plan['limit']) * 100)) : 0; ?>
-                <a class="ex-plan-card ex-plan-<?= self::e($plan['key']) ?>" href="pricing">
+                <a class="ex-plan-card ex-plan-<?= self::e($plan['key']) ?>" href="subscription?tab=plans">
                     <span class="d-flex align-items-center gap-2">
                         <?= enlixo_icon('crown', 18, 'ex-plan-crown') ?>
                         <span class="ex-plan-name"><?= self::e($plan['name']) ?> plan</span>

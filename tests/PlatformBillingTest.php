@@ -32,6 +32,7 @@ test('Billing: periods and the upgrade difference', function () {
     T::eq(-3, Lifecycle::daysBetween('2026-11-18', '2026-11-15'));
     T::eq(2967.74, Lifecycle::upgradeDifference(6000, 10000, '2026-12-18', '2027-01-18', '2026-12-26'), 'difference for the 23 of 31 days left');
     T::eq(0.0, Lifecycle::upgradeDifference(10000, 6000, '2026-12-18', '2027-01-18', '2026-12-26'), 'never negative');
+    T::eq(4000.0, Lifecycle::upgradeDifference(6000, 10000, '2026-11-19', '2026-12-19', '2026-11-12'), 'paid ahead of the trial end: the full difference, not more');
 });
 
 test('Billing: a free trial gets its first invoice 3 days before the end, then overdue, then suspended', function () use ($rules, $sub) {

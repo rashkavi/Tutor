@@ -235,7 +235,18 @@ final class PlatformController
     public function changeMyPlan(Request $r): JsonResponse
     {
         $auth = $this->tutorOwner($r);
-        return JsonResponse::ok(['message' => $this->app->platformBilling()->action($auth->userId, 'plan', ['plan' => $r->input('plan')], $auth->userId, true)]);
+        $in = ['plan' => $r->input('plan'), 'pay_now' => (bool) $r->input('pay_now', false)];
+        if ($r->input('cycle') !== null) {
+            $in['cycle'] = (string) $r->input('cycle');
+        }
+        return JsonResponse::ok(['message' => $this->app->platformBilling()->action($auth->userId, 'plan', $in, $auth->userId, true)]);
+    }
+
+    /** POST /tutor/subscription/pay-now: make the next invoice now, so the tutor can pay before the trial / period ends. */
+    public function payNow(Request $r): JsonResponse
+    {
+        $auth = $this->tutorOwner($r);
+        return JsonResponse::ok(['message' => $this->app->platformBilling()->action($auth->userId, 'pay_now', [], $auth->userId, true)]);
     }
 
     public function mySlip(Request $r): FileResponse
