@@ -678,7 +678,7 @@ function lp_icon(string $n, int $s = 22): string
                 </nav>
             </div>
 
-            <div class="lp-foot-word" aria-hidden="true">ENLIXO</div>
+            <div class="lp-foot-word" aria-hidden="true" data-reveal><?php foreach (str_split('ENLIXO') as $i => $ch) { echo '<span style="--i:' . $i . '">' . $ch . '</span>'; } ?></div>
 
             <div class="lp-foot-bottom">
                 <span>&copy; <?= date('Y') ?> <?= $e($name) ?>. All rights reserved. Made in Sri Lanka.</span>

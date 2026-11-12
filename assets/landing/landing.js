@@ -268,12 +268,6 @@
     new IntersectionObserver(([en]) => { if (en.isIntersecting && langTimer === null) startAuto(); }, { threshold: 0.4 }).observe(demo);
   }
 
-  // ---------- footer: big word follows the mouse ----------
-  const word = $('.lp-foot-word');
-  if (word && !reduce && fine) {
-    word.addEventListener('pointermove', (e) => { const r = word.getBoundingClientRect(); word.style.setProperty('--fx', `${((e.clientX - r.left) / r.width) * 100}%`); });
-  }
-
   // ---------- monthly / yearly prices ----------
   const tween = (el, to) => {
     const from = Number(el.textContent.replace(/,/g, '')) || 0;
