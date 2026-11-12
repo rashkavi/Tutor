@@ -44,7 +44,7 @@ function skeleton() {
     h('div', { class: 'ex-skel-card mb-4' }, bone('100%', 40)),
     h('div', { class: 'row g-4' }, [0, 1, 2, 3].map(() => h('div', { class: 'col-12 col-md-6 col-xl-4 col-xxl-3' },
       h('div', { class: 'ex-pcard' }, bone('100%', 0, { aspectRatio: '16 / 9', height: 'auto', borderRadius: 0 }),
-        h('div', { class: 'ex-pcard-body' }, bone('30%', 10), bone('80%', 16), bone('60%', 12), bone('100%', 40, { marginTop: '12px', borderRadius: '20px' }))))))));
+        h('div', { class: 'ex-pcard-body' }, bone('30%', 10), bone('80%', 16), bone('60%', 12), bone('100%', 40, { marginTop: '12px', borderRadius: 0 }))))))));
 }
 
 async function load() {

@@ -5,6 +5,11 @@ Every Tutor page follows the ENLIXO V3 look: Bootstrap 5 for layout, the app's o
 New screens are built from the shared kit in `assets/js/enlixo/components` so buttons, text and spacing
 come out the same everywhere. Don't add one-off sizes or colours in a page.
 
+## Square corners
+
+Cards, panels, stat cards, the greeting card, buttons, pills, menus, class cards and loading blocks are plain rectangles
+(`border-radius: 0`). No rounded or pill shapes and no decorative circles. Only people's pictures (avatars) and small dots stay round.
+
 ## No borders
 
 Components have **no borders**: cards, list rows, panels, menus, popovers, switchers, the side menu and tool buttons
