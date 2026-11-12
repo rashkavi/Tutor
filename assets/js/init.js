@@ -6,6 +6,11 @@
         const s = document.createElement('script');
         s.src = me.replace(/init\.js(\?.*)?$/, 'i18n-auto.js$1');
         document.head.appendChild(s);
+        // The (i) Quick guide on every page (assets/js/enlixo/quick-guide-auto.js)
+        const qg = document.createElement('script');
+        qg.type = 'module';
+        qg.src = me.replace(/init\.js(\?.*)?$/, 'enlixo/quick-guide-auto.js$1');
+        document.head.appendChild(qg);
     }
 
     const savedTheme = localStorage.getItem('theme') || 'light';

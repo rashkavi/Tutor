@@ -13,6 +13,12 @@ if (SessionUser::ifUserIsAdmin()) {
         error_log('Admin dashboard jobs: ' . $e->getMessage());
     }
 }
+// The one-time "just signed in" cookie from the sign-in API: show the welcome card once, then forget it.
+$justSignedIn = isset($_COOKIE['enviiz_lms_admin_login']);
+if ($justSignedIn) {
+    setcookie('enviiz_lms_admin_login', '', time() - 3600, '/');
+}
+$adminUser = SessionUser::getCurrentUserObject('Admin') ?? [];
 $ap = [
     'title' => 'Dashboard',
     'menu' => 'Dashboard',
@@ -26,7 +32,9 @@ $ap = [
         ],
     ],
     'header' => false,
-    'attrs' => 'data-name="' . htmlspecialchars((string) (SessionUser::getCurrentUserObject('Admin')['user_fname'] ?? ''), ENT_QUOTES, 'UTF-8') . '"',
+    'attrs' => 'data-name="' . htmlspecialchars((string) ($adminUser['user_fname'] ?? ''), ENT_QUOTES, 'UTF-8') . '"'
+        . ' data-full-name="' . htmlspecialchars(trim(($adminUser['user_fname'] ?? '') . ' ' . ($adminUser['user_lname'] ?? '')), ENT_QUOTES, 'UTF-8') . '"'
+        . ' data-welcome="' . ($justSignedIn ? '1' : '0') . '"',
     'root' => 'admin-dashboard',
     'js' => 'app-admin-dashboard.js',
     'scripts' => ['https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'],

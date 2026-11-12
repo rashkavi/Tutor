@@ -398,6 +398,14 @@
   "Pre-Recorded": "කලින් පටිගත කළ",
   "active in this class": "මෙම පන්තියේ සක්‍රිය",
   "Nothing is waiting for you in this class.": "මෙම පන්තියේ ඔබ බලාපොරොත්තුවෙන් කිසිවක් නැත.",
+  "Quick guide": "ඉක්මන් මාර්ගෝපදේශය",
+  "Help": "උදව්",
+  "Watch the video guide": "වීඩියෝ මාර්ගෝපදේශය නරඹන්න",
+  "Close the video": "වීඩියෝව වසන්න",
+  "Welcome back! Your classes, students, fees and attendance are all here. Check what needs you today below.": "නැවත සාදරයෙන් පිළිගනිමු! ඔබේ පන්ති, සිසුන්, ගාස්තු සහ පැමිණීම සියල්ල මෙහි ඇත. අද ඔබට කළ යුතු දේ පහතින් බලන්න.",
+  "Welcome back! Your classes, time table, recordings, tutes and fees are all in one place.": "නැවත සාදරයෙන් පිළිගනිමු! ඔබේ පන්ති, කාල සටහන, පටිගත කිරීම්, නිබන්ධන සහ ගාස්තු එකම තැනක.",
+  "Welcome back! Follow your children's classes, attendance and fees in one place.": "නැවත සාදරයෙන් පිළිගනිමු! ඔබේ දරුවන්ගේ පන්ති, පැමිණීම සහ ගාස්තු එකම තැනකින් බලන්න.",
+  "Welcome back! See how ENLIXO Tutor is doing today: tutors, trials, payments and what needs you.": "නැවත සාදරයෙන් පිළිගනිමු! අද ENLIXO Tutor තත්ත්වය බලන්න: ගුරුවරුන්, අත්හදා බැලීම්, ගෙවීම් සහ ඔබට කළ යුතු දේ.",
   "attended": "පැමිණි",
   "present": "පැමිණි",
   "more": "වැඩි",
@@ -571,6 +579,10 @@
   [
    "^(\\d+) students? (?:will get a parcel.*|can download it\\.)$",
    "සිසුන් $1ක්"
+  ],
+  [
+   "^Welcome, (.+)!$",
+   "සාදරයෙන් පිළිගනිමු, $1!"
   ],
   [
    "^Today, (.+)$",

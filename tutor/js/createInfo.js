@@ -19,87 +19,71 @@ class CreateInfo {
         this.bindEvents();
     }
 
-    getYouTubeVideoId(url) {
-        if (!url) return null;
-
-        try {
-            // iframe code support
-            const iframeMatch = url.match(/src\s*=\s*["']([^"']+)["']/i);
-            if (iframeMatch && iframeMatch[1]) {
-                url = iframeMatch[1];
-            }
-
-            if (url.includes('youtu.be/')) {
-                return url.split('youtu.be/')[1].split(/[?&/]/)[0];
-            }
-
-            if (url.includes('/embed/')) {
-                return url.split('/embed/')[1].split(/[?&/]/)[0];
-            }
-
-            const parsedUrl = new URL(url);
-            const videoId = parsedUrl.searchParams.get('v');
-            if (videoId) return videoId;
-        } catch (e) {
-            return null;
-        }
-
-        return null;
+    static videos() {
+        // one file for every guide video: assets/guides/videos.json ("help" = the (i) next to one field)
+        CreateInfo._videos ??= fetch('../assets/guides/videos.json', { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : {})).catch(() => ({}));
+        return CreateInfo._videos;
     }
 
-    createYouTubePreview() {
-        const videoId = this.getYouTubeVideoId(this.youtubeLink);
-        if (!videoId) return '';
+    static esc(s) {
+        return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
 
-        const thumbUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-        const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    getYouTubeVideoId(url) {
+        if (!url) return null;
+        const src = String(url).match(/src\s*=\s*["']([^"']+)["']/i)?.[1] ?? String(url);
+        const m = src.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|shorts\/|live\/|watch\?(?:.*&)?v=))([A-Za-z0-9_-]{6,})/);
+        return m ? m[1] : null;
+    }
 
-        return `
-            <div class="create-info-video-card" data-watch-url="${watchUrl}">
-                <div class="create-info-video-label">${this.videoTitle}</div>
-                <div class="create-info-video-wrap">
-                    <img src="${thumbUrl}" alt="YouTube thumbnail" class="create-info-video-thumb">
-                    <div class="create-info-video-overlay">
-                        <div class="create-info-video-play">
-                            <iconify-icon icon="solar:play-bold" width="20"></iconify-icon>
-                        </div>
-                    </div>
+    videoHTML() {
+        if (!this.youtubeLink) return '';
+        const id = this.getYouTubeVideoId(this.youtubeLink);
+        return `<button type="button" class="ex-qg-video" data-video="${CreateInfo.esc(this.youtubeLink)}" aria-label="Watch the video guide">
+                ${id ? `<img src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;ex-qg-video-blank&quot;></span>'">` : '<span class="ex-qg-video-blank"></span>'}
+                <span class="ex-qg-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span>
+                <span class="ex-qg-video-label">${CreateInfo.esc(this.videoTitle || 'Watch the video guide')}</span>
+            </button>`;
+    }
+
+    /** Same card as the page Quick guide (assets/js/enlixo/components/QuickGuide.js), so every (i) looks the same. */
+    fill() {
+        const check = '<span class="ex-qg-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.2 14.2-4-4 1.4-1.4 2.6 2.6 5.6-5.6 1.4 1.4-7 7Z"/></svg></span>';
+        this.popover.innerHTML = `
+            <div class="ex-qg" role="note">
+                <div class="ex-qg-head">
+                    <span class="ex-qg-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16Zm1 11h-2v-5h2v5Zm0-7h-2V6h2v2Z"/></svg></span>
+                    <div><strong>${CreateInfo.esc(this.title)}</strong><small>Help</small></div>
                 </div>
-            </div>
-        `;
+                <div class="ex-qg-body">
+                    ${this.note ? `<p>${CreateInfo.esc(this.note.trim())}</p>` : ''}
+                    ${this.steps.length ? `<ul>${this.steps.map((st) => `<li>${check}<span>${CreateInfo.esc(st)}</span></li>`).join('')}</ul>` : ''}
+                    ${this.videoHTML()}
+                </div>
+            </div>`;
     }
 
     render() {
         this.button = document.createElement('button');
         this.button.type = 'button';
-        this.button.className = 'create-info-btn';
-        this.button.innerHTML = `<iconify-icon icon="fe:info" width="20" class="create-info-icon"></iconify-icon>`;
-
+        this.button.className = 'create-info-btn ex-info-btn';
+        this.button.setAttribute('aria-label', `Help: ${this.title}`);
+        this.button.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>';
         this.target.appendChild(this.button);
 
         this.popover = document.createElement('div');
-        this.popover.className = 'create-info-popover d-none';
-
-        let stepsHTML = '';
-        this.steps.forEach((step, index) => {
-            stepsHTML += `
-                <div class="create-info-step">
-                    <span class="create-info-step-no">${index + 1}.</span>
-                    <span>${step}</span>
-                </div>
-            `;
-        });
-
-        const videoHTML = this.createYouTubePreview();
-
-        this.popover.innerHTML = `
-            <div class="create-info-title">${this.title}</div>
-            <div class="create-info-steps">${stepsHTML}</div>
-            ${this.note ? `<div class="create-info-note">${this.note}</div>` : ''}
-            ${videoHTML}
-        `;
-
+        this.popover.className = 'create-info-popover ex-qg-float d-none';
+        this.fill();
         document.body.appendChild(this.popover);
+
+        // no link given here: take it from assets/guides/videos.json by the field's guide id
+        const key = (this.target.id || '').trim();
+        if (!this.youtubeLink && key) {
+            CreateInfo.videos().then((v) => {
+                const url = String(v?.help?.[key] ?? '').trim();
+                if (/^https:\/\//i.test(url)) { this.youtubeLink = url; this.fill(); }
+            });
+        }
     }
 
     bindEvents() {
@@ -135,15 +119,12 @@ class CreateInfo {
             }
         });
 
-        // video click open new tab
+        // the video plays in the same player as the page guides (or opens in a new tab)
         this.popover.addEventListener('click', (e) => {
-            const videoCard = e.target.closest('.create-info-video-card');
-            if (videoCard) {
-                const watchUrl = videoCard.getAttribute('data-watch-url');
-                if (watchUrl) {
-                    window.open(watchUrl, '_blank');
-                }
-            }
+            const v = e.target.closest('.ex-qg-video');
+            if (!v) return;
+            const url = v.getAttribute('data-video');
+            if (window.EnlixoGuide) window.EnlixoGuide.play(url, this.title); else window.open(url, '_blank', 'noopener');
         });
     }
 

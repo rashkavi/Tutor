@@ -1,4 +1,25 @@
 <?php
+/** "tutor/classes" for tutor/classes.php: the name a page has in assets/guides/videos.json. */
+function enlixo_page_key(): string
+{
+    $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+    return basename(dirname($script)) . '/' . basename($script, '.php');
+}
+
+/**
+ * The video link for a guide, from assets/guides/videos.json (one file for every guide video, so a link can be changed
+ * without touching code). $list = 'pages' (a page's own guide) or 'help' (the (i) next to one field). '' = no video.
+ */
+function enlixo_guide_video(string $list, string $key): string
+{
+    static $videos = null;
+    if ($videos === null) {
+        $videos = json_decode((string) @file_get_contents(dirname(__DIR__, 2) . '/assets/guides/videos.json'), true) ?: [];
+    }
+    $url = trim((string) ($videos[$list][$key] ?? ''));
+    return preg_match('#^https://#i', $url) ? $url : '';
+}
+
 /**
  * Older signature, kept for callers: draws the same V3 header card as enlixo_form_header().
  * The Action menu is filled by the page script (so locked items can show their premium badge):
@@ -19,6 +40,13 @@ function enlixo_page_header(string $title, string $subtitle, string $i18nTitle =
 function enlixo_form_header(string $title, array $crumbs, array $guide = [], string $actionsId = 'page-actions'): void
 {
     $e = static fn (string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+    if ($guide && empty($guide['video'])) {
+        $video = enlixo_guide_video('pages', $guide['key'] ?? enlixo_page_key());
+        if ($video !== '') {
+            $guide['video'] = $video;
+        }
+    }
+    unset($guide['key']);
     $divider = "url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;)";
     ?>
     <div class="col-12 px-4 py-3 component-theme mb-4">
