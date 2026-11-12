@@ -81,7 +81,7 @@ final class Lifecycle
     public static function upgradeDifference(float $oldPeriodAmount, float $newPeriodAmount, string $periodStart, string $periodEnd, string $today): float
     {
         $len = max(1, self::daysBetween($periodStart, $periodEnd));
-        $left = max(0, self::daysBetween($today, $periodEnd));
+        $left = min($len, max(0, self::daysBetween($today, $periodEnd))); // a period paid ahead (it starts later) is charged once, never more
         return max(0.0, round(($newPeriodAmount - $oldPeriodAmount) * $left / $len, 2));
     }
 

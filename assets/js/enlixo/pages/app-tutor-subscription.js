@@ -53,35 +53,94 @@ function payDialog(inv) {
   ] });
 }
 
-function plansDialog() {
-  const cards = h('div', { class: 'row g-3' }, D.plans.map((p) => h('div', { class: 'col-md-4' }, h('div', { class: 'ad-soft p-3 h-100 d-flex flex-column gap-1' },
-    h('span', { class: 'main-topic' }, p.name, p.key === D.tutor.plan ? h('span', { class: 'ad-tag ms-2' }, 'Your plan') : null),
-    h('span', { class: 'text-12 sub-text' }, p.tagline),
-    h('span', { class: 'ad-hero-amount fs-5' }, lkr(p.monthly), h('span', { class: 'text-13 sub-text fw-normal' }, ' / month')),
-    h('span', { class: 'text-13 main-text' }, `Up to ${p.limit} students`),
-    h('ul', { class: 'text-12 sub-text ps-3 mb-2' }, p.features.map((f) => h('li', {}, f))),
-    p.key !== D.tutor.plan ? h('button', { type: 'button', class: 'custom-btn-outline mt-auto', onclick: async () => {
-      const res = await trySave(m.el, () => api.post('/tutor/subscription/change', { plan: p.key }));
-      if (!res) return;
-      m.close(); Toast.success(res.data.message); load();
-    } }, p.monthly > D.plan.monthly ? `Upgrade to ${p.name}` : `Move to ${p.name}`) : null))));
-  const m = BsModal.open({ title: 'Change Plan', subtitle: D.tutor.status === 'trial' ? ['Choose the plan you pay for after the trial'] : ['Upgrades start today', 'Downgrades at the next renewal'], icon: 'plans', body: cards, size: 'xl', footerEnd: [BsModal.button('Close', { onclick: () => m.close() })] });
+let cycle = null; // monthly / yearly picked on the Plans tab
+let tabsRef = null;
+
+/** After a plan change or Pay Now: load again and open the payment dialog of the open invoice. */
+async function thenPay(res) {
+  await load('plans');
+  const open = [...D.invoices].reverse().find((i) => ['open', 'overdue', 'part'].includes(i.status));
+  if (res?.data?.message) Toast.success(res.data.message);
+  if (open && !D.payments.some((p) => p.status === 'waiting' && p.invoice_id === open.id)) payDialog(open);
 }
 
-async function load() {
+function plansPanel(panel) {
+  const t = D.tutor;
+  const paying = t.period_end && ['active', 'due'].includes(t.status) && t.period_end > new Date().toISOString().slice(0, 10);
+  const freeNow = ['trial', 'complimentary'].includes(t.status) || !t.period_start;
+  cycle = cycle ?? t.cycle ?? 'monthly';
+  const open = [...D.invoices].reverse().find((i) => ['open', 'overdue', 'part'].includes(i.status));
+  const waiting = open && D.payments.some((p) => p.status === 'waiting' && p.invoice_id === open.id);
+  const locked = ['suspended', 'cancelled'].includes(t.status) && !open;
+  const busy = (btn, fn) => async () => { btn.disabled = true; try { await fn(); } finally { btn.disabled = false; } };
+  const yearlyMonthly = (p) => Math.max(0, p.monthly - p.yearly_discount);
+  const priceOf = (p) => (cycle === 'yearly' ? yearlyMonthly(p) : p.monthly);
+
+  const cycleBtn = (key, label) => h('button', { type: 'button', class: `${cycle === key ? 'custom-btn' : 'custom-btn-outline'} px-4`, disabled: paying && key !== t.cycle ? true : null,
+    onclick: () => { cycle = key; fill(panel); plansPanel(panel); } }, label);
+  const note = locked ? 'Your subscription is not running. Please call ENLIXO to start it again.'
+    : waiting ? 'Your slip is being checked. You can change your plan again once ENLIXO has approved it.'
+      : t.status === 'trial' ? `Your free trial ends on ${day(t.trial_ends)}. Choose your plan and pay any time before then. Your paid ${cycle === 'yearly' ? 'year' : 'month'} starts when the trial ends, so you lose no free days.`
+        : paying ? `Your ${t.plan_name} plan is paid until ${day(t.period_end)}. An upgrade starts today and you pay only the difference for the days left. A smaller plan starts at your next renewal.`
+          : 'Choose your plan and pay the invoice to switch everything on.';
+
+  const card = (p) => {
+    const mine = p.key === t.plan;
+    const up = p.monthly > D.plan.monthly;
+    let action = null;
+    if (!locked && !waiting) {
+      if (mine && (cycle === t.cycle || paying)) {
+        action = open ? h('button', { type: 'button', class: 'custom-btn w-100 mt-auto', onclick: () => payDialog(open) }, 'Pay Now')
+          : (freeNow || !paying) ? h('button', { type: 'button', class: 'custom-btn w-100 mt-auto' }, 'Pay Now') : h('span', { class: 'ad-tag mt-auto align-self-start' }, 'Your plan');
+        if (action.tagName === 'BUTTON' && !open) action.onclick = busy(action, async () => { const r = await trySave(panel, () => api.post('/tutor/subscription/pay-now', {})); if (r) await thenPay(r); });
+      } else {
+        const label = mine ? `Pay ${cycle === 'yearly' ? 'Yearly' : 'Monthly'}` : freeNow || !paying ? `Choose ${p.name}` : up ? `Upgrade to ${p.name}` : `Move to ${p.name}`;
+        action = h('button', { type: 'button', class: `${up || freeNow ? 'custom-btn' : 'custom-btn-outline'} w-100 mt-auto` }, label);
+        action.onclick = busy(action, async () => {
+          const pay = freeNow || !paying || up;
+          const r = await trySave(panel, () => api.post('/tutor/subscription/change', { plan: p.key, cycle, pay_now: pay }));
+          if (!r) return;
+          if (pay) await thenPay(r); else { Toast.success(r.data.message); await load('plans'); }
+        });
+      }
+    }
+    return h('div', { class: 'col-12 col-md-6 col-xl-4' }, h('div', { class: `ad-soft p-4 h-100 d-flex flex-column gap-2${mine ? ' border-primary' : ''}` },
+      h('div', { class: 'd-flex align-items-center gap-2' }, h('span', { class: 'main-topic' }, p.name), mine ? h('span', { class: 'ad-tag' }, t.status === 'trial' ? 'After your trial' : 'Your plan') : null,
+        t.next_plan === p.key ? h('span', { class: 'ad-tag' }, 'From your next renewal') : null),
+      h('span', { class: 'text-13 sub-text' }, p.tagline),
+      h('div', { class: 'mt-2' }, h('span', { class: 'ad-hero-amount fs-4' }, lkr(priceOf(p))), h('span', { class: 'text-13 sub-text' }, ' / month')),
+      h('span', { class: 'text-12 sub-text' }, cycle === 'yearly' ? `${lkr(yearlyMonthly(p) * 12)} a year, you save ${lkr(p.yearly_discount * 12)}` : `or ${lkr(yearlyMonthly(p))} a month when you pay yearly`),
+      h('span', { class: 'text-14 main-text fw-semibold mt-2' }, p.limit ? `Up to ${p.limit} students` : 'Unlimited students'),
+      p.pack_price ? h('span', { class: 'text-12 sub-text' }, `More students: ${lkr(p.pack_price)} a month for every ${p.pack_size}`) : null,
+      h('ul', { class: 'text-13 sub-text ps-3 mb-3 mt-1' }, p.features.map((f) => h('li', { class: 'mb-1' }, f))),
+      action));
+  };
+
+  fill(panel,
+    h('div', { class: 'd-flex flex-wrap align-items-center justify-content-between gap-3 mb-3' },
+      h('div', { class: 'text-14 sub-text', style: { maxWidth: '760px' } }, note),
+      h('div', { class: 'd-flex gap-2' }, cycleBtn('monthly', 'Monthly'), cycleBtn('yearly', 'Yearly'))),
+    h('div', { class: 'row g-3' }, D.plans.map(card)),
+    h('div', { class: 'text-12 sub-text mt-3' }, 'You pay by bank transfer or deposit and upload the slip. ENLIXO checks it within one working day and your account keeps working while it is checked.'));
+}
+
+async function load(tab) {
   try { ({ data: D } = await api.get('/tutor/subscription')); } catch (e) { fill(root, EmptyState.error(e.message, load)); return; }
   const open = [...D.invoices].reverse().find((i) => ['open', 'overdue', 'part'].includes(i.status));
   const waiting = open && D.payments.find((p) => p.status === 'waiting' && p.invoice_id === open.id);
   const rejected = open && !waiting && D.payments.find((p) => p.status === 'rejected' && p.invoice_id === open.id);
   const locked = ['suspended', 'cancelled'].includes(D.tutor.status);
   fill(document.getElementById('subscription-actions'),
-    h('button', { type: 'button', class: 'custom-btn-outline px-4', onclick: plansDialog }, 'Change Plan'),
+    h('button', { type: 'button', class: 'custom-btn-outline px-4', onclick: () => tabsRef?.show('plans') }, 'Change Plan'),
     open && !waiting ? h('button', { type: 'button', class: 'custom-btn px-4', onclick: () => payDialog(open) }, 'Pay Now') : null);
   const tabs = h('div', { class: 'col-12 component-theme p-4 mt-4' });
-  new Tabs({ tabs: [
+  tabsRef = new Tabs({ tabs: [
+    { id: 'plans', label: 'Plans', render: plansPanel },
     { id: 'invoices', label: 'Invoices', badge: D.invoices.length, render: (p) => p.append(simpleTable(invoiceColumns({ admin: false, open: (r) => invoiceDialog(r, { onPay: payDialog }) }), D.invoices, { title: 'No invoices yet', text: 'Your first invoice appears here when your free trial ends.' })) },
     { id: 'payments', label: 'Payment History', badge: D.payments.length, render: (p) => p.append(simpleTable(paymentColumns({ admin: false }), D.payments, { title: 'No payments yet', text: 'Slips you upload appear here with their status.' })) },
-  ] }).mount(tabs);
+  ] });
+  if (tab) tabsRef.active = tab;
+  tabsRef.mount(tabs);
   const paid = D.payments.filter((p) => p.status === 'approved');
   const heroText = waiting ? `Sent ${day(waiting.date)}. Your account keeps working while ENLIXO checks it.`
     : rejected ? `Your last slip was not accepted: ${rejected.reason}. Please upload the right slip.`

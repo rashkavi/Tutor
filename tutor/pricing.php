@@ -1,4 +1,7 @@
 <?php
+// Replaced by the Plans tab of Finance -> My Subscription (inside the normal layout, with the side menu).
+header("Location: ./subscription?tab=plans", true, 302);
+exit;
 require_once '../includes/UserClass.php';
 require_once '../includes/UserPermissionsClass.php';
 require_once "../includes/connection.php";
