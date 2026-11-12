@@ -2256,3 +2256,17 @@ a.ex-hd-stat:hover .ex-hd-go { opacity: 1; }
 /* Square corners everywhere (2026-11-12): cards, panels, buttons, pills, menus, skeletons and pictures are plain
    rectangles. Only people's pictures (avatars) and small dots stay round. */
 .ex-skeleton, .placeholder, .stats-mini-card, .stats-mini-icon { border-radius: 0 !important; }
+/* ---------- Second-level buttons have a background colour, never just an outline (2026-11-12) ----------
+   .custom-outline-btn / .custom-btn-outline (Generate thumbnail, Cancel, My Classes, Add Student ...) are light blue
+   blocks with blue text and no border; the main button stays dark blue (.custom-btn). Danger: light red with red text. */
+.custom-outline-btn, .custom-btn-outline { background-color: var(--light-theme, #E8ECFF); color: var(--dark-theme, #0061D2); border: 0; }
+.custom-outline-btn:hover:not(:disabled), .custom-btn-outline:hover:not(:disabled),
+.custom-outline-btn:focus-visible, .custom-btn-outline:focus-visible { background-color: #D6E0FF; color: var(--dark-theme, #0061D2); }
+.custom-outline-btn.ex-btn-danger-fill, .custom-outline-btn.ex-danger-outline, .ex-danger-outline { background-color: var(--light-red, #FFEBEB); color: var(--dark-red, #D85E44); border: 0; }
+.custom-outline-btn.ex-btn-danger-fill:hover:not(:disabled), .ex-danger-outline:hover:not(:disabled) { background-color: #FFDCD5 !important; }
+[data-custom-theme="dark"] .custom-outline-btn, [data-custom-theme="dark"] .custom-btn-outline { background-color: rgba(75, 147, 240, .18); color: #8cb8ff; }
+[data-custom-theme="dark"] .custom-outline-btn:hover:not(:disabled), [data-custom-theme="dark"] .custom-btn-outline:hover:not(:disabled) { background-color: rgba(75, 147, 240, .28); }
+[data-custom-theme="dark"] .custom-outline-btn.ex-btn-danger-fill, [data-custom-theme="dark"] .ex-danger-outline { background-color: rgba(226, 125, 102, .18); color: #ff9a85; }
+.ex-pcard-round, .ex-pcard-tools .ex-kebab { box-shadow: none; background: var(--light-theme, #E8ECFF); color: var(--dark-theme, #0061D2); }
+.ex-pcard-round:hover, .ex-pcard-tools .ex-kebab:hover, .ex-pcard-tools .ex-kebab[aria-expanded="true"] { background: #D6E0FF; }
+[data-custom-theme="dark"] .ex-pcard-round, [data-custom-theme="dark"] .ex-pcard-tools .ex-kebab { background: rgba(75, 147, 240, .18); color: #8cb8ff; }

@@ -75,9 +75,10 @@ on every page (old pages too); `ex-btn-lg` and `ex-btn-md` are the same size and
 | 48px | `custom-btn` / `custom-outline-btn` (+ `ex-btn-md`) | Every button: page header, toolbars, forms, modals |
 | 32px | `custom-btn ex-btn-sm` / `custom-outline-btn ex-btn-sm` | Only inside a table row or a small panel tool (View, Edit, Expand all) |
 
-* One filled (`custom-btn`) button per area: the main action. Other actions are outline (`custom-outline-btn`):
-  white, a 1px blue line, blue text. Cancel / Close / Previous / Next / clear use the grey V3 secondary
-  `custom-btn-outline`. The older `ex-btn` looks the same now.
+* One dark blue (`custom-btn`) button per area: the main action. Other actions use `custom-outline-btn`
+  (Cancel / Close / Previous / Next / clear may use `custom-btn-outline`). The older `ex-btn` looks the same now.
+* **No outline-only buttons.** `custom-outline-btn` and `custom-btn-outline` are light blue blocks with blue text and no
+  border (danger: light red with red text); the main button stays dark blue. Every button has a background colour.
 * Danger: `custom-danger-btn` (red), approve: `custom-success-btn` (green), after a `BsModal.confirm`.
 * Small text links (Add new, Crop again): `.ex-link-add`.
 * In JS use `BsModal.button(text, { primary, icon, danger, onclick })`, which applies the rules above.

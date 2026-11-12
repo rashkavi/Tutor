@@ -4354,3 +4354,15 @@ option {
 /* Header: thin line between the theme and language switches; Solar icons sit level with the text */
 .ex-header-sep { display: inline-block; width: 1px; height: 20px; background: var(--sub-text, #8a94a6); opacity: .4; }
 header .ex-ico { display: inline-flex; align-items: center; }
+
+/* ---------- Second-level buttons have a background colour, never just an outline (2026-11-12) ----------
+   .custom-outline-btn / .custom-btn-outline (Generate thumbnail, Cancel, My Classes, Add Student ...) are light blue
+   blocks with blue text and no border; the main button stays dark blue (.custom-btn). Danger: light red with red text. */
+.custom-outline-btn, .custom-btn-outline { background-color: var(--light-theme, #E8ECFF); color: var(--dark-theme, #0061D2); border: 0; }
+.custom-outline-btn:hover:not(:disabled), .custom-btn-outline:hover:not(:disabled),
+.custom-outline-btn:focus-visible, .custom-btn-outline:focus-visible { background-color: #D6E0FF; color: var(--dark-theme, #0061D2); }
+.custom-outline-btn.ex-btn-danger-fill, .custom-outline-btn.ex-danger-outline, .ex-danger-outline { background-color: var(--light-red, #FFEBEB); color: var(--dark-red, #D85E44); border: 0; }
+.custom-outline-btn.ex-btn-danger-fill:hover:not(:disabled), .ex-danger-outline:hover:not(:disabled) { background-color: #FFDCD5 !important; }
+[data-custom-theme="dark"] .custom-outline-btn, [data-custom-theme="dark"] .custom-btn-outline { background-color: rgba(75, 147, 240, .18); color: #8cb8ff; }
+[data-custom-theme="dark"] .custom-outline-btn:hover:not(:disabled), [data-custom-theme="dark"] .custom-btn-outline:hover:not(:disabled) { background-color: rgba(75, 147, 240, .28); }
+[data-custom-theme="dark"] .custom-outline-btn.ex-btn-danger-fill, [data-custom-theme="dark"] .ex-danger-outline { background-color: rgba(226, 125, 102, .18); color: #ff9a85; }
