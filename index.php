@@ -110,6 +110,7 @@ function lp_icon(string $n, int $s = 22): string
                 <a href="#free">Free plan</a>
                 <a href="#features">Features</a>
                 <a href="#logins">Logins</a>
+                <a href="#languages">Languages</a>
                 <a href="#pricing">Pricing</a>
                 <a href="#faq">FAQ</a>
             </nav>
@@ -127,7 +128,7 @@ function lp_icon(string $n, int $s = 22): string
             </div>
         </div>
         <div class="lp-mobile" id="lp-mobile" hidden>
-            <a href="#free">Free plan</a><a href="#features">Features</a><a href="#logins">Logins</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a>
+            <a href="#free">Free plan</a><a href="#features">Features</a><a href="#logins">Logins</a><a href="#languages">Languages</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a>
             <div class="lp-mobile-signin"><a href="tutor/">Tutor sign in</a><a href="portal/">Student sign in</a><a href="parent/">Parent sign in</a></div>
             <a href="<?= $signup ?>" class="lp-btn lp-btn-primary w-100">Start free</a>
         </div>
@@ -340,11 +341,6 @@ function lp_icon(string $n, int $s = 22): string
                             <?php foreach ([38, 52, 46, 64, 58, 72, 69, 84, 80, 94] as $i => $hgt) { echo '<i style="--h:' . $hgt . '%;--d:' . ($i * 60) . 'ms"></i>'; } ?>
                         </div>
                     </article>
-                    <article class="lp-tile lp-t-full" data-reveal>
-                        <span class="lp-dot lp-green"><?= lp_icon('globe') ?></span>
-                        <div><h3>Sinhala, Tamil and English</h3><p>Every screen in the language your students and parents read best.</p></div>
-                        <div class="lp-langs" aria-hidden="true"><span>සිංහල</span><span>தமிழ்</span><span>English</span></div>
-                    </article>
                 </div>
             </div>
         </section>
@@ -442,6 +438,67 @@ function lp_icon(string $n, int $s = 22): string
                     <span><?= lp_icon('users', 18) ?> One parent login for all their children</span>
                     <span><?= lp_icon('phone', 18) ?> Any phone browser, no app to install</span>
                     <span><?= lp_icon('globe', 18) ?> <span class="lp-lang">සිංහල · தமிழ் · English</span></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ LANGUAGES ============ -->
+        <section class="lp-sec lp-lang-sec" id="languages">
+            <div class="lp-aurora lp-aurora-soft" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="lp-wrap lp-lang-in">
+                <div class="lp-lang-copy">
+                    <span class="lp-eyebrow lp-eyebrow-dark" data-reveal>Your language, your choice</span>
+                    <h2 class="lp-h2" data-reveal>
+                        <span class="lp-lang-big" lang="si">සිංහල</span>
+                        <span class="lp-lang-big" lang="ta">தமிழ்</span>
+                        <span class="lp-lang-big">English</span>
+                    </h2>
+                    <p class="lp-sub" data-reveal>Every tutor, student and parent picks the language they read best, and can change it any time from the top of the page. In the same class, the tutor can work in English while a student reads Sinhala and a parent reads Tamil.</p>
+                    <div class="lp-lang-people" data-reveal>
+                        <div class="lp-lp-row"><span class="lp-dot lp-blue"><?= lp_icon('tutor', 18) ?></span><span><b>Tutor</b><small>Mr. Perera</small></span><em>English</em></div>
+                        <div class="lp-lp-row"><span class="lp-dot lp-green"><?= lp_icon('student', 18) ?></span><span><b>Student</b><small>Kavindi</small></span><em lang="si">සිංහල</em></div>
+                        <div class="lp-lp-row"><span class="lp-dot lp-violet"><?= lp_icon('parent', 18) ?></span><span><b>Parent</b><small>Mrs. Shanthi</small></span><em lang="ta">தமிழ்</em></div>
+                    </div>
+                    <ul class="lp-lang-points" data-reveal>
+                        <li><?= lp_icon('check', 16) ?> Menus, buttons and messages, on every page</li>
+                        <li><?= lp_icon('check', 16) ?> Each person's choice is kept for them</li>
+                        <li><?= lp_icon('check', 16) ?> Names and class details stay as you typed them</li>
+                    </ul>
+                </div>
+
+                <!-- live demo: landing.js switches the words between the three languages -->
+                <div class="lp-lang-demo" data-reveal id="lp-lang-demo">
+                    <div class="lp-ld-switch" role="tablist" aria-label="Try a language">
+                        <button type="button" role="tab" data-lang="si" aria-selected="true" class="on" lang="si">සිංහල</button>
+                        <button type="button" role="tab" data-lang="ta" aria-selected="false" lang="ta">தமிழ்</button>
+                        <button type="button" role="tab" data-lang="en" aria-selected="false">English</button>
+                        <span class="lp-ld-ink" aria-hidden="true"></span>
+                    </div>
+                    <div class="lp-ld-app" aria-live="polite">
+                        <div class="lp-ld-side">
+                            <span class="lp-ld-logo"></span>
+                            <span class="lp-ld-nav on" data-k="dashboard"></span>
+                            <span class="lp-ld-nav" data-k="classes"></span>
+                            <span class="lp-ld-nav" data-k="timetable"></span>
+                            <span class="lp-ld-nav" data-k="attendance"></span>
+                            <span class="lp-ld-nav" data-k="payments"></span>
+                            <span class="lp-ld-nav" data-k="recordings"></span>
+                        </div>
+                        <div class="lp-ld-main">
+                            <div class="lp-ld-hello"><b data-k="hello"></b><small data-k="today"></small></div>
+                            <div class="lp-ld-cards">
+                                <div class="lp-ld-card"><small data-k="attendance"></small><b>92%</b><span class="lp-ld-chip ok" data-k="present"></span></div>
+                                <div class="lp-ld-card"><small data-k="students"></small><b>48</b><span class="lp-ld-chip" data-k="classes3"></span></div>
+                            </div>
+                            <div class="lp-ld-card lp-ld-next"><div><small data-k="next"></small><b>A/L Physics · 3:30 PM</b></div><span class="lp-ld-btn" data-k="join"></span></div>
+                            <div class="lp-ld-card lp-ld-fee"><div><small data-k="fees"></small><b>LKR 1,500</b></div><span class="lp-ld-btn lp-ld-btn-g" data-k="paynow"></span></div>
+                            <div class="lp-ld-list">
+                                <span><i class="ok"></i><b data-k="tutes"></b><em data-k="new"></em></span>
+                                <span><i class="v"></i><b data-k="recordings"></b><em data-k="watch"></em></span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="lp-ld-cap">Try it: tap a language above.</p>
                 </div>
             </div>
         </section>
@@ -575,32 +632,61 @@ function lp_icon(string $n, int $s = 22): string
             </div>
         </section>
 
-        <!-- ============ CTA ============ -->
-        <section class="lp-cta">
-            <div class="lp-aurora lp-aurora-cta" aria-hidden="true"><i></i><i></i><i></i></div>
-            <div class="lp-wrap lp-cta-in" data-reveal>
-                <h2>Your next class could already be running on ENLIXO.</h2>
-                <p>Free for up to <?= $freeLimit ?> students. Send your request today and we set everything up with you.</p>
-                <div class="lp-hero-cta lp-center">
-                    <a href="<?= $signup ?>" class="lp-btn lp-btn-white lp-btn-lg lp-shine">Start free today <?= lp_icon('arrow', 18) ?></a>
-                    <a href="tutor/" class="lp-btn lp-btn-glass lp-btn-lg">I already have an account</a>
-                </div>
-            </div>
-        </section>
     </main>
 
     <footer class="lp-foot">
-        <div class="lp-wrap lp-foot-in">
-            <div class="lp-foot-brand">
-                <img src="assets/imgs/common/enlixo-light.webp" alt="<?= $e($name) ?>">
-                <p>The all-in-one app for tutors in Sri Lanka.</p>
+        <div class="lp-foot-glow" aria-hidden="true"></div>
+        <div class="lp-wrap">
+            <div class="lp-foot-cta" data-reveal>
+                <div>
+                    <span class="lp-foot-badge"><span class="lp-announce-tag">FREE</span> Up to <?= $freeLimit ?> students</span>
+                    <h3>Bring your class online this week.</h3>
+                    <p>Send your request in two minutes. Our team calls you and sets everything up.</p>
+                </div>
+                <div class="lp-foot-cta-btns">
+                    <a href="<?= $signup ?>" class="lp-btn lp-btn-primary lp-btn-lg lp-shine">Start free today <?= lp_icon('arrow', 18) ?></a>
+                    <a href="#pricing" class="lp-btn lp-btn-glass lp-btn-lg">See pricing</a>
+                </div>
             </div>
-            <div class="lp-foot-col"><b>Product</b><a href="#free">Free plan</a><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="<?= $signup ?>">Start free</a></div>
-            <div class="lp-foot-col"><b>Sign in</b><a href="tutor/">Tutor Dashboard</a><a href="portal/">Student Portal</a><a href="parent/">Parent Portal</a><a href="admin/">ENLIXO team</a></div>
-        </div>
-        <div class="lp-wrap lp-foot-bottom">
-            <span>&copy; <?= date('Y') ?> <?= $e($name) ?>. All rights reserved.</span>
-            <a href="https://enviiz.com" target="_blank" rel="noopener" class="lp-powered">Powered by <img src="assets/imgs/common/enviiz-white.webp" alt="ENVIIZ Softwares"></a>
+
+            <div class="lp-foot-in">
+                <div class="lp-foot-brand">
+                    <img src="assets/imgs/common/enlixo-light.webp" alt="<?= $e($name) ?>">
+                    <p>The all-in-one app for tutors in Sri Lanka. Students, fees, attendance, Zoom classes, recordings, tutes and parents, in one place.</p>
+                    <div class="lp-foot-langs" aria-label="Languages">
+                        <a href="#languages" lang="si">සිංහල</a><a href="#languages" lang="ta">தமிழ்</a><a href="#languages">English</a>
+                    </div>
+                    <div class="lp-foot-trust">
+                        <span><?= lp_icon('lock', 16) ?> Each tutor's data kept apart</span>
+                        <span><?= lp_icon('phone', 16) ?> Works on any phone</span>
+                    </div>
+                </div>
+                <nav class="lp-foot-col" aria-label="Product"><b>Product</b>
+                    <a href="#free">Free plan</a><a href="#features">Features</a><a href="#languages">Languages</a><a href="#pricing">Pricing</a><a href="#how">How it works</a><a href="#faq">FAQ</a>
+                </nav>
+                <nav class="lp-foot-col" aria-label="Sign in"><b>Sign in</b>
+                    <a href="tutor/"><span class="lp-fdot lp-fdot-b"></span>Tutor Dashboard</a>
+                    <a href="portal/"><span class="lp-fdot lp-fdot-g"></span>Student Portal</a>
+                    <a href="parent/"><span class="lp-fdot lp-fdot-v"></span>Parent Portal</a>
+                    <a href="admin/"><span class="lp-fdot"></span>ENLIXO team</a>
+                </nav>
+                <nav class="lp-foot-col" aria-label="Get started"><b>Get started</b>
+                    <a href="<?= $signup ?>?plan=free">Start free</a>
+                    <a href="<?= $signup ?>?plan=grow"><?= (int) $trial['days'] ?>-day trial for bigger classes</a>
+                    <a href="#logins">Student &amp; parent logins</a>
+                    <a href="https://enviiz.com" target="_blank" rel="noopener">About ENVIIZ</a>
+                </nav>
+            </div>
+
+            <div class="lp-foot-word" aria-hidden="true">ENLIXO</div>
+
+            <div class="lp-foot-bottom">
+                <span>&copy; <?= date('Y') ?> <?= $e($name) ?>. All rights reserved. Made in Sri Lanka.</span>
+                <div class="lp-foot-bottom-r">
+                    <a href="https://enviiz.com" target="_blank" rel="noopener" class="lp-powered">Powered by <img src="assets/imgs/common/enviiz-white.webp" alt="ENVIIZ Softwares"></a>
+                    <a href="#top" class="lp-totop" aria-label="Back to the top"><?= lp_icon('arrow', 18) ?></a>
+                </div>
+            </div>
         </div>
     </footer>
 
