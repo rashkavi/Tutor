@@ -22,6 +22,13 @@ Don't add `border: 1px` to a new component; use a background change for hover an
 | Settings layout | One `component-theme` card: left menu `.ex-side-nav` (`.ex-side-group` headings, `.ex-side-item` buttons, `.active`), right panel `p-4`. |
 | Lists | `DataView` (search, filters, export, per page, table). |
 
+## Dashboards
+
+Built from `includes/enlixo/dashboard.php`, the same for every role: `enlixo_dash_head()` (greeting + buttons), `enlixo_dash_stats()`,
+`enlixo_dash_sessions()` (today + coming up), `enlixo_dash_attendance()` / `enlixo_dash_bars()` (bars, blue = present, red = absent, always with a legend
+and a hover card), `enlixo_dash_calendar()`, `enlixo_dash_payments()`, `enlixo_dash_attention()`. Every card has an empty state that says what to do next.
+Status pills: green = done, orange = waiting, red = overdue or rejected, always with the word.
+
 ## Text
 
 | Size | Class | For |

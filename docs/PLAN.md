@@ -82,7 +82,7 @@ Status: ✅ done in this branch · 🟡 started · ⬜ to do
 |---|------|--------|
 | 7.1 | CSRF, rate limiting on login and heartbeat | ⬜ |
 | 7.2 | Webhook log table + retry worker | ⬜ |
-| 7.3 | Parent dashboard child switcher | ⬜ |
+| 7.3 | Parent dashboard child switcher | ✅ (`parent/dashboard?child=ID`) |
 
 ## Moving the real pages (started 2026-11-09)
 | Page | Status |
@@ -91,11 +91,31 @@ Status: ✅ done in this branch · 🟡 started · ⬜ to do
 | `portal/watch-recording.php`, `portal/watch-pre-recording.php`: watch-time meter + lock (PRO only), enrolment check on pre-recordings | ✅ |
 | ENLIXO V3 layout: grouped side menu (Academic / Finance / Communication / Settings), header card with Action menu, count + search + filter dropdown + Export Report, Results Per Page, "Update ticked" bulk action, ticked table with sort icons. Applied to Students | ✅ |
 | Create a Class (`tutor/create-class.php`): one page with weekly times + fee, (i) info on every field, "Customise form" (hide fields, add own fields). See docs/TUTOR-PRODUCT-PLAN.md step 1 | ✅ |
+| Dashboards for all four roles (`tutor/`, `admin/`, `portal/`, `parent/dashboard.php`): real numbers only (the sample chart, calendar and parent figures are gone), one shared kit (`includes/enlixo/dashboard.php`, `Enlixo\Dashboard\DashboardRepository`, `app-dashboard.js`). See "Dashboards" below | ✅ |
+| Admin side menu lists only pages that exist in `admin/` | ✅ |
 | `tutor/payments`, `tutor/attendance`, `tutor/class-students`, `tutor/time-table` | ⬜ next |
 | Student portal: timetable + recordings grouped by class | ⬜ |
 | Tutor settings: custom roles page | ⬜ |
 | Zoom weekly schedule UI | ⬜ |
 | Lock badges in the side menu | ⬜ |
+
+## Dashboards (done 2026-11-12)
+
+All four are drawn by PHP from `DashboardRepository` (prepared statements), with the same parts in the same order:
+header card (greeting + main buttons) → stat cards → today's classes / attendance bars / month calendar → tables.
+
+| Role | Stat cards | Extra |
+|---|---|---|
+| Tutor | Active classes, students, income this month (vs last month), fees to collect | "Needs your attention": slips to approve, overdue fees, class days of the last 7 days with no attendance. Recent payments. Quick notes (kept in the browser). |
+| Admin | Active tutors, students, active classes, package income this month | "Needs your attention": tutor requests, package payments to approve. New tutors per month, tutors per package, latest requests and package payments. |
+| Student | My classes, classes this week, attendance (6 weeks), fees to pay | Fees to pay with "Pay now", recent payments, my classes. |
+| Parent | Children (or classes for one child), classes this week, attendance, fees to pay | Child switcher (`?child=ID`, only the parent's own children), one card per child, fees to pay with "Pay now". |
+
+Rules used: paid = payment status 3 or 8; attended = attendance status 2 or 4 (watched the recording); for students a past class
+day with no mark counts as missed (same as the Attendance page). The calendar holds class days from 2 months back to 3 months ahead.
+No Chart.js or other CDN script is needed on these pages. If the data can't be read, the page shows "We couldn't load your dashboard" and the menu still works.
+
+Not done yet: notes are saved per browser, not in the database; the student and parent "Today's classes" rows don't show a Zoom join button.
 
 ## Open questions for Rashmi
 1. Recording limit default: is **3 × video length** right, or do you want a fixed number of views like V3?

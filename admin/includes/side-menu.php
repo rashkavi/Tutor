@@ -8,16 +8,14 @@ class load_side_menu
 
         $sessionUser = SessionUser::getCurrentUserObject('Admin');
         
+        // Only pages that exist in admin/. (The old list linked to tutor pages that were never built here.)
         $menuItems = [
             ["Dashboard", "material-symbols:team-dashboard-outline", "dashboard", "dashboard"],
             ["Users", "mdi:users", "users", "users"],
+            ["Tutor Requests", "mdi:account-clock-outline", "requested-users", ""],
             ["Classes", "eos-icons:product-classes-outlined", "classes", "classes"],
-            ["Students", "ph:student", "students", "students"],
-            ["Time Table", "eos-icons:storage-class-outlined", "time-table", "time-table"],
             ["Payments", "f7:wallet", "payments", "payments"],
-            ["Attendance", "gg:check-o", "attendance", "attendance"],
-            ["Intergrations", "grommet-icons:connect", "intergrations", "intergrations"],
-            ["Message Center", "healthicons:communication", "message-center", "message-center"],
+            ["News", "mdi:newspaper-variant-outline", "news", ""],
         ];
 
 ?>
@@ -50,7 +48,7 @@ class load_side_menu
                 ?>
                 <div class="d-flex flex-column align-items-start mx-2 flex-grow-1">
                     <span class="text-16 main-text fw-medium"><?php
-                                                                $role = ucwords(strtolower('Tutor'));
+                                                                $role = ucwords(strtolower('Admin'));
                                                                 echo strlen($role) > 11 ? substr($role, 0, 11) . '...' : $role;
                                                                 ?></span>
                     <span class=" text-12 sub-text fw-medium">Log Out</span>

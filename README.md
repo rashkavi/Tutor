@@ -16,7 +16,7 @@ The existing app (PHP pages in `tutor/`, `portal/`, `admin/`, `includes/`) stays
 | `api/v1/` | JSON API front controller (uses the existing login session) |
 | `src/` | API code, namespace `Enlixo\` (Controller → Service → Repository) |
 | `assets/js/enlixo/`, `assets/css/enlixo-ui.css` | Reusable UI kit. All classes start with `ex-` so they never clash with Bootstrap |
-| `includes/enlixo/` | Small PHP helpers the old pages include (e.g. the recording watch-time guard) |
+| `includes/enlixo/` | Small PHP helpers the old pages include (e.g. the recording watch-time guard, the dashboard parts in `dashboard.php`) |
 | `design-demo/` | The new screens on demo data, no database needed |
 
 ## Run locally
@@ -57,6 +57,7 @@ No packages to install. Tests use in-memory fakes, so they don't need MySQL.
 | `src/Roles` | Custom roles, `PermissionService` (role ∩ package), audit log |
 | `src/Recordings` | Watch-time limits: rules, overrides, server-counted heartbeats |
 | `src/Students`, `src/Classes` | Tutor-scoped lists for the real pages |
+| `src/Dashboard` | Numbers for the tutor, admin, student and parent dashboards (`DashboardRepository`) and date helpers (`Stats`) |
 | `src/Scheduling` | Weekly slots → timetable sessions → Zoom meetings; Zoom OAuth / S2S clients; webhook verifier |
 | `assets/js/enlixo/core` | `ApiClient`, `Component`, `UrlState`, DOM helpers |
 | `assets/js/enlixo/components` | `DataView`, `SearchInput`, `FilterBar`, `Pagination`, `LoadingState`, `EmptyState`, `FeatureGate`, `Modal`, `Toast`, `Tabs`, `Meter` |
