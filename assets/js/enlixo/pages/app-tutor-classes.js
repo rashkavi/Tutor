@@ -8,6 +8,8 @@ import { QuickGuide } from '../components/QuickGuide.js';
 import { ActionMenu } from '../components/Popover.js';
 import { BsModal } from '../components/BsModal.js';
 import { Toast } from '../components/Toast.js';
+import { StatCard } from '../components/StatCard.js';
+import { EmptyState } from '../components/EmptyState.js';
 
 const api = new ApiClient();
 const root = document.getElementById('classes-root');
@@ -81,7 +83,7 @@ function draw() {
   const list = visible();
   const scroller = document.querySelector('.contentBodyArea');
   const y = scroller?.scrollTop;
-  fill(root, stats(), toolbar(), viewBar(list), list.length ? body(list) : empty());
+  fill(root, stats(), toolbar(list), viewBar(), list.length ? body(list) : empty());
   if (scroller && y !== undefined) scroller.scrollTop = y;
 }
 
@@ -95,15 +97,13 @@ function stats() {
     const [a, b] = [t.start, t.end].map((x) => x.split(':').map(Number));
     return m + ((b[0] * 60 + b[1]) - (a[0] * 60 + a[1])) / 60;
   }, 0), 0);
-  const card = (ico, n, title, sub) => h('div', { class: 'col-12 col-md-6 col-xl-3' },
-    h('div', { class: 'component-theme px-4 py-3 h-100 d-flex align-items-center gap-3' },
-      h('span', { class: 'ex-stat-ico' }, icon(ico, { size: 22 })),
-      h('div', {}, h('div', { class: 'ex-stat-num' }, n), h('div', { class: 'text-14 main-text' }, title), h('div', { class: 'text-12 sub-text' }, sub))));
-  return h('div', { class: 'row g-3 mb-4' },
-    card('classes', String(active.length), 'Active classes', `${all.length - active.length} inactive`),
-    card('students', String(students), 'Students', 'active in your classes'),
-    card('money', money(income), 'Expected each month', 'monthly fee × students'),
-    card('clock', `${Math.round(hours * 10) / 10} h`, 'Teaching each week', `${active.reduce((n, c) => n + c.times.length, 0)} weekly class times`));
+  const showStatus = (status) => [{ label: status ? `Show ${status} classes` : 'Show all classes', icon: 'filter', onClick: () => { state.filters.status = status; draw(); } }];
+  return StatCard.row([
+    { icon: 'classes', label: 'Active Classes', value: active.length, caption: `${all.length - active.length} inactive`, menu: [...showStatus('active'), ...showStatus('inactive')] },
+    { icon: 'students', label: 'Students', value: students, caption: 'Active in your classes', menu: [{ label: 'Open students', icon: 'students', href: 'students' }] },
+    { icon: 'money', label: 'Expected Each Month', value: money(income), caption: 'Monthly fee × students' },
+    { icon: 'clock', label: 'Teaching Each Week', value: `${Math.round(hours * 10) / 10} h`, caption: `${active.reduce((n, c) => n + c.times.length, 0)} weekly class times`, menu: [{ label: 'Open the timetable', icon: 'timetable', href: 'time-table' }] },
+  ]);
 }
 
 // ---------- toolbar: search and filters ----------
@@ -113,32 +113,58 @@ function options(key, idKey) {
   return [...seen].sort((a, b) => String(a[1]).localeCompare(String(b[1]), undefined, { numeric: true }));
 }
 
-function toolbar() {
-  const select = (label, key, opts) => h('select', { class: 'form-select custom-select ex-h40 ex-filter', 'aria-label': label, onchange: (e) => { state.filters[key] = e.target.value; draw(); } },
-    h('option', { value: '' }, label), opts.map(([v, l]) => h('option', { value: v, selected: state.filters[key] === v }, l)));
-  const search = h('input', { type: 'search', class: 'form-control custom-input ex-h40 ps-5', placeholder: 'Search classes', value: state.q, 'aria-label': 'Search classes',
-    oninput: debounce((e) => { state.q = e.target.value; const pos = e.target.selectionStart; draw(); const el = root.querySelector('.ex-classes-search input'); el?.focus(); el?.setSelectionRange(pos, pos); }, 200) });
-  return h('div', { class: 'component-theme p-3 mb-3' },
-    h('div', { class: 'd-flex flex-wrap align-items-center gap-2' },
-      h('div', { class: 'position-relative ex-classes-search flex-grow-1' }, h('span', { class: 'ex-search-ico' }, icon('search', { size: 16 })), search),
-      select('All exams', 'exam', options('exam', 'exam_id')),
-      select('All years', 'year', options('year', 'year_id')),
-      select('All subjects', 'subject', options('subject', 'subject_id')),
-      select('All mediums', 'medium', options('medium', 'medium_id')),
-      select('Any status', 'status', [['active', 'Active'], ['inactive', 'Inactive']])));
+const clearAll = () => { state.q = ''; Object.keys(state.filters).forEach((k) => { state.filters[k] = ''; }); draw(); };
+let filtersOpen = null; // null until first drawn: then open only if a filter is already set
+
+// V3 table toolbar: [ N Classes ] [ search ] [ filter ] [ Export Report ], the filter row opens below
+// (a label over each select, the refresh button clears them; the red badge counts the filters in use).
+function toolbar(list) {
+  if (filtersOpen === null) filtersOpen = Object.values(state.filters).some(Boolean);
+  const field = (label, key, all, opts) => {
+    const id = `cf-${key}`;
+    return h('div', { class: 'col-12 col-md-4 col-lg-2' }, h('label', { class: 'text-12 sub-text mb-1', for: id }, label),
+      h('select', { id, class: 'form-select custom-select', onchange: (e) => { state.filters[key] = e.target.value; draw(); } },
+        h('option', { value: '' }, `- ${all} -`), opts.map(([v, l]) => h('option', { value: v, selected: String(state.filters[key]) === String(v) }, l))));
+  };
+  const search = h('input', { type: 'search', class: 'h-100 sub-text form-control border-0 shadow-none ex-search-input', placeholder: 'Search classes by name, subject or exam', value: state.q, 'aria-label': 'Search classes', 'data-limit': '100',
+    oninput: debounce((e) => { state.q = e.target.value; const pos = e.target.selectionStart; draw(); const el = root.querySelector('.ex-search-input'); el?.focus(); el?.setSelectionRange(pos, pos); }, 200) });
+  const set = Object.values(state.filters).filter(Boolean).length;
+  const total = state.classes.length;
+  const row = h('div', { class: 'col-12 ex-v3-filters', id: 'class-filters', hidden: !filtersOpen },
+    h('div', { class: 'row justify-content-end align-items-end gy-3 gx-3' },
+      field('Exam', 'exam', 'All Exams', options('exam', 'exam_id')),
+      field('Year', 'year', 'All Years', options('year', 'year_id')),
+      field('Subject', 'subject', 'All Subjects', options('subject', 'subject_id')),
+      field('Medium', 'medium', 'All Mediums', options('medium', 'medium_id')),
+      field('Status', 'status', 'All Status', [['active', 'Active'], ['inactive', 'Inactive']]),
+      h('div', { class: 'col-auto d-flex flex-column justify-content-end' },
+        h('button', { type: 'button', class: 'custom-btn-outline tf-clear d-flex align-items-center justify-content-center', title: 'Clear filters', 'aria-label': 'Clear filters', disabled: !set,
+          onclick: () => { Object.keys(state.filters).forEach((k) => { state.filters[k] = ''; }); draw(); } }, icon('refresh', { size: 22 })))));
+  const toggle = h('button', { type: 'button', class: 'custom-btn w-100 position-relative ex-filter-btn', 'aria-expanded': String(filtersOpen), 'aria-controls': 'class-filters', title: 'Filters', 'aria-label': 'Filters',
+    onclick: () => { filtersOpen = !filtersOpen; toggle.setAttribute('aria-expanded', String(filtersOpen)); row.hidden = !filtersOpen; } },
+    icon('sliders', { size: 24 }), h('span', { class: 'tf-badge', hidden: !set, title: 'Filters applied' }, String(set)));
+  return h('div', { class: 'component-theme p-4 mb-4' },
+    h('div', { class: 'row p-0 gy-3 gx-3 align-content-center justify-content-end' },
+      h('div', { class: 'col-4 col-md-2 d-flex flex-column justify-content-start' },
+        h('div', { class: 'd-flex custom-div align-items-center justify-content-center px-2', 'aria-live': 'polite' },
+          h('span', { class: 'text-14 dark-theme fw-medium text-nowrap' }, filtering() ? `${list.length} of ${total} Classes` : `${total} ${total === 1 ? 'Class' : 'Classes'}`))),
+      h('div', { class: 'col-8 col-md-8 col-lg-7 d-flex flex-column' },
+        h('div', { class: 'h-100 d-flex align-items-center p-1 bl-solid ex-search-box' }, h('span', { class: 'px-3 d-inline-flex' }, icon('search', { size: 22 })), search)),
+      h('div', { class: 'col-12 col-md-2 col-lg-1 d-flex flex-column justify-content-end' }, toggle),
+      h('div', { class: 'col-12 col-md-2 col-lg-2 d-flex flex-column justify-content-end' },
+        h('button', { type: 'button', class: 'custom-btn w-100 d-flex align-items-center justify-content-center gap-2', onclick: exportCsv },
+          h('span', { class: 'text-14 fw-semibold' }, 'Export Report'), icon('download', { size: 22 }))),
+      row));
 }
 
-// The line above the list: count and how to reorder on the left, export and the view switcher on the right (as in V3).
-function viewBar(list) {
+// The line above the list: how to reorder on the left, the view switcher on the right.
+function viewBar() {
   const total = state.classes.length;
-  const clear = () => { state.q = ''; Object.keys(state.filters).forEach((k) => { state.filters[k] = ''; }); draw(); };
   return h('div', { class: 'd-flex flex-wrap align-items-center gap-3 mb-3' },
-    h('span', { class: 'text-14 main-text' }, filtering() ? `${list.length} of ${total} classes` : `${total} ${total === 1 ? 'class' : 'classes'}`),
     total > 1 ? (canDrag()
       ? h('span', { class: 'text-12 sub-text d-inline-flex align-items-center gap-1' }, 'To change the order, hold', h('span', { class: 'ex-grip-sample' }, icon('drag-dots', { size: 14 })), 'and drag a class up or down.')
-      : h('span', { class: 'text-12 sub-text' }, 'Showing a filtered list. ', h('button', { type: 'button', class: 'ex-link-add', onclick: clear }, 'Clear search and filters'), ' to change the order.')) : null,
+      : h('span', { class: 'text-12 sub-text' }, 'Showing a filtered list. ', h('button', { type: 'button', class: 'ex-link-add', onclick: clearAll }, 'Clear search and filters'), ' to change the order.')) : null,
     h('div', { class: 'ms-auto d-flex align-items-center gap-2' },
-      h('button', { type: 'button', class: 'ex-view-btn', title: 'Export classes (CSV)', 'aria-label': 'Export classes (CSV)', onclick: exportCsv }, icon('export', { size: 18 })),
       h('div', { class: 'ex-view-switch', role: 'group', 'aria-label': 'View' }, VIEWS.map(([key, label, ico]) => h('button', {
         type: 'button', class: `ex-view-btn ${state.view === key ? 'active' : ''}`, 'aria-pressed': String(state.view === key), title: label, 'aria-label': `${label} view`,
         onclick: () => { state.view = key; localStorage.setItem('enlixo.classes.view', key); draw(); },
@@ -147,11 +173,9 @@ function viewBar(list) {
 
 function empty() {
   const none = !state.classes.length;
-  return h('div', { class: 'component-theme text-center py-5 px-3' },
-    h('span', { class: 'ex-empty-ico' }, icon('classes', { size: 30 })),
-    h('p', { class: 'main-text fw-medium mt-3 mb-1' }, none ? 'No classes yet' : 'No class matches'),
-    h('p', { class: 'text-14 sub-text mb-3' }, none ? 'Create your first class: subject, weekly times and fee in one form.' : 'Try another search or clear the filters.'),
-    none ? h('a', { href: 'create-class', class: 'custom-btn ex-btn-md px-4 border-0 d-inline-flex' }, 'Create a Class') : null);
+  return h('div', { class: 'component-theme' }, EmptyState.empty(none
+    ? { icon: 'classes', title: 'No classes yet', text: 'Create your first class: subject, weekly times and fee in one form.', action: h('a', { href: 'create-class', class: 'custom-btn ex-btn-md px-4 border-0 d-inline-flex' }, 'Create a Class') }
+    : { icon: 'search', title: 'No class matches', text: 'Try another search or clear the filters.', action: h('button', { type: 'button', class: 'custom-btn-outline px-4', onclick: clearAll }, 'Clear search and filters') }));
 }
 
 // ---------- shared bits ----------

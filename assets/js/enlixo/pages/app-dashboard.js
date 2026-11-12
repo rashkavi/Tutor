@@ -40,17 +40,17 @@ class DashCalendar {
         this.next.disabled = this.month >= this.data.to;
         this.grid.replaceChildren();
         const lead = (new Date(y, m - 1, 1).getDay() + 6) % 7; // Monday first
-        for (let i = 0; i < lead; i++) this.grid.append(el('span', 'ex-cal-cell'));
+        for (let i = 0; i < lead; i++) this.grid.append(el('span', 'ex-hd-cal-cell'));
         const count = new Date(y, m, 0).getDate();
         for (let d = 1; d <= count; d++) {
             const key = `${this.month}-${pad(d)}`;
             const list = this.data.days[key];
-            const cell = el(list ? 'button' : 'span', 'ex-cal-cell', String(d));
-            if (key === this.data.today) cell.classList.add('ex-cal-today');
+            const cell = el(list ? 'button' : 'span', 'ex-hd-cal-cell', String(d));
+            if (key === this.data.today) cell.classList.add('ex-hd-cal-today');
             if (list) {
                 cell.type = 'button';
                 cell.setAttribute('aria-label', `${d} ${MONTHS[m - 1]}: ${list.length} ${list.length === 1 ? 'class' : 'classes'}`);
-                if (key === this.picked) cell.classList.add('ex-cal-picked');
+                if (key === this.picked) cell.classList.add('ex-hd-cal-picked');
                 cell.addEventListener('click', () => {
                     this.picked = key;
                     this.draw();
@@ -84,7 +84,7 @@ class DashCalendar {
 function chartTips() {
     let tip = null;
     const show = (col) => {
-        tip ??= document.body.appendChild(el('div', 'ex-chart-tip'));
+        tip ??= document.body.appendChild(el('div', 'ex-hd-chart-tip'));
         tip.textContent = col.dataset.tip;
         const r = col.getBoundingClientRect();
         tip.style.left = `${Math.min(Math.max(r.left + r.width / 2, 90), window.innerWidth - 90)}px`;
@@ -92,7 +92,7 @@ function chartTips() {
         tip.hidden = false;
     };
     const hide = () => { if (tip) tip.hidden = true; };
-    for (const col of document.querySelectorAll('.ex-chart-col[data-tip]')) {
+    for (const col of document.querySelectorAll('.ex-hd-chart-col[data-tip]')) {
         col.addEventListener('mouseenter', () => show(col));
         col.addEventListener('focus', () => show(col));
         col.addEventListener('mouseleave', hide);

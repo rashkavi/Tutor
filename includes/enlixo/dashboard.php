@@ -77,7 +77,7 @@ function enlixo_dash_head(string $title, string $subtitle, array $actions = []):
             <?php if ($actions) { ?>
                 <div class="d-flex flex-wrap gap-2">
                     <?php foreach ($actions as $a) { ?>
-                        <a class="<?= !empty($a[3]) ? 'custom-btn' : 'custom-outline-btn' ?> ex-btn-md ex-dash-btn" href="<?= enlixo_dash_e($a[1]) ?>">
+                        <a class="<?= !empty($a[3]) ? 'custom-btn' : 'custom-outline-btn' ?> ex-btn-md ex-hd-btn" href="<?= enlixo_dash_e($a[1]) ?>">
                             <?= !empty($a[2]) ? enlixo_icon($a[2], 18) : '' ?><span><?= enlixo_dash_e($a[0]) ?></span>
                         </a>
                     <?php } ?>
@@ -101,8 +101,8 @@ function enlixo_dash_stats(array $cards): void
             <?php foreach ($cards as $c) {
                 $tag = !empty($c['href']) ? 'a' : 'div'; ?>
                 <div class="<?= $col ?>">
-                    <<?= $tag ?> class="component-theme px-4 py-3 d-flex align-items-center gap-3 h-100 ex-dash-stat"<?= $tag === 'a' ? ' href="' . enlixo_dash_e($c['href']) . '"' : '' ?>>
-                        <span class="ex-stat-ico<?= !empty($c['tone']) ? ' ex-tone-' . enlixo_dash_e($c['tone']) : '' ?>"><?= enlixo_icon($c['icon'], 24) ?></span>
+                    <<?= $tag ?> class="component-theme px-4 py-3 d-flex align-items-center gap-3 h-100 ex-hd-stat"<?= $tag === 'a' ? ' href="' . enlixo_dash_e($c['href']) . '"' : '' ?>>
+                        <span class="ex-stat-ico<?= !empty($c['tone']) ? ' ex-hd-tone-' . enlixo_dash_e($c['tone']) : '' ?>"><?= enlixo_icon($c['icon'], 24) ?></span>
                         <span class="min-w-0 d-block">
                             <span class="ex-stat-num d-block text-truncate"><?= enlixo_dash_stat_value($c['value']) ?></span>
                             <span class="text-14 main-text d-block"><?= enlixo_dash_e($c['title']) ?></span>
@@ -120,7 +120,7 @@ function enlixo_dash_stats(array $cards): void
 function enlixo_dash_stat_value(string $value): string
 {
     if (str_starts_with($value, 'LKR ')) {
-        return '<span class="ex-stat-unit">LKR</span> ' . enlixo_dash_e(substr($value, 4));
+        return '<span class="ex-hd-unit">LKR</span> ' . enlixo_dash_e(substr($value, 4));
     }
     return enlixo_dash_e($value);
 }
@@ -134,7 +134,7 @@ function enlixo_dash_card_head(string $title, string $sub = '', ?string $href = 
             <h2 class="ex-panel-title m-0"><?= enlixo_dash_e($title) ?></h2>
             <?php if ($sub !== '') { ?><p class="text-12 sub-text m-0"><?= enlixo_dash_e($sub) ?></p><?php } ?>
         </div>
-        <?php if ($href) { ?><a class="ex-dash-link" href="<?= enlixo_dash_e($href) ?>"><?= enlixo_dash_e($linkText) ?></a><?php } ?>
+        <?php if ($href) { ?><a class="ex-hd-link" href="<?= enlixo_dash_e($href) ?>"><?= enlixo_dash_e($linkText) ?></a><?php } ?>
     </div>
     <?php
 }
@@ -142,7 +142,7 @@ function enlixo_dash_card_head(string $title, string $sub = '', ?string $href = 
 function enlixo_dash_empty(string $text, string $icon = 'check'): void
 {
     ?>
-    <div class="ex-dash-empty">
+    <div class="ex-hd-empty">
         <span class="ex-empty-ico"><?= enlixo_icon($icon, 28) ?></span>
         <p class="text-14 sub-text m-0"><?= enlixo_dash_e($text) ?></p>
     </div>
@@ -161,15 +161,15 @@ function enlixo_dash_attention(array $items, string $emptyText = 'Nothing is wai
         if (!$items) {
             enlixo_dash_empty($emptyText);
         } else { ?>
-            <ul class="ex-dash-list">
+            <ul class="ex-hd-list">
                 <?php foreach ($items as $it) { ?>
-                    <li class="ex-dash-row">
-                        <span class="ex-dash-ico ex-tone-<?= enlixo_dash_e($it['tone'] ?? 'warn') ?>"><?= enlixo_icon($it['icon'], 20) ?></span>
+                    <li class="ex-hd-row">
+                        <span class="ex-hd-ico ex-hd-tone-<?= enlixo_dash_e($it['tone'] ?? 'warn') ?>"><?= enlixo_icon($it['icon'], 20) ?></span>
                         <span class="flex-grow-1 min-w-0">
                             <span class="text-14 main-text d-block"><?= enlixo_dash_e($it['text']) ?></span>
                             <?php if (!empty($it['sub'])) { ?><span class="text-12 sub-text d-block"><?= enlixo_dash_e($it['sub']) ?></span><?php } ?>
                         </span>
-                        <a class="custom-outline-btn ex-btn-sm ex-dash-btn" href="<?= enlixo_dash_e($it['href']) ?>"><?= enlixo_dash_e($it['action']) ?></a>
+                        <a class="custom-outline-btn ex-btn-sm ex-hd-btn" href="<?= enlixo_dash_e($it['href']) ?>"><?= enlixo_dash_e($it['action']) ?></a>
                     </li>
                 <?php } ?>
             </ul>
@@ -196,14 +196,14 @@ function enlixo_dash_sessions(array $sessions, array $o): void
             enlixo_dash_empty($o['empty'] ?? 'No classes in the next 7 days.', 'timetable');
         } else {
             if ($todays) {
-                echo '<ul class="ex-dash-list">';
+                echo '<ul class="ex-hd-list">';
                 foreach ($todays as $s) {
                     enlixo_dash_session_row($s, $o, true);
                 }
                 echo '</ul>';
             }
             if ($later) {
-                echo '<div class="ex-dash-caption">Coming up</div><ul class="ex-dash-list">';
+                echo '<div class="ex-hd-caption">Coming up</div><ul class="ex-hd-list">';
                 foreach ($later as $s) {
                     enlixo_dash_session_row($s, $o, false);
                 }
@@ -221,13 +221,13 @@ function enlixo_dash_session_row(array $s, array $o, bool $isToday): void
     $who = isset($o['who']) ? (string) $o['who']($s) : '';
     $href = isset($o['link']) ? $o['link']($s) : null;
     ?>
-    <li class="ex-dash-row">
-        <span class="ex-dash-date<?= $isToday ? ' ex-today' : '' ?>" aria-hidden="true">
-            <span class="ex-dash-date-d"><?= $isToday ? enlixo_dash_e(date('g:i', strtotime($s['start']))) : date('j', $ts) ?></span>
-            <span class="ex-dash-date-m"><?= $isToday ? date('A', strtotime($s['start'])) : date('M', $ts) ?></span>
+    <li class="ex-hd-row">
+        <span class="ex-hd-date<?= $isToday ? ' ex-today' : '' ?>" aria-hidden="true">
+            <span class="ex-hd-date-d"><?= $isToday ? enlixo_dash_e(date('g:i', strtotime($s['start']))) : date('j', $ts) ?></span>
+            <span class="ex-hd-date-m"><?= $isToday ? date('A', strtotime($s['start'])) : date('M', $ts) ?></span>
         </span>
         <span class="flex-grow-1 min-w-0">
-            <span class="text-14 fw-medium ex-dash-title d-block text-truncate"><?= enlixo_dash_e($s['class']) ?></span>
+            <span class="text-14 fw-medium ex-hd-title d-block text-truncate"><?= enlixo_dash_e($s['class']) ?></span>
             <span class="text-12 sub-text d-flex align-items-start gap-1">
                 <?= enlixo_icon($s['online'] ? 'online' : 'physical', 14) ?>
                 <span><?= enlixo_dash_e(($isToday ? '' : date('D', $ts) . ' · ') . implode(' · ', $bits)) ?></span>
@@ -237,7 +237,7 @@ function enlixo_dash_session_row(array $s, array $o, bool $isToday): void
             <?php } ?>
         </span>
         <?php if ($href) { ?>
-            <a class="<?= $isToday ? 'custom-btn' : 'custom-outline-btn' ?> ex-btn-sm ex-dash-btn" href="<?= enlixo_dash_e($href) ?>"
+            <a class="<?= $isToday ? 'custom-btn' : 'custom-outline-btn' ?> ex-btn-sm ex-hd-btn" href="<?= enlixo_dash_e($href) ?>"
                aria-label="<?= enlixo_dash_e(($o['action'] ?? 'View') . ': ' . $s['class']) ?>"><?= enlixo_dash_e($o['action'] ?? 'View') ?></a>
         <?php } ?>
     </li>
@@ -267,32 +267,32 @@ function enlixo_dash_attendance(array $series, array $o = []): void
             <div class="d-flex align-items-end gap-3 mb-3">
                 <div><span class="ex-stat-num"><?= (int) $rate ?>%</span> <span class="text-12 sub-text"><?= enlixo_dash_e(strtolower($presentLabel)) ?></span></div>
                 <div class="ms-auto d-flex gap-3 text-12 main-text">
-                    <span class="d-inline-flex align-items-center gap-1"><i class="ex-chart-key ex-chart-present"></i><?= enlixo_dash_e($presentLabel) ?></span>
-                    <span class="d-inline-flex align-items-center gap-1"><i class="ex-chart-key ex-chart-absent"></i><?= enlixo_dash_e($absentLabel) ?></span>
+                    <span class="d-inline-flex align-items-center gap-1"><i class="ex-hd-chart-key ex-hd-chart-present"></i><?= enlixo_dash_e($presentLabel) ?></span>
+                    <span class="d-inline-flex align-items-center gap-1"><i class="ex-hd-chart-key ex-hd-chart-absent"></i><?= enlixo_dash_e($absentLabel) ?></span>
                 </div>
             </div>
-            <div class="ex-chart" role="img" aria-label="<?= enlixo_dash_e(($o['title'] ?? 'Attendance') . ': ' . $rate . '% ' . strtolower($presentLabel)) ?>">
+            <div class="ex-hd-chart" role="img" aria-label="<?= enlixo_dash_e(($o['title'] ?? 'Attendance') . ': ' . $rate . '% ' . strtolower($presentLabel)) ?>">
                 <?php foreach ($series as $p) {
                     $total = $p['present'] + $p['absent'];
                     $day = date('j M', strtotime($p['date']));
                     $tip = ($p['label'] === $day ? 'Week of ' . $day : $p['label'] . ' ' . $day) . ': ' . ($total ? $p['present'] . ' ' . strtolower($presentLabel) . ', ' . $p['absent'] . ' ' . strtolower($absentLabel) : 'nothing marked'); ?>
-                    <div class="ex-chart-col" tabindex="0" data-tip="<?= enlixo_dash_e($tip) ?>" aria-label="<?= enlixo_dash_e($tip) ?>">
-                        <div class="ex-chart-bars">
+                    <div class="ex-hd-chart-col" tabindex="0" data-tip="<?= enlixo_dash_e($tip) ?>" aria-label="<?= enlixo_dash_e($tip) ?>">
+                        <div class="ex-hd-chart-bars">
                             <?php if ($total === 0) { ?>
-                                <span class="ex-chart-none"></span>
+                                <span class="ex-hd-chart-none"></span>
                             <?php } else { ?>
-                                <span class="ex-chart-total"><?= $total ?></span>
-                                <?php if ($p['absent']) { ?><span class="ex-chart-bar ex-chart-absent" style="height: <?= round($p['absent'] * 100 / $max, 2) ?>%"></span><?php } ?>
-                                <?php if ($p['present']) { ?><span class="ex-chart-bar ex-chart-present" style="height: <?= round($p['present'] * 100 / $max, 2) ?>%"></span><?php } ?>
+                                <span class="ex-hd-chart-total"><?= $total ?></span>
+                                <?php if ($p['absent']) { ?><span class="ex-hd-chart-bar ex-hd-chart-absent" style="height: <?= round($p['absent'] * 100 / $max, 2) ?>%"></span><?php } ?>
+                                <?php if ($p['present']) { ?><span class="ex-hd-chart-bar ex-hd-chart-present" style="height: <?= round($p['present'] * 100 / $max, 2) ?>%"></span><?php } ?>
                             <?php } ?>
                         </div>
-                        <span class="ex-chart-x"><?= enlixo_dash_e($p['label']) ?></span>
+                        <span class="ex-hd-chart-x"><?= enlixo_dash_e($p['label']) ?></span>
                     </div>
                 <?php } ?>
             </div>
         <?php }
         if (!empty($o['footer'])) { ?>
-            <div class="ex-dash-foot mt-3"><?= enlixo_icon('crown', 20) ?><span class="text-12 main-text"><?= enlixo_dash_e($o['footer']) ?></span></div>
+            <div class="ex-hd-foot mt-3"><?= enlixo_icon('crown', 20) ?><span class="text-12 main-text"><?= enlixo_dash_e($o['footer']) ?></span></div>
         <?php } ?>
     </div>
     <?php
@@ -311,15 +311,15 @@ function enlixo_dash_bars(string $title, string $sub, array $items, string $unit
         if ($max === 0) {
             enlixo_dash_empty($emptyText, 'students');
         } else { ?>
-            <div class="ex-chart mt-auto" role="img" aria-label="<?= enlixo_dash_e($title) ?>">
+            <div class="ex-hd-chart mt-auto" role="img" aria-label="<?= enlixo_dash_e($title) ?>">
                 <?php foreach ($items as $it) {
                     $tip = $it['label'] . ': ' . $it['value'] . ' ' . $unit; ?>
-                    <div class="ex-chart-col" tabindex="0" data-tip="<?= enlixo_dash_e($tip) ?>" aria-label="<?= enlixo_dash_e($tip) ?>">
-                        <div class="ex-chart-bars">
-                            <span class="ex-chart-total"><?= (int) $it['value'] ?></span>
-                            <?php if ($it['value'] > 0) { ?><span class="ex-chart-bar ex-chart-present" style="height: <?= round($it['value'] * 100 / $max, 2) ?>%"></span><?php } else { ?><span class="ex-chart-none"></span><?php } ?>
+                    <div class="ex-hd-chart-col" tabindex="0" data-tip="<?= enlixo_dash_e($tip) ?>" aria-label="<?= enlixo_dash_e($tip) ?>">
+                        <div class="ex-hd-chart-bars">
+                            <span class="ex-hd-chart-total"><?= (int) $it['value'] ?></span>
+                            <?php if ($it['value'] > 0) { ?><span class="ex-hd-chart-bar ex-hd-chart-present" style="height: <?= round($it['value'] * 100 / $max, 2) ?>%"></span><?php } else { ?><span class="ex-hd-chart-none"></span><?php } ?>
                         </div>
-                        <span class="ex-chart-x"><?= enlixo_dash_e($it['label']) ?></span>
+                        <span class="ex-hd-chart-x"><?= enlixo_dash_e($it['label']) ?></span>
                     </div>
                 <?php } ?>
             </div>
@@ -342,15 +342,15 @@ function enlixo_dash_calendar(array $sessions, string $today, string $from, stri
     $days = array_map('array_values', $days);
     $data = ['today' => $today, 'from' => substr($from, 0, 7), 'to' => substr($to, 0, 7), 'days' => $days ?: new stdClass()];
     ?>
-    <div class="component-theme p-4 w-100 ex-cal" data-dash-calendar="<?= enlixo_dash_e(json_encode($data, JSON_UNESCAPED_UNICODE)) ?>">
+    <div class="component-theme p-4 w-100 ex-hd-cal" data-dash-calendar="<?= enlixo_dash_e(json_encode($data, JSON_UNESCAPED_UNICODE)) ?>">
         <div class="d-flex align-items-center gap-2 mb-3">
             <h2 class="ex-panel-title m-0 flex-grow-1" data-cal-title>Calendar</h2>
-            <button type="button" class="ex-cal-nav" data-cal-prev aria-label="Previous month"><?= enlixo_icon('chevron-left', 18) ?></button>
-            <button type="button" class="ex-cal-nav" data-cal-next aria-label="Next month"><?= enlixo_icon('chevron-right', 18) ?></button>
+            <button type="button" class="ex-hd-cal-nav" data-cal-prev aria-label="Previous month"><?= enlixo_icon('chevron-left', 18) ?></button>
+            <button type="button" class="ex-hd-cal-nav" data-cal-next aria-label="Next month"><?= enlixo_icon('chevron-right', 18) ?></button>
         </div>
-        <div class="ex-cal-grid ex-cal-dow" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-        <div class="ex-cal-grid" data-cal-grid></div>
-        <div class="ex-cal-day" data-cal-day aria-live="polite"></div>
+        <div class="ex-hd-cal-grid ex-hd-cal-dow" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+        <div class="ex-hd-cal-grid" data-cal-grid></div>
+        <div class="ex-hd-cal-day" data-cal-day aria-live="polite"></div>
     </div>
     <?php
 }
@@ -359,17 +359,17 @@ function enlixo_dash_avatar(string $name, string $image, string $folder): string
 {
     $file = dirname(__DIR__, 2) . '/assets/imgs/' . $folder . '/' . $image;
     if ($image !== '' && basename($image) === $image && is_file($file)) {
-        return '<img src="' . Project::getAssetsPath() . '/imgs/' . $folder . '/' . enlixo_dash_e($image) . '" class="ex-dash-avatar" alt="">';
+        return '<img src="' . Project::getAssetsPath() . '/imgs/' . $folder . '/' . enlixo_dash_e($image) . '" class="ex-hd-avatar" alt="">';
     }
     $parts = preg_split('/\s+/', trim($name)) ?: [];
     $initials = strtoupper(mb_substr($parts[0] ?? '', 0, 1) . mb_substr($parts[1] ?? '', 0, 1));
-    return '<span class="ex-dash-avatar" aria-hidden="true">' . enlixo_dash_e($initials) . '</span>';
+    return '<span class="ex-hd-avatar" aria-hidden="true">' . enlixo_dash_e($initials) . '</span>';
 }
 
 /** Status pill. $kind: 'good' | 'wait' | 'bad' | '' */
 function enlixo_dash_status(string $label, string $kind): string
 {
-    return '<span class="ex-dash-pill' . ($kind !== '' ? ' ex-tone-' . $kind : '') . '">' . enlixo_dash_e($label) . '</span>';
+    return '<span class="ex-hd-pill' . ($kind !== '' ? ' ex-hd-tone-' . $kind : '') . '">' . enlixo_dash_e($label) . '</span>';
 }
 
 function enlixo_dash_payment_kind(int $statusId): string
@@ -424,7 +424,7 @@ function enlixo_dash_payments(array $rows, array $o): void
                                 <td class="text-nowrap"><span class="text-14 main-text"><?= $date ? date('j M Y', strtotime($date)) : '-' ?></span></td>
                                 <td><?= $late ? enlixo_dash_status('Overdue', 'bad') : enlixo_dash_status($r['status'], enlixo_dash_payment_kind($r['status_id'])) ?></td>
                                 <?php if (isset($o['link'])) { ?>
-                                    <td class="text-end"><a class="<?= !empty($o['primary']) ? 'custom-btn' : 'custom-outline-btn' ?> ex-btn-sm ex-dash-btn" href="<?= enlixo_dash_e($o['link']($r)) ?>"
+                                    <td class="text-end"><a class="<?= !empty($o['primary']) ? 'custom-btn' : 'custom-outline-btn' ?> ex-btn-sm ex-hd-btn" href="<?= enlixo_dash_e($o['link']($r)) ?>"
                                             aria-label="<?= enlixo_dash_e(($o['action'] ?? 'View') . ': ' . $r['class']) ?>"><?= enlixo_dash_e($o['action'] ?? 'View') ?></a></td>
                                 <?php } ?>
                             </tr>
@@ -450,7 +450,7 @@ function enlixo_dash_skeleton(): void
         </div>
         <div class="row g-4">
             <?php foreach ([5, 4, 3] as $w) { ?>
-                <div class="col-12 col-xl-<?= $w ?>"><div class="component-theme p-4 ex-dash-skel"><span class="placeholder col-6 d-block mb-3"></span><span class="placeholder col-12 d-block mb-2"></span><span class="placeholder col-10 d-block mb-2"></span><span class="placeholder col-11 d-block"></span></div></div>
+                <div class="col-12 col-xl-<?= $w ?>"><div class="component-theme p-4 ex-hd-skel"><span class="placeholder col-6 d-block mb-3"></span><span class="placeholder col-12 d-block mb-2"></span><span class="placeholder col-10 d-block mb-2"></span><span class="placeholder col-11 d-block"></span></div></div>
             <?php } ?>
         </div>
     </div>
@@ -475,5 +475,5 @@ function enlixo_dash_cover(string $cover): string
     if ($cover !== '' && basename($cover) === $cover && is_file($file)) {
         return '<img class="ex-thumb-sm" src="' . Project::getAssetsPath() . '/imgs/classes-covers/' . enlixo_dash_e($cover) . '" alt="">';
     }
-    return '<span class="ex-cover-empty ex-thumb-sm ex-dash-cover" aria-hidden="true">' . enlixo_icon('classes', 20) . '</span>';
+    return '<span class="ex-cover-empty ex-thumb-sm ex-hd-cover" aria-hidden="true">' . enlixo_icon('classes', 20) . '</span>';
 }

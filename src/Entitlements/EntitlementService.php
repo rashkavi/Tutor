@@ -23,7 +23,7 @@ final class EntitlementService
             $this->cache[$tutorId] = new Entitlements(
                 $plan,
                 $features,
-                $this->repo->planStudentLimit($plan),
+                $this->repo->tutorStudentLimit($tutorId, $plan),
                 $this->repo->activeStudentCount($tutorId),
             );
         }

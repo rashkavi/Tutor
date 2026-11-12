@@ -7,7 +7,7 @@ class Project
     private const SUB_FOLDER_ASSETS_PATH = "../assets";
     private const SUB_FOLDER_INCLUDES_PATH = "../includes";
     private const SUB_FOLDER_API_ASSETS_PATH = "../../assets";
-    private const VERSION = "1.0.8";
+    private const VERSION = "1.0.9";
     private const BUNNY_LIBRARY_ID = "594208";
     private const BUNNY_API_KEY   = "ba6ab531-6fb3-4889-811fb7c1c0a4-62a3-4361";
 

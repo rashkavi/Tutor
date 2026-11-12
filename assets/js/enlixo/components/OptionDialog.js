@@ -1,5 +1,6 @@
 import { h } from '../core/dom.js';
 import { BsModal } from './BsModal.js';
+import { Toast } from './Toast.js';
 
 export const OWN_LISTS = {
   exam_types: { one: 'exam type', title: 'Exam types', example: 'e.g. Grade 9 Term Test', max: 45 },
@@ -34,12 +35,14 @@ export class OptionDialog {
           m.close();
         } catch (e) {
           err.textContent = e.details?.fields?.label ?? e.message;
+          if (!e.details?.fields?.label) Toast.error(e.message);
           input.classList.add('is-invalid');
           input.focus();
         } finally { save.disabled = false; }
       } });
       const m = BsModal.open({
         title: option ? `Rename ${meta.one}` : `Add your own ${meta.one}`,
+        icon: option ? 'edit' : 'plus',
         subtitle: 'Only you see it. The default list stays the same for every tutor.',
         body: h('div', { class: 'd-flex flex-column' },
           h('label', { class: 'text-14 main-text required', for: id }, `${meta.one[0].toUpperCase()}${meta.one.slice(1)} name`),

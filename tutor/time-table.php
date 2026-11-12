@@ -25,6 +25,7 @@ if (!SessionUser::hasValidSession()) {
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/skeleton.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/calender.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
+        <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
         <link href="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.css" rel="stylesheet">
 
         <script src="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.js"></script>
@@ -61,12 +62,11 @@ if (!SessionUser::hasValidSession()) {
                                     <div class="row align-items-center p-0 m-0 g-0">
                                         <div class="col-12 col-lg-8">
                                             <div class="row">
-                                                <span class="main-topic lh-lg" data-i18n="class-students">Time Table</span>
+                                                <div class="d-flex align-items-center gap-2"><span class="main-topic lh-lg">Time Table</span><button type="button" class="ex-info-btn" data-quick-guide="{&quot;title&quot;: &quot;Time Table&quot;, &quot;intro&quot;: &quot;Every class time for the month in one calendar.&quot;, &quot;points&quot;: [&quot;Point at a class for its details; click a day to schedule one.&quot;, &quot;Live, Upcoming, Completed and Cancelled show the state of each class.&quot;, &quot;Schedule a Class adds a one-time or weekly class.&quot;]}" aria-label="Quick guide: Time Table"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg></button></div>
                                                 <nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
                                                     <ol class="breadcrumb m-0">
-                                                        <li class="breadcrumb-item"><a class="sub-text text-decoration-none cursor-pointer" href="./classes">Classes</a></li>
-                                                        <li class="breadcrumb-item"><a class="sub-text text-decoration-none" href="./class-details?class-id=<?= $class_id ?>">Class Details</a></li>
-                                                        <li class="breadcrumb-item"><a class="sub-text text-decoration-none">Class Students</a></li>
+                                                        <li class="breadcrumb-item"><a class="sub-text text-decoration-none cursor-pointer" href="./classes">Academic</a></li>
+                                                        <li class="breadcrumb-item"><a class="sub-text text-decoration-none">Time Table</a></li>
                                                     </ol>
                                                 </nav>
                                             </div>
@@ -84,44 +84,7 @@ if (!SessionUser::hasValidSession()) {
                                 <div class="col-12 p-4 component-theme">
                                     <div class="row p-0 m-0 gy-4 gx-3">
                                         <div class="col-12">
-                                            <div class="col-12 d-flex flex-column flex-lg-row justify-content-center mb-4 mt-2">
-                                                <div class="col-2 col-lg-1 d-none d-lg-block">
-                                                    <button class="w-100 p-2 bl-solid br-8 d-flex align-items-center justify-content-center component-theme previous-button" onclick="prevMonthSchedule()">
-                                                        <iconify-icon icon="tabler:arrow-left" width="20" height="20" class="dark-color px-1"></iconify-icon>
-                                                        <span class="text-14 main-text fw-semibold">Previous</span>
-                                                    </button>
-                                                </div>
-                                                <div class="col-12 col-lg-10 d-flex justify-content-center align-items-center gap-2">
-                                                    <h4 class="text-center" data-i18n="lecture-schedule">Time Table</h4>
-                                                    <h4 class="text-center">-</h4>
-                                                    <h4 class="text-center" id="month"></h4>
-                                                    <h4 class="text-center" id="year"></h4>
-                                                </div>
-                                                <div class="col-12 col-lg-1 mt-3 d-block d-lg-none">
-                                                    <div class="row">
-                                                        <div class="col-6 d-flex justify-content-start">
-                                                            <button class="py-2 px-3 bl-solid br-8 d-flex align-items-center justify-content-center component-theme previous-button" onclick="prevMonthSchedule()">
-                                                                <iconify-icon icon="tabler:arrow-left" width="20" height="20" class="dark-color px-1"></iconify-icon>
-                                                                <span class="text-14 main-text fw-semibold">Previous</span>
-                                                            </button>
-                                                        </div>
-                                                        <div class="col-6 d-flex justify-content-end">
-                                                            <button class="py-2 px-3 bl-solid br-8 d-flex align-items-center justify-content-center component-theme next-button" onclick="nextMonthSchedule()">
-                                                                <span class="text-14 main-text fw-semibold">Next</span>
-                                                                <iconify-icon icon="tabler:arrow-right" width="20" height="20" class="dark-color px-1"></iconify-icon>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-6 col-lg-1 text-end d-none d-lg-block">
-                                                    <button class="w-100 p-2 bl-solid br-8 d-flex align-items-center justify-content-center component-theme next-button" onclick="nextMonthSchedule()">
-                                                        <span class="text-14 main-text fw-semibold">Next</span>
-                                                        <iconify-icon icon="tabler:arrow-right" width="20" height="20" class="dark-color px-1"></iconify-icon>
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div id="calendar" class="calendar"></div>
+                                            <div id="calendar" class="ex-cal"></div>
                                         </div>
 
                                         <!-- Event Modal -->
@@ -363,6 +326,7 @@ if (!SessionUser::hasValidSession()) {
         <script src="<?= Project::getAssetsPath() ?>/js/functions.js?v=<?= Project::getVersion() ?>"></script>
         <script src="js/eventCalender.js?v=<?= Project::getVersion() ?>"></script>
         <script src="<?= Project::getAssetsPath() ?>/js/fileChooser.js?v=<?= Project::getVersion() ?>"></script>
+        <script type="module">import { QuickGuide } from '<?= Project::getAssetsPath() ?>/js/enlixo/components/QuickGuide.js'; QuickGuide.attachAll();</script>
     </body>
 
     </html>

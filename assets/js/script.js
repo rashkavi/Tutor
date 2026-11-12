@@ -42,35 +42,20 @@ $(window).on('load', function () {
 
     // Check if elements exist
     if (toggleBtn.length && sideMenu.length && appWrapper.length) {
-        // Initialize menu state from localStorage
-        const menuVisible = localStorage.getItem('menuVisible') !== 'false';
-        setMenuState(menuVisible);
-
-        // Toggle menu on click
-        toggleBtn.on('click', function () {
-            const isCurrentlyVisible = !sideMenu.hasClass('d-xl-block');
-            setMenuState(!isCurrentlyVisible);
-        });
-
-        function setMenuState(visible) {
-            //console.log(visible);
-            if (visible) {
-                // Show menu
-                sideMenu.removeClass('d-xl-block');
-                if (appWrapper.hasClass("app-wrapper") == true) {
-                    appWrapper.removeClass("app-wrapper");
-                    appWrapper.addClass("app-wrapper-full");
-                }
-            } else {
-                // Hide menu
-                sideMenu.addClass('d-xl-block');
-                if (appWrapper.hasClass("app-wrapper") == false) {
-                    appWrapper.removeClass("app-wrapper-full");
-                    appWrapper.addClass("app-wrapper");
-                }
-            }
-            localStorage.setItem('menuVisible', visible);
+        // V3: the side menu is shown by default on desktop and slides out with .collapsed
+        if ($(window).width() >= 1200) {
+            sideMenu.removeClass('d-none d-xl-block');
         }
+        const setMenuState = (visible) => {
+            sideMenu.toggleClass('collapsed', !visible);
+            appWrapper.toggleClass('app-wrapper', visible).toggleClass('app-wrapper-full', !visible);
+            localStorage.setItem('menuVisible', visible);
+        };
+        setMenuState(localStorage.getItem('menuVisible') !== 'false');
+
+        toggleBtn.on('click', function () {
+            setMenuState(sideMenu.hasClass('collapsed'));
+        });
     } else {
         console.error('Required elements not found');
     }
@@ -152,11 +137,11 @@ const initializeTheme2 = () => {
 
         // Update active button UI
         if (theme === 'light') {
-            lightBtn.classList.add('btn-primary');
-            darkBtn.classList.remove('btn-primary');
+            lightBtn?.classList.add('btn-primary');
+            darkBtn?.classList.remove('btn-primary');
         } else {
-            darkBtn.classList.add('btn-primary');
-            lightBtn.classList.remove('btn-primary');
+            darkBtn?.classList.add('btn-primary');
+            lightBtn?.classList.remove('btn-primary');
         }
     };
 
@@ -302,7 +287,7 @@ const initializeLanguage2 = () => {
             localStorage.setItem("lang", lang);
 
             // Update button label
-            dropdownButton.textContent = lang == "en" ? "English" : lang == "si" ? "සිංහල" : "தமிழ்";
+            if (dropdownButton) dropdownButton.textContent = lang == "en" ? "English" : lang == "si" ? "සිංහල" : "தமிழ்";
 
         } catch (err) {
             console.error("Error:", err);
@@ -404,55 +389,48 @@ const toggleSkeleton = () => {
 
 const notifications = document.querySelector(".notifications");
 
+// The V3 toast. Same markup as assets/js/enlixo/components/Toast.js (new pages), Solar icons drawn inline (no CDN).
 const toastDetails = {
     timer: 3000,
-    success: {
-        topic: 'Success',
-        icon: 'mdi:check-circle',  // Iconify icon for success
-        defaultText: 'This is a success toast.',
-    },
-    error: {
-        topic: 'Error',
-        icon: 'mdi:close-circle',  // Iconify icon for error
-        defaultText: 'This is an error toast.',
-    },
-    warning: {
-        topic: 'Warning',
-        icon: 'mdi:alert-circle',  // Iconify icon for warning
-        defaultText: 'This is a warning toast.',
-    },
-    info: {
-        topic: 'Info',
-        icon: 'mdi:information',  // Iconify icon for info
-        defaultText: 'This is an information toast.',
-    }
+    success: { topic: 'Success', icon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12ZM16.0303 8.96967C16.3232 9.26256 16.3232 9.73744 16.0303 10.0303L11.0303 15.0303C10.7374 15.3232 10.2626 15.3232 9.96967 15.0303L7.96967 13.0303C7.67678 12.7374 7.67678 12.2626 7.96967 11.9697C8.26256 11.6768 8.73744 11.6768 9.03033 11.9697L10.5 13.4393L12.7348 11.2045L14.9697 8.96967C15.2626 8.67678 15.7374 8.67678 16.0303 8.96967Z\" clip-rule=\"evenodd\"/></svg>", defaultText: 'Done.' },
+    error: { topic: 'Error', icon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12ZM8.96963 8.96965C9.26252 8.67676 9.73739 8.67676 10.0303 8.96965L12 10.9393L13.9696 8.96967C14.2625 8.67678 14.7374 8.67678 15.0303 8.96967C15.3232 9.26256 15.3232 9.73744 15.0303 10.0303L13.0606 12L15.0303 13.9696C15.3232 14.2625 15.3232 14.7374 15.0303 15.0303C14.7374 15.3232 14.2625 15.3232 13.9696 15.0303L12 13.0607L10.0303 15.0303C9.73742 15.3232 9.26254 15.3232 8.96965 15.0303C8.67676 14.7374 8.67676 14.2625 8.96965 13.9697L10.9393 12L8.96963 10.0303C8.67673 9.73742 8.67673 9.26254 8.96963 8.96965Z\" clip-rule=\"evenodd\"/></svg>", defaultText: 'Something went wrong. Please try again.', timer: 5000 },
+    warning: { topic: 'Warning', icon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12ZM12 6.25C12.4142 6.25 12.75 6.58579 12.75 7V13C12.75 13.4142 12.4142 13.75 12 13.75C11.5858 13.75 11.25 13.4142 11.25 13V7C11.25 6.58579 11.5858 6.25 12 6.25ZM12 17C12.5523 17 13 16.5523 13 16C13 15.4477 12.5523 15 12 15C11.4477 15 11 15.4477 11 16C11 16.5523 11.4477 17 12 17Z\" clip-rule=\"evenodd\"/></svg>", defaultText: 'Please check and try again.', timer: 5000 },
+    info: { topic: 'Info', icon: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12ZM12 17.75C12.4142 17.75 12.75 17.4142 12.75 17V11C12.75 10.5858 12.4142 10.25 12 10.25C11.5858 10.25 11.25 10.5858 11.25 11V17C11.25 17.4142 11.5858 17.75 12 17.75ZM12 7C12.5523 7 13 7.44772 13 8C13 8.55228 12.5523 9 12 9C11.4477 9 11 8.55228 11 8C11 7.44772 11.4477 7 12 7Z\" clip-rule=\"evenodd\"/></svg>", defaultText: '' },
+    close: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><g fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\"><path d=\"M19.0068 5L5.00684 19\"/><path d=\"M19 19L5 5\"/></g></svg>",
 }
 
 const removeToast = (toast) => {
+    if (!toast || toast.classList.contains("hide")) return;
     toast.classList.add("hide");
-    if (toast.timeoutId) clearTimeout(toast.timeoutId); // Clear the timeout for the toast
-    setTimeout(() => toast.remove(), 500); // Remove the toast after 500ms
+    if (toast.timeoutId) clearTimeout(toast.timeoutId);
+    setTimeout(() => toast.remove(), 400);
 }
 
 const showToast = (type, message) => {
-    const { topic, icon, defaultText } = toastDetails[type];
+    const kind = toastDetails[type] ? type : 'info';
+    const { topic, icon, defaultText } = toastDetails[kind];
+    const wait = toastDetails[kind].timer || toastDetails.timer;
+    const host = notifications || document.querySelector(".notifications") || document.body.appendChild(Object.assign(document.createElement("div"), { className: "notifications" }));
+    host.setAttribute("role", "status");
+    host.setAttribute("aria-live", "polite");
     const toast = document.createElement("li");
-    toast.className = `custom-toast ${type}`;
-    const toastMessage = message || defaultText;
-
-    // Using Iconify icons in place of FontAwesome
+    toast.className = `custom-toast ${kind}`;
+    toast.style.setProperty("--toast-ms", wait + "ms");
     toast.innerHTML = `<div class="column">
-                         <iconify-icon icon="${icon}" width="24" height="24"></iconify-icon>
+                         <span class="custom-toast-icon">${icon}</span>
                          <div class="custom-toast-text">
                            <span class="custom-toast-type">${topic}</span>
-                           <span class="custom-toast-message">${toastMessage}</span>
+                           <span class="custom-toast-message"></span>
                          </div>
                        </div>
-                       <iconify-icon icon="mdi:close" width="24" height="24" class="close-btn" onclick="removeToast(this.parentElement)"></iconify-icon>`;
-
-    notifications.appendChild(toast);
-
-    toast.timeoutId = setTimeout(() => removeToast(toast), toastDetails.timer);
+                       <button type="button" class="close-btn" aria-label="Close message">${toastDetails.close}</button>`;
+    // messages are shown as text, so a quote or a < typed by someone can never break the page
+    toast.querySelector(".custom-toast-message").textContent = String(message || defaultText);
+    toast.querySelector(".close-btn").addEventListener("click", () => removeToast(toast));
+    toast.addEventListener("mouseenter", () => { clearTimeout(toast.timeoutId); toast.classList.add("paused"); });
+    toast.addEventListener("mouseleave", () => { toast.classList.remove("paused"); toast.timeoutId = setTimeout(() => removeToast(toast), 1500); });
+    host.appendChild(toast);
+    toast.timeoutId = setTimeout(() => removeToast(toast), wait);
 };
 
 const togglePasswordVisibility = () => {

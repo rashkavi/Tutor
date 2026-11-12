@@ -6,8 +6,8 @@ import { h } from '../core/dom.js';
  * Options can load asynchronously (e.g. the tutor's classes); a "Loading…" option shows meanwhile.
  */
 export class FilterBar extends Component {
-  constructor({ filters, values = {}, onChange, stacked = false }) {
-    super({ filters, onChange, stacked });
+  constructor({ filters, values = {}, onChange, stacked = false, row = false }) {
+    super({ filters, onChange, stacked, row });
     this.values = { ...values };
     this.options = {};
     for (const f of filters) {
@@ -33,6 +33,13 @@ export class FilterBar extends Component {
   }
 
   render() {
+    if (this.props.row) {
+      // V3 filter row (table_toolbar): every filter col-lg-2 with a small label above it; the wrapper adds no box of its own
+      return h('div', { class: 'd-contents' }, this.props.filters.map((f) => {
+        const id = `ex-f-${f.key}`;
+        return h('div', { class: 'col-12 col-md-4 col-lg-2 d-flex flex-column justify-content-end' }, h('label', { class: 'text-12 sub-text mb-1', for: id }, f.label), this.#select(f, id));
+      }));
+    }
     if (this.props.stacked) {
       // Inside the filter dropdown: one labelled field per filter
       return h('div', { class: 'ex-filters ex-stacked' }, this.props.filters.map((f) =>
@@ -52,8 +59,15 @@ export class FilterBar extends Component {
     if (f.type === 'date') {
       return h('input', { class: 'ex-input', type: 'date', value, 'aria-label': f.label, onchange: (e) => this.set(f.key, e.target.value) });
     }
-    return h('select', { class: 'ex-select', 'aria-label': f.label, disabled: opts === null, onchange: (e) => this.set(f.key, e.target.value) },
-      h('option', { value: '' }, opts === null ? 'Loading…' : f.allLabel ?? `All ${f.label.toLowerCase()}`),
+    return this.#select(f);
+  }
+
+  #select(f, id = null) {
+    const value = this.values[f.key] ?? '';
+    const opts = this.options[f.key];
+    if (f.type === 'date') return h('input', { id, class: 'form-control custom-input', type: 'date', value, onchange: (e) => this.set(f.key, e.target.value) });
+    return h('select', { id, class: `${id ? 'form-select custom-select' : 'ex-select'}`, 'aria-label': f.label, disabled: opts === null, onchange: (e) => this.set(f.key, e.target.value) },
+      h('option', { value: '' }, opts === null ? 'Loading…' : `- ${f.allLabel ?? `All ${f.label}`} -`),
       (opts ?? []).map((o) => h('option', { value: o.value, selected: String(o.value) === String(value) }, o.label)));
   }
 }

@@ -1,25 +1,39 @@
 import { h } from '../core/dom.js';
+import { icon } from '../core/icons.js';
 
+/**
+ * The V3 pager under every table (students.php): Previous on the left, numbered pages in the middle, Next on the right.
+ * Same classes as V3 (.pagination-wrapper, .previous-button, .pagination-list > .page-item, .next-button).
+ */
 export class Pagination {
-  /** Returns page numbers with gaps: [1, '…', 4, 5, 6, '…', 20] */
+  /** Returns page numbers with gaps, V3 style (first, last and two around the current one): [1, '…', 4, 5, 6, 7, 8, '…', 20] */
   static pages(current, total) {
-    const set = new Set([1, total, current - 1, current, current + 1].filter((p) => p >= 1 && p <= total));
-    const sorted = [...set].sort((a, b) => a - b);
     const out = [];
-    sorted.forEach((p, i) => { if (i && p - sorted[i - 1] > 1) out.push('…'); out.push(p); });
+    let gapBefore = false;
+    let gapAfter = false;
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || Math.abs(current - i) <= 2) out.push(i);
+      else if (i < current && !gapBefore) { gapBefore = true; out.push('…'); }
+      else if (i > current && !gapAfter) { gapAfter = true; out.push('…'); }
+    }
     return out;
   }
 
-  static render({ page, pages, total, perPage }, onPage) {
+  static render({ page, pages, total }, onPage) {
     if (total === 0) return null;
-    const from = (page - 1) * perPage + 1;
-    const to = Math.min(total, page * perPage);
-    return h('nav', { class: 'ex-pagination', 'aria-label': 'Pagination' },
-      h('span', { class: 'ex-info' }, `Showing ${from}–${to} of ${total}`),
-      h('button', { class: 'ex-page-btn', disabled: page <= 1, 'aria-label': 'Previous page', onclick: () => onPage(page - 1) }, '‹'),
-      Pagination.pages(page, pages).map((p) => p === '…'
-        ? h('span', { class: 'ex-muted' }, '…')
-        : h('button', { class: `ex-page-btn ${p === page ? 'ex-active' : ''}`, 'aria-current': p === page ? 'page' : null, onclick: () => onPage(p) }, String(p))),
-      h('button', { class: 'ex-page-btn', disabled: page >= pages, 'aria-label': 'Next page', onclick: () => onPage(page + 1) }, '›'));
+    const nav = (label, target, disabled, left) => h('button', {
+      type: 'button', class: `col-2 col-lg-1 p-2 bl-solid br-8 d-flex align-items-center justify-content-center gap-1 component-theme ${left ? 'previous-button' : 'next-button'}`,
+      disabled, 'aria-label': `${label} page`, onclick: () => onPage(target),
+    }, left ? icon('arrow-left', { size: 18 }) : null, h('span', { class: 'text-14 main-text fw-semibold' }, label), left ? null : icon('arrow-right', { size: 18 }));
+    return h('div', { class: 'm-0 g-0 component-theme pagination-wrapper ex-pager' },
+      h('nav', { class: 'col-12 px-2 m-0 container-fluid', 'aria-label': 'Pagination' },
+        h('div', { class: 'row p-4 align-items-center justify-content-between' },
+          nav('Previous', page - 1, page <= 1, true),
+          h('div', { class: 'col-8 col-lg-10 custom-pagination d-flex justify-content-center' },
+            h('ul', { class: 'pagination-list d-flex mb-0' }, Pagination.pages(page, pages).map((p) => (p === '…'
+              ? h('li', { class: 'd-flex align-items-end h-100 sub-text px-1' }, '…')
+              : h('li', { class: `page-item${p === page ? ' active' : ''}` },
+                h('button', { type: 'button', class: 'py-2 px-3', 'aria-current': p === page ? 'page' : null, onclick: () => onPage(p) }, String(p))))))),
+          nav('Next', page + 1, page >= pages, false))));
   }
 }

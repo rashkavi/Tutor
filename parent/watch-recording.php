@@ -3,6 +3,7 @@ require_once '../includes/UserClass.php';
 require_once "../includes/connection.php";
 require_once "../includes/UserPermissionsClass.php";
 require_once "../includes/Project.php";
+require_once "../includes/enlixo/recording-player.php";
 if (!SessionUser::ifUserIsParent()) {
     header("Location: ./index");
 } else {
@@ -151,7 +152,9 @@ if (!SessionUser::ifUserIsParent()) {
                                         <div class="col-12 py-4 px-4 pe-4 component-theme">
                                             <div class="row p-0 m-0 g-0 align-content-center">
 
-                                                <?php if ($recordingData['integrations_integration_id'] == null): ?>
+                                                <?php if (($typedPlayer = enlixo_recording_player($recordingData, (string) ($recordingData['recording_title'] ?? ''), '')) !== null): ?>
+                                                    <?= $typedPlayer ?>
+                                                <?php elseif ($recordingData['integrations_integration_id'] == null): ?>
                                                     <?= $recordingData["recording_link"]; ?>
                                                     <?php else:
 

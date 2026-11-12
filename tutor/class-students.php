@@ -97,7 +97,7 @@ if (!SessionUser::ifUserIsTutor()) {
                                                                     Action
                                                                 </button>
                                                                 <ul class="dropdown-menu dropdown-menu-end w-100" style="min-width: max-content;">
-                                                                    <li><a class="dropdown-item" href="add-student-to-class?class-id=<?= $class_id ?>" data-i18n="add-student">Add New Student</a></li>
+                                                                    <li><a class="dropdown-item" href="add-student?class=<?= (int) $class_id ?>" data-i18n="add-student">Add New Student</a></li>
                                                                     <li><a class="dropdown-item" href="upload-student-bulk?class-id=<?= $class_id ?>" data-i18n="add-students-bulk">Add New Students Bulk</a></li>
                                                                 </ul>
                                                             </div>

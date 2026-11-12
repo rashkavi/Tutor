@@ -37,6 +37,7 @@ final class PermissionCatalog
             'payments.arrears'         => ['name' => 'View arrears dashboard', 'module' => 'Payments', 'feature' => 'payments.arrears'],
 
             'attendance.mark'          => ['name' => 'Mark attendance', 'module' => 'Attendance'],
+            'attendance.correct'       => ['name' => 'Correct finished class days', 'module' => 'Attendance'],
             'attendance.export'        => ['name' => 'Export attendance', 'module' => 'Attendance', 'feature' => 'attendance.export'],
 
             'messages.send'            => ['name' => 'Send messages', 'module' => 'Messages'],

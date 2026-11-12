@@ -162,10 +162,10 @@ if (!SessionUser::ifUserIsStudent()) {
                                         <div class="row g-3">
                                             <?php foreach ($dash['classes'] as $c) { ?>
                                                 <div class="col-12 col-md-6 col-xl-4">
-                                                    <a class="ex-dash-class" href="class-details?class-id=<?= $c['id'] ?>">
+                                                    <a class="ex-hd-class" href="class-details?class-id=<?= $c['id'] ?>">
                                                         <?= enlixo_dash_cover($c['cover']) ?>
                                                         <span class="min-w-0">
-                                                            <span class="text-14 fw-medium ex-dash-title d-block text-truncate"><?= enlixo_dash_e($c['name']) ?></span>
+                                                            <span class="text-14 fw-medium ex-hd-title d-block text-truncate"><?= enlixo_dash_e($c['name']) ?></span>
                                                             <span class="text-12 sub-text d-block text-truncate"><?= enlixo_dash_e($c['subject'] . ' · ' . $c['tutor']) ?></span>
                                                         </span>
                                                     </a>

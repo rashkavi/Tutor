@@ -9,7 +9,7 @@ const monthNames = [
 ];
 
 let lectures = {};
-generateCalendar(now.getFullYear(), now.getMonth());
+let calLoaded = false;
 
 const getLectureScheduleData = () => {
     fetch('api/getLectureScheduleData')
@@ -18,6 +18,7 @@ const getLectureScheduleData = () => {
             const response = JSON.parse(data);
             if (response.hasOwnProperty('done')) {
                 lectures = response.lectures;
+                calLoaded = true;
                 generateCalendar(now.getFullYear(), now.getMonth());
                 initLecturePopovers();
             }
@@ -35,6 +36,7 @@ const getClassLectureScheduleData = (id) => {
             const response = JSON.parse(data);
             if (response.hasOwnProperty('done')) {
                 lectures = response.lectures;
+                calLoaded = true;
                 generateCalendar(now.getFullYear(), now.getMonth());
                 initLecturePopovers();
 
@@ -53,6 +55,7 @@ const getSelectedLecturerScheduleData = (lecturerd) => {
             const response = JSON.parse(data);
             if (response.hasOwnProperty('done')) {
                 lectures = response.lectures;
+                calLoaded = true;
                 generateCalendar(now.getFullYear(), now.getMonth());
             }
         })
@@ -61,141 +64,127 @@ const getSelectedLecturerScheduleData = (lecturerd) => {
         });
 }
 
+// ---------- V3 Lecture Schedule look (2026-11-10) ----------
+// Month grid with the days of the next/previous month greyed, today ringed, each lecture a small
+// card with a status badge, a hover card with the details, and a click to open the full details.
+let currentSelectedYear = now.getFullYear();
+const CAL_MAX_PER_DAY = 3;
+const calEsc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const calSvg = {
+    left: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12H4m0 0l6-6m-6 6l6 6"/></svg>',
+    right: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m0 0l-6-6m6 6l-6 6"/></svg>',
+    calendar: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 12c0-3.771 0-5.657 1.172-6.828S6.229 4 10 4h4c3.771 0 5.657 0 6.828 1.172S22 8.229 22 12v2c0 3.771 0 5.657-1.172 6.828S17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172S2 17.771 2 14zM7 4V2.5M17 4V2.5M2.5 9h19"/></svg>',
+    clock: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l2.5 2.5"/></svg>',
+    user: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="6" r="4"/><path d="M20 17.5c0 2.485 0 4.5-8 4.5s-8-2.015-8-4.5S7.582 13 12 13s8 2.015 8 4.5Z"/></svg>',
+};
+// status → [css key, badge text]
+function calStatus(status) {
+    const s = String(status || '').toLowerCase();
+    if (s.includes('ongoing') || s.includes('live')) return ['live', 'Live'];
+    if (s.includes('complete')) return ['done', 'Completed'];
+    if (s.includes('cancel')) return ['cancelled', 'Cancelled'];
+    if (s.includes('postpone')) return ['postponed', 'Postponed'];
+    if (s.includes('leave')) return ['leave', 'Study Leave'];
+    if (s.includes('upcoming')) return ['upcoming', 'Upcoming'];
+    return ['pending', status || 'Pending'];
+}
+const calKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 function generateCalendar(year, month) {
-    $("#month").attr("data-i18n", `${monthNames[month].toLowerCase()}`);
-    $("#year").text(`${year}`);
-
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-
     currentSelectedMonth = month;
+    currentSelectedYear = year;
+    const el = document.getElementById('calendar');
+    if (!el) return;
+    el.classList.add('ex-cal');
 
-    let table = `<table class='calendar-grid'><thead><tr>`;
-    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    daysOfWeek.forEach(day => table += `<th>${day}</th>`);
-    table += "</tr></thead><tbody><tr>";
+    const first = new Date(year, month, 1);
+    const start = new Date(year, month, 1 - first.getDay());
+    const last = new Date(year, month + 1, 0);
+    const weeks = Math.ceil((first.getDay() + last.getDate()) / 7);
+    const todayKey = calKey(new Date());
+    const isThisMonth = year === new Date().getFullYear() && month === new Date().getMonth();
 
-    for (let i = 0; i < firstDay.getDay(); i++) {
-        table += "<td class='empty-day'></td>";
+    let monthCount = 0;
+    let html = `
+      <div class="ex-cal-nav">
+        <button type="button" class="py-2 px-3 bl-solid br-8 d-flex align-items-center justify-content-center gap-1 component-theme previous-button" onclick="prevMonthSchedule()">${calSvg.left}<span class="text-14 main-text fw-semibold">Previous</span></button>
+        <div class="ex-cal-title"><h2>${monthNames[month]} ${year}</h2>
+          ${isThisMonth ? '' : '<button type="button" class="ex-cal-today-btn" onclick="todaySchedule()">Back to today</button>'}</div>
+        <button type="button" class="py-2 px-3 bl-solid br-8 d-flex align-items-center justify-content-center gap-1 component-theme next-button" onclick="nextMonthSchedule()"><span class="text-14 main-text fw-semibold">Next</span>${calSvg.right}</button>
+      </div>
+      <div class="ex-cal-legend" aria-label="What the colours mean">
+        <span><i class="ex-cal-badge ex-st-live">Live</i> on now</span>
+        <span><i class="ex-cal-badge ex-st-upcoming">Upcoming</i> not started</span>
+        <span><i class="ex-cal-badge ex-st-done">Completed</i> finished</span>
+        <span><i class="ex-cal-badge ex-st-cancelled">Cancelled</i> or postponed</span>
+        <span class="ex-cal-legend-tip">Point at a lecture for its details; click a day to schedule one.</span>
+      </div>
+      <div class="ex-cal-scroll"><div class="ex-cal-grid" role="grid" aria-label="${monthNames[month]} ${year}">
+        ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => `<div class="ex-cal-dow" role="columnheader">${d}</div>`).join('')}`;
+
+    for (let i = 0; i < weeks * 7; i++) {
+        const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+        const key = calKey(d);
+        const inMonth = d.getMonth() === month;
+        const isToday = key === todayKey;
+        const dayLectures = inMonth ? (lectures[key] || []) : [];
+        monthCount += dayLectures.length;
+        const shown = dayLectures.slice(0, CAL_MAX_PER_DAY);
+        const more = dayLectures.length - shown.length;
+        html += `
+        <div class="ex-cal-cell${inMonth ? '' : ' ex-out'}${isToday ? ' ex-today' : ''}${d.getDay() === 0 ? ' ex-sun' : ''}" role="gridcell"
+             ${inMonth ? `data-date="${key}" tabindex="0" aria-label="${d.toDateString()}, ${dayLectures.length ? `${dayLectures.length} lecture${dayLectures.length > 1 ? 's' : ''}` : 'no lectures'}"` : ''}>
+          <div class="ex-cal-day"><span class="ex-cal-num">${d.getDate()}</span>${isToday ? '<span class="ex-cal-today">Today</span>' : ''}</div>
+          ${shown.map((l) => {
+              const [st, label] = calStatus(l.status);
+              return `<button type="button" class="ex-cal-ev ex-st-${st}" data-lecture-id="${calEsc(l.lectureId)}" aria-label="${calEsc(`${l.startTime} ${label}`)}">
+                  <span class="ex-cal-ev-time">${calEsc(l.startTime)} · ${calEsc(l.lectureType)}</span>
+                  <span class="ex-cal-ev-title">${l.class}</span>
+                  <i class="ex-cal-badge ex-st-${st}">${calEsc(label)}</i>
+                </button>`;
+          }).join('')}
+          ${more > 0 ? `<button type="button" class="ex-cal-more" data-more="${key}">+${more} more</button>` : ''}
+        </div>`;
     }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-        const dayLectures = lectures[dateStr] || [];
-
-        const cellHeight = dayLectures.length > 0 ? `${100 + (dayLectures.length * 70)}px` : "100px";
-
-        table += `<td class='calendar-cell ${dayLectures.length > 0 ? 'has-lectures' : ''}' 
-                  style='height:${cellHeight}' data-date='${dateStr}'>`;
-
-        table += `<div class='day-header'>${day}</div>`;
-
-        if (dayLectures.length > 0) {
-            table += `<div class='events-stack'>`;
-            dayLectures.forEach(lecture => {
-
-                const statusKey = (lecture.status || '').toLowerCase(); // completed/upcoming/cancelled/ongoing
-
-                table += `
-                  <div class="tt-mini ${statusKey}" data-lecture-id="${lecture.lectureId}">
-                    <div class="tt-mini-top">
-                      <span class="tt-mini-icon">
-                      
-                      </span>
-                        <div class="tt-mini-exam-type ${getExamTypeClass(lecture.exam_type_id)} mt-2">
-                    ${lecture.exam_type} • ${lecture.year}
-                    </div>
-                    </div>
-                 
-
-                    <div class="tt-mini-title">${lecture.class}</div>
-                    <div class="tt-mini-time">${lecture.startTime} - ${lecture.endTime}</div>
-                     <div class="tt-mini-time">${lecture.lectureType}</div>
-                  </div>
-                `;
-            });
-
-            table += `</div>`;
-        }
-        table += `</td>`;
-
-        if ((firstDay.getDay() + day) % 7 === 0) {
-            table += "</tr><tr>";
-        }
+    html += '</div></div>';
+    if (calLoaded && !monthCount) {
+        html += `<div class="ex-empty py-4"><div class="ex-empty-icon" aria-hidden="true">${calSvg.calendar.replace(/width="14" height="14"/, 'width="28" height="28"')}</div>
+          <p class="ex-empty-title">No lectures in ${monthNames[month]}</p>
+          <p class="ex-empty-text">Click a day, or use Schedule a Class, to add one.</p></div>`;
     }
+    el.innerHTML = html;
 
-    table += "</tr></tbody></table>";
-    document.getElementById("calendar").innerHTML = table;
-
-    document.querySelectorAll("td[data-date]").forEach(cell => {
-        cell.addEventListener("click", function () {
-            const date = this.getAttribute("data-date");
-            const dayLectures = lectures[date] || [];
-            if (dayLectures.length === 0) {
-                showLectureModal(date, dayLectures);
-            }
-
-        });
+    el.querySelectorAll('.ex-cal-cell[data-date]').forEach((cell) => {
+        const open = () => showLectureModal(cell.dataset.date, lectures[cell.dataset.date] || []);
+        cell.addEventListener('click', open);
+        cell.addEventListener('keydown', (e) => { if (e.target === cell && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(); } });
     });
-
-    document.querySelectorAll(".tt-mini").forEach(item => {
-        item.addEventListener("click", function (e) {
-            e.stopPropagation();
-            const lectureId = this.getAttribute("data-lecture-id");
-            showLectureDetails(lectureId);
-        });
-    });
-
-
-    document.querySelectorAll(".lecture-item").forEach(item => {
-        item.addEventListener("click", function () {
-            const lectureId = this.getAttribute("data-lecture-id");
-            showLectureDetails(lectureId);
-        });
-    });
-
-}
-
-function ttStatusIcon(status) {
-    if (status.includes("completed")) return `<iconify-icon icon="solar:check-circle-bold"></iconify-icon>`;
-    if (status.includes("cancel")) return `<iconify-icon icon="solar:close-circle-bold"></iconify-icon>`;
-    if (status.includes("ongoing")) return `<iconify-icon icon="solar:play-circle-bold"></iconify-icon>`;
-    return `<iconify-icon icon="solar:clock-circle-bold"></iconify-icon>`; // upcoming/default
-}
-function getExamTypeClass(type) {
-    type = Number(type); // convert string to number
-
-    switch (type) {
-        case 1:
-            return "scholarship";
-        case 2:
-            return "o-l";
-        case 3:
-            return "a-l";
-        case 4:
-            return "london-o-l";
-        case 5:
-            return "london-a-l";
-        default:
-            return "";
-    }
+    el.querySelectorAll('.ex-cal-ev').forEach((item) => item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        bootstrap.Popover.getInstance(item)?.hide();
+        showLectureDetails(item.dataset.lectureId);
+    }));
+    el.querySelectorAll('.ex-cal-more').forEach((b) => b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showLectureModal(b.dataset.more, lectures[b.dataset.more] || []);
+    }));
 }
 
 const prevMonthSchedule = () => {
-    const year = currentSelectedMonth === 0 ? now.getFullYear() - 1 : now.getFullYear();
-    const month = currentSelectedMonth === 0 ? 11 : currentSelectedMonth - 1;
-    generateCalendar(year, month);
+    const d = new Date(currentSelectedYear, currentSelectedMonth - 1, 1);
+    generateCalendar(d.getFullYear(), d.getMonth());
     initLecturePopovers();
-    initializeLanguage();
 };
 
 const nextMonthSchedule = () => {
-    const year = currentSelectedMonth === 11 ? now.getFullYear() + 1 : now.getFullYear();
-    const month = currentSelectedMonth === 11 ? 0 : currentSelectedMonth + 1;
-    generateCalendar(year, month);
+    const d = new Date(currentSelectedYear, currentSelectedMonth + 1, 1);
+    generateCalendar(d.getFullYear(), d.getMonth());
     initLecturePopovers();
-    initializeLanguage();
+};
+
+const todaySchedule = () => {
+    generateCalendar(new Date().getFullYear(), new Date().getMonth());
+    initLecturePopovers();
 };
 
 function showLectureModal(date, dayLectures) {
@@ -512,86 +501,33 @@ function showLectureDetails(lectureId) {
 }
 
 function initLecturePopovers() {
-
-    // Remove old popovers (important when rerender calendar)
-    document.querySelectorAll('.tt-mini').forEach(el => {
-        const instance = bootstrap.Popover.getInstance(el);
-        if (instance) instance.dispose();
-    });
-
-    document.querySelectorAll('.tt-mini').forEach(el => {
-        let lectureId = el.dataset.lectureId;
-        const allLecturesArray = Object.values(lectures).flat();
-        const lecture = allLecturesArray.find(l => l.lectureId == lectureId);
-
-        const name = lecture.class || 'Class';
-        const subject = lecture.subject || 'Lecture';
-        const exam = lecture.exam_type || '';
-        const exam_id = lecture.exam_type_id || '';
-        const year = lecture.year || '';
-        const status = lecture.status || '';
-        const start = lecture.startTime || '';
-        const end = lecture.endTime || '';
-        const lecturer = lecture.lecturerName || '';
-        const thumb = lecture.subjectImage || '';
-        const id = lecture.lectureId || '';
-        const type = lecture.lectureType || '';
-
-        const examClass = getExamTypeClass(exam_id);
-
+    const all = Object.values(lectures).flat();
+    document.querySelectorAll('.ex-cal-ev').forEach((el) => {
+        bootstrap.Popover.getInstance(el)?.dispose();
+        const l = all.find((x) => String(x.lectureId) === el.dataset.lectureId);
+        if (!l) return;
+        const [st, label] = calStatus(l.status);
+        const day = new Date(`${Object.keys(lectures).find((k) => lectures[k].includes(l))}T00:00`);
         const content = `
-        <div class="pro-pop">
-          <div class="pro-pop-head">
-            <div class="pro-pop-icon">
-              <img src="${thumb}" onerror="this.src='https://dashboard.enviiz.com/assets/imgs/common/empty-thumbnail.webp'">
-            </div>
-  
-            <div class="pro-pop-titlewrap">
-              <div class="pro-pop-title">${name}</div>
-              <div class="pro-pop-sub">
-                ${exam ? `<span class="pro-pop-pill ${examClass}">${exam}•${year}</span>` : ''}
-               
-              </div>
-            </div>
+        <div class="ex-cal-pop-card ex-st-${st}">
+          <div class="ex-cal-pop-head">
+            <img src="${calEsc(l.subjectImage)}" alt="" onerror="this.style.visibility='hidden'">
+            <div><div class="ex-cal-pop-title">${l.class}</div><div class="ex-cal-pop-sub">${calEsc(l.title || l.lectureType)}</div></div>
           </div>
-  
-        ${subject ? `
-          <div class="pro-pop-row">
-            <span class="pro-pop-label">Subject</span>
-            <span class="pro-pop-value">${subject}</span>
-          </div>` : ''}
-
-          <div class="pro-pop-row">
-            <span class="pro-pop-label">Time</span>
-            <span class="pro-pop-value">${start} - ${end}</span>
+          <div class="ex-cal-pop-when">
+            <span>${calSvg.calendar} ${day.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+            <span>${calSvg.clock} ${calEsc(l.startTime)} - ${calEsc(l.endTime)}</span>
           </div>
-          <div class="pro-pop-row">
-            <span class="pro-pop-label">Class Type</span>
-            <span class="pro-pop-value">${type}</span>
-          </div>
-           
-            <div class="pro-pop-actions">
-            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3"
-                    onclick="openLectureFromPopover(event,'${id}')">
-              <i class="bi bi-eye me-2"></i>View
-            </button>
-  
-            <button class="btn btn-sm btn-primary rounded-pill px-3"
-                    onclick="shareLectureFromPopover(event,'${id}')">
-              <i class="bi bi-share me-2"></i>Share link
-            </button>
-          </div>
-        </div>
-      `;
-
+          <div class="ex-cal-pop-sec"><div class="ex-cal-pop-label">Tutor</div><div class="ex-cal-pop-val">${calSvg.user} ${calEsc(l.lecturerName)}</div></div>
+          <div class="ex-cal-pop-sec"><div class="ex-cal-pop-label">Class</div>
+            <div class="ex-cal-pop-chips"><span>${l.subject}</span><span>${l.exam_type} ${l.year}</span><span>${calEsc(l.lectureType)}</span></div></div>
+          <div class="ex-cal-pop-foot"><i class="ex-cal-badge ex-st-${st}">${calEsc(label)}</i><span>Click for details</span></div>
+        </div>`;
         new bootstrap.Popover(el, {
-            trigger: 'hover focus',
-            html: true,
-            placement: 'auto',
-            container: 'body',
-            customClass: 'pro-popover',
-            title: '',
-            content
+            trigger: 'hover focus', html: true, placement: 'auto', container: 'body',
+            customClass: 'ex-cal-pop', title: '', content, sanitize: false,
         });
     });
 }
+
+generateCalendar(now.getFullYear(), now.getMonth());

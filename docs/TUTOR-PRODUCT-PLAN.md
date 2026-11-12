@@ -48,6 +48,7 @@ Every step reuses the shared kit (DataView, ActionMenu, page header, Form with i
 | 8 | Messages | To a class / absentees / arrears. | |
 | 9 | Settings | Profile, roles & staff, integrations, class form customisation, package. | |
 | 10 | Student & parent portal | My classes → timetable, recordings, payments per class. | |
+| D | **Dashboard** | Today strip (next class, Start Class / Mark Attendance, exam countdowns), six stat cards, fee / attendance / students charts, next 7 days, waiting for you, students to follow up, recent payments, class performance table. | ✅ |
 
 ## Step 1 details: class form
 
@@ -85,3 +86,15 @@ Every step reuses the shared kit (DataView, ActionMenu, page header, Form with i
     new ones start today (or on the first class date if that is later).
   * A new fee changes the class's fee plan from now on; discounts and late fees stay.
   * A new cover replaces the old file; "Remove" clears it.
+
+## Dashboard details
+
+* Page: `tutor/dashboard.php`, script `assets/js/enlixo/pages/app-tutor-dashboard.js`, data from ONE request `GET /api/v1/tutor/dashboard`
+  (`src/Dashboard/TutorDashboard.php`, read only). Exam dates: `GET / PUT /api/v1/tutor/exam-dates`. Migration `006_dashboard.sql`.
+* Fees: one `student_has_payments` row per student per month (month = `date_added`); status 1 awaiting payment, 2 slip waiting, 3 approved,
+  4 slip rejected (still owed). Net = amount + penalties - discount; net 0 = free card. Unpaid fees count only students still active in the class.
+* Attendance: finished class days (time table status 1, not a recording) x students enrolled on that day. Joined online (1) / present (2) attend,
+  4 = absent but watched the recording, no row = absent.
+* Follow up: missed the last 3 class days, owes 2 months or more, or missed a recorded class in the last 14 days and did not watch it.
+* People without `payments.view` see the dashboard without any money (fee cards, fee charts and Recent Payments are left out).
+* "Left" numbers need migration 006 (`students_has_classes.status_changed_at`, kept by a trigger); before it the chart shows joined students only.

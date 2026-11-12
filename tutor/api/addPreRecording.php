@@ -7,6 +7,7 @@ require_once("../../includes/connection.php");
 require_once("../../includes/UserPermissionsClass.php");
 require_once("../../includes/DateTimeClass.php");
 require_once("../../includes/Project.php");
+require_once("../../includes/enlixo/pre-recording-link.php");
 if (SessionUser::ifUserIsTutor()) {
 
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
@@ -44,7 +45,25 @@ if (SessionUser::ifUserIsTutor()) {
                 $status->duration = 'Please enter a duration';
             }
 
-            if (!($isYoutube || $isVideo)) {
+            // New form: a recording type from Settings -> Recording Types + the link (checked like Class Recordings).
+            $typed = isset($_POST['rec_type']);
+            $linkResult = null;
+            if ($typed) {
+                $isYoutube = 0;
+                $isVideo = 0;
+                $linkResult = enlixo_pre_recording_link((int) $sessionUserObject['user_id'], [
+                    'type' => $_POST['rec_type'] ?? 0,
+                    'link' => $_POST['link'] ?? '',
+                    'passcode' => $_POST['passcode'] ?? '',
+                    'unlock_at' => $_POST['unlock_at'] ?? '',
+                    'keep_video' => $_POST['keep_video'] ?? '',
+                ], $title, null);
+                foreach ($linkResult['errors'] as $k => $msg) {
+                    $status->$k = $msg;
+                }
+            }
+
+            if (!$typed && !($isYoutube || $isVideo)) {
                 $status->type = "Please select a valid type";
             }
 
@@ -152,6 +171,8 @@ if (SessionUser::ifUserIsTutor()) {
 
 
             $requiredProperties = [
+                'passcode',
+                'unlock_at',
                 'title',
                 'duration',
                 'type',
@@ -245,6 +266,9 @@ if (SessionUser::ifUserIsTutor()) {
 
                 Database::iud("INSERT INTO `pre_recordings` (" . $col . ") VALUES (" . $val . ")");
                 $rec_id = Database::$connection->insert_id;
+                if ($typed && $linkResult['sql'] !== '') {
+                    Database::iud("UPDATE `pre_recordings` SET " . $linkResult['sql'] . " WHERE `pre_recording_id` = '" . (int) $rec_id . "'");
+                }
 
                 if (isset($_FILES["tutes"])) {
                     for ($i = 0; $i < count($_FILES["tutes"]["name"]); $i++) {

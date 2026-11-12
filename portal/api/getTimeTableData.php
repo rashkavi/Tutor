@@ -11,6 +11,7 @@ if (SessionUser::ifUserIsStudent()) {
 
         $totalLecSchedule = "
         SELECT 
+           `class`.`class_id`,
            `class`.`class_name`,
            `class`.`class_cover`,
            `et`.`exam_type`,
@@ -58,6 +59,11 @@ if (SessionUser::ifUserIsStudent()) {
             AND `shc`.`status_status_id` = 1
     ";
 
+        // class-time-table?class-id=<id> shows only that class (the student must be enrolled; checked by the join above)
+        $classFilter = isset($_GET['class']) ? (int) $_GET['class'] : 0;
+        if ($classFilter > 0) {
+            $totalLecSchedule .= " AND `class`.`class_id` = '" . $classFilter . "'";
+        }
         $totalLecSchedule .= "  AND lt.lecture_type_id != 3
                 ORDER BY tt.date, tt.start_time";
 
@@ -92,6 +98,8 @@ if (SessionUser::ifUserIsStudent()) {
 
                 $lecture = [
                     'lectureId' => $row['time_table_id'],
+                    'classId' => (int) $row['class_id'],
+                    'lecturer' => htmlspecialchars($row['title'] . '. ' . $row['user_fname'] . ' ' . $row['user_lname']),
                     'date' => date_format(new DateTime($row['date']), 'D M Y'),
                     'subject' => htmlspecialchars($row['subject']),
                     'year' => htmlspecialchars($row['year']),
@@ -99,13 +107,13 @@ if (SessionUser::ifUserIsStudent()) {
                     'exam_type_id' => $row['exam_type_id'],
                     'class' => htmlspecialchars($row['class_name']),
                     'subjectImage' => $hasSubjectImage ? $subjectImage : $defaultImage,
-                    'lecturerName' => $row['title'] . '.' . $row['user_fname'] . ' ' . $row['user_lname'],
+                    'lecturerName' => htmlspecialchars($row['title'] . '.' . $row['user_fname'] . ' ' . $row['user_lname']),
                     'joinLink' => $row['lecture'],
                     'status' => $lectureStatus,
                     'startTime' => date('h:i A', strtotime($row['start_time'])),
                     'endTime' => date('h:i A', strtotime($row['end_time'])),
-                    'lectureType' => $row['lecture_type'],
-                    'title' => $row['lecture_title'],
+                    'lectureType' => htmlspecialchars($row['lecture_type']),
+                    'title' => htmlspecialchars((string) $row['lecture_title']),
                 ];
 
                 $lectureDate = $row['date'];

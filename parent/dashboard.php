@@ -107,7 +107,7 @@ if (!SessionUser::ifUserIsParent()) {
 
                                 if ($several) { ?>
                                     <div class="col-12 mb-4">
-                                        <nav class="ex-dash-switch" aria-label="Choose a child">
+                                        <nav class="ex-hd-switch" aria-label="Choose a child">
                                             <a href="dashboard" class="<?= $childId ? '' : 'active' ?>"<?= $childId ? '' : ' aria-current="page"' ?>>All children</a>
                                             <?php foreach ($children as $c) { ?>
                                                 <a href="dashboard?child=<?= $c['id'] ?>" class="<?= $childId === $c['id'] ? 'active' : '' ?>"<?= $childId === $c['id'] ? ' aria-current="page"' : '' ?>><?= enlixo_dash_e($c['first_name']) ?></a>
@@ -133,12 +133,12 @@ if (!SessionUser::ifUserIsParent()) {
                                             <?php foreach ($children as $c) { ?>
                                                 <div class="col-12 col-md-6 col-xl-4">
                                                     <div class="component-theme p-4 h-100 d-flex align-items-center gap-3">
-                                                        <?= str_replace('ex-dash-avatar', 'ex-dash-avatar ex-lg', enlixo_dash_avatar($c['name'], $c['image'], 'students')) ?>
+                                                        <?= str_replace('ex-hd-avatar', 'ex-hd-avatar ex-lg', enlixo_dash_avatar($c['name'], $c['image'], 'students')) ?>
                                                         <span class="flex-grow-1 min-w-0">
-                                                            <span class="text-14 fw-medium ex-dash-title d-block text-truncate"><?= enlixo_dash_e($c['name']) ?></span>
+                                                            <span class="text-14 fw-medium ex-hd-title d-block text-truncate"><?= enlixo_dash_e($c['name']) ?></span>
                                                             <span class="text-12 sub-text d-block"><?= $c['classes'] . ($c['classes'] === 1 ? ' class' : ' classes') ?> · <?= $c['due_count'] ? enlixo_dash_e(enlixo_dash_money($c['due'])) . ' to pay' : 'Fees paid' ?></span>
                                                         </span>
-                                                        <a class="custom-outline-btn ex-btn-sm ex-dash-btn" href="dashboard?child=<?= $c['id'] ?>" aria-label="View <?= enlixo_dash_e($c['name']) ?>">View</a>
+                                                        <a class="custom-outline-btn ex-btn-sm ex-hd-btn" href="dashboard?child=<?= $c['id'] ?>" aria-label="View <?= enlixo_dash_e($c['name']) ?>">View</a>
                                                     </div>
                                                 </div>
                                             <?php } ?>

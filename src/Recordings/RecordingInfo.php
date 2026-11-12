@@ -12,6 +12,7 @@ final class RecordingInfo
         public readonly int $tutorId,
         public readonly string $title,
         public readonly int $durationSeconds,
+        public readonly ?\DateTimeImmutable $unlockAt = null, // "Opens on" set by the tutor (every plan)
     ) {
     }
 }

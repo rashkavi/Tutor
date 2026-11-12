@@ -1,17 +1,17 @@
+<?php require_once __DIR__ . "/../../includes/enlixo/icons.php"; ?>
 <header class="overflow-visible">
     <div class="col-12 px-4 pt-2 pb-2 component-theme">
         <div class="row align-items-center">
             <div class="col-10 d-none d-xl-block">
                 <div class="h-100 w-75 d-flex align-items-center p-1">
-                    <iconify-icon icon="gg:menu-left" width="24" height="24" class="sub-topic-color pe-3 pt-2 pb-2 cursor-pointer" id="toggleMenu"></iconify-icon>
+                    <span class="sub-topic-color pe-3 cursor-pointer d-inline-flex" id="toggleMenu" role="button" tabindex="0" aria-label="Show or hide the menu"><?= enlixo_icon('sidebar', 24) ?></span>
                     <span class="text-18 fw-semibold">Hello</span>
                     <span class="mx-1 text-18 fw-medium"><?= $sessionUserObject['user_fname'] . " " . $sessionUserObject['user_lname'] ?></span>
-                    <iconify-icon icon="noto:clapping-hands" width="24" height="24" class="sub-topic-color pe-3 pt-2 pb-2 cursor-pointer" id="toggleMenu"></iconify-icon>
                 </div>
             </div>
             <div class="col-10 d-block d-xl-none">
                 <div class="d-flex align-items-center flex-grow-1">
-                    <iconify-icon icon="gg:menu-left" width="24" height="24" class="sub-topic-color pe-3 pt-2 pb-2 cursor-pointer" data-bs-toggle="offcanvas" data-bs-target="#offcanvas"></iconify-icon>
+                    <span class="sub-topic-color pe-3 cursor-pointer d-inline-flex" data-bs-toggle="offcanvas" data-bs-target="#offcanvas"><?= enlixo_icon('sidebar', 24) ?></span>
                 </div>
             </div>
 
@@ -20,27 +20,27 @@
                 <!-- Theme Switcher Dropdown -->
                 <div class="dropdown">
                     <button class="btn p-0 border-0 bg-transparent" type="button" id="themeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <iconify-icon icon="line-md:moon-alt-to-sunny-outline-loop-transition" width="24" height="24" class="light-theme-icon d-none"></iconify-icon>
-                        <iconify-icon icon="line-md:sunny-filled-loop-to-moon-filled-loop-transition" width="24" height="24" class="dark-theme-icon d-none"></iconify-icon>
+                        <span class="light-theme-icon d-none"><?= enlixo_icon('sun', 24) ?></span>
+                        <span class="dark-theme-icon d-none"><?= enlixo_icon('moon', 24) ?></span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end p-2 border-0 shadow" aria-labelledby="themeDropdown">
                         <li>
                             <a class="dropdown-item d-flex align-items-center theme-item" href="#" data-theme="light">
-                                <iconify-icon icon="line-md:moon-alt-to-sunny-outline-loop-transition" width="20" height="20" class="me-2"></iconify-icon>
+                                <span class="me-2"><?= enlixo_icon('sun', 20) ?></span>
                                 Light
-                                <iconify-icon icon="material-symbols:check" width="20" height="20" class="ms-2 theme-check" style="display: none;"></iconify-icon>
+                                <span class="ms-2 theme-check" style="display: none;"><?= enlixo_icon('check', 20) ?></span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center theme-item" href="#" data-theme="dark">
-                                <iconify-icon icon="line-md:sunny-filled-loop-to-moon-filled-loop-transition" width="20" height="20" class="me-2"></iconify-icon>
+                                <span class="me-2"><?= enlixo_icon('moon', 20) ?></span>
                                 Dark
-                                <iconify-icon icon="material-symbols:check" width="20" height="20" class="ms-2 theme-check" style="display: none;"></iconify-icon>
+                                <span class="ms-2 theme-check" style="display: none;"><?= enlixo_icon('check', 20) ?></span>
                             </a>
                         </li>
                     </ul>
                 </div>
-                <iconify-icon icon="vaadin:line-v" width="16" height="20" class="text-dark-color px-1"></iconify-icon>
+                <span class="ex-header-sep" aria-hidden="true"></span>
 
 
                 <div class="dropdown">
@@ -63,12 +63,7 @@
 
                                 English
 
-                                <iconify-icon icon="material-symbols:check"
-                                    width="20"
-                                    height="20"
-                                    class="ms-auto lang-check"
-                                    style="display: none;">
-                                </iconify-icon>
+                                <span class="ms-auto lang-check" style="display: none;"><?= enlixo_icon('check', 20) ?></span>
                             </a>
                         </li>
 
@@ -79,12 +74,7 @@
 
                                 සිංහල
 
-                                <iconify-icon icon="material-symbols:check"
-                                    width="20"
-                                    height="20"
-                                    class="ms-auto lang-check"
-                                    style="display: none;">
-                                </iconify-icon>
+                                <span class="ms-auto lang-check" style="display: none;"><?= enlixo_icon('check', 20) ?></span>
                             </a>
                         </li>
 
@@ -95,19 +85,14 @@
 
                                 தமிழ்
 
-                                <iconify-icon icon="material-symbols:check"
-                                    width="20"
-                                    height="20"
-                                    class="ms-auto lang-check"
-                                    style="display: none;">
-                                </iconify-icon>
+                                <span class="ms-auto lang-check" style="display: none;"><?= enlixo_icon('check', 20) ?></span>
                             </a>
                         </li>
 
                     </ul>
                 </div>
 
-                <iconify-icon icon="vaadin:line-v" width="16" height="20" class="text-dark-color px-1"></iconify-icon>
+                <span class="ex-header-sep" aria-hidden="true"></span>
 
                 <div class="dropdown text-decoration-none">
                     <?php
@@ -152,18 +137,18 @@
                                 href="#"
                                 data-bs-toggle="offcanvas"
                                 data-bs-target="#settingsOffcanvas">
-                                <iconify-icon icon="carbon:settings" width="18" height="18"></iconify-icon>
+                                <?= enlixo_icon('settings', 18) ?>
                                 Settings
                             </a>
                         </li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li> <a class="dropdown-item d-flex align-items-center gap-2" href="my-profile"> <iconify-icon icon="line-md:edit" width="18" height="18"></iconify-icon> Edit Profile </a> </li>
+                        <li> <a class="dropdown-item d-flex align-items-center gap-2" href="my-profile"> <?= enlixo_icon('edit', 18) ?> Edit Profile </a> </li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li> <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="api/signOut.php"> <iconify-icon icon="line-md:logout" width="18" height="18"></iconify-icon> Log Out </a> </li>
+                        <li> <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="api/signOut.php"> <?= enlixo_icon('logout', 18) ?> Log Out </a> </li>
                     </ul>
                 </div>
             </div>
@@ -188,16 +173,14 @@
                 <button id="lightThemeBtn"
                     class="d-flex align-items-center justify-content-center theme-toggle-btn btn rounded-pill px-3"
                     data-theme="light">
-                    <iconify-icon icon="line-md:moon-alt-to-sunny-outline-loop-transition"
-                        width="20" height="20" class="p-1"></iconify-icon>
+                    <span class="p-1"><?= enlixo_icon('sun', 20) ?></span>
                 </button>
 
                 <!-- Light Mode -->
                 <button id="darkThemeBtn"
                     class="d-flex align-items-center justify-content-center theme-toggle-btn btn rounded-pill px-3"
                     data-theme="dark">
-                    <iconify-icon icon="line-md:sunny-filled-loop-to-moon-filled-loop-transition"
-                        width="20" height="20" class="p-1"></iconify-icon>
+                    <span class="p-1"><?= enlixo_icon('moon', 20) ?></span>
                 </button>
             </div>
         </div>
@@ -283,7 +266,7 @@
                     <?php
                     if (empty($tutorPaymentPlan['users_has_payment_plans_payment_id'])) {
                     ?>
-                        <button class="btn upgrade-plan-btn mt-3 w-100" id="upgradePlanBtn" onclick="window.location.href='billing'">
+                        <button class="btn upgrade-plan-btn mt-3 w-100" id="upgradePlanBtn" onclick="window.location.href='subscription'">
 
                             Proceed to Payment
                         </button>
@@ -316,11 +299,11 @@
                     <div class="d-flex align-items-center justify-content-center icon-wrapper p-2 br-5 bg-content-body">
                         <?php
                         if ($userDevice["device_type"] == "Desktop") {
-                            echo '<iconify-icon icon="solar:laptop-broken" width="26" height="26"></iconify-icon>';
+                            echo enlixo_icon('laptop', 26);
                         } else if ($userDevice["device_type"] == "Mobile") {
-                            echo '<iconify-icon icon="mynaui:mobile" width="26" height="26"></iconify-icon>';
+                            echo enlixo_icon('smartphone', 26);
                         } else {
-                            echo '<iconify-icon icon="solar:tablet-broken" width="26" height="26"></iconify-icon>';
+                            echo enlixo_icon('tablet', 26);
                         }
                         ?>
                     </div>
@@ -332,7 +315,7 @@
                         ?>
                             <div class="d-flex align-items-center gap-3 mt-1">
                                 <span class="d-flex align-items-center justify-content-center table-btn table-btn-success fw-medium rounded-pill px-2 py-1">
-                                    <iconify-icon icon="icon-park-outline:dot"></iconify-icon>
+                                    <?= enlixo_icon('dot', 12) ?>
                                     <span class="me-1">
                                         <span class="rounded-circle d-inline-block table-btn-success"></span>
                                     </span>

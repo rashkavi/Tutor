@@ -5,6 +5,7 @@ import { DataView } from '../components/DataView.js';
 import { LoadingState } from '../components/LoadingState.js';
 import { EmptyState } from '../components/EmptyState.js';
 import { Meter } from '../components/Meter.js';
+import { Toast } from '../components/Toast.js';
 
 const classId = Number(new URLSearchParams(location.search).get('id') ?? 1);
 const shell = await AppShell.boot({ area: 'student', active: 'classes', title: 'Class' });
@@ -43,7 +44,7 @@ function sessionRow(s) {
   const d = new Date(s.date);
   let action = null;
   if (s.status !== 'active') action = h('span', { class: 'ex-badge ex-warning' }, s.status);
-  else if (s.zoom_ready) action = h('button', { class: 'ex-btn ex-btn-primary ex-btn-sm', onclick: () => alert('Opens the Zoom meeting through the portal (join link is only given after login).') }, 'Join on Zoom');
+  else if (s.zoom_ready) action = h('button', { class: 'ex-btn ex-btn-primary ex-btn-sm', onclick: () => Toast.info('Opens the Zoom meeting through the portal (join link is only given after login).') }, 'Join on Zoom');
   else if (s.has_recording) action = h('a', { class: 'ex-btn ex-btn-sm', href: '?id=' + classId + '&tab=recordings' }, 'Watch recording');
   return h('div', { class: 'ex-session-row', style: s.upcoming ? null : { opacity: 0.75 } },
     h('div', { class: 'ex-date-box' }, h('div', { class: 'ex-d' }, String(d.getDate())), h('div', { class: 'ex-m' }, d.toLocaleDateString('en-GB', { month: 'short' }))),

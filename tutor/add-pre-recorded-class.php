@@ -45,7 +45,9 @@ if (!SessionUser::ifUserIsTutor()) {
                 <script src="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.js"></script>
                 <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
                 <script src="<?= Project::getAssetsPath() ?>/js/init.js?v=<?= Project::getVersion() ?>"></script>
-            </head>
+                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
+    <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-recordings.css?v=<?= Project::getVersion() ?>">
+</head>
 
             <body class="overflow-hidden" onload="initializeAddPreRecording();">
                 <div class="notifications"></div>
@@ -169,67 +171,9 @@ if (!SessionUser::ifUserIsTutor()) {
                                                             </div>
                                                             <span class="text-12 text-dark-red" id="rec-cover-feedback"></span>
                                                         </div>
-                                                        <div class="col-12 d-flex flex-column mb-4">
-                                                            <label class="text-16 main-text required" for="">Recording Type</label>
-                                                            <div class="d-flex gap-4 px-2 mt-4">
-
-                                                                <div class="form-check d-flex align-items-center">
-                                                                    <input class="form-check-input text-20 mt-0 mb-0 me-2"
-                                                                        type="checkbox"
-                                                                        name="lectureType"
-                                                                        id="youtube-check-box"
-                                                                        checked>
-
-                                                                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                                        <label class="text-16 main-text mb-0" for="link">Unsecured</label>
-                                                                        <span id="unsecured-guide-info"></span>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="form-check option-locked d-flex align-items-center">
-                                                                    <input class="form-check-input text-20 mt-0 mb-0 me-2"
-                                                                        type="checkbox"
-                                                                        name="lectureType"
-                                                                        id="video-check-box"
-                                                                        disabled>
-
-                                                                    <label class="text-16 sub-text mx-2 d-flex align-items-center gap-2">
-                                                                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                                            <label class="text-16 main-text mb-0" for="link">Secured</label>
-                                                                            <span id="secured-guide-info"></span>
-                                                                        </div>
-                                                                        <span class="pro-badge">
-                                                                            <iconify-icon icon="solar:crown-bold-duotone" width="14"></iconify-icon>
-                                                                            PRO
-                                                                        </span>
-                                                                    </label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-12 d-flex flex-column mb-4" id="youtube-link-area">
-                                                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                                <label class="text-16 main-text required mb-0" for="link">YouTube Iframe Link</label>
-                                                                <span id="youtube-guide-info"></span>
-                                                            </div>
-                                                            <textarea name="link" class="form-control custom-input mt-2" rows="3" id="link"></textarea>
-                                                            <span id="link-feedback" class="text-dark-red text-12"></span>
-                                                        </div>
-
-                                                        <div class="col-12 d-flex flex-column d-none" id="video-area">
-                                                            <label class="text-16 main-text required">Recording Video</label>
-                                                            <div class="p-5 d-flex flex-column bl-solid align-items-center justify-content-center w-100 h-auto cursor-pointer mt-2" id="video-drop-zone">
-                                                                <img src="../assets/imgs/icons/cloud.png" alt="cloud">
-                                                                <span>Drag & Drop your files here</span>
-                                                                <span>OR</span>
-                                                                <button class="custom-btn px-4" id="video-browse-btn">Select Files</button>
-                                                                <input type="file" class="d-none" id="video-input-field" accept=".mp4">
-                                                                <div class="col-12 px-1 mt-4">
-                                                                    <div class="row" id="video-preview-list">
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <span id="attachment-feedback" class="text-dark-red text-12"></span>
-                                                            <!-- File upload input field for PDF, Word, and PowerPoint files -->
+                                                        <!-- Where the video is: Settings -> Recording Types (assets/js/enlixo/pages/app-tutor-pre-recording-link.js) -->
+                                                        <div class="col-12" id="rec-link-field" data-type="0">
+                                                            <div class="sub-text text-14">Loading recording types…</div>
                                                         </div>
 
                                                         <div class="col-12 d-flex flex-column">
@@ -349,7 +293,7 @@ if (!SessionUser::ifUserIsTutor()) {
                 <script src="js/functions.js?v=<?= Project::getVersion() ?>"></script>
                 <script src="js/createInfo.js?v=<?= Project::getVersion() ?>"></script>
                 <script src="<?= Project::getAssetsPath() ?>/js/fileChooser.js?v=<?= Project::getVersion() ?>"></script>
-                <script src="<?= Project::getAssetsPath() ?>/js/videoFileChooser.js?v=<?= Project::getVersion() ?>"></script>
+                <script type="module" src="<?= Project::getAssetsPath() ?>/js/enlixo/pages/app-tutor-pre-recording-link.js?v=<?= Project::getVersion() ?>"></script>
             </body>
 
             </html>

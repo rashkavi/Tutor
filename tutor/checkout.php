@@ -1,4 +1,7 @@
 <?php
+// Replaced by Finance -> My Subscription (tutor/subscription.php), which bills through invoices the admin side sees.
+header("Location: ./subscription", true, 302);
+exit;
 require_once '../includes/UserClass.php';
 require_once '../includes/UserPermissionsClass.php';
 require_once "../includes/connection.php";

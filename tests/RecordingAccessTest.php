@@ -89,3 +89,13 @@ test('another student cannot use my session token', function () {
     $token = $svc->start(99, 'lecture', 1)['session_token'];
     T::throws(HttpException::class, fn () => $svc->heartbeat(100, $token, 0));
 });
+
+test('"Opens on" of the recording locks it until then, on every plan', function () {
+    [$repo, $clock, $svc] = recFixture('start');
+    $repo->recordings['lecture:1'] = new RecordingInfo('lecture', 1, 3, 1, 'Lesson 1', 600, new DateTimeImmutable('2026-11-10 18:00:00'));
+    $s = $svc->status(99, 'lecture', 1);
+    T::eq(WatchStatus::NOT_YET, $s->state);
+    T::eq('This recording opens on Tue, 10 Nov 2026 at 6:00 PM.', $svc->lockedMessage($s));
+    $clock->advance(32 * 3600);
+    T::eq(WatchStatus::AVAILABLE, $svc->status(99, 'lecture', 1)->state);
+});
