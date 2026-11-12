@@ -36,15 +36,15 @@ export class DashboardKit {
     const bone = (w, hgt = 12, extra = {}) => h('span', { class: 'ex-skeleton d-block', style: { width: w, height: `${hgt}px`, ...extra } });
     const stat = () => h('div', { class: 'col-12 col-md-6 col-xl-3' },
       h('div', { class: 'ex-skel-card ex-skel-stat' },
-        h('div', { class: 'd-flex align-items-center gap-2 mb-3' }, bone('30px', 30, { borderRadius: '8px' }), bone('45%')),
+        h('div', { class: 'd-flex align-items-center gap-2 mb-3' }, bone('30px', 30, { borderRadius: 0 }), bone('45%')),
         bone('55%', 26, { marginBottom: '10px' }), bone('70%', 10)));
     const panel = (cols, height) => h('div', { class: cols },
       h('div', { class: 'ex-skel-card', style: { height: `${height}px` } },
         bone('35%', 16, { marginBottom: '8px' }), bone('55%', 10, { marginBottom: '24px' }),
-        bone('100%', height - 110, { borderRadius: '10px' })));
+        bone('100%', height - 110, { borderRadius: 0 })));
     return h('div', { 'aria-busy': 'true', 'aria-label': 'Loading the dashboard' },
       h('div', { class: 'ex-greet ex-skel-greet mb-4' },
-        bone('48px', 48, { borderRadius: '12px', flex: 'none' }),
+        bone('48px', 48, { borderRadius: 0, flex: 'none' }),
         h('div', { class: 'flex-grow-1' }, bone('30%', 18, { marginBottom: '10px' }), bone('50%', 12))),
       h('div', { class: 'row g-3 mb-4' }, [0, 1, 2, 3].map(stat)),
       h('div', { class: 'row g-4 mb-4' }, panel('col-12 col-xl-8', 320), panel('col-12 col-xl-4', 320)),
