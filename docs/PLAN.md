@@ -212,3 +212,11 @@ cards for Waiting / This week / Approved / Rejected (click to filter), search, p
 A request opens with everything the tutor wrote, WhatsApp and call links. **Approve** opens Add Tutor filled in from
 the request (plan, billing, add-ons); saving makes the tutor with `PlatformBilling::addTutor`, links the request
 (`tutor_id`) and e-mails the tutor how to sign in. **Reject** needs a reason (admins only); **Open again** undoes it.
+
+**FREE plan and separate logins on the landing page (2026-11-13).** Tutors with up to 50 students
+(`TutorRequests::FREE_LIMIT`) can ask for FREE: the START features at no cost. It is a sign-up option, not a
+`payment_plans` row: on approval Add Tutor opens with START + Complimentary for 12 months
+("FREE plan: up to 50 students"), so no invoice is made; extend it while the class stays small. The landing page has an
+announcement bar, a "Free for small classes" section with a students calculator (FREE up to 50, then the cheapest plan
+with extra packs), a FREE card in Pricing, and a "Three logins" section for the Student Portal (`/portal`), Tutor
+Dashboard (`/tutor`) and Parent Portal (`/parent`).

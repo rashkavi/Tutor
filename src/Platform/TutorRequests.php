@@ -83,7 +83,24 @@ final class TutorRequests
             ];
             $prev = $key;
         }
+        array_unshift($out, self::freePlan());
         return $out;
+    }
+
+    /**
+     * FREE: tutors with up to 50 students use the START features at no cost. On approval it becomes START with
+     * complimentary access (PlatformBilling 'comp'), so nothing is invoiced while the tutor stays small.
+     */
+    public const FREE_LIMIT = 50;
+
+    public static function freePlan(): array
+    {
+        $start = array_values(array_map(static fn ($f) => $f['name'], array_filter(FeatureCatalog::features(), static fn ($f) => in_array('start', $f['plans'], true))));
+        return [
+            'key' => 'free', 'name' => 'FREE', 'monthly' => 0.0, 'yearly_discount' => 0.0, 'limit' => self::FREE_LIMIT,
+            'pack_price' => null, 'pack_size' => Lifecycle::PACK_SIZE, 'tagline' => 'Free for tutors with up to ' . self::FREE_LIMIT . ' students',
+            'everything_in' => null, 'new_features' => $start, 'feature_count' => count($start), 'free' => true, 'same_as' => 'start',
+        ];
     }
 
     /** The pricing sheet as a table: category → [feature, [plan => true|false], add-on pricing or null]. */

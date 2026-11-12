@@ -162,10 +162,57 @@
   addEventListener('load', () => moveInk($('.lp-tabs .on')));
   addEventListener('resize', () => moveInk($('.lp-tabs .on')));
   moveInk($('.lp-tabs .on'));
-  if (!reduce) {
+  if (!reduce && tabs.length) {
     let auto = setInterval(() => { const i = tabs.findIndex((t) => t.classList.contains('on')); pick(tabs[(i + 1) % tabs.length]); }, 6000);
     $('#roles')?.addEventListener('pointerdown', () => clearInterval(auto), { once: true });
     tabs.forEach((t) => t.addEventListener('click', () => { clearInterval(auto); auto = null; }));
+  }
+
+  // ---------- "how many students?" calculator: FREE up to the free limit, then the cheapest plan ----------
+  const calc = $('#lp-calc');
+  if (calc) {
+    const plans = JSON.parse(calc.dataset.plans || '[]');
+    const freeMax = Number(calc.dataset.free) || 50;
+    const range = $('#lp-calc-range');
+    const out = $('#lp-calc-n');
+    const planEl = $('#lp-calc-plan');
+    const priceEl = $('#lp-calc-price');
+    const perEl = $('#lp-calc-per');
+    const note = $('#lp-calc-note');
+    const cta = $('#lp-calc-cta');
+    let last = '';
+    const best = (n) => {
+      if (n <= freeMax) return { key: 'free', name: 'FREE', cost: 0 };
+      let pick = null;
+      for (const p of plans) {
+        if (p.key === 'free' || p.limit === null) continue;
+        const extra = Math.max(0, n - p.limit);
+        if (extra && !p.pack_price) continue;
+        const packs = Math.ceil(extra / (p.pack_size || 50));
+        const cost = p.monthly + packs * (p.pack_price || 0);
+        if (!pick || cost < pick.cost) pick = { key: p.key, name: p.name, cost, packs };
+      }
+      return pick ?? { key: 'pro', name: 'PRO', cost: null };
+    };
+    const update = () => {
+      const n = Number(range.value);
+      out.textContent = n;
+      range.style.setProperty('--fill', `${((n - range.min) / (range.max - range.min)) * 100}%`);
+      const b = best(n);
+      const free = b.key === 'free';
+      calc.classList.toggle('is-free', free);
+      planEl.textContent = b.name;
+      priceEl.textContent = b.cost === null ? 'Custom' : `LKR ${fmt(b.cost)}`;
+      perEl.textContent = b.cost === null ? 'we send you a price' : 'a month';
+      note.textContent = free ? `Free while you teach up to ${freeMax} students. No card, no invoices.`
+        : b.cost === null ? 'Over the PRO limit: our team gives you a price for your class.'
+          : `${b.packs ? `Includes ${b.packs} extra pack${b.packs > 1 ? 's' : ''} of 50 students. ` : ''}Starts with a free trial.`;
+      cta.href = `${calc.dataset.signup}?plan=${b.key}`;
+      cta.firstChild.textContent = free ? 'Start with FREE ' : `Start with ${b.name} `;
+      if (b.key !== last) { [planEl, priceEl].forEach((x) => { x.classList.remove('bump'); void x.offsetWidth; x.classList.add('bump'); }); last = b.key; }
+    };
+    range.addEventListener('input', update);
+    update();
   }
 
   // ---------- monthly / yearly prices ----------

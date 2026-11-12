@@ -34,7 +34,7 @@ header('X-Frame-Options: DENY');
             <div class="lp-grid-bg" aria-hidden="true"></div>
             <a href="./" class="su-aside-logo"><img src="assets/imgs/common/enlixo-light.webp" alt="<?= $e($name) ?>"></a>
             <div class="su-aside-body">
-                <span class="lp-pill"><span class="lp-pill-tag">Free</span> <span id="su-trial-pill">Free trial, no card needed</span></span>
+                <span class="lp-pill"><span class="lp-pill-tag">Free</span> <span id="su-trial-pill">Free up to 50 students, no card needed</span></span>
                 <h1>Teach more.<br><span class="lp-grad">Manage less.</span></h1>
                 <p>Tell us about your classes and pick a plan. Our team calls you, sets up your account and helps you bring your students in.</p>
                 <ul class="su-perks">
