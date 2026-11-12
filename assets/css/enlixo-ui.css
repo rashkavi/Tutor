@@ -2189,7 +2189,7 @@ a.ex-hd-stat:hover .ex-hd-go { opacity: 1; }
    still uses it now gets the same light shimmer as .ex-skeleton. ---------- */
 .placeholder-glow .placeholder, .placeholder { background: linear-gradient(90deg, var(--skeleton, #e8e8e8) 25%, var(--skeleton-shine, #f1f1f1) 37%, var(--skeleton, #e8e8e8) 63%);
   background-size: 400% 100%; opacity: 1; border-radius: 0; animation: shimmer 1.3s ease infinite; }
-[data-custom-theme="dark"] .placeholder, [data-custom-theme="dark"] .ex-skeleton { --skeleton: rgba(255, 255, 255, .06); --skeleton-shine: rgba(255, 255, 255, .11); }
+/* dark-mode skeleton colours come from --skeleton-color-1 / -2 in style.css */
 
 /* ---------- Premium class card (Classes page "Cards" view; same look as the student Classes page) ---------- */
 .ex-pcard { display: flex; flex-direction: column; background: var(--custom-white, #fff); border-radius: 0; overflow: hidden; position: relative;
@@ -2321,3 +2321,23 @@ a.ex-hd-stat:hover .ex-hd-go { opacity: 1; }
 [data-custom-theme="dark"] .ex-plan .custom-outline-btn, [data-custom-theme="dark"] .ex-plan-current, [data-custom-theme="dark"] .ex-plan-tick,
 [data-custom-theme="dark"] .ex-plan-tag { color: color-mix(in srgb, var(--tone) 45%, #ffffff); }
 [data-custom-theme="dark"] .ex-plan-note b { color: #6fdc8c; }
+
+/* ---------- Loading skeletons, one look everywhere (2026-11-12) ----------
+   Every kind of skeleton (.skeleton from skeleton.css, .ex-skeleton, Bootstrap .placeholder, the calendar) uses the same
+   two colours (--skeleton-color-1 / -2: a soft cool grey and a lighter wave; faint white in dark mode) and the same slow
+   wave, so loading never shows dark or heavy blocks. Square corners. No movement for people who turned motion off. */
+.skeleton, .ex-skeleton, .placeholder, .placeholder-glow .placeholder, .skeleton-cell, .calendar-skeleton-header {
+  background: linear-gradient(100deg, var(--skeleton-color-1, #EEF1F5) 30%, var(--skeleton-color-2, #F8FAFC) 50%, var(--skeleton-color-1, #EEF1F5) 70%) !important;
+  background-size: 300% 100% !important;
+  animation: ex-skeleton-wave 1.6s ease-in-out infinite !important;
+  opacity: 1 !important;
+  border-radius: 0 !important;
+}
+@keyframes ex-skeleton-wave { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton, .ex-skeleton, .placeholder, .skeleton-cell, .calendar-skeleton-header { animation: none !important; }
+}
+/* the white card a skeleton sits in, and thin lines between table rows, never in grey */
+.skeleton-row.bl-solid { border: 0 !important; border-bottom: 1px solid var(--line-color, #E9EAF0) !important; }
+.ex-skel-greet, [data-custom-theme] .ex-skel-greet { background: var(--custom-white, #fff) !important; }
+.ex-skel-greet::after { display: none; }

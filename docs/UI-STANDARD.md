@@ -197,7 +197,9 @@ Previous (`previous-button`) on the left, numbered `page-item`s in the middle, N
 
 ## Loading, empty and error states
 
-* Loading: grey blocks in the shape of the page (`.ex-skeleton`, or Bootstrap `placeholder-glow`, which now looks the same: light grey with a shimmer, never dark blocks).
+* Loading: blocks in the shape of the page, in two soft colours only (`--skeleton-color-1` #EEF1F5 and `--skeleton-color-2`
+  #F8FAFC; faint white in dark mode) with one slow wave. `.skeleton`, `.ex-skeleton` and Bootstrap `.placeholder` all look the
+  same. Bars sit inside white cards; tables show a thin line between rows, never a box round each row. No dark or heavy blocks.
 * Empty: `EmptyState.empty({ title, text, action })` = V3 `.empty-state`: the `inbox` icon in a soft circle, a bold
   title and one grey line. In a table it is a row inside `tbody`. With a search or filter on: "No matching results"
   + "Try changing the search or filters." and a Clear button.

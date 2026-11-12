@@ -39,9 +39,10 @@
     --red-gradient-mid: #82402f;
     --red-gradient-end: #5c0f01;
 
-    --skeleton-color-1: #e8e8e8;
-    --skeleton-color-2: #f1f1f1;
-    --skeleton-color-3: #e8e8e8;
+    /* loading skeletons: a soft cool grey with a lighter wave (see "Loading skeletons" at the end of this file) */
+    --skeleton-color-1: #EEF1F5;
+    --skeleton-color-2: #F8FAFC;
+    --skeleton-color-3: #EEF1F5;
 
     /* Chart data view */
     --chart-red: #48CD50;
@@ -146,9 +147,9 @@
     --red-gradient-mid: #82402f;
     --red-gradient-end: #5c0f01;
 
-    --skeleton-color-1: #35496dbb;
-    --skeleton-color-2: #415a8567;
-    --skeleton-color-3: #263753be;
+    --skeleton-color-1: rgba(255, 255, 255, .05);
+    --skeleton-color-2: rgba(255, 255, 255, .10);
+    --skeleton-color-3: rgba(255, 255, 255, .05);
 
     /* Chart data view */
     --chart-red: #FF6B6B;
@@ -4366,3 +4367,23 @@ header .ex-ico { display: inline-flex; align-items: center; }
 [data-custom-theme="dark"] .custom-outline-btn, [data-custom-theme="dark"] .custom-btn-outline { background-color: rgba(75, 147, 240, .18); color: #8cb8ff; }
 [data-custom-theme="dark"] .custom-outline-btn:hover:not(:disabled), [data-custom-theme="dark"] .custom-btn-outline:hover:not(:disabled) { background-color: rgba(75, 147, 240, .28); }
 [data-custom-theme="dark"] .custom-outline-btn.ex-btn-danger-fill, [data-custom-theme="dark"] .ex-danger-outline { background-color: rgba(226, 125, 102, .18); color: #ff9a85; }
+
+/* ---------- Loading skeletons, one look everywhere (2026-11-12) ----------
+   Every kind of skeleton (.skeleton from skeleton.css, .ex-skeleton, Bootstrap .placeholder, the calendar) uses the same
+   two colours (--skeleton-color-1 / -2: a soft cool grey and a lighter wave; faint white in dark mode) and the same slow
+   wave, so loading never shows dark or heavy blocks. Square corners. No movement for people who turned motion off. */
+.skeleton, .ex-skeleton, .placeholder, .placeholder-glow .placeholder, .skeleton-cell, .calendar-skeleton-header {
+  background: linear-gradient(100deg, var(--skeleton-color-1, #EEF1F5) 30%, var(--skeleton-color-2, #F8FAFC) 50%, var(--skeleton-color-1, #EEF1F5) 70%) !important;
+  background-size: 300% 100% !important;
+  animation: ex-skeleton-wave 1.6s ease-in-out infinite !important;
+  opacity: 1 !important;
+  border-radius: 0 !important;
+}
+@keyframes ex-skeleton-wave { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton, .ex-skeleton, .placeholder, .skeleton-cell, .calendar-skeleton-header { animation: none !important; }
+}
+/* the white card a skeleton sits in, and thin lines between table rows, never in grey */
+.skeleton-row.bl-solid { border: 0 !important; border-bottom: 1px solid var(--line-color, #E9EAF0) !important; }
+.ex-skel-greet, [data-custom-theme] .ex-skel-greet { background: var(--custom-white, #fff) !important; }
+.ex-skel-greet::after { display: none; }
