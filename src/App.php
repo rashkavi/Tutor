@@ -11,8 +11,13 @@ use Enlixo\Core\SystemClock;
 use Enlixo\Entitlements\EntitlementService;
 use Enlixo\Entitlements\PdoEntitlementRepository;
 use Enlixo\Http\Client\CurlHttpClient;
+use Enlixo\Platform\PlatformBilling;
+use Enlixo\Platform\PlatformCatalog;
+use Enlixo\Platform\PlatformDashboard;
+use Enlixo\Platform\PlatformSettings;
 use Enlixo\Recordings\PdoRecordingRepository;
 use Enlixo\Recordings\RecordingAccessService;
+use Enlixo\Recordings\RecordingTypeRepository;
 use Enlixo\Roles\PdoAuditLogger;
 use Enlixo\Roles\PdoRoleRepository;
 use Enlixo\Roles\PermissionService;
@@ -74,6 +79,12 @@ final class App
         ));
     }
 
+    /** Settings -> Recording Types (class recordings and pre-recorded classes). */
+    public function recordingTypes(): RecordingTypeRepository
+    {
+        return $this->once('rectypes', fn () => new RecordingTypeRepository($this->db(), $this->crypto()));
+    }
+
     public function schedule(): ScheduleService
     {
         return $this->once('sched', fn () => new ScheduleService(
@@ -82,6 +93,25 @@ final class App
             $this->crypto() ?? throw new \RuntimeException('Set APP_KEY before scheduling Zoom meetings (start URLs are stored encrypted).'),
             $this->clock(),
         ));
+    }
+
+    /** Platform billing (admin side): tutor subscriptions, invoices, payments. */
+    public function platformCatalog(): PlatformCatalog { return $this->once('pcat', fn () => new PlatformCatalog($this->db())); }
+    public function platformSettings(): PlatformSettings { return $this->once('pset', fn () => new PlatformSettings($this->db())); }
+
+    public function today(): string
+    {
+        return $this->clock()->now()->setTimezone(new \DateTimeZone($this->config['app']['timezone']))->format('Y-m-d');
+    }
+
+    public function platformBilling(): PlatformBilling
+    {
+        return $this->once('pbill', fn () => new PlatformBilling($this->db(), $this->platformCatalog(), $this->platformSettings(), dirname(__DIR__) . '/assets/uploads/users-payment-slips', $this->today()));
+    }
+
+    public function platformDashboard(): PlatformDashboard
+    {
+        return $this->once('pdash', fn () => new PlatformDashboard($this->db(), $this->platformBilling(), $this->platformCatalog(), $this->today()));
     }
 
     public function zoomWebhooks(): ZoomWebhookVerifier

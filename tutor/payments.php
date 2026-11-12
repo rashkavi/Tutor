@@ -3,6 +3,7 @@ require_once '../includes/UserClass.php';
 require_once "../includes/connection.php";
 require_once "../includes/UserPermissionsClass.php";
 require_once "../includes/Project.php";
+require_once "../includes/enlixo/stat-card.php";
 if (!SessionUser::ifUserIsTutor()) {
     header("Location: ./index");
 } else {
@@ -88,6 +89,7 @@ if (!SessionUser::ifUserIsTutor()) {
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/calender.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/attendance.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
+        <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
         <link href="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.css" rel="stylesheet">
 
         <script src="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.js"></script>
@@ -135,52 +137,20 @@ if (!SessionUser::ifUserIsTutor()) {
                                     <div class="row">
                                         <div class="col-12">
                                             <div class="row g-4">
-                                                <div class="col-12 col-md-3">
-                                                    <div class="courier-kpi delivered">
-                                                        <div class="icon">
-                                                            <iconify-icon icon="boxicons:seal-check" width="22"></iconify-icon>
-                                                        </div>
-                                                        <div>
-                                                            <div class="label">Total Income</div>
-                                                            <div class="value">LKR <?= number_format($cardData['total_income'], 2) ?></div>
-                                                        </div>
-                                                    </div>
+                                                <div class="col-12 col-md-6 col-xl-3">
+                                                    <?php enlixo_stat_card('money', 'Total Income', 'LKR ' . number_format((float) $cardData['total_income'], 2), 'Accepted payments', []); ?>
                                                 </div>
 
-                                                <div class="col-12 col-md-3">
-                                                    <div class="courier-kpi pending">
-                                                        <div class="icon">
-                                                            <iconify-icon icon="ic:outline-refresh" width="22"></iconify-icon>
-                                                        </div>
-                                                        <div>
-                                                            <div class="label">Awaiing Payments</div>
-                                                            <div class="value">LKR <?= number_format($cardData['awaiting_total'], 2) ?></div>
-                                                        </div>
-                                                    </div>
+                                                <div class="col-12 col-md-6 col-xl-3">
+                                                    <?php enlixo_stat_card('hourglass', 'Awaiting Payments', 'LKR ' . number_format((float) $cardData['awaiting_total'], 2), 'Not paid yet', []); ?>
                                                 </div>
 
-                                                <div class="col-12 col-md-3">
-                                                    <div class="courier-kpi transit">
-                                                        <div class="icon">
-                                                            <iconify-icon icon="solar:refresh-circle-broken" width="22"></iconify-icon>
-                                                        </div>
-                                                        <div>
-                                                            <div class="label">Awaiting Approvals</div>
-                                                            <div class="value">LKR <?= number_format($cardData['awaiting_approval'], 2) ?></div>
-                                                        </div>
-                                                    </div>
+                                                <div class="col-12 col-md-6 col-xl-3">
+                                                    <?php enlixo_stat_card('clock', 'Awaiting Approvals', 'LKR ' . number_format((float) $cardData['awaiting_approval'], 2), 'Slips to check', []); ?>
                                                 </div>
 
-                                                <div class="col-12 col-md-3">
-                                                    <div class="courier-kpi cancelled">
-                                                        <div class="icon">
-                                                            <iconify-icon icon="icon-park-outline:reject" width="22"></iconify-icon>
-                                                        </div>
-                                                        <div>
-                                                            <div class="label">Rejected Payments</div>
-                                                            <div class="value">LKR <?= number_format($cardData['total_rejected'], 2) ?></div>
-                                                        </div>
-                                                    </div>
+                                                <div class="col-12 col-md-6 col-xl-3">
+                                                    <?php enlixo_stat_card('close', 'Rejected Payments', 'LKR ' . number_format((float) $cardData['total_rejected'], 2), 'Sent back to students', []); ?>
                                                 </div>
                                             </div>
                                         </div>

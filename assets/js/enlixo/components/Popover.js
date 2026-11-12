@@ -7,14 +7,27 @@ import { icon } from '../core/icons.js';
  * Closes on outside click, Esc, or when an item calls close().
  */
 export class Popover {
-  constructor({ trigger, content, align = 'end', className = '' }) {
+  constructor({ trigger, content, align = 'end', className = '', hover = false }) {
     this.trigger = trigger;
     this.content = content; // Element or (popover) => Element
     this.panel = h('div', { class: `ex-popover ex-${align} ${className}`, role: 'dialog', hidden: true });
     this.el = h('div', { class: 'ex-popover-host' }, trigger, this.panel);
     trigger.setAttribute('aria-haspopup', 'true');
     trigger.setAttribute('aria-expanded', 'false');
-    trigger.addEventListener('click', (e) => { e.stopPropagation(); this.isOpen ? this.close() : this.open(); });
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (hover && this.isOpen && !window.matchMedia('(hover: none)').matches) return; // already open from the hover
+      this.isOpen ? this.close() : this.open();
+    });
+    if (hover) {
+      // V3 info tooltips: open on hover / focus, with a short grace period to move the pointer into the card.
+      let timer;
+      const later = (fn, ms) => { clearTimeout(timer); timer = setTimeout(fn, ms); };
+      this.el.addEventListener('mouseenter', () => later(() => { if (!this.isOpen) this.open(); }, 80));
+      this.el.addEventListener('mouseleave', () => later(() => this.close(), 180));
+      trigger.addEventListener('focus', () => { if (!this.isOpen) this.open(); });
+      trigger.addEventListener('blur', () => later(() => this.close(), 180));
+    }
     this.onDoc = (e) => { if (!this.el.contains(e.target)) this.close(); };
     // Fixed positioning, so a menu in a scrolling table is never clipped; it flips above when there's no room below.
     this.onMove = (e) => { if (!e || e.type === 'resize' || !this.panel.contains(e.target)) this.close(); };

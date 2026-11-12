@@ -75,6 +75,9 @@ if (!SessionUser::ifUserIsStudent()) {
                                                 <span class="text-14 sub-text lh-base mt-1" data-i18n="">Organize and distribute study resources, handouts, and assignments for each class efficiently.</span>
                                             </div>
                                         </div>
+                                        <div class="col-12 col-lg-4 mt-3 mt-lg-0 d-flex justify-content-lg-end align-items-center">
+                                            <a href="couriered-tute-details" class="custom-btn px-4 d-inline-flex align-items-center gap-2 text-decoration-none" style="height:48px">My tute parcels</a>
+                                        </div>
                                     </div>
                                 </div>
 

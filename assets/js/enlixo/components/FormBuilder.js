@@ -2,6 +2,7 @@ import { h, fill } from '../core/dom.js';
 import { QuickGuide } from './QuickGuide.js';
 import { Popover } from './Popover.js';
 import { ImageCropper } from './ImageCropper.js';
+import { icon } from '../core/icons.js';
 
 const DAYS = [[1, 'Monday'], [2, 'Tuesday'], [3, 'Wednesday'], [4, 'Thursday'], [5, 'Friday'], [6, 'Saturday'], [7, 'Sunday']];
 const INFO_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>';
@@ -13,22 +14,16 @@ const INFO_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true
 export function fieldInfo(text, label, enter = '') {
   if (!text && !enter) return null;
   const btn = h('button', { type: 'button', class: 'ex-info-btn ex-info-sm', 'aria-label': `About ${label}: ${text} ${enter}`.trim(), html: INFO_SVG });
-  const card = h('div', { class: 'ex-help' },
-    text ? h('div', { class: 'ex-help-row' }, h('span', { class: 'ex-help-k' }, 'What it does'), h('span', {}, text)) : null,
-    enter ? h('div', { class: 'ex-help-row' }, h('span', { class: 'ex-help-k' }, 'What to enter'), h('span', {}, enter)) : null);
-  if (window.bootstrap?.Popover) {
-    queueMicrotask(() => new window.bootstrap.Popover(btn, { trigger: 'hover focus', placement: 'top', html: true, title: label, content: card, customClass: 'ex-help-pop', container: 'body' }));
-  } else {
-    btn.title = [text, enter].filter(Boolean).join(' ');
-  }
-  return btn;
+  // The same card as the V3 field info icon: field name, what it is, then what to enter.
+  return new Popover({ trigger: btn, align: 'start', className: 'ex-qg-pop', hover: true,
+    content: QuickGuide.card({ title: label, subtitle: 'Field guide', intro: text, points: enter ? [enter] : [] }) }).el;
 }
 
 /** (i) next to a section title: opens a small quick-guide card. */
 function sectionInfo(title, text) {
   if (!text) return null;
   const btn = h('button', { type: 'button', class: 'ex-info-btn', 'aria-label': `About ${title}`, html: INFO_SVG });
-  return new Popover({ trigger: btn, align: 'start', className: 'ex-qg-pop', content: QuickGuide.card({ title, intro: text }) }).el;
+  return new Popover({ trigger: btn, align: 'start', className: 'ex-qg-pop', content: QuickGuide.card({ title, intro: text }), hover: true }).el;
 }
 
 /**
@@ -43,10 +38,14 @@ function sectionInfo(title, text) {
  * a chosen picture opens the Crop Image modal, and `onGenerateImage(field)` (optional) adds a "Generate thumbnail" button.
  * A select whose options come from exam_types / subjects / mediums gets "+ Add new" when `onAddOption(field)` is given.
  * `showIf: [otherKey, [allowed values]]` hides a field until the other field matches.
+ * Also: type email / tel, `suggest: lookupName` (type-ahead from a list of words), `help` (grey line under the field),
+ * `width: 'half' | 'full'`, and on an image field `aspect` (1 = square photo) and `hint`.
+ * The image panel sits on the left of the section the image field belongs to.
+ * `bars: true` draws each section as a white card with a blue title bar (the public application form).
  */
 export class FormBuilder {
-  constructor({ sections, fields, lookups = {}, values = {}, file = null, imageUrl = null, onChange = () => {}, lockBadge = () => null, onLocked = () => {}, onAddOption = null, onGenerateImage = null }) {
-    this.o = { sections, fields, lookups, onChange, lockBadge, onLocked, onAddOption, onGenerateImage };
+  constructor({ sections, fields, lookups = {}, values = {}, file = null, imageUrl = null, onChange = () => {}, lockBadge = () => null, onLocked = () => {}, onAddOption = null, onGenerateImage = null, bars = false }) {
+    this.o = { sections, fields, lookups, onChange, lockBadge, onLocked, onAddOption, onGenerateImage, bars };
     this.v = {};
     for (const f of fields) this.v[f.key] = values[f.key] ?? f.default ?? (f.type === 'schedule' ? [] : f.type === 'switch' ? false : '');
     this.file = file;
@@ -65,12 +64,18 @@ export class FormBuilder {
       const grid = h('div', { class: 'row gx-4 gy-3' }, fields.map((f) => this.#col(f)));
       const head = h('div', { class: 'd-flex align-items-center gap-2 mb-3' }, h('span', { class: 'sub-topic' }, s.title), sectionInfo(s.title, s.info));
       let body = grid;
-      if (first && image) {
+      if (image && image.section === s.key) {
         body = h('div', { class: 'row gx-4 gy-3 m-0 p-0' },
           h('div', { class: 'col-12 col-md-4 col-xl-3 p-0' }, this.#image(image)),
           h('div', { class: 'col-12 col-md-8 col-xl-9 ps-md-4 pe-0' }, grid));
       }
-      this.el.append(h('section', { class: `ex-bsform-section ${first ? '' : 'mt-5'}`, 'aria-label': s.title }, head, body));
+      if (this.o.bars) {
+        this.el.append(h('section', { class: 'ex-bar-section mb-4', 'aria-label': s.title },
+          h('div', { class: 'ex-bar-head' }, s.icon ? icon(s.icon, { size: 20 }) : null, h('span', {}, s.title), s.sub ? h('span', { class: 'ex-bar-sub d-none d-md-inline' }, s.sub) : null),
+          h('div', { class: 'p-4' }, body)));
+      } else {
+        this.el.append(h('section', { class: `ex-bsform-section ${first ? '' : 'mt-5'}`, 'aria-label': s.title }, head, body));
+      }
       first = false;
     }
     target.append(this.el);
@@ -123,7 +128,7 @@ export class FormBuilder {
 
   #colClass(f) {
     if (['textarea', 'schedule', 'radio'].includes(f.type) || f.width === 'full') return 'col-12';
-    if (f.type === 'switch' || f.type === 'yesno') return 'col-12 col-md-6 col-lg-4';
+    if (f.width === 'half') return 'col-12 col-md-6';
     return 'col-12 col-md-6 col-lg-4';
   }
 
@@ -135,6 +140,7 @@ export class FormBuilder {
       h('div', { class: 'd-flex align-items-center gap-1' }, label, fieldInfo(f.info, f.label, f.enter), f.locked ? this.o.lockBadge(f) : null,
         addable ? h('button', { type: 'button', class: 'ex-link-add ms-auto', onclick: () => this.#addOption(f, id) }, '+ Add new') : null),
       this.#input(f, id),
+      f.help ? h('span', { class: 'text-12 sub-text mt-1' }, f.help) : null,
       h('span', { class: 'ex-feedback text-dark-red text-12', role: 'alert' }));
     this.rows[f.key] = col;
     return col;
@@ -177,7 +183,15 @@ export class FormBuilder {
       }
       case 'schedule':
         return this.#schedule(f);
+      case 'email':
+      case 'tel':
+        return h('input', { ...common, class: 'form-control custom-input mt-2', type: f.type, inputmode: f.type, autocomplete: f.type === 'tel' ? 'tel' : 'email', maxlength: f.maxlength ?? null, value: val, placeholder: f.placeholder ?? null, oninput: (e) => set(e.target.value) });
       default:
+        if (f.suggest) {
+          return h('div', { class: 'mt-2' },
+            h('input', { ...common, class: 'form-control custom-input', type: 'text', list: `${id}-list`, autocomplete: 'off', maxlength: f.maxlength ?? null, value: val, placeholder: f.placeholder ?? null, oninput: (e) => set(e.target.value) }),
+            h('datalist', { id: `${id}-list` }, (this.o.lookups[f.suggest] ?? []).map((w) => h('option', { value: w }))));
+        }
         return h('input', { ...common, class: 'form-control custom-input mt-2', type: 'text', maxlength: f.maxlength ?? null, value: val, placeholder: f.placeholder ?? (f.auto && !f.required ? 'Leave empty to use the suggested name' : `Enter ${f.label.toLowerCase()}`), oninput: (e) => set(e.target.value) });
     }
   }
@@ -228,12 +242,12 @@ export class FormBuilder {
     const show = (file) => {
       this.file = file;
       if (!file && this.imageUrl) { this.imageUrl = null; this.removed = true; }
-      fill(box, file ? h('img', { src: URL.createObjectURL(file), alt: 'Class cover preview' }) : empty());
+      fill(box, file ? h('img', { src: URL.createObjectURL(file), alt: `${f.label} preview` }) : empty());
       actions.classList.toggle('d-none', !file);
       this.set(f.key, file ? file.name : '');
     };
     const crop = async (source) => {
-      const file = await ImageCropper.open({ source, aspect: 16 / 9, fileName: 'class-cover.jpg' });
+      const file = await ImageCropper.open({ source, aspect: f.aspect ?? 16 / 9, fileName: f.key === 'cover' ? 'class-cover.jpg' : `${f.key}.jpg` });
       if (file) { original = source; show(file); }
     };
     const input = h('input', { id, type: 'file', accept: 'image/jpeg,image/png,image/webp', class: 'd-none', onchange: (e) => {
@@ -247,8 +261,8 @@ export class FormBuilder {
     const actions = h('div', { class: `d-flex justify-content-center gap-3 mt-2 ${this.file || this.imageUrl ? '' : 'd-none'}` },
       h('button', { type: 'button', class: 'ex-link-add', onclick: () => crop(original ?? this.file ?? this.imageUrl) }, 'Crop again'),
       h('button', { type: 'button', class: 'ex-link-add text-dark-red', onclick: () => { original = null; show(null); } }, 'Remove image'));
-    if (this.file) fill(box, h('img', { src: URL.createObjectURL(this.file), alt: 'Class cover preview' }));
-    else if (this.imageUrl) fill(box, h('img', { src: this.imageUrl, alt: 'Class cover' }));
+    if (this.file) fill(box, h('img', { src: URL.createObjectURL(this.file), alt: `${f.label} preview` }));
+    else if (this.imageUrl) fill(box, h('img', { src: this.imageUrl, alt: f.label }));
 
     const generate = this.o.onGenerateImage
       ? h('button', { type: 'button', class: 'custom-outline-btn ex-btn-md w-100 mt-3 d-inline-flex align-items-center justify-content-center gap-2', onclick: async () => {
@@ -259,14 +273,14 @@ export class FormBuilder {
 
     const col = h('div', { class: 'd-flex flex-column', 'data-key': f.key },
       h('div', { class: 'd-flex align-items-center gap-1 mb-2' }, h('span', { class: `text-14 main-text ${f.required ? 'required' : ''}` }, f.label), fieldInfo(f.info, f.label, f.enter)),
-      h('div', { class: 'ex-image-panel p-3' },
+      h('div', { class: `ex-image-panel p-3${f.aspect === 1 ? ' ex-square' : ''}` },
         h('div', { class: 'position-relative' }, box,
           h('label', { class: 'upload-image text-white p-2 bottom-0 start-0 m-0 text-14 gap-2', for: id, role: 'button', tabindex: '0',
             onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } } },
             h('span', { 'aria-hidden': 'true', html: '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M11 16V7.85l-2.6 2.6L7 9l5-5 5 5-1.4 1.45-2.6-2.6V16h-2Zm-5 4a2 2 0 0 1-2-2v-3h2v3h12v-3h2v3a2 2 0 0 1-2 2H6Z"/></svg>' }), 'Upload Image')),
         input,
         actions,
-        h('p', { class: 'text-center text-12 sub-text mt-2 mb-0' }, 'JPG, PNG or WebP. You can crop it to 16:9 after choosing.'),
+        h('p', { class: 'text-center text-12 sub-text mt-2 mb-0' }, f.hint ?? 'JPG, PNG or WebP. You can crop it to 16:9 after choosing.'),
         generate),
       h('span', { class: 'ex-feedback text-dark-red text-12', role: 'alert' }));
     this.rows[f.key] = col;

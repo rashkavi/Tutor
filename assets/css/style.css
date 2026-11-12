@@ -39,9 +39,10 @@
     --red-gradient-mid: #82402f;
     --red-gradient-end: #5c0f01;
 
-    --skeleton-color-1: #e8e8e8;
-    --skeleton-color-2: #f1f1f1;
-    --skeleton-color-3: #e8e8e8;
+    /* loading skeletons: a soft cool grey with a lighter wave (see "Loading skeletons" at the end of this file) */
+    --skeleton-color-1: #EEF1F5;
+    --skeleton-color-2: #F8FAFC;
+    --skeleton-color-3: #EEF1F5;
 
     /* Chart data view */
     --chart-red: #48CD50;
@@ -146,9 +147,9 @@
     --red-gradient-mid: #82402f;
     --red-gradient-end: #5c0f01;
 
-    --skeleton-color-1: #35496dbb;
-    --skeleton-color-2: #415a8567;
-    --skeleton-color-3: #263753be;
+    --skeleton-color-1: rgba(255, 255, 255, .05);
+    --skeleton-color-2: rgba(255, 255, 255, .10);
+    --skeleton-color-3: rgba(255, 255, 255, .05);
 
     /* Chart data view */
     --chart-red: #FF6B6B;
@@ -571,7 +572,7 @@ body {
 .custom-btn {
     background-color: var(--dark-theme);
     color: white;
-    font-size: var(--font-size-17);
+    font-size: var(--font-size-15);
     height: 48px;
     border-radius: 0px;
     cursor: pointer;
@@ -586,7 +587,7 @@ body {
 .custom-danger-btn {
     background-color: var(--dark-red);
     color: white;
-    font-size: var(--font-size-17);
+    font-size: var(--font-size-15);
     height: 48px;
     border-radius: 0px;
     cursor: pointer;
@@ -632,7 +633,7 @@ body {
 .custom-outline-btn {
     background-color: white;
     color: var(--dark-theme);
-    font-size: var(--font-size-16);
+    font-size: var(--font-size-15);
     height: 48px;
     border-radius: 0px;
     cursor: pointer;
@@ -1532,7 +1533,7 @@ input {
 }
 
 .custom-toast.info {
-    border-left-color: var(--chart-blue2);
+    border-left-color: var(--chart-blue2, var(--dark-theme));
 }
 
 .custom-toast .close-btn {
@@ -1595,7 +1596,7 @@ input {
     width: 100%;
     bottom: 0px;
     left: 0px;
-    animation: progress 3s linear forwards;
+    animation: progress var(--toast-ms, 3000ms) linear forwards;
 }
 
 @keyframes progress {
@@ -1621,7 +1622,7 @@ input {
 
 .custom-toast.info::before,
 .btn#info {
-    background: var(--chart-blue2);
+    background: var(--chart-blue2, var(--dark-theme));
 }
 
 .custom-toast .column iconify-icon {
@@ -1642,7 +1643,7 @@ input {
 }
 
 .custom-toast.info .column iconify-icon {
-    color: var(--chart-blue2);
+    color: var(--chart-blue2, var(--dark-theme));
 }
 
 .custom-toast-text {
@@ -1661,6 +1662,47 @@ input {
     font-size: 0.8rem;
     margin-top: 4px;
     color: var(--sub-text);
+}
+
+/* Toasts drawn by assets/js/enlixo/components/Toast.js and showToast(): Solar icons, a real close button,
+   the bottom line stops while the mouse is on the toast */
+.custom-toast .custom-toast-icon {
+    display: inline-flex;
+    flex: none;
+}
+
+.custom-toast.success .custom-toast-icon {
+    color: var(--dark-green);
+}
+
+.custom-toast.error .custom-toast-icon {
+    color: var(--dark-red);
+}
+
+.custom-toast.warning .custom-toast-icon {
+    color: var(--dark-orange);
+}
+
+.custom-toast.info .custom-toast-icon {
+    color: var(--chart-blue2, var(--dark-theme));
+}
+
+.custom-toast button.close-btn {
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: none;
+    line-height: 1;
+}
+
+.custom-toast.paused::before {
+    animation-play-state: paused;
+}
+
+.custom-toast-text {
+    min-width: 0;
+    padding-right: 24px;
+    overflow-wrap: anywhere;
 }
 
 /* For modern browsers */
@@ -4304,3 +4346,44 @@ option {
         width: 15% !important;
     }
 }
+/* Side menu (V3): shown by default on desktop, the menu button slides it out */
+@media only screen and (min-width: 1200px) {
+  #sideMenu { width: 250px; min-width: 250px; transition: margin-left .4s cubic-bezier(.25, 1, .5, 1) !important; }
+  #sideMenu.collapsed { margin-left: -250px !important; }
+  .app-wrapper, .app-wrapper-full { transition: width .4s cubic-bezier(.25, 1, .5, 1) !important; }
+}
+/* Header: thin line between the theme and language switches; Solar icons sit level with the text */
+.ex-header-sep { display: inline-block; width: 1px; height: 20px; background: var(--sub-text, #8a94a6); opacity: .4; }
+header .ex-ico { display: inline-flex; align-items: center; }
+
+/* ---------- Second-level buttons have a background colour, never just an outline (2026-11-12) ----------
+   .custom-outline-btn / .custom-btn-outline (Generate thumbnail, Cancel, My Classes, Add Student ...) are light blue
+   blocks with blue text and no border; the main button stays dark blue (.custom-btn). Danger: light red with red text. */
+.custom-outline-btn, .custom-btn-outline { background-color: var(--light-theme, #E8ECFF); color: var(--dark-theme, #0061D2); border: 0; }
+.custom-outline-btn:hover:not(:disabled), .custom-btn-outline:hover:not(:disabled),
+.custom-outline-btn:focus-visible, .custom-btn-outline:focus-visible { background-color: #D6E0FF; color: var(--dark-theme, #0061D2); }
+.custom-outline-btn.ex-btn-danger-fill, .custom-outline-btn.ex-danger-outline, .ex-danger-outline { background-color: var(--light-red, #FFEBEB); color: var(--dark-red, #D85E44); border: 0; }
+.custom-outline-btn.ex-btn-danger-fill:hover:not(:disabled), .ex-danger-outline:hover:not(:disabled) { background-color: #FFDCD5 !important; }
+[data-custom-theme="dark"] .custom-outline-btn, [data-custom-theme="dark"] .custom-btn-outline { background-color: rgba(75, 147, 240, .18); color: #8cb8ff; }
+[data-custom-theme="dark"] .custom-outline-btn:hover:not(:disabled), [data-custom-theme="dark"] .custom-btn-outline:hover:not(:disabled) { background-color: rgba(75, 147, 240, .28); }
+[data-custom-theme="dark"] .custom-outline-btn.ex-btn-danger-fill, [data-custom-theme="dark"] .ex-danger-outline { background-color: rgba(226, 125, 102, .18); color: #ff9a85; }
+
+/* ---------- Loading skeletons, one look everywhere (2026-11-12) ----------
+   Every kind of skeleton (.skeleton from skeleton.css, .ex-skeleton, Bootstrap .placeholder, the calendar) uses the same
+   two colours (--skeleton-color-1 / -2: a soft cool grey and a lighter wave; faint white in dark mode) and the same slow
+   wave, so loading never shows dark or heavy blocks. Square corners. No movement for people who turned motion off. */
+.skeleton, .ex-skeleton, .placeholder, .placeholder-glow .placeholder, .skeleton-cell, .calendar-skeleton-header {
+  background: linear-gradient(100deg, var(--skeleton-color-1, #EEF1F5) 30%, var(--skeleton-color-2, #F8FAFC) 50%, var(--skeleton-color-1, #EEF1F5) 70%) !important;
+  background-size: 300% 100% !important;
+  animation: ex-skeleton-wave 1.6s ease-in-out infinite !important;
+  opacity: 1 !important;
+  border-radius: 0 !important;
+}
+@keyframes ex-skeleton-wave { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton, .ex-skeleton, .placeholder, .skeleton-cell, .calendar-skeleton-header { animation: none !important; }
+}
+/* the white card a skeleton sits in, and thin lines between table rows, never in grey */
+.skeleton-row.bl-solid { border: 0 !important; border-bottom: 1px solid var(--line-color, #E9EAF0) !important; }
+.ex-skel-greet, [data-custom-theme] .ex-skel-greet { background: var(--custom-white, #fff) !important; }
+.ex-skel-greet::after { display: none; }

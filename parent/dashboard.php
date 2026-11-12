@@ -87,7 +87,7 @@ if (!SessionUser::ifUserIsParent()) {
 
                     <?php enlixo_dash_skeleton(); ?>
 
-                    <div class="col-12 d-flex flex-column contentBodyArea vh-100 d-none" id="real-list">
+                    <div class="col-12 d-flex flex-column contentBodyArea vh-100" id="real-list">
                         <div class="row p-4 m-0 g-0">
                             <?php
                             if (!$dash) {
@@ -107,7 +107,7 @@ if (!SessionUser::ifUserIsParent()) {
 
                                 if ($several) { ?>
                                     <div class="col-12 mb-4">
-                                        <nav class="ex-dash-switch" aria-label="Choose a child">
+                                        <nav class="ex-hd-switch" aria-label="Choose a child">
                                             <a href="dashboard" class="<?= $childId ? '' : 'active' ?>"<?= $childId ? '' : ' aria-current="page"' ?>>All children</a>
                                             <?php foreach ($children as $c) { ?>
                                                 <a href="dashboard?child=<?= $c['id'] ?>" class="<?= $childId === $c['id'] ? 'active' : '' ?>"<?= $childId === $c['id'] ? ' aria-current="page"' : '' ?>><?= enlixo_dash_e($c['first_name']) ?></a>
@@ -120,10 +120,10 @@ if (!SessionUser::ifUserIsParent()) {
                                     $childId || !$several
                                         ? ['icon' => 'classes', 'value' => (string) $t['classes'], 'title' => 'Classes', 'note' => 'Classes ' . $who . ' has joined', 'href' => 'classes']
                                         : ['icon' => 'students', 'value' => (string) count($children), 'title' => 'Children', 'note' => $t['classes'] . ($t['classes'] === 1 ? ' class' : ' classes') . ' in total', 'href' => 'my-children'],
-                                    ['icon' => 'timetable', 'value' => (string) $t['week_sessions'], 'title' => 'Classes this week', 'note' => 'Monday to Sunday', 'href' => 'time-table'],
+                                    ['icon' => 'timetable', 'value' => (string) $t['week_sessions'], 'title' => 'Classes this week', 'color' => 'teal', 'note' => 'Monday to Sunday', 'href' => 'time-table'],
                                     ['icon' => 'attendance', 'value' => $dash['rate'] === null ? '-' : $dash['rate'] . '%', 'title' => 'Attendance', 'href' => 'attendance',
-                                        'tone' => $dash['rate'] !== null && $dash['rate'] >= 80 ? 'good' : '', 'note' => $dash['rate'] === null ? 'No class days yet' : 'Last 6 weeks, recordings count'],
-                                    ['icon' => 'payments', 'value' => enlixo_dash_money($t['due']), 'title' => 'Fees to pay', 'tone' => $t['due_count'] ? 'warn' : 'good', 'href' => 'payments',
+                                        'color' => 'purple', 'note' => $dash['rate'] === null ? 'No class days yet' : 'Last 6 weeks, recordings count'],
+                                    ['icon' => 'payments', 'value' => enlixo_dash_money($t['due']), 'title' => 'Fees to pay', 'color' => $t['due_count'] ? 'orange' : 'green', 'alert' => $t['overdue_count'] > 0, 'href' => 'payments',
                                         'note' => $t['due_count'] === 0 ? 'Everything is paid' : $t['due_count'] . ($t['due_count'] === 1 ? ' fee' : ' fees') . ' to pay' . ($t['overdue_count'] ? ', ' . $t['overdue_count'] . ' overdue' : '')],
                                 ]);
 
@@ -133,12 +133,12 @@ if (!SessionUser::ifUserIsParent()) {
                                             <?php foreach ($children as $c) { ?>
                                                 <div class="col-12 col-md-6 col-xl-4">
                                                     <div class="component-theme p-4 h-100 d-flex align-items-center gap-3">
-                                                        <?= str_replace('ex-dash-avatar', 'ex-dash-avatar ex-lg', enlixo_dash_avatar($c['name'], $c['image'], 'students')) ?>
+                                                        <?= str_replace('ex-hd-avatar', 'ex-hd-avatar ex-lg', enlixo_dash_avatar($c['name'], $c['image'], 'students')) ?>
                                                         <span class="flex-grow-1 min-w-0">
-                                                            <span class="text-14 fw-medium ex-dash-title d-block text-truncate"><?= enlixo_dash_e($c['name']) ?></span>
+                                                            <span class="text-14 fw-medium ex-hd-title d-block text-truncate"><?= enlixo_dash_e($c['name']) ?></span>
                                                             <span class="text-12 sub-text d-block"><?= $c['classes'] . ($c['classes'] === 1 ? ' class' : ' classes') ?> · <?= $c['due_count'] ? enlixo_dash_e(enlixo_dash_money($c['due'])) . ' to pay' : 'Fees paid' ?></span>
                                                         </span>
-                                                        <a class="custom-outline-btn ex-btn-sm ex-dash-btn" href="dashboard?child=<?= $c['id'] ?>" aria-label="View <?= enlixo_dash_e($c['name']) ?>">View</a>
+                                                        <a class="custom-outline-btn ex-btn-sm ex-hd-btn" href="dashboard?child=<?= $c['id'] ?>" aria-label="View <?= enlixo_dash_e($c['name']) ?>">View</a>
                                                     </div>
                                                 </div>
                                             <?php } ?>

@@ -73,7 +73,7 @@
                         </li>
 
                         <li>
-                            <a class="dropdown-item d-flex align-items-center lang-item d-none"
+                            <a class="dropdown-item d-flex align-items-center lang-item"
                                 href="#"
                                 data-lang="si">
 
@@ -89,7 +89,7 @@
                         </li>
 
                         <li>
-                            <a class="dropdown-item d-flex align-items-center lang-item d-none"
+                            <a class="dropdown-item d-flex align-items-center lang-item"
                                 href="#"
                                 data-lang="ta">
 
@@ -252,8 +252,8 @@
 
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item language-select" data-value="en" data-text="English" href="#">English</a></li>
-                    <li><a class="dropdown-item language-select d-none" data-value="si" data-text="Sinhala" href="#">සිංහල</a></li>
-                    <li><a class="dropdown-item language-select d-none" data-value="ta" data-text="Tamil" href="#">தமிழ்</a></li>
+                    <li><a class="dropdown-item language-select" data-value="si" data-text="Sinhala" href="#">සිංහල</a></li>
+                    <li><a class="dropdown-item language-select" data-value="ta" data-text="Tamil" href="#">தமிழ்</a></li>
                 </ul>
             </div>
         </div>

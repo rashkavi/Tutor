@@ -12,7 +12,7 @@ import { Modal } from './Modal.js';
  *   button.onclick = gate.guard('payments.online_card', () => openGateway())
  */
 export class FeatureGate {
-  constructor(access, { upgradeUrl = 'pricing' } = {}) {
+  constructor(access, { upgradeUrl = 'subscription?tab=plans' } = {}) {
     this.access = access;
     this.upgradeUrl = upgradeUrl;
     this.features = new Map(access.features.map((f) => [f.key, f]));

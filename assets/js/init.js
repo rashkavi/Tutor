@@ -1,4 +1,13 @@
 (function () {
+    // Whole-page translation (assets/js/i18n-auto.js): loaded next to this file on every page, so text drawn later
+    // by JavaScript follows the chosen language too, not only elements with data-i18n.
+    const me = document.currentScript && document.currentScript.src;
+    if (me && !window.EnlixoI18n) {
+        const s = document.createElement('script');
+        s.src = me.replace(/init\.js(\?.*)?$/, 'i18n-auto.js$1');
+        document.head.appendChild(s);
+    }
+
     const savedTheme = localStorage.getItem('theme') || 'light';
 
     document.documentElement.setAttribute('data-bs-theme', savedTheme);
@@ -34,9 +43,9 @@
 
             const activeItem = document.querySelector(`.lang-item[data-lang="${lang}"]`);
             if (activeItem) {
-                const icon = activeItem.querySelector("iconify-icon").getAttribute("icon");
+                const icon = activeItem.querySelector("iconify-icon")?.getAttribute("icon");
                 const currentIcon = document.querySelector(".current-lang-icon");
-                if (currentIcon) currentIcon.setAttribute("icon", icon);
+                if (currentIcon && icon) currentIcon.setAttribute("icon", icon);
 
                 // Show checkmark
                 document.querySelectorAll(".lang-check").forEach(check => check.style.display = "none");

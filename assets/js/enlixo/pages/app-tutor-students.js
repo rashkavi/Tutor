@@ -34,9 +34,10 @@ const setStatus = async (ids, status) => {
 
 // Header "Action" menu: locked items stay visible with the premium badge
 document.getElementById('students-actions').append(ActionMenu.button('Action', [
-  { label: 'Add New Student', icon: 'user-add', href: 'add-student-to-class' },
+  { label: 'Add New Student', icon: 'user-add', href: 'add-student' },
+  { label: 'Requested Students', icon: 'application', href: 'requested-students' },
   { label: 'Add Registered Student', icon: 'user', href: 'add-registered-student-to-class' },
-  { label: 'Bulk Upload (CSV)', icon: 'upload', href: 'upload-student-bulk' },
+  { label: 'Upload Students Bulk', icon: 'upload', href: 'upload-student-bulk' },
   gate && { label: 'Send WhatsApp Message', icon: 'communication', locked: gate.badge('comms.whatsapp'), onClick: gate.guard('comms.whatsapp', () => { location.href = 'message-center'; }) },
 ]));
 
@@ -75,6 +76,6 @@ view = new DataView({
         : { label: 'Mark as Active', icon: 'activate', onClick: () => setStatus([s.id], '1').then(() => view.reload()).catch((e) => Toast.error(e.message)) },
     ], `Actions for ${fullName(s)}`) },
   ],
-  empty: { icon: '🎓', title: 'No students yet', text: 'Add a student to one of your classes to see them here.', action: h('a', { class: 'ex-btn ex-btn-primary', href: 'add-student-to-class' }, 'Add New Student') },
+  empty: { icon: '🎓', title: 'No students yet', text: 'Add a student to one of your classes to see them here.', action: h('a', { class: 'custom-btn ex-btn-md px-4 text-decoration-none', href: 'add-student' }, 'Add New Student') },
   onLocked: (e) => gate?.openUpgrade(e.details),
 }).mount(document.getElementById('students-list'));

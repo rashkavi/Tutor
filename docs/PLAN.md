@@ -101,21 +101,75 @@ Status: ✅ done in this branch · 🟡 started · ⬜ to do
 
 ## Dashboards (done 2026-11-12)
 
-All four are drawn by PHP from `DashboardRepository` (prepared statements), with the same parts in the same order:
-header card (greeting + main buttons) → stat cards → today's classes / attendance bars / month calendar → tables.
+The tutor and admin dashboards are main's API pages (`app-tutor-dashboard.js`, `app-admin-dashboard.js`). The student and parent
+dashboards are drawn by PHP from `DashboardRepository`. All four now look the same:
+
+* **No "Dashboard › Overview" header card.** The top of the page is a greeting card ("Good morning, Nimal", today's date, one line
+  about today) that also holds the Action menu and the main button (Start Class, Pay Fees).
+* **Four stat cards to a row** on large screens, each with its own light colour (blue, green, orange, purple; `StatCard` `tone`).
+  The tutor's "Waiting for You" and "Classes This Week" cards were dropped from the row because they have their own panels below;
+  the admin's "Overdue" and "Slips to Check" are in "Waiting for You".
+* **Loading:** a skeleton in the shape of the page (`DashboardKit.skeleton()`), light grey with a shimmer. The student and parent pages
+  come from PHP, so they show at once with no skeleton.
 
 | Role | Stat cards | Extra |
 |---|---|---|
-| Tutor | Active classes, students, income this month (vs last month), fees to collect | "Needs your attention": slips to approve, overdue fees, class days of the last 7 days with no attendance. Recent payments. Quick notes (kept in the browser). |
-| Admin | Active tutors, students, active classes, package income this month | "Needs your attention": tutor requests, package payments to approve. New tutors per month, tutors per package, latest requests and package payments. |
 | Student | My classes, classes this week, attendance (6 weeks), fees to pay | Fees to pay with "Pay now", recent payments, my classes. |
 | Parent | Children (or classes for one child), classes this week, attendance, fees to pay | Child switcher (`?child=ID`, only the parent's own children), one card per child, fees to pay with "Pay now". |
 
 Rules used: paid = payment status 3 or 8; attended = attendance status 2 or 4 (watched the recording); for students a past class
 day with no mark counts as missed (same as the Attendance page). The calendar holds class days from 2 months back to 3 months ahead.
-No Chart.js or other CDN script is needed on these pages. If the data can't be read, the page shows "We couldn't load your dashboard" and the menu still works.
+
+## Classes as premium cards (done 2026-11-12)
+
+Tutor → Classes opens in the **Cards** view (rows and table are still there). Student and parent Classes use the same card
+(`includes/enlixo/class-card.php`): cover or a drawn cover in the exam colour, "2027 • A/L" pill (pink A/L, orange O/L, purple
+Scholarship), subject, name, medium and students, blue "View Class", round edit and ⋯ buttons.
+
+## Language (done 2026-11-12)
+
+Sinhala and Tamil were hidden in the tutor and student language menus, and only elements with a `data-i18n` key changed, once,
+on page load. Now `assets/js/i18n-auto.js` (loaded by `init.js` on every page) translates every piece of text on the page,
+including text drawn later by JavaScript, from `assets/i18n/phrases.si.json` / `phrases.ta.json` plus the old key files.
+Add wording in `bin/i18n-phrases.py` and run `python3 bin/i18n-phrases.py`. Names, class names and other data typed by people stay
+as they are. Chart labels inside the charts are not translated yet.
 
 Not done yet: notes are saved per browser, not in the database; the student and parent "Today's classes" rows don't show a Zoom join button.
+
+## Tutes and class page (done 2026-11-12)
+
+Migration **012_tute_delivery.sql** (additive): four columns on `class_tutes` (courier, planned post date, note to
+students, added by) and a new `tute_deliveries` table. Run it after 011.
+
+**Who gets a tute** (`Enlixo\Tutes\TuteRules`, `TuteRepository`), the same rule the old tute pages used:
+* `payment_month` empty = every active student of the class (also students who join later).
+* `payment_month` = 'YYYY-MM' = only students whose fee for that month is paid: status 3 (approved slip / cash) or 8 (card).
+  A student who pays later gets it then. A free class always gives it to everyone.
+
+**Add Tute** (`tutor/add-tute.php`, `app-tutor-add-tute.js`, `POST /api/v1/tutor/tutes`): name and description, Download
+(PDF / Word, up to 10 MB each, type checked from the file itself) or Post to their home (courier), who gets it (everyone /
+paid for a month, with how many students that is), then files, or the parcel items, courier, planned post date and a note.
+
+**Courier deliveries** (`tutor/couriered-tute.php`, `app-tutor-tute-deliveries.js`): replaces the old page that showed
+made-up numbers. One parcel per student who gets the tute; the address is copied from the student's profile when the
+parcel is made (so a parcel already sent keeps its address). Steps: To pack → Packed → Sent (courier + tracking number,
+date filled in) → Delivered, or Returned. Tick rows to move many at once; Edit one parcel to fix its address; "Add students
+who paid later"; Print labels (address labels for the ticked parcels, or every parcel still to send); Download list (CSV).
+Couriers offered: Sri Lanka Post (Speed Post / Registered Post), Domex, Prompt Xpress, Koombiyo, Pronto, Certis Lanka,
+Trans Express, Hand delivery, or Other. Sri Lanka Post tracking numbers look like BA123456789LK; students get a link to
+the Sri Lanka Post tracking page.
+
+**Student**: Tutes → My tute parcels (`portal/couriered-tute-details.php`): each parcel with its progress, courier,
+tracking number (Copy, Track parcel), where it is going and the tutor's note. Replaces the old mock page.
+
+**Class page** (`tutor/class-details.php`, `app-tutor-class-details.js`, `GET /api/v1/tutor/classes/{id}/summary`,
+`TutorDashboard::classSummary()` so the rules match the dashboard): weekly times, where, fee, medium and year; cards for
+students, fees this month, attendance (4 weeks) and the next class; attendance per week; next class days; "Needs your
+attention" (slips to approve, students who have not paid, parcels to send); links to everything in the class with counts.
+Edit Class opens `edit-class` (the old edit pop-up is gone).
+
+Not done yet: the old `tutor/api/addTute.php` is no longer used by the page but is still on the server; the parent side
+does not show tute parcels yet; no automatic SMS/WhatsApp when a parcel is sent.
 
 ## Open questions for Rashmi
 1. Recording limit default: is **3 × video length** right, or do you want a fixed number of views like V3?

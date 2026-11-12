@@ -46,6 +46,7 @@ final class FakeEntitlementRepo implements EntitlementRepository
     public function activePlanKey(int $tutorId): string { return $this->plans[$tutorId] ?? 'start'; }
     public function planFeatureKeys(string $planKey): array { return FeatureCatalog::featuresForPlan($planKey); }
     public function planStudentLimit(string $planKey): ?int { return FeatureCatalog::PLANS[$planKey]['student_limit']; }
+    public function tutorStudentLimit(int $tutorId, string $planKey): ?int { return $this->planStudentLimit($planKey); }
     public function activeAddonFeatureKeys(int $tutorId): array { return $this->addons[$tutorId] ?? []; }
     public function activeStudentCount(int $tutorId): int { return $this->students; }
 }

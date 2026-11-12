@@ -2,6 +2,22 @@
 require_once "../includes/nav-item.php";
 require_once __DIR__ . "/../../includes/enlixo/icons.php";
 
+// Admin side billing (migration 007): while the subscription is suspended or cancelled the tutor can only open
+// Finance -> My Subscription (to pay); every other page sends them there. The API refuses the same calls (api/v1/index.php).
+if (isset($sessionUserObject['user_id']) && class_exists('SessionUser') && SessionUser::ifUserIsTutor()
+    && basename((string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH), '.php') !== 'subscription') {
+    try {
+        $enlixoSub = Database::search("SELECT `status` FROM `users_has_payment_plans` WHERE `users_user_id` = '" . (int) $sessionUserObject['user_id'] . "' ORDER BY `users_has_payment_plan_id` DESC LIMIT 1");
+        $enlixoSub = $enlixoSub ? $enlixoSub->fetch_assoc() : null;
+    } catch (\Throwable $e) {
+        $enlixoSub = null; // before migration 007
+    }
+    if ($enlixoSub && in_array($enlixoSub['status'] ?? '', ['suspended', 'cancelled'], true)) {
+        echo '<script>location.replace("subscription");</script></body></html>';
+        exit;
+    }
+}
+
 /**
  * Tutor side menu, grouped like the ENLIXO V3 portal:
  *   Dashboard / Academic ▾ (Classes, Students ▾, Time Table, Attendance) / Finance ▾ / Communication ▾ / Settings ▾
@@ -21,24 +37,33 @@ class load_side_menu
                     ['Create a Class', null, 'create-class', '', []],
                 ]],
                 ['Students', null, null, 'students', ['Students'], [
-                    ['All Students', null, 'students', '', []],
-                    ['Add New Student', null, 'add-student-to-class', '', []],
+                    ['Registered Students', null, 'students', '', []],
+                    ['Requested Students', null, 'requested-students', '', ['Requested Students']],
+                    ['Add New Student', null, 'add-student', '', ['Add New Student']],
                     ['Add Registered Student', null, 'add-registered-student-to-class', '', []],
-                    ['Bulk Upload', null, 'upload-student-bulk', '', []],
+                    ['Upload Students Bulk', null, 'upload-student-bulk', '', ['Upload Students Bulk']],
                 ]],
                 ['Time Table', null, 'time-table', 'time-table', ['Time Table']],
-                ['Attendance', null, 'attendance', 'attendance', ['Attendance']],
+                ['Class Recordings', null, 'recordings', '', ['Class Recordings']],
+                ['Attendance', null, null, 'attendance', ['Attendance'], [
+                    ['Attendance Dashboard', null, 'attendance-dashboard', '', ['Attendance Dashboard']],
+                    ['Mark Attendance', null, 'mark-attendance', '', ['Mark Attendance']],
+                ]],
             ]],
             ['Finance', 'finance', null, '', [], [
-                ['Payments', null, 'payments', 'payments', ['Payments']],
-                ['Billing', null, 'billing', 'billing', ['Billing']],
+                ['Student Fees', null, 'fees', '', ['Student Fees', 'Payments']],
+                ['My Subscription', null, 'subscription', '', ['My Subscription', 'Billing']],
             ]],
             ['Communication', 'communication', null, '', [], [
                 ['Message Center', null, 'message-center', 'message-center', ['Message Center']],
             ]],
             ['Settings', 'settings', null, '', [], [
                 ['Class Form', null, 'class-form-settings', '', ['Class Form']],
-                ['Plans & Billing', null, 'pricing', '', ['Pricing']],
+                ['Student Form', null, 'student-form-settings', '', ['Student Form']],
+                ['Fees & Receipts', null, 'fee-settings', '', ['Fee Settings']],
+                ['Attendance', null, 'attendance-settings', '', ['Attendance Settings']],
+                ['Recording Types', null, 'recording-types', '', ['Recording Types']],
+                ['Plans & Billing', null, 'subscription?tab=plans', '', ['Pricing']],
                 ['Integrations', null, 'intergrations', 'intergrations', ['Intergrations']],
             ]],
         ];
@@ -74,7 +99,7 @@ class load_side_menu
         foreach ($children as $child) {
             $active = self::isActive($child, $selected, $page);
             if (!empty($child[5])) {
-                echo '<li><details class="ex-subgroup"' . ($active ? ' open' : '') . '><summary class="ex-subnav-link' . ($active ? ' ex-in' : '') . '">' . self::label($child) . '<span class="ex-chev" aria-hidden="true"></span></summary>';
+                echo '<li><details class="ex-subgroup"' . ($active ? ' open' : '') . '><summary class="ex-subnav-link' . ($active ? ' ex-in' : '') . '">' . self::label($child) . enlixo_icon('chevron-down', 16, 'ex-chev') . '</summary>';
                 self::renderChildren($child[5], $selected, $page, $depth + 1);
                 echo '</details></li>';
             } else {
@@ -116,7 +141,7 @@ class load_side_menu
 
     private static function groupHead(array $item, bool $active, bool $isLink): string
     {
-        return enlixo_icon($item[1] . ($active ? '-active' : ''), 20, 'ex-nav-tile') . self::label($item)
+        return enlixo_icon($item[1], 20, 'ex-nav-tile') . self::label($item)
             . ($isLink ? '' : enlixo_icon('chevron-down', 16, 'ex-chev'));
     }
 
@@ -142,7 +167,6 @@ class load_side_menu
             </div>
 
             <div class="flex-grow-1 overflow-auto ex-sidenav-scroll">
-                <div class="ex-nav-caption">Menu</div>
                 <?php foreach (self::menu() as $item) {
                     $active = self::isActive($item, $selected, $page);
                     if (empty($item[5])) { ?>
@@ -159,7 +183,7 @@ class load_side_menu
 
             <?php if ($plan) {
                 $pct = $plan['limit'] ? min(100, (int) round($plan['count'] / max(1, $plan['limit']) * 100)) : 0; ?>
-                <a class="ex-plan-card ex-plan-<?= self::e($plan['key']) ?>" href="pricing">
+                <a class="ex-plan-card ex-plan-<?= self::e($plan['key']) ?>" href="subscription?tab=plans">
                     <span class="d-flex align-items-center gap-2">
                         <?= enlixo_icon('crown', 18, 'ex-plan-crown') ?>
                         <span class="ex-plan-name"><?= self::e($plan['name']) ?> plan</span>
@@ -203,6 +227,14 @@ class load_side_menu
                     });
                     empty.hidden = !q || shown > 0;
                 };
+                // V3 accordion: opening a group closes the other groups at the same level, so one long group never pushes the rest out of view
+                nav.addEventListener('toggle', (e) => {
+                    const d = e.target;
+                    if (!(d instanceof HTMLDetailsElement) || !d.open || nav.classList.contains('ex-finding')) return;
+                    const level = d.closest('li') ? d.closest('ul') : d.parentElement;
+                    level.querySelectorAll(':scope > details[open], :scope > li > details[open]').forEach((o) => { if (o !== d) o.open = false; });
+                    d.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }, true);
                 input.addEventListener('input', filter);
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') { const first = links.find((a) => !a.closest('[hidden]')); if (first) location.href = first.href; }

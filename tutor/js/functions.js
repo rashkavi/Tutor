@@ -1623,12 +1623,17 @@ const addPreRecording = (btn) => {
     form.append("description", $("#description").val());
     form.append("duration", $("#duration").val());
     form.append("rec_cover", $("#rec-cover-input").prop("files")[0]);
-    form.append("youtube", $("#youtube-check-box").is(":checked"));
-    form.append("video", $("#video-check-box").is(":checked"));
-    form.append("link", $("#link").val());
-    const videoEl = $("#video-input-field")[0];
-    if (videoEl && videoEl.files.length > 0) {
-        form.append("video_file", videoEl.files[0]);
+    if (window.PreRecordingLink) {
+        // recording type + link + passcode + opens on (assets/js/enlixo/pages/app-tutor-pre-recording-link.js)
+        window.PreRecordingLink.append(form);
+    } else {
+        form.append("youtube", $("#youtube-check-box").is(":checked"));
+        form.append("video", $("#video-check-box").is(":checked"));
+        form.append("link", $("#link").val());
+        const videoEl = $("#video-input-field")[0];
+        if (videoEl && videoEl.files.length > 0) {
+            form.append("video_file", videoEl.files[0]);
+        }
     }
 
     const files = $("#file-selector-input")[0].files;
@@ -1680,6 +1685,7 @@ const addPreRecording = (btn) => {
                         showToast("error", response.error);
                     } else {
                         applyValidation(response, validationMap);
+                        window.PreRecordingLink?.showErrors(response);
                     }
                 } catch (err) {
                     console.log(err);
@@ -1704,12 +1710,17 @@ const editPreRecording = (btn, preRecordingId) => {
     form.append("description", $("#description").val());
     form.append("duration", $("#duration").val());
     form.append("rec_cover", $("#rec-cover-input").prop("files")[0]);
-    form.append("youtube", $("#youtube-check-box").is(":checked"));
-    form.append("video", $("#video-check-box").is(":checked"));
-    form.append("link", $("#link").val());
-    const videoEl = $("#video-input-field")[0];
-    if (videoEl && videoEl.files.length > 0) {
-        form.append("video_file", videoEl.files[0]);
+    if (window.PreRecordingLink) {
+        // recording type + link + passcode + opens on (assets/js/enlixo/pages/app-tutor-pre-recording-link.js)
+        window.PreRecordingLink.append(form);
+    } else {
+        form.append("youtube", $("#youtube-check-box").is(":checked"));
+        form.append("video", $("#video-check-box").is(":checked"));
+        form.append("link", $("#link").val());
+        const videoEl = $("#video-input-field")[0];
+        if (videoEl && videoEl.files.length > 0) {
+            form.append("video_file", videoEl.files[0]);
+        }
     }
 
     const files = $("#file-selector-input")[0].files;
@@ -1759,6 +1770,7 @@ const editPreRecording = (btn, preRecordingId) => {
                         showToast("error", response.error);
                     } else {
                         applyValidation(response, validationMap);
+                        window.PreRecordingLink?.showErrors(response);
                     }
                 } catch (err) {
                     console.log(err);
@@ -2813,7 +2825,8 @@ function disconnectIntegration(btn) {
     const integrationId = document.getElementById("disconnectIntegrationId").value;
 
     if (!integrationId) {
-        alert("Invalid integration selected.");
+        toggleBtnLoader(btn, false);
+        showToast("error", "Invalid integration selected.");
         return;
     }
 
@@ -2838,6 +2851,7 @@ function disconnectIntegration(btn) {
             }
         })
         .catch(() => {
-            alert("Something went wrong. Please try again.");
+            toggleBtnLoader(btn, false);
+            showToast("error", "Something went wrong. Please try again.");
         });
 }

@@ -2,6 +2,7 @@
 require_once '../includes/UserClass.php';
 require_once "../includes/connection.php";
 require_once "../includes/Project.php";
+require_once "../includes/enlixo/class-card.php";
 if (!SessionUser::ifUserIsStudent()) {
     header("Location: ./index");
 } else {
@@ -19,6 +20,7 @@ if (!SessionUser::ifUserIsStudent()) {
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/style.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/skeleton.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
+        <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
         <link href="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.css" rel="stylesheet">
 
         <script src="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.js"></script>
@@ -63,7 +65,7 @@ if (!SessionUser::ifUserIsStudent()) {
                                 </div>
 
                                 <div class="col-12">
-                                    <div class="row g-3">
+                                    <div class="row g-4">
                                         <?php
 
                                         $query = "
@@ -91,97 +93,18 @@ if (!SessionUser::ifUserIsStudent()) {
 
                                         if ($classes->num_rows > 0) {
                                             while ($class = $classes->fetch_assoc()) {
-                                                $classBage = $class['exam_type_id'] == 1 ? "scholarship" : ($class['exam_type_id'] == 2 ? "o-l" : "a-l");
-                                        ?>
-                                                <div class="col-12 col-md-4 col-xl-3">
-                                                    <div class="tutor-class-card h-100">
-
-                                                        <div class="card-image-wrapper position-relative cursor-pointer" onclick="window.location.href='class-details?class-id=<?= $class['class_id']; ?>'">
-                                                            <?php if (!empty($class['class_cover']) && file_exists(Project::getAssetsPath() . "/imgs/classes-covers/" . $class['class_cover'])) { ?>
-                                                                <img src="<?= Project::getAssetsPath() ?>/imgs/classes-covers/<?= $class['class_cover'] ?>" class="w-100" alt="Class Thumbnail">
-                                                            <?php } else { ?>
-                                                                <img src="<?= Project::getAssetsPath() ?>/imgs/common/empty-thumbnail.webp" class="w-100" alt="Class Thumbnail">
-                                                            <?php } ?>
-
-                                                            <div class="image-overlay"></div>
-
-                                                            <span class="class-badge <?= $classBage ?>">
-                                                                <?= $class['year'] ?> • <?= $class['exam_type'] ?>
-                                                            </span>
-                                                        </div>
-
-                                                        <div class="card-body-custom cursor-pointer">
-                                                            <span class="subject-text">
-                                                                <?= $class['subject'] ?>
-                                                            </span>
-                                                            <h5 class="class-title">
-                                                                <?= $class['class_name'] ?>
-                                                            </h5>
-                                                            <div class="class-meta d-flex justify-content-between" onclick="window.location.href='class-details?class-id=<?= $class['class_id']; ?>'">
-                                                                <div class="meta-item">
-                                                                    <iconify-icon icon="fontisto:language"></iconify-icon>
-                                                                    <span class="sub-text"><?= $class['medium'] ?></span>
-                                                                </div>
-
-                                                                <div class="meta-item">
-                                                                    <iconify-icon icon="lets-icons:user-alt-duotone"></iconify-icon>
-                                                                    <span class="sub-text"><?= $class['student_count'] ?> Students</span>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="card-footer-premium">
-                                                                <button class="btn-watch-premium bg-dark-theme"
-                                                                    onclick="window.location = 'class-details?class-id=<?= $class['class_id']; ?>'">
-                                                                    <iconify-icon icon="solar:eye-broken" width="18"></iconify-icon>
-                                                                    <span>View Class</span>
-                                                                </button>
-
-                                                                <div class="footer-icon-group">
-
-                                                                    <div class="dropdown">
-                                                                        <button class="icon-premium"
-                                                                            type="button"
-                                                                            data-bs-toggle="dropdown"
-                                                                            data-tooltip="Options"
-
-                                                                            aria-expanded="false">
-                                                                            <iconify-icon icon="qlementine-icons:menu-dots-16" width="20"></iconify-icon>
-                                                                        </button>
-
-                                                                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow br-5">
-                                                                            <li><a class="dropdown-item text-14 main-text d-flex align-items-center" href="class-time-table?class-id=<?= $class['class_id']; ?>">
-                                                                                    <iconify-icon icon="solar:calendar-date-broken" width="20" height="20" class="sub-text-color me-3"></iconify-icon>
-                                                                                    Class Time Table</a></li>
-                                                                            <hr class="mt-1 mb-1 mb-0 me-2 mx-2">
-                                                                            <li><a class="dropdown-item text-14 main-text d-flex align-items-center" href="class-recordings?class-id=<?= $class['class_id']; ?>">
-                                                                                    <iconify-icon icon="gravity-ui:video" width="20" height="20" class="sub-text me-3"></iconify-icon>
-                                                                                    Recordings</a></li>
-                                                                            <hr class="mt-1 mb-1 mb-0 me-2 mx-2">
-                                                                            <li><a class="dropdown-item text-14 main-text d-flex align-items-center" href="class-pre-recordings?class-id=<?= $class['class_id']; ?>">
-                                                                                    <iconify-icon icon="streamline:live-video" width="20" height="20" class="sub-text me-3"></iconify-icon>
-                                                                                    Pre-Recorded Classes</a></li>
-                                                                            <hr class="mt-1 mb-1 mb-0 me-2 mx-2">
-                                                                            <li><a class="dropdown-item text-14 main-text d-flex align-items-center" href="class-tutes?class-id=<?= $class['class_id']; ?>">
-                                                                                    <iconify-icon icon="lsicon:constitute-outline" width="20" height="20" class="sub-text-color me-3"></iconify-icon>
-                                                                                    Tutes</a></li>
-                                                                            <hr class="mt-1 mb-1 mb-0 me-2 mx-2">
-                                                                            <li><a class="dropdown-item text-14 main-text d-flex align-items-center" href="class-attendance?class-id=<?= $class['class_id']; ?>">
-                                                                                    <iconify-icon icon="ci:wavy-check" width="20" height="20" class="sub-text-color me-3"></iconify-icon>
-                                                                                    Attendance</a></li>
-                                                                            <hr class="mt-1 mb-1 mb-0 me-2 mx-2">
-                                                                            <li><a class="dropdown-item text-14 main-text d-flex align-items-center" href="class-payments?class-id=<?= $class['class_id']; ?>">
-                                                                                    <iconify-icon icon="fluent:payment-28-regular" width="20" height="20" class="sub-text-color me-3"></iconify-icon>
-                                                                                    Payments</a></li>
-                                                                        </ul>
-
-                                                                    </div>
-
-                                                                </div>
-                                                            </div>
-
-                                                        </div>
-                                                    </div>
+                                                                                        ?>
+                                                <div class="col-12 col-md-6 col-xl-4 col-xxl-3">
+                                                    <?php enlixo_class_card($class, 'class-details?class-id=' . (int) $class['class_id'], $class['student_count'] . ((int) $class['student_count'] === 1 ? ' Student' : ' Students'), [
+                                                        ['Class Time Table', 'class-time-table?class-id=' . (int) $class['class_id'], 'timetable'],
+                                                        ['Recordings', 'recordings?class=' . (int) $class['class_id'], 'recordings'],
+                                                        ['Pre-Recorded Classes', 'pre-recorded-classes?class=' . (int) $class['class_id'], 'pre-recorded'],
+                                                        ['Tutes', 'class-tutes?class-id=' . (int) $class['class_id'], 'tutes'],
+                                                        ['Attendance', 'class-attendance?class-id=' . (int) $class['class_id'], 'attendance'],
+                                                        ['Payments', 'class-payments?class-id=' . (int) $class['class_id'], 'payments'],
+                                                    ]); ?>
                                                 </div>
+
 
                                         <?php
                                             }

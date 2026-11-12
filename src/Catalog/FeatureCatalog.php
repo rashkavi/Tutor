@@ -69,6 +69,7 @@ final class FeatureCatalog
             'attendance.qr'      => ['name' => 'QR-Based Attendance', 'category' => 'Attendance & ID', 'plans' => self::ALL, 'description' => 'Scan student QR codes.'],
             'attendance.export'  => ['name' => 'Attendance Reports Export', 'category' => 'Attendance & ID', 'plans' => self::GROW_UP, 'description' => 'Export attendance to Excel / PDF.'],
             'id.digital'         => ['name' => 'Digital Student ID (QR)', 'category' => 'Attendance & ID', 'plans' => self::GROW_UP, 'description' => 'Each student gets a QR ID card in the app.'],
+            'id.cards'           => ['name' => 'Student ID Cards', 'category' => 'Attendance & ID', 'plans' => self::GROW_UP, 'description' => 'Make and print student ID cards with the QR code or barcode used for attendance.'],
             'id.physical_cards'  => ['name' => 'Physical ID Card Printing', 'category' => 'Attendance & ID', 'plans' => self::ADDON, 'description' => 'Printed PVC ID cards.', 'addon' => ['key' => 'physical_id', 'name' => 'Physical ID Card Setup', 'pricing' => 'One-time + per-card cost']],
 
             // Reporting & Analytics

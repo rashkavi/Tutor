@@ -80,7 +80,7 @@ if (!SessionUser::ifUserIsStudent()) {
 
                     <?php enlixo_dash_skeleton(); ?>
 
-                    <div class="col-12 d-flex flex-column contentBodyArea vh-100 d-none" id="real-list">
+                    <div class="col-12 d-flex flex-column contentBodyArea vh-100" id="real-list">
                         <div class="row p-4 m-0 g-0">
                             <?php
                             if (!$dash) {
@@ -94,10 +94,10 @@ if (!SessionUser::ifUserIsStudent()) {
 
                                 enlixo_dash_stats([
                                     ['icon' => 'classes', 'value' => (string) $t['classes'], 'title' => 'My classes', 'note' => 'Classes you have joined', 'href' => 'classes'],
-                                    ['icon' => 'timetable', 'value' => (string) $t['week_sessions'], 'title' => 'Classes this week', 'note' => 'Monday to Sunday', 'href' => 'time-table'],
+                                    ['icon' => 'timetable', 'value' => (string) $t['week_sessions'], 'title' => 'Classes this week', 'color' => 'teal', 'note' => 'Monday to Sunday', 'href' => 'time-table'],
                                     ['icon' => 'attendance', 'value' => $dash['rate'] === null ? '-' : $dash['rate'] . '%', 'title' => 'Attendance', 'href' => 'attendance',
-                                        'tone' => $dash['rate'] !== null && $dash['rate'] >= 80 ? 'good' : '', 'note' => $dash['rate'] === null ? 'No class days yet' : 'Last 6 weeks, recordings count'],
-                                    ['icon' => 'payments', 'value' => enlixo_dash_money($t['due']), 'title' => 'Fees to pay', 'tone' => $t['due_count'] ? 'warn' : 'good', 'href' => 'payments',
+                                        'color' => 'purple', 'note' => $dash['rate'] === null ? 'No class days yet' : 'Last 6 weeks, recordings count'],
+                                    ['icon' => 'payments', 'value' => enlixo_dash_money($t['due']), 'title' => 'Fees to pay', 'color' => $t['due_count'] ? 'orange' : 'green', 'alert' => $t['overdue_count'] > 0, 'href' => 'payments',
                                         'note' => $t['due_count'] === 0 ? 'You have paid everything' : $t['due_count'] . ($t['due_count'] === 1 ? ' fee' : ' fees') . ' to pay' . ($t['overdue_count'] ? ', ' . $t['overdue_count'] . ' overdue' : '')],
                                 ]);
                             ?>
@@ -162,10 +162,10 @@ if (!SessionUser::ifUserIsStudent()) {
                                         <div class="row g-3">
                                             <?php foreach ($dash['classes'] as $c) { ?>
                                                 <div class="col-12 col-md-6 col-xl-4">
-                                                    <a class="ex-dash-class" href="class-details?class-id=<?= $c['id'] ?>">
+                                                    <a class="ex-hd-class" href="class-details?class-id=<?= $c['id'] ?>">
                                                         <?= enlixo_dash_cover($c['cover']) ?>
                                                         <span class="min-w-0">
-                                                            <span class="text-14 fw-medium ex-dash-title d-block text-truncate"><?= enlixo_dash_e($c['name']) ?></span>
+                                                            <span class="text-14 fw-medium ex-hd-title d-block text-truncate"><?= enlixo_dash_e($c['name']) ?></span>
                                                             <span class="text-12 sub-text d-block text-truncate"><?= enlixo_dash_e($c['subject'] . ' · ' . $c['tutor']) ?></span>
                                                         </span>
                                                     </a>
