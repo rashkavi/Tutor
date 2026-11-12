@@ -5,13 +5,13 @@ import { ActionMenu } from '../components/Popover.js';
 import { Tabs } from '../components/Tabs.js';
 import {
   api, h, fill, icon, lkr, day, inDays, plural, chip, cell, facts, simpleTable, subscriptionCard, invoiceColumns, paymentColumns,
-  previewNote, field, showErrors, BsModal, Toast, EmptyState, invoiceDialog, paymentDialog,
+  previewNote, field, BsModal, Toast, EmptyState, invoiceDialog, paymentDialog, sendReminder, trySave,
 } from './admin-common.js';
 
 QuickGuide.attachAll();
 const root = document.getElementById('tutor-details');
 const params = new URLSearchParams(location.search);
-const id = Number(params.get('tutor-id') ?? 101);
+const id = Number(params.get('tutor-id') ?? 0);
 let D;
 
 /** One dialog for every plan action: fields + a reason (when needed) → POST, then reload. */
@@ -24,8 +24,9 @@ function act(action, { title, sub, ico = 'edit', tone = '', intro, fields = [], 
     BsModal.button('Cancel', { onclick: () => m.close() }),
     BsModal.button(yes, { primary: true, danger, onclick: async () => {
       const payload = Object.fromEntries(Object.entries(els).map(([k, el]) => [k, el.value]));
-      try { await api.post(`/admin/tutors/${id}/${action}`, payload); } catch (e) { showErrors(m.el, e.details ?? {}); return; }
-      m.close(); Toast.success(done(payload)); load();
+      const res = await trySave(m.el, () => api.post(`/admin/tutors/${id}/${action}`, payload));
+      if (!res) return;
+      m.close(); Toast.success(done(payload, res.data)); load();
     } }),
   ] });
 }
@@ -39,13 +40,13 @@ const actions = {
     fields: [
       { key: 'plan', label: 'New plan', required: true, el: sel(D.plans.map((p) => [p.key, `${p.name}, ${lkr(p.monthly)} a month, up to ${p.limit} students`]), D.tutor.plan) },
       { key: 'cycle', label: 'Billing', required: true, el: sel([['monthly', 'Monthly'], ['yearly', 'Yearly']], D.tutor.cycle) },
-    ], reason: false, yes: 'Change Plan', done: (p) => `Plan changed to ${p.plan.toUpperCase()}. The price difference invoice was made.` }),
+    ], reason: false, yes: 'Change Plan', done: (p, r) => r.message }),
   packs: () => act('packs', { title: 'Extra Students', ico: 'students', intro: `Each pack adds 50 students for ${lkr(D.plan.pack_price ?? 0)} a month, from the next invoice.`,
     fields: [{ key: 'packs', label: 'Packs of 50', required: true, el: num(D.tutor.extra_packs, { min: 0, max: 20, placeholder: 'Enter the number of packs' }), info: `0 = only the ${D.plan.limit} students of the plan. For example 2 = ${D.plan.limit + 100} students.` }], reason: false, yes: 'Save', done: (p) => `Extra students set to ${p.packs} × 50.` }),
   price: () => act('price', { title: 'Custom Price', ico: 'price', intro: 'This tutor pays this price instead of the plan price, from the next invoice. Leave it empty to go back to the plan price.',
     fields: [{ key: 'price', label: 'Monthly price (LKR)', el: num(D.tutor.custom_price ? D.tutor.price : '', { min: 0, placeholder: `Plan price is ${lkr(D.plan.monthly)}` }) }], yes: 'Save Price', done: () => 'Custom price saved.' }),
   suspend: () => act('suspend', { title: 'Suspend this Tutor?', ico: 'pause', tone: 'danger', intro: 'The tutor can still sign in, see Billing and pay. Everything else is paused and students see "This class is paused".', yes: 'Suspend', danger: true, done: () => 'Tutor suspended.' }),
-  reactivate: () => act('reactivate', { title: 'Reactivate this Tutor?', ico: 'play', tone: 'success', intro: 'Classes and student access switch back on at once. Open invoices stay open.', yes: 'Reactivate', done: () => 'Tutor reactivated.' }),
+  reactivate: () => act('reactivate', { title: 'Reactivate this Tutor?', ico: 'play', tone: 'success', intro: `Classes and student access switch back on at once. Open invoices stay open, and the tutor gets ${plural(D.rules.grace_days, 'more day')} to pay before the system pauses the account again.`, yes: 'Reactivate', done: () => 'Tutor reactivated.' }),
   cancel: () => act('cancel', { title: 'Cancel the Subscription?', ico: 'stop', tone: 'danger', intro: 'At the end of the period: the tutor keeps access until the paid period ends. Now: access stops today and the open invoice is void.',
     fields: [{ key: 'when', label: 'When', required: true, el: sel([['end', `At the end of the period (${day(D.tutor.period_end)})`], ['now', 'Now']], 'end') }], yes: 'Cancel Subscription', danger: true, done: () => 'Subscription cancelled.' }),
 };
@@ -57,14 +58,14 @@ function profile(t) {
     h('div', { class: 'text-center' },
       h('span', { class: 'ad-profile-avatar' }, `${t.first_name[0]}${t.last_name[0]}`),
       h('div', { class: 'main-topic mt-2' }, `${t.title} ${t.name}`),
-      h('div', { class: 'text-14 sub-text' }, t.brand),
+      h('div', { class: 'text-14 sub-text' }, t.brand || 'No institute name'),
       h('div', { class: 'd-flex justify-content-center gap-2 mt-2' }, h('span', { class: 'ad-tag' }, `ID T-${t.id}`), chip(t.status))),
     h('div', { class: 'mt-3' },
       row('mail', t.email, `mailto:${t.email}`),
       row('phone', t.mobile, `tel:${t.mobile}`),
-      row('whatsapp', 'Message on WhatsApp', `https://wa.me/94${t.mobile.slice(1)}`),
-      row('subject', t.subject)),
-    h('div', { class: 'mt-3' }, facts([['Joined', day(t.joined)], ['Last sign-in', day(t.last_login)], ['Students', `${t.students} active`], ['Balance', t.balance ? lkr(t.balance) : 'Nothing due']])));
+      t.mobile ? row('whatsapp', 'Message on WhatsApp', `https://wa.me/94${(t.whatsapp || t.mobile).replace(/\D/g, '').replace(/^(94|0)/, '')}`) : null,
+      t.subject ? row('subject', t.subject) : null),
+    h('div', { class: 'mt-3' }, facts([['Joined', day(t.joined)], ['Last sign-in', t.last_login ? day(t.last_login) : 'Not yet'], ['Students', `${t.students} active`], ['Balance', t.balance ? lkr(t.balance) : 'Nothing due'], t.note ? ['Team note', t.note, true] : null])));
 }
 
 function subscription() {
@@ -74,9 +75,9 @@ function subscription() {
     t.status === 'trial' ? { label: 'Extend Trial', icon: 'hourglass', onClick: actions.extend } : null,
     D.plan.pack_price ? { label: 'Extra Students', icon: 'students', onClick: actions.packs } : null,
     { label: 'Custom Price', icon: 'price', onClick: actions.price },
-    t.balance ? { label: 'Send Payment Reminder', icon: 'send', onClick: async () => { await api.post(`/admin/tutors/${id}/remind`, {}); Toast.success(`Reminder sent to ${t.name}.`); } } : null,
-    t.status === 'suspended' ? { label: 'Reactivate', icon: 'play', onClick: actions.reactivate } : { label: 'Suspend', icon: 'pause', danger: true, onClick: actions.suspend },
-    t.status !== 'cancelled' ? { label: 'Cancel Subscription', icon: 'stop', danger: true, onClick: actions.cancel } : null,
+    t.balance ? { label: 'Send Payment Reminder', icon: 'send', onClick: () => sendReminder(id) } : null,
+    ['suspended', 'cancelled'].includes(t.status) ? { label: 'Reactivate', icon: 'play', onClick: actions.reactivate } : { label: 'Suspend', icon: 'pause', danger: true, onClick: actions.suspend },
+    t.status !== 'cancelled' && !t.cancel_at_period_end ? { label: 'Cancel Subscription', icon: 'stop', danger: true, onClick: actions.cancel } : null,
   ];
   return subscriptionCard(t, D.plan, { actions: ActionMenu.button('Manage Plan', items) });
 }
@@ -118,6 +119,7 @@ function tabs() {
 }
 
 async function load() {
+  if (!id) { fill(root, EmptyState.empty({ title: 'No tutor chosen', text: 'Open a tutor from All Tutors.' })); return; }
   try {
     ({ data: D } = await api.get(`/admin/tutors/${id}`));
   } catch (e) { fill(root, EmptyState.error(e.message, load)); return; }

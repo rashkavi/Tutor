@@ -103,10 +103,20 @@ Tutor side: `tutor/subscription` (My Subscription, Invoices, Payment History) ne
 
 | # | Step | Status |
 |---|---|---|
-| A | This plan + preview pages with sample data (admin shell, dashboard, tutors, add tutor, tutor details, invoices, payments, plans & rules, tutor's subscription page) | ✅ for review |
-| B | Migration 007, services, admin API; wire the pages to real data; Add Tutor creates the user + subscription + welcome e-mail | |
-| C | Daily job: renewal invoices, reminders (e-mail / WhatsApp), overdue, suspension; receipts and printable invoices | |
+| A | This plan + preview pages with sample data (admin shell, dashboard, tutors, add tutor, tutor details, invoices, payments, plans & rules, tutor's subscription page) | ✅ done |
+| B | Migration 007, services (`src/Platform/`), admin + tutor API; pages on real data; Add Tutor creates the user + subscription (the tutor signs in with an OTP) | ✅ done |
+| C | Daily job (`bin/platform-billing-daily.php`): first invoice before the trial ends, renewal invoices, overdue, suspension; e-mail reminder from the admin side | ✅ done (WhatsApp reminders, receipts and printable invoices still open) |
 | D | Upgrades with the price difference, credit notes, revenue reports, card gateway, coupons | |
+
+### Running it
+
+1. Run `database/migrations/007_platform_billing.sql` (idempotent). It turns every existing subscription into Trial or Active.
+2. Add a cron line, once a day after midnight Sri Lanka time: `php /path/to/bin/platform-billing-daily.php`. The admin dashboard and the tutor's My Subscription page also run it when they open, so nothing waits for the cron.
+3. Admin > Plans > Bank Accounts: add the bank account tutors pay into (the tutor page shows only accounts that are on).
+
+### Defaults used until the questions below are answered
+
+Trial 7 days on PRO with 30 students; first invoice at most 3 days before the trial ends; renewal invoice 7 days before; suspended 7 days after the due date; VAT off (18 % ready); prices as in the live database; bank slip only. All of these except the plan prices are in Admin > Plans > Trial & Billing Rules. Students of a suspended tutor are not blocked yet.
 
 ## 8. Questions for Rashmi
 

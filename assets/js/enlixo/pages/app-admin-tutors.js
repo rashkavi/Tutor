@@ -20,8 +20,13 @@ const when = (t) => {
   return cell(`Renews ${day(t.period_end)}`, inDays(t.period_end));
 };
 const remind = async (ids) => {
-  await Promise.all(ids.map((id) => api.post(`/admin/tutors/${id}/remind`, {})));
-  Toast.success(`Payment reminder sent to ${ids.length} ${ids.length === 1 ? 'tutor' : 'tutors'}.`);
+  const res = await Promise.allSettled(ids.map((id) => api.post(`/admin/tutors/${id}/remind`, {})));
+  const sent = res.filter((r) => r.status === 'fulfilled' && r.value.data.sent).length;
+  const nothing = res.filter((r) => r.status === 'rejected').length;
+  const failed = ids.length - sent - nothing;
+  if (sent) Toast.success(`Payment reminder e-mailed to ${sent} ${sent === 1 ? 'tutor' : 'tutors'}.`);
+  if (failed) Toast.error(`${failed} e-mail${failed === 1 ? '' : 's'} could not be sent. The reminder is in their history; call or WhatsApp them.`);
+  if (nothing) Toast.error(`${nothing} ${nothing === 1 ? 'tutor has' : 'tutors have'} nothing to pay, so no reminder was sent.`);
 };
 
 const holder = document.createElement('div');

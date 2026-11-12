@@ -1,4 +1,7 @@
 <?php
+// Replaced by Finance -> Payments (admin/tutor-payments.php): slips from the old Billing page are checked there too.
+header("Location: ./tutor-payments?status=waiting", true, 302);
+exit;
 require_once '../includes/UserClass.php';
 require_once "../includes/connection.php";
 require_once "../includes/UserPermissionsClass.php";

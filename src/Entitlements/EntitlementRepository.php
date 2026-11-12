@@ -13,6 +13,9 @@ interface EntitlementRepository
 
     public function planStudentLimit(string $planKey): ?int;
 
+    /** Students this tutor may have: the plan limit + extra packs, or the trial cap while on a free trial. */
+    public function tutorStudentLimit(int $tutorId, string $planKey): ?int;
+
     /** @return list<string> feature keys unlocked by active add-ons */
     public function activeAddonFeatureKeys(int $tutorId): array;
 
