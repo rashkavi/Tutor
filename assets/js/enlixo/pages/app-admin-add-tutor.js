@@ -183,16 +183,22 @@ if (REQ) {
   set('mobile', REQ.mobile); if (REQ.whatsapp && REQ.whatsapp !== REQ.mobile) set('whatsapp', REQ.whatsapp);
   set('brand', REQ.institute); set('subject', REQ.subject); set('note', `Online request ${REQ.ref}`);
   [planCards, cycle, addons].forEach((n) => n.querySelectorAll('input').forEach((x) => {
-    if (x.name === 'plan' && REQ.plan) x.checked = x.value === REQ.plan;
+    if (x.name === 'plan' && REQ.plan) x.checked = x.value === (REQ.plan === 'free' ? 'start' : REQ.plan);
     if (x.name === 'cycle') x.checked = x.value === REQ.cycle;
     if (x.name === 'addon') x.checked = REQ.addons.includes(x.value);
   }));
+}
+// FREE (up to 50 students): START with complimentary access, so no invoice is made while the class stays small.
+if (REQ?.plan === 'free') {
+  startSection.querySelectorAll('input[name="start"]').forEach((x) => { x.checked = x.value === 'comp'; });
+  inputs.comp_until.value = plusMonths(12);
+  inputs.comp_reason.value = 'FREE plan: up to 50 students';
 }
 const reqBanner = REQ ? h('div', { class: 'col-12 ad-soft p-3 mb-4 d-flex align-items-center gap-3 flex-wrap' },
   icon('application', { size: 22 }),
   h('div', { class: 'flex-grow-1' },
     h('div', { class: 'text-14 main-text fw-semibold' }, `Approving request ${REQ.ref} from ${REQ.name}`),
-    h('div', { class: 'text-13 sub-text' }, [REQ.subject, REQ.mode_label, REQ.district, REQ.students ? `~${REQ.students} students` : null, `asked for ${(REQ.plan ?? '').toUpperCase()} ${REQ.cycle}`].filter(Boolean).join(' · '),
+    h('div', { class: 'text-13 sub-text' }, [REQ.subject, REQ.mode_label, REQ.district, REQ.students ? `~${REQ.students} students` : null, REQ.plan === 'free' ? 'asked for the FREE plan (up to 50 students): START, complimentary' : `asked for ${(REQ.plan ?? '').toUpperCase()} ${REQ.cycle}`].filter(Boolean).join(' · '),
       REQ.addons.length ? ` · add-ons: ${REQ.addons.join(', ').replaceAll('_', ' ')}` : ''),
     REQ.message ? h('div', { class: 'text-13 main-text mt-1' }, `"${REQ.message}"`) : null),
   h('a', { class: 'custom-btn-outline px-3 d-inline-flex align-items-center text-decoration-none', href: `requested-users?request=${REQ.id}` }, 'View request')) : null;
@@ -200,3 +206,4 @@ fill(root, previewNote(), reqBanner, h('div', { class: 'row g-4' },
   h('div', { class: 'col-12 col-xl-8' }, details, planSection, startSection),
   h('div', { class: 'col-12 col-xl-4' }, sumBox)));
 summary();
+showStart(); // after the form is on the page (a FREE request starts as Complimentary)

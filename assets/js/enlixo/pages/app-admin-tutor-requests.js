@@ -17,7 +17,7 @@ document.getElementById('requests-actions').append(ActionMenu.button('Action', [
 ]));
 
 const status = (st) => (st === 'pending' ? chip('waiting', 'Pending') : chip(st));
-const PLAN = { start: 'START', grow: 'GROW', pro: 'PRO' };
+const PLAN = { free: 'FREE', start: 'START', grow: 'GROW', pro: 'PRO' };
 const when = (d) => new Date(d.replace(' ', 'T')).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 const ago = (d) => {
   const m = Math.round((Date.now() - new Date(d.replace(' ', 'T'))) / 60000);
@@ -79,7 +79,7 @@ const view = new DataView({
   columns: [
     { key: 'name', label: 'Tutor', sortable: true, render: (r) => h('button', { type: 'button', class: 'btn p-0 border-0 text-start', onclick: () => open(r.id) }, person(r.name, r.institute || r.email)) },
     { key: 'subject', label: 'Teaches', sortable: true, render: (r) => cell(r.subject || '-', [r.grades, r.mode_label].filter(Boolean).join(' · ')) },
-    { key: 'plan', label: 'Plan Asked', sortable: true, render: (r) => cell(PLAN[r.plan] ?? '-', r.plan ? `${r.cycle === 'yearly' ? 'Yearly' : 'Monthly'}${r.students ? ` · ~${r.students} students` : ''}` : null) },
+    { key: 'plan', label: 'Plan Asked', sortable: true, render: (r) => cell(PLAN[r.plan] ?? '-', r.plan ? `${r.plan === 'free' ? 'Up to 50 students' : r.cycle === 'yearly' ? 'Yearly' : 'Monthly'}${r.students ? ` · ~${r.students} students` : ''}` : null) },
     { key: 'mobile', label: 'Contact', render: (r) => h('div', { class: 'd-flex flex-column' },
       h('a', { class: 'text-14 main-text text-decoration-none', href: `tel:${r.mobile}` }, r.mobile),
       h('a', { class: 'text-12 dark-theme text-decoration-none d-inline-flex align-items-center gap-1', href: wa(r.whatsapp || r.mobile), target: '_blank', rel: 'noopener' }, icon('whatsapp', { size: 14 }), 'WhatsApp')) },

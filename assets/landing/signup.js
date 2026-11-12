@@ -53,7 +53,7 @@ async function load() {
   }
   if (!D.plans.some((p) => p.key === v.plan)) v.plan = D.plans[1]?.key ?? D.plans[0]?.key;
   const pill = document.getElementById('su-trial-pill');
-  if (pill) pill.textContent = `${D.trial.days}-day free trial on ${D.trial.plan}, no card needed`;
+  if (pill) pill.textContent = `Free up to ${D.plans.find((x) => x.free)?.limit ?? 50} students, no card needed`;
   render();
 }
 
@@ -129,26 +129,30 @@ function priceOf(p) {
 function stepPlan() {
   const yearlyOn = D.plans.some((p) => p.yearly_discount > 0);
   const suggest = Number(v.students) > 0 ? D.plans.find((p) => p.limit === null || p.limit >= Number(v.students))?.key : null;
+  const chosen = D.plans.find((p) => p.key === v.plan);
   return [
     h('h2', {}, 'Pick a plan'),
-    h('p', {}, `Every plan starts with a ${D.trial.days}-day free trial. You can change your plan later.`),
+    h('p', {}, `FREE up to ${D.plans.find((x) => x.free)?.limit ?? 50} students. Paid plans start with a ${D.trial.days}-day free trial. You can change your plan later.`),
     yearlyOn ? h('div', { class: 'su-cycle', role: 'radiogroup', 'aria-label': 'Billing' },
       ['monthly', 'yearly'].map((c) => h('button', { type: 'button', role: 'radio', 'aria-checked': String(v.cycle === c), class: v.cycle === c ? 'on' : '', onclick: () => { v.cycle = c; save(); render(); } },
         c === 'monthly' ? 'Monthly' : 'Yearly', c === 'yearly' ? h('span', { class: 'lp-save' }, 'Save more') : null))) : null,
     h('div', { class: 'su-plans', role: 'radiogroup', 'aria-label': 'Plan' },
       D.plans.map((p) => h('label', { class: `su-plan su-plan-${p.key}` },
-        h('input', { type: 'radio', name: 'plan', value: p.key, checked: v.plan === p.key, onchange: () => { v.plan = p.key; save(); } }),
-        p.key === (suggest ?? 'grow') ? h('span', { class: 'su-plan-pop' }, suggest ? 'Fits your class' : 'Most popular') : null,
+        h('input', { type: 'radio', name: 'plan', value: p.key, checked: v.plan === p.key, onchange: () => { v.plan = p.key; save(); render(); app.querySelector(`input[name=plan][value=${p.key}]`)?.focus(); } }),
+        p.key === (suggest ?? 'grow') ? h('span', { class: `su-plan-pop${p.free ? ' su-plan-pop-free' : ''}` }, suggest ? 'Fits your class' : 'Most popular') : null,
         h('span', { class: 'su-plan-check' }, ic(I.check, 14)),
         h('span', { class: 'su-plan-name' }, p.name),
-        h('span', { class: 'su-plan-price' }, lkr(priceOf(p)), h('small', {}, ' / month')),
-        h('span', { class: 'su-plan-meta' }, p.limit ? `Up to ${p.limit} students` : 'Unlimited students', v.cycle === 'yearly' && p.yearly_discount ? ` · ${lkr(priceOf(p) * 12)} a year` : ''),
+        h('span', { class: 'su-plan-price' }, p.free ? 'Free' : lkr(priceOf(p)), h('small', {}, p.free ? ' always' : ' / month')),
+        h('span', { class: 'su-plan-meta' }, p.limit ? `Up to ${p.limit} students` : 'Unlimited students', p.free ? ' · START features' : v.cycle === 'yearly' && p.yearly_discount ? ` · ${lkr(priceOf(p) * 12)} a year` : ''),
         h('ul', {},
           p.everything_in ? h('li', {}, ic(I.check, 13), h('b', {}, `Everything in ${p.everything_in}`)) : null,
           p.new_features.slice(0, p.everything_in ? 4 : 5).map((f) => h('li', {}, ic(I.check, 13), f)))))),
     errors.plan ? h('span', { class: 'su-err', role: 'alert' }, errors.plan) : null,
-    h('div', { class: 'su-trial' }, h('span', { class: 'lp-dot lp-violet' }, ic(I.gift, 20)),
-      h('span', {}, h('b', {}, `${D.trial.days} days free on ${D.trial.plan}`), ` for up to ${D.trial.students} students. No card needed. You pay only after the trial, for the plan you keep.`)),
+    chosen?.free
+      ? h('div', { class: 'su-trial su-trial-free' }, h('span', { class: 'lp-dot lp-green' }, ic(I.gift, 20)),
+        h('span', {}, h('b', {}, `Free while you teach up to ${chosen.limit} students.`), ' No card and no invoices. When your class grows, you pick a paid plan and keep everything.'))
+      : h('div', { class: 'su-trial' }, h('span', { class: 'lp-dot lp-violet' }, ic(I.gift, 20)),
+        h('span', {}, h('b', {}, `${D.trial.days} days free on ${D.trial.plan}`), ` for up to ${D.trial.students} students. No card needed. You pay only after the trial, for the plan you keep.`)),
     D.addons.length ? h('div', { class: 'su-section-t' }, 'Interested in an add-on? ', h('span', { class: 'su-hint' }, '(optional, we will talk about it)')) : null,
     D.addons.length ? h('div', { class: 'su-addons' }, D.addons.map((a) => h('label', { class: 'su-addon' },
       h('input', { type: 'checkbox', value: a.key, checked: v.addons.includes(a.key), onchange: (e) => { v.addons = e.target.checked ? [...new Set([...v.addons, a.key])] : v.addons.filter((x) => x !== a.key); save(); } }),
@@ -170,8 +174,9 @@ function stepReview() {
       h('div', { class: 'su-card' }, h('h3', {}, 'Your classes', edit(1)), h('dl', {},
         row('Subject', v.subject), row('Grades', v.grades), row('Institute', v.institute), row('Teaching', D.modes[v.mode]), row('District', v.district), row('Students', v.students))),
       h('div', { class: 'su-card', style: { gridColumn: '1 / -1' } }, h('h3', {}, 'Plan', edit(2)), h('dl', {},
-        row('Plan', p ? `${p.name}, ${v.cycle}` : ''), row('Price', p ? `${lkr(priceOf(p))} a month${v.cycle === 'yearly' && p.yearly_discount ? `, billed ${lkr(priceOf(p) * 12)} a year` : ''}` : ''),
-        row('Start', `${D.trial.days}-day free trial`), row('Add-ons', v.addons.map((k) => D.addons.find((a) => a.key === k)?.name).filter(Boolean).join(', '))))),
+        row('Plan', p ? (p.free ? `${p.name}, up to ${p.limit} students` : `${p.name}, ${v.cycle}`) : ''),
+        row('Price', p ? (p.free ? 'Free' : `${lkr(priceOf(p))} a month${v.cycle === 'yearly' && p.yearly_discount ? `, billed ${lkr(priceOf(p) * 12)} a year` : ''}`) : ''),
+        row('Start', p?.free ? 'Free from day one' : `${D.trial.days}-day free trial`), row('Add-ons', v.addons.map((k) => D.addons.find((a) => a.key === k)?.name).filter(Boolean).join(', '))))),
     h('div', { class: 'su-grid', style: { marginTop: '20px' } },
       field('message', 'Anything we should know?', h('textarea', { class: 'su-in', name: 'message', maxlength: 500, placeholder: 'For example: I have 3 classes and want to move my students from WhatsApp groups.', oninput: (e) => { v.message = e.target.value; save(); } }, v.message), { opt: true, span: 's6' })),
     h('div', { class: 'su-hp', 'aria-hidden': 'true' }, h('label', {}, 'Website', h('input', { tabindex: '-1', autocomplete: 'off', name: 'website', oninput: (e) => { v.website = e.target.value; } }))),
@@ -267,7 +272,7 @@ function done(ref) {
     h('ul', { class: 'su-next' },
       h('li', {}, h('span', { class: 'lp-dot lp-blue' }, ic(I.phone, 16)), h('span', {}, 'We call or WhatsApp you within one working day.')),
       h('li', {}, h('span', { class: 'lp-dot lp-green' }, ic(I.mail, 16)), h('span', {}, `Your sign-in details come to ${v.email}.`)),
-      h('li', {}, h('span', { class: 'lp-dot lp-violet' }, ic(I.rocket, 16)), h('span', {}, `Your ${D.trial.days}-day free trial starts when your account is ready.`))),
+      h('li', {}, h('span', { class: 'lp-dot lp-violet' }, ic(I.rocket, 16)), h('span', {}, p?.free ? 'Your FREE plan starts when your account is ready.' : `Your ${D.trial.days}-day free trial starts when your account is ready.`))),
     h('div', { class: 'lp-hero-cta lp-center' }, h('a', { href: './', class: 'lp-btn lp-btn-dark' }, 'Back to the home page'))));
   window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
   if (!reduce) confetti();

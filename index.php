@@ -18,6 +18,7 @@ if ($info === null) {
         $info['plans'][] = ['key' => $k, 'name' => $p['name'], 'monthly' => ['start' => 3000, 'grow' => 6000, 'pro' => 10000][$k], 'yearly_discount' => 0, 'limit' => $p['student_limit'],
             'pack_price' => $k === 'pro' ? null : 1000, 'pack_size' => 50, 'tagline' => '', 'everything_in' => null, 'new_features' => [], 'feature_count' => count(Enlixo\Catalog\FeatureCatalog::featuresForPlan($k))];
     }
+    array_unshift($info['plans'], Enlixo\Platform\TutorRequests::freePlan());
     foreach (Enlixo\Catalog\FeatureCatalog::features() as $f) {
         if (isset($f['addon'])) {
             $info['addons'][] = ['key' => $f['addon']['key'], 'name' => $f['addon']['name'], 'note' => $f['addon']['pricing']];
@@ -30,7 +31,10 @@ $v = Project::getVersion();
 $name = Project::getBaseName();
 $trial = $info['trial'];
 $signup = 'tutor-registration-application.php';
-$planTone = ['start' => 'green', 'grow' => 'blue', 'pro' => 'violet'];
+$planTone = ['free' => 'free', 'start' => 'green', 'grow' => 'blue', 'pro' => 'violet'];
+$freeLimit = Enlixo\Platform\TutorRequests::FREE_LIMIT;
+$host = preg_replace('#^https?://#', '', rtrim(Project::getBaseUrl(), '/'));
+$calcPlans = array_map(static fn ($p) => ['key' => $p['key'], 'name' => $p['name'], 'monthly' => (float) $p['monthly'], 'limit' => $p['limit'], 'pack_price' => $p['pack_price'], 'pack_size' => $p['pack_size']], $info['plans']);
 $addonIcon = ['enviiz_gateway' => 'card', 'enviiz_zoom' => 'video', 'enviiz_streaming' => 'shield', 'enviiz_sms' => 'sms', 'enviiz_whatsapp' => 'chat', 'physical_id' => 'id'];
 
 // Small inline icons (stroke, currentColor)
@@ -94,15 +98,18 @@ function lp_icon(string $n, int $s = 22): string
 
     <!-- ============ NAV ============ -->
     <header class="lp-nav" id="lp-nav">
+        <a href="#free" class="lp-announce" id="lp-announce">
+            <span class="lp-announce-in"><span class="lp-announce-tag">FREE</span> Teaching <?= $freeLimit ?> students or fewer? Use ENLIXO Tutor completely free. <b>See how <?= lp_icon('arrow', 14) ?></b></span>
+        </a>
         <div class="lp-wrap lp-nav-in">
             <a href="./" class="lp-logo" aria-label="<?= $e($name) ?> home">
                 <img src="assets/imgs/common/enlixo-light.webp" alt="<?= $e($name) ?>" class="lp-logo-light">
                 <img src="assets/imgs/common/enlixo-dark.webp" alt="" class="lp-logo-dark" aria-hidden="true">
             </a>
             <nav class="lp-links" aria-label="Main">
+                <a href="#free">Free plan</a>
                 <a href="#features">Features</a>
-                <a href="#roles">For you</a>
-                <a href="#how">How it works</a>
+                <a href="#logins">Logins</a>
                 <a href="#pricing">Pricing</a>
                 <a href="#faq">FAQ</a>
             </nav>
@@ -115,14 +122,14 @@ function lp_icon(string $n, int $s = 22): string
                         <a role="menuitem" href="parent/"><span class="lp-dot lp-violet"><?= lp_icon('parent', 18) ?></span><span><b>Parent</b><small>Follow your child</small></span></a>
                     </div>
                 </div>
-                <a href="<?= $signup ?>" class="lp-btn lp-btn-primary lp-hide-sm">Start free trial</a>
+                <a href="<?= $signup ?>" class="lp-btn lp-btn-primary lp-hide-sm">Start free</a>
                 <button type="button" class="lp-burger" id="lp-burger" aria-label="Open the menu" aria-expanded="false"><?= lp_icon('menu', 24) ?></button>
             </div>
         </div>
         <div class="lp-mobile" id="lp-mobile" hidden>
-            <a href="#features">Features</a><a href="#roles">For you</a><a href="#how">How it works</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a>
+            <a href="#free">Free plan</a><a href="#features">Features</a><a href="#logins">Logins</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a>
             <div class="lp-mobile-signin"><a href="tutor/">Tutor sign in</a><a href="portal/">Student sign in</a><a href="parent/">Parent sign in</a></div>
-            <a href="<?= $signup ?>" class="lp-btn lp-btn-primary w-100">Start free trial</a>
+            <a href="<?= $signup ?>" class="lp-btn lp-btn-primary w-100">Start free</a>
         </div>
     </header>
 
@@ -136,8 +143,8 @@ function lp_icon(string $n, int $s = 22): string
 
             <div class="lp-wrap lp-hero-in">
                 <div class="lp-hero-copy">
-                    <a href="#pricing" class="lp-pill" data-reveal>
-                        <span class="lp-pill-tag">New</span> <?= (int) $trial['days'] ?>-day free trial on <?= $e($trial['plan']) ?> <?= lp_icon('arrow', 16) ?>
+                    <a href="#free" class="lp-pill" data-reveal>
+                        <span class="lp-pill-tag">Free</span> Up to <?= $freeLimit ?> students? It costs you nothing <?= lp_icon('arrow', 16) ?>
                     </a>
                     <h1 class="lp-h1" data-reveal>
                         <span class="lp-h1-a">Run your classes</span>
@@ -146,13 +153,13 @@ function lp_icon(string $n, int $s = 22): string
                     <p class="lp-lead" data-reveal>Students, class fees, QR attendance, Zoom classes, secure recordings, tutes and parents. One app, built for Sri Lankan tutors, in
                         <span class="lp-lang">සිංහල</span>, <span class="lp-lang">தமிழ்</span> and English.</p>
                     <div class="lp-hero-cta" data-reveal>
-                        <a href="<?= $signup ?>" class="lp-btn lp-btn-primary lp-btn-lg lp-shine">Start your free trial <?= lp_icon('arrow', 18) ?></a>
-                        <a href="#features" class="lp-btn lp-btn-glass lp-btn-lg"><?= lp_icon('play', 16) ?> See what it does</a>
+                        <a href="<?= $signup ?>" class="lp-btn lp-btn-primary lp-btn-lg lp-shine">Start free today <?= lp_icon('arrow', 18) ?></a>
+                        <a href="#logins" class="lp-btn lp-btn-glass lp-btn-lg"><?= lp_icon('play', 16) ?> Student &amp; parent logins</a>
                     </div>
                     <ul class="lp-hero-facts" data-reveal>
-                        <li><?= lp_icon('check', 16) ?> No card needed</li>
+                        <li><?= lp_icon('check', 16) ?> Free up to <?= $freeLimit ?> students</li>
+                        <li><?= lp_icon('check', 16) ?> Own logins for students &amp; parents</li>
                         <li><?= lp_icon('check', 16) ?> Our team sets you up</li>
-                        <li><?= lp_icon('check', 16) ?> Cancel any time</li>
                     </ul>
                 </div>
 
@@ -210,6 +217,43 @@ function lp_icon(string $n, int $s = 22): string
                 <div class="lp-marquee-track">
                     <?php $tags = ['A/L Physics', 'O/L Maths', 'Grade 5 Scholarship', 'A/L Chemistry', 'English Literature', 'ICT', 'Combined Maths', 'Biology', 'Accounting', 'Economics', 'සිංහල', 'தமிழ்', 'History', 'Spoken English'];
                     for ($k = 0; $k < 2; $k++) { foreach ($tags as $t) { echo '<span' . ($k ? ' aria-hidden="true"' : '') . '>' . $e($t) . '</span>'; } } ?>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ FREE FOR SMALL CLASSES ============ -->
+        <section class="lp-sec lp-free" id="free">
+            <div class="lp-free-glow" aria-hidden="true"></div>
+            <div class="lp-wrap lp-free-in">
+                <div class="lp-free-copy">
+                    <span class="lp-eyebrow lp-eyebrow-green" data-reveal>Free for small classes</span>
+                    <h2 class="lp-h2" data-reveal>Up to <?= $freeLimit ?> students?<br><span class="lp-grad-green">It's completely free.</span></h2>
+                    <p class="lp-sub" data-reveal>Just starting out, or teaching a small group? Use ENLIXO Tutor with all the START features and pay nothing, for as long as you teach <?= $freeLimit ?> students or fewer.</p>
+                    <ul class="lp-free-list" data-reveal>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span>Students, classes and timetable</li>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span>Fees with bank slips and approval</li>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span>QR and manual attendance</li>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span>Zoom classes and recordings</li>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span>Tutes and study material</li>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span>Student and parent logins</li>
+                    </ul>
+                    <div class="lp-hero-cta" data-reveal>
+                        <a href="<?= $signup ?>?plan=free" class="lp-btn lp-btn-green lp-btn-lg lp-shine">Start free, no card <?= lp_icon('arrow', 18) ?></a>
+                        <a href="#pricing" class="lp-btn lp-btn-soft lp-btn-lg">Compare plans</a>
+                    </div>
+                </div>
+                <div class="lp-calc" data-reveal id="lp-calc" data-plans="<?= $e(json_encode($calcPlans)) ?>" data-free="<?= $freeLimit ?>" data-signup="<?= $signup ?>">
+                    <div class="lp-calc-zero" aria-hidden="true"><small>LKR</small>0</div>
+                    <label for="lp-calc-range" class="lp-calc-q">How many students do you teach?</label>
+                    <div class="lp-calc-n"><output id="lp-calc-n" for="lp-calc-range">35</output><span>students</span></div>
+                    <input type="range" id="lp-calc-range" min="5" max="400" step="5" value="35" aria-describedby="lp-calc-res">
+                    <div class="lp-calc-scale" aria-hidden="true"><span>5</span><span class="m" style="--at:<?= round(($freeLimit - 5) / 395 * 100, 2) ?>%"><?= $freeLimit ?> · free</span><span>400</span></div>
+                    <div class="lp-calc-res" id="lp-calc-res" aria-live="polite">
+                        <div><small>Your plan</small><b id="lp-calc-plan">FREE</b></div>
+                        <div class="r"><small>You pay</small><b id="lp-calc-price">LKR 0</b><em id="lp-calc-per">a month</em></div>
+                    </div>
+                    <p class="lp-calc-note" id="lp-calc-note">Free while you teach up to <?= $freeLimit ?> students.</p>
+                    <a href="<?= $signup ?>?plan=free" class="lp-btn lp-btn-white w-100" id="lp-calc-cta">Start with FREE <?= lp_icon('arrow', 16) ?></a>
                 </div>
             </div>
         </section>
@@ -305,40 +349,100 @@ function lp_icon(string $n, int $s = 22): string
             </div>
         </section>
 
-        <!-- ============ ROLES ============ -->
-        <section class="lp-sec lp-roles" id="roles">
+        <!-- ============ SEPARATE LOGINS ============ -->
+        <section class="lp-sec lp-logins" id="logins">
             <div class="lp-wrap">
                 <div class="lp-head" data-reveal>
-                    <span class="lp-eyebrow">For everyone in the class</span>
-                    <h2 class="lp-h2">One system. <span class="lp-grad">Three happy sides.</span></h2>
+                    <span class="lp-eyebrow">Three logins, one system</span>
+                    <h2 class="lp-h2">Students and parents get <span class="lp-grad">their own login.</span></h2>
+                    <p class="lp-sub">Students sign in to the Student Portal, parents to the Parent Portal, and you run everything from your dashboard. Each one sees only what is theirs, on any phone, with no app to install.</p>
                 </div>
-                <div class="lp-tabs" role="tablist" data-reveal>
-                    <button role="tab" aria-selected="true" aria-controls="role-tutor" id="tab-tutor" class="on"><?= lp_icon('tutor', 18) ?> Tutors</button>
-                    <button role="tab" aria-selected="false" aria-controls="role-student" id="tab-student" tabindex="-1"><?= lp_icon('student', 18) ?> Students</button>
-                    <button role="tab" aria-selected="false" aria-controls="role-parent" id="tab-parent" tabindex="-1"><?= lp_icon('parent', 18) ?> Parents</button>
-                    <span class="lp-tab-ink" aria-hidden="true"></span>
+                <div class="lp-portals">
+                    <article class="lp-portal lp-portal-student" data-reveal>
+                        <div class="lp-portal-dev" aria-hidden="true">
+                            <div class="lp-dev-phone">
+                                <div class="lp-phone-notch"></div>
+                                <div class="lp-dev-scr">
+                                    <div class="lp-dev-top"><b>Hi Kavindi</b><span class="lp-av lp-av-g">KS</span></div>
+                                    <div class="lp-dev-card lp-dev-live"><small>Next class · in 25 min</small><b>A/L Physics</b><span class="lp-dev-btn">Join Zoom</span></div>
+                                    <div class="lp-dev-card"><small>Recording · 6 days left</small><b>Lesson 12 · Waves</b><div class="lp-dev-prog"><i style="--w:62%"></i></div></div>
+                                    <div class="lp-dev-row"><div class="lp-dev-card"><small>November fee</small><b class="ok">Paid</b></div><div class="lp-dev-card lp-dev-qr"><span class="lp-qr lp-qr-xs"><?php for ($i = 0; $i < 25; $i++) { echo '<i' . ((($i * 3 + $i % 4) % 5) < 3 ? ' class="on"' : '') . '></i>'; } ?></span><small>My ID</small></div></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lp-portal-body">
+                            <span class="lp-portal-tag lp-green"><?= lp_icon('student', 16) ?> Student Portal</span>
+                            <h3>Everything for class, in their pocket</h3>
+                            <ul>
+                                <li><?= lp_icon('check', 15) ?> Join Zoom classes in one tap</li>
+                                <li><?= lp_icon('check', 15) ?> Watch the recordings they paid for</li>
+                                <li><?= lp_icon('check', 15) ?> Pay fees or upload a bank slip</li>
+                                <li><?= lp_icon('check', 15) ?> Tutes, papers, marks and timetable</li>
+                                <li><?= lp_icon('check', 15) ?> Digital student ID with a QR code</li>
+                            </ul>
+                            <div class="lp-portal-foot"><code><?= $e($host) ?>/portal</code><a href="portal/" class="lp-btn lp-btn-dark">Student sign in <?= lp_icon('arrow', 16) ?></a></div>
+                        </div>
+                    </article>
+                    <article class="lp-portal lp-portal-tutor" data-reveal>
+                        <div class="lp-portal-dev" aria-hidden="true">
+                            <div class="lp-dev-laptop">
+                                <div class="lp-dev-lscr">
+                                    <div class="lp-dev-lside"><b></b><span class="on"></span><span></span><span></span><span></span></div>
+                                    <div class="lp-dev-lmain">
+                                        <div class="lp-dev-stats"><span><small>Students</small><b>248</b></span><span><small>Paid</small><b>78%</b></span><span><small>Present</small><b>91%</b></span></div>
+                                        <div class="lp-dev-bars"><?php foreach ([40, 62, 54, 70, 66, 84, 78, 95] as $hh) { echo '<i style="--h:' . $hh . '%"></i>'; } ?></div>
+                                        <div class="lp-dev-list"><span><em class="ok"></em>Kavindi paid LKR 3,000</span><span><em class="wait"></em>Nimal uploaded a slip</span></div>
+                                    </div>
+                                </div>
+                                <div class="lp-dev-base"></div>
+                            </div>
+                        </div>
+                        <div class="lp-portal-body">
+                            <span class="lp-portal-tag lp-blue"><?= lp_icon('tutor', 16) ?> Tutor Dashboard</span>
+                            <h3>You run the whole class</h3>
+                            <ul>
+                                <li><?= lp_icon('check', 15) ?> Today's classes, fees and attendance</li>
+                                <li><?= lp_icon('check', 15) ?> Approve slips and mark attendance</li>
+                                <li><?= lp_icon('check', 15) ?> Share recordings, tutes and notices</li>
+                                <li><?= lp_icon('check', 15) ?> Give students and parents their logins</li>
+                                <li><?= lp_icon('check', 15) ?> Staff logins for your assistants</li>
+                            </ul>
+                            <div class="lp-portal-foot"><code><?= $e($host) ?>/tutor</code><a href="tutor/" class="lp-btn lp-btn-primary">Tutor sign in <?= lp_icon('arrow', 16) ?></a></div>
+                        </div>
+                    </article>
+                    <article class="lp-portal lp-portal-parent" data-reveal>
+                        <div class="lp-portal-dev" aria-hidden="true">
+                            <div class="lp-dev-phone">
+                                <div class="lp-phone-notch"></div>
+                                <div class="lp-dev-scr">
+                                    <div class="lp-dev-top"><b>Hi Sunil</b><span class="lp-av lp-av-v">SR</span></div>
+                                    <div class="lp-dev-kids"><span class="on">Kavindi</span><span>Nimal</span></div>
+                                    <div class="lp-dev-card lp-dev-ring"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="15.9" class="bg" /><circle cx="21" cy="21" r="15.9" class="fg" /></svg><div><small>Attendance</small><b>92%</b></div></div>
+                                    <div class="lp-dev-card lp-dev-note"><span class="lp-dot lp-violet"><?= lp_icon('bell', 14) ?></span><span><b>Kavindi arrived</b><small>A/L Physics · 3:29 PM</small></span></div>
+                                    <div class="lp-dev-card"><small>Fees to pay</small><b>LKR 4,500</b><span class="lp-dev-btn lp-dev-btn-v">Pay now</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lp-portal-body">
+                            <span class="lp-portal-tag lp-violet"><?= lp_icon('parent', 16) ?> Parent Portal</span>
+                            <h3>Peace of mind for parents</h3>
+                            <ul>
+                                <li><?= lp_icon('check', 15) ?> Every child in one login</li>
+                                <li><?= lp_icon('check', 15) ?> Know when they arrive at class</li>
+                                <li><?= lp_icon('check', 15) ?> Attendance for every class</li>
+                                <li><?= lp_icon('check', 15) ?> See and pay fees online</li>
+                                <li><?= lp_icon('check', 15) ?> Classes, exams and notices</li>
+                            </ul>
+                            <div class="lp-portal-foot"><code><?= $e($host) ?>/parent</code><a href="parent/" class="lp-btn lp-btn-dark">Parent sign in <?= lp_icon('arrow', 16) ?></a></div>
+                        </div>
+                    </article>
                 </div>
-                <?php
-                $roles = [
-                    'tutor' => ['Run the whole class from one dashboard', 'See today\'s classes, who paid, who came and what needs you, the moment you sign in.', ['Approve fees and slips in one tap', 'Mark attendance by QR or by hand', 'Share recordings, tutes and papers', 'Staff accounts for your assistants'], 'tutor/', 'Tutor sign in', 'blue'],
-                    'student' => ['Everything for the class in their pocket', 'Students join with a link, pay online or upload a slip, and never miss a class or a tute.', ['Timetable and Zoom links', 'Recordings they have paid for', 'Tutes, papers and marks', 'Digital ID with a QR code'], 'portal/', 'Student sign in', 'green'],
-                    'parent' => ['Peace of mind for parents', 'Parents follow every child in one place: attendance, fees and what is coming up.', ['Attendance for every class', 'Fees to pay, and pay online', 'Upcoming classes and exams', 'Notices from the tutor'], 'parent/', 'Parent sign in', 'violet'],
-                ];
-                foreach ($roles as $k => [$h, $p, $pts, $href, $cta, $tone]) { ?>
-                    <div class="lp-role<?= $k === 'tutor' ? ' on' : '' ?>" role="tabpanel" id="role-<?= $k ?>" aria-labelledby="tab-<?= $k ?>" <?= $k === 'tutor' ? '' : 'hidden' ?>>
-                        <div class="lp-role-copy">
-                            <h3><?= $e($h) ?></h3>
-                            <p><?= $e($p) ?></p>
-                            <ul><?php foreach ($pts as $pt) { echo '<li><span class="lp-dot lp-' . $tone . '">' . lp_icon('check', 14) . '</span>' . $e($pt) . '</li>'; } ?></ul>
-                            <a href="<?= $href ?>" class="lp-btn lp-btn-dark"><?= $e($cta) ?> <?= lp_icon('arrow', 16) ?></a>
-                        </div>
-                        <div class="lp-role-art lp-art-<?= $k ?>" aria-hidden="true">
-                            <div class="lp-art-card a1"><small><?= $k === 'parent' ? 'Kavindi · this week' : ($k === 'student' ? 'Next class' : 'Today') ?></small><b><?= $k === 'parent' ? '4 of 4 classes' : ($k === 'student' ? 'A/L Physics · 3:30 PM' : '2 classes · 86 students') ?></b><div class="lp-art-bar"><i style="--w:<?= $k === 'parent' ? 100 : ($k === 'student' ? 64 : 82) ?>%"></i></div></div>
-                            <div class="lp-art-card a2"><small><?= $k === 'parent' ? 'Fees' : ($k === 'student' ? 'Recording' : 'Slips to approve') ?></small><b><?= $k === 'parent' ? 'LKR 4,500 to pay' : ($k === 'student' ? 'Lesson 12 · Waves' : '4 waiting') ?></b></div>
-                            <div class="lp-art-card a3"><span class="lp-dot lp-<?= $tone ?>"><?= lp_icon($k === 'tutor' ? 'chart' : ($k === 'student' ? 'play' : 'bell'), 18) ?></span><span><?= $k === 'parent' ? 'Kavindi arrived at 3:29 PM' : ($k === 'student' ? 'Watch before Friday' : 'Fees up 12% on last month') ?></span></div>
-                        </div>
-                    </div>
-                <?php } ?>
+                <div class="lp-login-facts" data-reveal>
+                    <span><?= lp_icon('lock', 18) ?> Own password for each student and parent</span>
+                    <span><?= lp_icon('users', 18) ?> One parent login for all their children</span>
+                    <span><?= lp_icon('phone', 18) ?> Any phone browser, no app to install</span>
+                    <span><?= lp_icon('globe', 18) ?> <span class="lp-lang">සිංහල · தமிழ் · English</span></span>
+                </div>
             </div>
         </section>
 
@@ -364,7 +468,7 @@ function lp_icon(string $n, int $s = 22): string
                 <div class="lp-head" data-reveal>
                     <span class="lp-eyebrow">Pricing</span>
                     <h2 class="lp-h2">Simple plans that <span class="lp-grad">grow with your class.</span></h2>
-                    <p class="lp-sub">Start free for <?= (int) $trial['days'] ?> days. Pick a plan when you are ready. Add more students any time.</p>
+                    <p class="lp-sub">Free up to <?= $freeLimit ?> students. Bigger classes start with a <?= (int) $trial['days'] ?>-day free trial. Add more students any time.</p>
                 </div>
                 <?php $anyYearly = array_sum(array_column($info['plans'], 'yearly_discount')) > 0; ?>
                 <?php if ($anyYearly) { ?>
@@ -373,8 +477,9 @@ function lp_icon(string $n, int $s = 22): string
                         <button type="button" role="radio" aria-checked="false" data-cycle="yearly">Yearly <span class="lp-save">Save more</span></button>
                     </div>
                 <?php } ?>
-                <div class="lp-plans">
+                <div class="lp-plans<?= count($info['plans']) > 3 ? ' lp-plans-4' : '' ?>">
                     <?php foreach ($info['plans'] as $p) {
+                        $isFree = !empty($p['free']);
                         $tone = $planTone[$p['key']] ?? 'blue';
                         $pop = $p['key'] === 'grow';
                         $yearly = max(0, $p['monthly'] - $p['yearly_discount']); ?>
@@ -389,13 +494,17 @@ function lp_icon(string $n, int $s = 22): string
                                 <b data-monthly="<?= (int) $p['monthly'] ?>" data-yearly="<?= (int) $yearly ?>"><?= $lkr($p['monthly']) ?></b>
                                 <span>/ month</span>
                             </div>
-                            <div class="lp-price-note" data-monthly-note="Billed every month" data-yearly-note="Billed yearly, LKR <?= $lkr($yearly * 12) ?> a year">Billed every month</div>
-                            <a href="<?= $signup ?>?plan=<?= $e($p['key']) ?>" class="lp-btn <?= $pop ? 'lp-btn-primary lp-shine' : 'lp-btn-dark' ?> w-100" data-plan-link="<?= $e($p['key']) ?>">Choose <?= $e($p['name']) ?></a>
+                            <?php if ($isFree) { $fn = 'Free while you teach up to ' . (int) $p['limit'] . ' students'; ?>
+                                <div class="lp-price-note" data-monthly-note="<?= $fn ?>" data-yearly-note="<?= $fn ?>"><?= $fn ?></div>
+                            <?php } else { ?>
+                                <div class="lp-price-note" data-monthly-note="Billed every month" data-yearly-note="Billed yearly, LKR <?= $lkr($yearly * 12) ?> a year">Billed every month</div>
+                            <?php } ?>
+                            <a href="<?= $signup ?>?plan=<?= $e($p['key']) ?>" class="lp-btn <?= $pop ? 'lp-btn-primary lp-shine' : ($isFree ? 'lp-btn-green' : 'lp-btn-dark') ?> w-100" data-plan-link="<?= $e($p['key']) ?>"><?= $isFree ? 'Start free' : 'Choose ' . $e($p['name']) ?></a>
                             <ul class="lp-plan-list">
                                 <li class="lp-strong"><?= lp_icon('users', 16) ?> <?= $p['limit'] ? 'Up to ' . (int) $p['limit'] . ' students' : 'Unlimited students' ?></li>
-                                <li class="lp-strong"><?= lp_icon('plus', 16) ?> <?= $p['pack_price'] ? '+LKR ' . $lkr($p['pack_price']) . ' per ' . (int) $p['pack_size'] . ' more students' : 'Custom price above ' . (int) $p['limit'] ?></li>
+                                <li class="lp-strong"><?= lp_icon('plus', 16) ?> <?= $isFree ? 'No card, no invoices' : ($p['pack_price'] ? '+LKR ' . $lkr($p['pack_price']) . ' per ' . (int) $p['pack_size'] . ' more students' : 'Custom price above ' . (int) $p['limit']) ?></li>
                                 <?php if ($p['everything_in']) { ?><li class="lp-strong"><?= lp_icon('sparkle', 16) ?> Everything in <?= $e($p['everything_in']) ?>, plus:</li><?php } ?>
-                                <?php foreach (array_slice($p['new_features'], 0, $p['everything_in'] ? 8 : 7) as $f) { echo '<li>' . lp_icon('check', 16) . ' ' . $e($f) . '</li>'; } ?>
+                                <?php foreach (array_slice($p['new_features'], 0, $p['everything_in'] ? 7 : 6) as $f) { echo '<li>' . lp_icon('check', 16) . ' ' . $e($f) . '</li>'; } ?>
                             </ul>
                         </article>
                     <?php } ?>
@@ -413,7 +522,7 @@ function lp_icon(string $n, int $s = 22): string
                                         <tr><th scope="row"><?= $e($row['name']) ?></th>
                                             <?php foreach ($info['plans'] as $p) {
                                                 if ($row['addon']) { echo '<td><span class="lp-addon-chip">Add-on</span></td>'; }
-                                                elseif (!empty($row['plans'][$p['key']])) { echo '<td><span class="lp-yes" aria-label="Included">' . lp_icon('check', 18) . '</span></td>'; }
+                                                elseif (!empty($row['plans'][$p['same_as'] ?? $p['key']])) { echo '<td><span class="lp-yes" aria-label="Included">' . lp_icon('check', 18) . '</span></td>'; }
                                                 else { echo '<td><span class="lp-no" aria-label="Not included">–</span></td>'; }
                                             } ?>
                                         </tr>
@@ -447,6 +556,8 @@ function lp_icon(string $n, int $s = 22): string
                 </div>
                 <div class="lp-faq">
                     <?php $faq = [
+                        ['Is it really free up to ' . $freeLimit . ' students?', 'Yes. If you teach ' . $freeLimit . ' students or fewer, you use ENLIXO Tutor with the START features and pay nothing. No card is needed. When your class grows past ' . $freeLimit . ', you pick a paid plan and everything you added stays.'],
+                        ['Do students and parents get their own login?', 'Yes. Students sign in to the Student Portal and parents to the Parent Portal, each with their own password. A parent with more than one child sees all of them in one login. You make the logins from your dashboard.'],
                         ['How does the free trial work?', 'You get every ' . $trial['plan'] . ' feature free for ' . $trial['days'] . ' days, for up to ' . $trial['students'] . ' students. No card is needed. Before it ends you pick the plan that suits you.'],
                         ['Do my students need to install an app?', 'No. Students and parents sign in from any phone or computer browser. Their pages are in Sinhala, Tamil or English.'],
                         ['How do students pay their class fees?', 'They upload a bank slip, or pay by card if you connect your own payment gateway or use the ENVIIZ Payment Gateway. You approve slips in one tap.'],
@@ -469,9 +580,9 @@ function lp_icon(string $n, int $s = 22): string
             <div class="lp-aurora lp-aurora-cta" aria-hidden="true"><i></i><i></i><i></i></div>
             <div class="lp-wrap lp-cta-in" data-reveal>
                 <h2>Your next class could already be running on ENLIXO.</h2>
-                <p>Send your request today. We set everything up with you, and the first <?= (int) $trial['days'] ?> days are free.</p>
+                <p>Free for up to <?= $freeLimit ?> students. Send your request today and we set everything up with you.</p>
                 <div class="lp-hero-cta lp-center">
-                    <a href="<?= $signup ?>" class="lp-btn lp-btn-white lp-btn-lg lp-shine">Start your free trial <?= lp_icon('arrow', 18) ?></a>
+                    <a href="<?= $signup ?>" class="lp-btn lp-btn-white lp-btn-lg lp-shine">Start free today <?= lp_icon('arrow', 18) ?></a>
                     <a href="tutor/" class="lp-btn lp-btn-glass lp-btn-lg">I already have an account</a>
                 </div>
             </div>
@@ -484,8 +595,8 @@ function lp_icon(string $n, int $s = 22): string
                 <img src="assets/imgs/common/enlixo-light.webp" alt="<?= $e($name) ?>">
                 <p>The all-in-one app for tutors in Sri Lanka.</p>
             </div>
-            <div class="lp-foot-col"><b>Product</b><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="<?= $signup ?>">Start free trial</a></div>
-            <div class="lp-foot-col"><b>Sign in</b><a href="tutor/">Tutors</a><a href="portal/">Students</a><a href="parent/">Parents</a><a href="admin/">ENLIXO team</a></div>
+            <div class="lp-foot-col"><b>Product</b><a href="#free">Free plan</a><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="<?= $signup ?>">Start free</a></div>
+            <div class="lp-foot-col"><b>Sign in</b><a href="tutor/">Tutor Dashboard</a><a href="portal/">Student Portal</a><a href="parent/">Parent Portal</a><a href="admin/">ENLIXO team</a></div>
         </div>
         <div class="lp-wrap lp-foot-bottom">
             <span>&copy; <?= date('Y') ?> <?= $e($name) ?>. All rights reserved.</span>
