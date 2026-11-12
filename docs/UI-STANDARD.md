@@ -44,6 +44,13 @@ Status pills: green = done, orange = waiting, red = overdue or rejected, always 
 name (two lines at most), medium and students, then a line and the blue pill "View Class" with round edit / ⋯ buttons.
 JS: `gridView()` in `app-tutor-classes.js`. PHP: `enlixo_class_card()`.
 
+## Plans (pricing cards)
+
+`.ex-plan` in `app-tutor-subscription.js`: a coloured band on top and an icon per plan (START blue, GROW green, PRO purple),
+name and one line, the price big with a small "LKR" and "/ month", the yearly price in green, ticked features, and the
+action at the bottom in the plan's colour. The tutor's own plan has a "Your plan" ribbon, a soft tint and a coloured frame.
+Monthly / Yearly is one switch (`.ex-plan-cycle`) with the yearly saving on it.
+
 ## Language
 
 Write plain English in the page; `assets/js/i18n-auto.js` translates it by its exact wording. Add every new label to

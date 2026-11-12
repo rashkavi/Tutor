@@ -76,8 +76,11 @@ function plansPanel(panel) {
   const yearlyMonthly = (p) => Math.max(0, p.monthly - p.yearly_discount);
   const priceOf = (p) => (cycle === 'yearly' ? yearlyMonthly(p) : p.monthly);
 
-  const cycleBtn = (key, label) => h('button', { type: 'button', class: `${cycle === key ? 'custom-btn' : 'custom-btn-outline'} px-4`, disabled: paying && key !== t.cycle ? true : null,
-    onclick: () => { cycle = key; fill(panel); plansPanel(panel); } }, label);
+  // Monthly / Yearly switch: one filled block, the chosen side dark blue; Yearly shows what it saves.
+  const best = Math.max(0, ...D.plans.map((p) => (p.monthly ? Math.round((p.yearly_discount / p.monthly) * 100) : 0)));
+  const cycleBtn = (key, label) => h('button', { type: 'button', class: `ex-plan-cycle-btn${cycle === key ? ' active' : ''}`, 'aria-pressed': String(cycle === key),
+    disabled: paying && key !== t.cycle ? true : null, onclick: () => { cycle = key; fill(panel); plansPanel(panel); } },
+  label, key === 'yearly' && best ? h('span', { class: 'ex-plan-save' }, `Save ${best}%`) : null);
   const note = locked ? 'Your subscription is not running. Please call ENLIXO to start it again.'
     : waiting ? 'Your slip is being checked. You can change your plan again once ENLIXO has approved it.'
       : t.status === 'trial' ? `Your free trial ends on ${day(t.trial_ends)}. Choose your plan and pay any time before then. Your paid ${cycle === 'yearly' ? 'year' : 'month'} starts when the trial ends, so you lose no free days.`
@@ -104,24 +107,36 @@ function plansPanel(panel) {
         });
       }
     }
-    return h('div', { class: 'col-12 col-md-6 col-xl-4' }, h('div', { class: `ad-soft p-4 h-100 d-flex flex-column gap-2${mine ? ' border-primary' : ''}` },
-      h('div', { class: 'd-flex align-items-center gap-2' }, h('span', { class: 'main-topic' }, p.name), mine ? h('span', { class: 'ad-tag' }, t.status === 'trial' ? 'After your trial' : 'Your plan') : null,
-        t.next_plan === p.key ? h('span', { class: 'ad-tag' }, 'From your next renewal') : null),
-      h('span', { class: 'text-13 sub-text' }, p.tagline),
-      h('div', { class: 'mt-2' }, h('span', { class: 'ad-hero-amount fs-4' }, lkr(priceOf(p))), h('span', { class: 'text-13 sub-text' }, ' / month')),
-      h('span', { class: 'text-12 sub-text' }, cycle === 'yearly' ? `${lkr(yearlyMonthly(p) * 12)} a year, you save ${lkr(p.yearly_discount * 12)}` : `or ${lkr(yearlyMonthly(p))} a month when you pay yearly`),
-      h('span', { class: 'text-14 main-text fw-semibold mt-2' }, p.limit ? `Up to ${p.limit} students` : 'Unlimited students'),
-      p.pack_price ? h('span', { class: 'text-12 sub-text' }, `More students: ${lkr(p.pack_price)} a month for every ${p.pack_size}`) : null,
-      h('ul', { class: 'text-13 sub-text ps-3 mb-3 mt-1' }, p.features.map((f) => h('li', { class: 'mb-1' }, f))),
+    // Pricing card: colour band and icon per plan, big price, ticked features, the action at the bottom.
+    const tone = { start: 'blue', grow: 'green', pro: 'purple' }[p.key] ?? 'blue';
+    const tick = (text, strong = false) => h('li', { class: strong ? 'fw-semibold main-text' : '' }, h('span', { class: 'ex-plan-tick' }, icon('check', { size: 16 })), h('span', {}, text));
+    if (action?.classList.contains('custom-btn-outline')) action.className = action.className.replace('custom-btn-outline', 'custom-outline-btn');
+    if (action?.tagName === 'SPAN') action = h('div', { class: 'ex-plan-current mt-auto' }, icon('check', { size: 18 }), 'This is your plan');
+    return h('div', { class: 'col-12 col-md-6 col-xl-4' }, h('div', { class: `ex-plan tone-${tone}${mine ? ' is-mine' : ''}` },
+      mine ? h('div', { class: 'ex-plan-ribbon' }, t.status === 'trial' ? 'After your trial' : 'Your plan') : null,
+      h('div', { class: 'ex-plan-head' },
+        h('span', { class: 'ex-plan-ico' }, icon(p.key === 'pro' ? 'crown' : p.key === 'grow' ? 'growth' : 'classes', { size: 22 })),
+        h('div', { class: 'min-w-0' },
+          h('div', { class: 'ex-plan-name' }, p.name, t.next_plan === p.key ? h('span', { class: 'ex-plan-tag' }, 'From your next renewal') : null),
+          h('div', { class: 'ex-plan-tagline' }, p.tagline))),
+      h('div', { class: 'ex-plan-price' },
+        h('span', { class: 'ex-plan-cur' }, 'LKR'), h('span', { class: 'ex-plan-amount' }, lkr(priceOf(p)).replace(/^LKR\s*/, '')), h('span', { class: 'ex-plan-per' }, '/ month')),
+      h('div', { class: 'ex-plan-note' }, !p.yearly_discount ? (cycle === 'yearly' ? `${lkr(p.monthly * 12)} a year` : '\u00a0')
+        : cycle === 'yearly' ? [`${lkr(yearlyMonthly(p) * 12)} a year, `, h('b', {}, `you save ${lkr(p.yearly_discount * 12)}`)]
+          : ['or ', h('b', {}, `${lkr(yearlyMonthly(p))} a month`), ' when you pay yearly']),
+      h('ul', { class: 'ex-plan-list' },
+        tick(p.limit ? `Up to ${p.limit} students` : 'Unlimited students', true),
+        p.pack_price ? tick(`More students: ${lkr(p.pack_price)} a month for every ${p.pack_size}`) : null,
+        p.features.map((f) => tick(f))),
       action));
   };
 
   fill(panel,
-    h('div', { class: 'd-flex flex-wrap align-items-center justify-content-between gap-3 mb-3' },
-      h('div', { class: 'text-14 sub-text', style: { maxWidth: '760px' } }, note),
-      h('div', { class: 'd-flex gap-2' }, cycleBtn('monthly', 'Monthly'), cycleBtn('yearly', 'Yearly'))),
-    h('div', { class: 'row g-3' }, D.plans.map(card)),
-    h('div', { class: 'text-12 sub-text mt-3' }, 'You pay by bank transfer or deposit and upload the slip. ENLIXO checks it within one working day and your account keeps working while it is checked.'));
+    h('div', { class: 'ex-plan-top' },
+      h('div', { class: 'ex-plan-info' }, icon('info', { size: 18 }), h('span', {}, note)),
+      h('div', { class: 'ex-plan-cycle', role: 'group', 'aria-label': 'Pay monthly or yearly' }, cycleBtn('monthly', 'Monthly'), cycleBtn('yearly', 'Yearly'))),
+    h('div', { class: 'row g-4 align-items-stretch' }, D.plans.map(card)),
+    h('div', { class: 'ex-plan-foot' }, icon('money', { size: 16 }), 'You pay by bank transfer or deposit and upload the slip. ENLIXO checks it within one working day and your account keeps working while it is checked.'));
 }
 
 async function load(tab) {
