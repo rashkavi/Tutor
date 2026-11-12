@@ -2825,7 +2825,8 @@ function disconnectIntegration(btn) {
     const integrationId = document.getElementById("disconnectIntegrationId").value;
 
     if (!integrationId) {
-        alert("Invalid integration selected.");
+        toggleBtnLoader(btn, false);
+        showToast("error", "Invalid integration selected.");
         return;
     }
 
@@ -2850,6 +2851,7 @@ function disconnectIntegration(btn) {
             }
         })
         .catch(() => {
-            alert("Something went wrong. Please try again.");
+            toggleBtnLoader(btn, false);
+            showToast("error", "Something went wrong. Please try again.");
         });
 }

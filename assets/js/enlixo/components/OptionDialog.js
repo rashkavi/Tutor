@@ -1,5 +1,6 @@
 import { h } from '../core/dom.js';
 import { BsModal } from './BsModal.js';
+import { Toast } from './Toast.js';
 
 export const OWN_LISTS = {
   exam_types: { one: 'exam type', title: 'Exam types', example: 'e.g. Grade 9 Term Test', max: 45 },
@@ -34,6 +35,7 @@ export class OptionDialog {
           m.close();
         } catch (e) {
           err.textContent = e.details?.fields?.label ?? e.message;
+          if (!e.details?.fields?.label) Toast.error(e.message);
           input.classList.add('is-invalid');
           input.focus();
         } finally { save.disabled = false; }

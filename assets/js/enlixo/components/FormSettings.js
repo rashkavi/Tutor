@@ -301,7 +301,9 @@ function editCustom(f, section = 'custom') {
       if (next.section !== current && !(current in OWN_LISTS)) { current = next.section; draw(); }
     } catch (e) {
       schema.settings.custom = before;
-      err.textContent = Object.values(e.details?.fields ?? {}).join(' ') || e.message;
+      const fieldMsg = Object.values(e.details?.fields ?? {}).join(' ');
+      err.textContent = fieldMsg || e.message;
+      if (!fieldMsg) Toast.error(e.message);
       saveBtn.disabled = false;
     }
   } });

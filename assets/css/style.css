@@ -1532,7 +1532,7 @@ input {
 }
 
 .custom-toast.info {
-    border-left-color: var(--chart-blue2);
+    border-left-color: var(--chart-blue2, var(--dark-theme));
 }
 
 .custom-toast .close-btn {
@@ -1595,7 +1595,7 @@ input {
     width: 100%;
     bottom: 0px;
     left: 0px;
-    animation: progress 3s linear forwards;
+    animation: progress var(--toast-ms, 3000ms) linear forwards;
 }
 
 @keyframes progress {
@@ -1621,7 +1621,7 @@ input {
 
 .custom-toast.info::before,
 .btn#info {
-    background: var(--chart-blue2);
+    background: var(--chart-blue2, var(--dark-theme));
 }
 
 .custom-toast .column iconify-icon {
@@ -1642,7 +1642,7 @@ input {
 }
 
 .custom-toast.info .column iconify-icon {
-    color: var(--chart-blue2);
+    color: var(--chart-blue2, var(--dark-theme));
 }
 
 .custom-toast-text {
@@ -1661,6 +1661,47 @@ input {
     font-size: 0.8rem;
     margin-top: 4px;
     color: var(--sub-text);
+}
+
+/* Toasts drawn by assets/js/enlixo/components/Toast.js and showToast(): Solar icons, a real close button,
+   the bottom line stops while the mouse is on the toast */
+.custom-toast .custom-toast-icon {
+    display: inline-flex;
+    flex: none;
+}
+
+.custom-toast.success .custom-toast-icon {
+    color: var(--dark-green);
+}
+
+.custom-toast.error .custom-toast-icon {
+    color: var(--dark-red);
+}
+
+.custom-toast.warning .custom-toast-icon {
+    color: var(--dark-orange);
+}
+
+.custom-toast.info .custom-toast-icon {
+    color: var(--chart-blue2, var(--dark-theme));
+}
+
+.custom-toast button.close-btn {
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: none;
+    line-height: 1;
+}
+
+.custom-toast.paused::before {
+    animation-play-state: paused;
+}
+
+.custom-toast-text {
+    min-width: 0;
+    padding-right: 24px;
+    overflow-wrap: anywhere;
 }
 
 /* For modern browsers */
