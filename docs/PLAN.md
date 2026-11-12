@@ -186,3 +186,29 @@ does not show tute parcels yet; no automatic SMS/WhatsApp when a parcel is sent.
 2. Plan that unlocks custom roles: the pricing sheet doesn't mention staff roles. I put it in **GROW and PRO** (START only has the Owner role). OK?
 
 Answered: the existing code is now in the repo; `duration` columns are **minutes** (confirmed from `portal/watch-recording.php`).
+
+## Landing page, online tutor sign-up and Requested Tutors (done 2026-11-13)
+
+Migration **013_tutor_requests.sql** (additive): `requested_users` gets the plan the tutor asked for (`plan_key`,
+`billing_cycle`, `addons`), what they teach (`main_subject`, `grades`, `institute_name`, `class_mode`, `district`,
+`expected_students`), `heard_from`, `message`, `ip`, and the decision (`tutor_id`, `decided_by`, `decided_at`,
+`decision_note`). Run it after 012. Run `php bin/seed.php` once so the add-ons and plan features are in the database
+(the pages fall back to the pricing sheet in `FeatureCatalog` until then).
+
+**Landing page** (`index.php`, `assets/landing/landing.css`, `landing.js`): hero with a live dashboard mock-up, "why
+tutors switch", features, Tutors / Students / Parents, how it works, pricing (prices from Admin > Plans & Prices, the
+feature table and add-ons from the pricing sheet), FAQ and sign-in links for every role. Square corners, no libraries,
+all motion off for "reduce motion", works without the database.
+
+**Tutor sign-up** (`tutor-registration-application.php`, `assets/landing/signup.js`, `GET|POST /api/v1/public/tutor-signup`,
+`Enlixo\Platform\TutorRequests`): About you → Your classes → Plan (START / GROW / PRO, monthly or yearly, add-ons) →
+Review. `?plan=grow&cycle=yearly` from the landing page picks the plan. Checks: e-mail and mobile not already used,
+one pending request per e-mail, 5 requests an hour per connection, a hidden field for bots. The tutor gets a
+"we received your request" e-mail with the reference (TR-00012). The old `api/submitTutorRegistrationApplication.php`
+is removed.
+
+**Requested Tutors** (`admin/requested-users.php`, `app-admin-tutor-requests.js`, `/api/v1/admin/tutor-requests`):
+cards for Waiting / This week / Approved / Rejected (click to filter), search, plan and teaching filters, CSV.
+A request opens with everything the tutor wrote, WhatsApp and call links. **Approve** opens Add Tutor filled in from
+the request (plan, billing, add-ons); saving makes the tutor with `PlatformBilling::addTutor`, links the request
+(`tutor_id`) and e-mails the tutor how to sign in. **Reject** needs a reason (admins only); **Open again** undoes it.

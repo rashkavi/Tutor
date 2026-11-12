@@ -1,235 +1,71 @@
 <?php
-require_once './includes/UserClass.php';
-require_once './includes/UserPermissionsClass.php';
-require_once "./includes/connection.php";
-require_once "./includes/Project.php";
+// Online tutor sign-up: 4 steps (about you, your classes, plan, review). Drawn by assets/landing/signup.js from
+// GET /api/v1/public/tutor-signup and sent with POST to the same address. The request waits in
+// Admin > Tutors > Requested Tutors, where the admin approves it into a tutor account (Add Tutor) or rejects it.
+require_once __DIR__ . '/includes/Project.php';
+$e = static fn ($s): string => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+$v = Project::getVersion();
+$name = Project::getBaseName();
+header('X-Frame-Options: DENY');
 ?>
 <!DOCTYPE html>
-<html lang="en" data-custom-theme="light">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registration Application</title>
-
-    <meta property="og:locale" content="en_US" />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Tutor Registration Application | <?= Project::getBaseName(); ?>" />
-    <meta property="og:description" content="ENLIXO Tutor helps educators manage classes, students, and academic activities with a modern and efficient system." />
-    <meta property="og:url" content="<?= Project::getBaseUrl(); ?>" />
-    <meta property="og:site_name" content="Tutor Registration Application | <?= Project::getBaseName(); ?>" />
-    <meta property="og:image" content="./assets/imgs/favicon/web-app-manifest-512x512.png" />
-
-    <meta name="twitter:title" content="Tutor Registration Application | <?= Project::getBaseName(); ?>" />
-    <meta name="twitter:description" content="ENLIXO Tutor helps educators manage classes, students, and academic activities with a modern and efficient system." />
-    <meta name="twitter:image" content="./assets/imgs/favicon/web-app-manifest-512x512.png" />
-
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/imgs/favicon/apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-title" content="Tutor Registration Application | <?= Project::getBaseName(); ?>" />
-    <link rel="manifest" href="./assets/imgs/favicon/site.webmanifest" />
-
-    <link rel="stylesheet" href="assets/css/style.css?v=<?= Project::getVersion() ?>">
-    <link rel="stylesheet" href="assets/css/registration.css?v=<?= Project::getVersion() ?>">
-    <link rel="stylesheet" href="assets/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
-
-    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+    <title>Start your free trial | <?= $e($name) ?></title>
+    <meta name="description" content="Send your request to join ENLIXO Tutor. Pick a plan, and our team sets up your account and your free trial.">
+    <meta property="og:title" content="Start your free trial | <?= $e($name) ?>">
+    <meta property="og:description" content="Students, fees, QR attendance, recordings, tutes and parents in one app for tutors.">
+    <meta property="og:url" content="<?= $e(Project::getBaseUrl()) ?>/tutor-registration-application.php">
+    <meta name="theme-color" content="#050b1f">
+    <link rel="icon" href="favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/landing/landing.css?v=<?= $v ?>">
 </head>
 
-<body>
-    <div class="notifications"></div>
-    <div class="container-fluid registration-wrapper p-0">
-        <div class="row g-0 page-layout">
+<body class="lp">
+    <div class="su">
+        <aside class="su-aside">
+            <div class="lp-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="lp-grid-bg" aria-hidden="true"></div>
+            <a href="./" class="su-aside-logo"><img src="assets/imgs/common/enlixo-light.webp" alt="<?= $e($name) ?>"></a>
+            <div class="su-aside-body">
+                <span class="lp-pill"><span class="lp-pill-tag">Free</span> <span id="su-trial-pill">Free trial, no card needed</span></span>
+                <h1>Teach more.<br><span class="lp-grad">Manage less.</span></h1>
+                <p>Tell us about your classes and pick a plan. Our team calls you, sets up your account and helps you bring your students in.</p>
+                <ul class="su-perks">
+                    <li><span class="lp-dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4.5 4.5L19 7" /></svg></span> Fees, attendance, recordings and tutes in one place</li>
+                    <li><span class="lp-dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4.5 4.5L19 7" /></svg></span> Students and parents in Sinhala, Tamil or English</li>
+                    <li><span class="lp-dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4.5 4.5L19 7" /></svg></span> We help you move your students in</li>
+                    <li><span class="lp-dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4.5 4.5L19 7" /></svg></span> Change your plan any time</li>
+                </ul>
+                <div class="su-quote"><b>What happens next?</b> We call or WhatsApp you within one working day, make your account and send your sign-in details by e-mail.</div>
+            </div>
+            <div class="su-aside-foot"><span>&copy; <?= date('Y') ?> <?= $e($name) ?></span><a href="https://enviiz.com" target="_blank" rel="noopener">Powered by ENVIIZ</a></div>
+        </aside>
 
-
-            <div class="col-12 col-xl-7 left-panel overflow-scroll vh-100">
-                <div class="form-shell">
-                    <div class="form-card">
-                        <div class="form-header">
-                            <div class="d-flex flex-column align-items-center gap-3">
-                                <div class="mini-logo">
-                                    <img src="assets/imgs/<?= Project::getInstituteLogo() ?>" class="h-auto enviiz-logo institute-logo" alt="<?= Project::getBaseName() ?>">
-                                </div>
-                                <div class="d-flex flex-column align-items-center">
-                                    <div class="form-title">Tutor Registration</div>
-                                    <p class="form-subtitle">Complete the application form to join our teaching platform.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-body">
-                            <div id="successBanner" class="success-banner">
-                                Application submitted successfully.
-                            </div>
-
-                            <div class="d-flex flex-wrap gap-2 mb-4">
-                                <span class="info-chip">
-                                    <iconify-icon icon="solar:shield-check-outline" width="16" height="16"></iconify-icon>
-                                    Secure Form
-                                </span>
-                                <span class="info-chip">
-                                    <iconify-icon icon="solar:document-text-outline" width="16" height="16"></iconify-icon>
-                                    Professional Application
-                                </span>
-                            </div>
-
-                            <div class="section-title">Basic Information</div>
-
-                            <form id="registrationForm" novalidate>
-                                <div class="row">
-                                    <div class="col-12 col-md-4 field-wrap">
-                                        <label class="custom-label required">Title</label>
-                                        <select class="form-select custom-select" id="title">
-                                            <option value="">- Select -</option>
-                                            <?php
-                                            $user_titles = Database::search("SELECT * FROM `title`");
-                                            while ($data = $user_titles->fetch_assoc()) {
-                                            ?>
-                                                <option value="<?php echo $data["title_id"]; ?>"><?php echo $data["title"]; ?></option>
-                                            <?php
-                                            }
-                                            ?>
-                                        </select>
-                                        <div class="feedback-text" id="title-feedback"></div>
-                                    </div>
-                                    <div class="col-12 col-md-4 field-wrap">
-                                        <label class="custom-label required">First Name</label>
-                                        <div class="input-group-modern">
-                                            <span class="input-icon">
-                                                <iconify-icon icon="solar:user-outline" width="18" height="18"></iconify-icon>
-                                            </span>
-                                            <input type="text" class="form-control custom-input with-icon" id="firstName" maxlength="45">
-                                        </div>
-                                        <div class="feedback-text" id="fname-feedback"></div>
-                                    </div>
-
-                                    <div class="col-12 col-md-4 field-wrap">
-                                        <label class="custom-label required">Last Name</label>
-                                        <div class="input-group-modern">
-                                            <span class="input-icon">
-                                                <iconify-icon icon="solar:user-outline" width="18" height="18"></iconify-icon>
-                                            </span>
-                                            <input type="text" class="form-control custom-input with-icon" id="lastName" maxlength="45">
-                                        </div>
-                                        <div class="feedback-text" id="lname-feedback"></div>
-                                    </div>
-
-
-                                    <div class="col-12 col-md-8 field-wrap">
-                                        <label class="custom-label required">Email</label>
-                                        <div class="input-group-modern">
-                                            <span class="input-icon">
-                                                <iconify-icon icon="solar:letter-outline" width="18" height="18"></iconify-icon>
-                                            </span>
-                                            <input type="email" class="form-control custom-input with-icon" id="email" maxlength="100">
-                                        </div>
-                                        <div class="feedback-text" id="email-feedback"></div>
-                                    </div>
-
-                                    <div class="col-12 col-md-4 field-wrap">
-                                        <label class="custom-label required">NIC</label>
-                                        <div class="input-group-modern">
-                                            <span class="input-icon">
-                                                <iconify-icon icon="tabler:id-filled" width="18" height="18"></iconify-icon>
-                                            </span>
-                                            <input type="text" class="form-control custom-input with-icon" id="nic" maxlength="45">
-                                        </div>
-                                        <div class="feedback-text" id="nic-feedback"></div>
-                                    </div>
-
-                                    <div class="col-12 col-md-6 field-wrap">
-                                        <label class="custom-label required">Mobile</label>
-                                        <div class="input-group-modern">
-                                            <span class="input-icon">
-                                                <iconify-icon icon="solar:phone-outline" width="18" height="18"></iconify-icon>
-                                            </span>
-                                            <input type="text" class="form-control custom-input with-icon" id="mobile" maxlength="15">
-                                        </div>
-                                        <div class="feedback-text" id="mobile-feedback"></div>
-                                    </div>
-
-                                    <div class="col-12 col-md-6 field-wrap">
-                                        <label class="custom-label required">WhatsApp</label>
-                                        <div class="input-group-modern">
-                                            <span class="input-icon">
-                                                <iconify-icon icon="ri:whatsapp-line" width="18" height="18"></iconify-icon>
-                                            </span>
-                                            <input type="text" class="form-control custom-input with-icon" id="whatsapp" maxlength="15">
-                                        </div>
-                                        <div class="feedback-text" id="whatsapp-feedback"></div>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <button type="submit" class="custom-btn w-100 d-flex align-items-center justify-content-center gap-2"
-                                            onclick="submitTutorRegistrationApplication(this);">
-                                            <span>Submit Application</span>
-                                            <iconify-icon icon="solar:arrow-right-linear" width="18" height="18"></iconify-icon>
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-
-                            <div class="footer-note">
-                                <div class="d-flex flex-column pb-4 align-items-center justify-content-end">
-                                    <p class="text-12 sub-text p-0 m-1 g-0 text-center">&copy;<?php echo date("Y"); ?> ENLIXO Tutor. All Rights Reserved | Powered by
-                                        <a href="https://enviiz.com" target="_blank" class="text-decoration-none footer-link">
-                                            <img src="assets/imgs/common/enviiz-theme.webp" alt="ENVIIZ Softwares (PVT) LTD" style="width: 40px;height: auto;" class="enviiz-logo">
-                                        </a>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <main class="su-main" id="su-root">
+            <div class="su-top">
+                <a href="./" class="su-top-logo"><img src="assets/imgs/common/enlixo-dark.webp" alt="<?= $e($name) ?>"></a>
+                <span>Already a tutor? <a href="tutor/">Sign in</a></span>
+            </div>
+            <div id="su-app">
+                <div class="su-loading" aria-busy="true">
+                    <div class="su-sk" style="height:8px;margin-bottom:36px"></div>
+                    <div class="su-sk" style="height:30px;width:50%;margin-bottom:14px"></div>
+                    <div class="su-sk" style="height:16px;width:70%;margin-bottom:30px"></div>
+                    <div class="su-sk" style="height:48px;margin-bottom:16px"></div>
+                    <div class="su-sk" style="height:48px;margin-bottom:16px"></div>
+                    <div class="su-sk" style="height:48px"></div>
                 </div>
             </div>
-
-            <div class="col-xl-5 d-none d-xl-block right-panel">
-                <div class="floating-shape shape-1"></div>
-                <div class="floating-shape shape-2"></div>
-                <div class="floating-shape shape-3"></div>
-
-                <div class="right-content">
-                    <div class="hero-badge">
-                        <iconify-icon icon="solar:stars-outline" width="16" height="16"></iconify-icon>
-                        Professional Teaching Platform
-                    </div>
-
-                    <div>
-                        <h1 class="hero-title">
-                            Teach Smarter, Manage Better
-                        </h1>
-
-                        <p class="hero-text">
-                            ENLIXO Tutor empowers educators to manage classes, students, attendance, and academic activities efficiently with a modern and intuitive system.
-                        </p>
-
-                        <div class="hero-stats">
-                            <div class="hero-stat">
-                                <h4>50+</h4>
-                                <p>Active Tutors</p>
-                            </div>
-                            <div class="hero-stat">
-                                <h4>40+</h4>
-                                <p>Subjects Covered</p>
-                            </div>
-                            <div class="hero-stat">
-                                <h4>98%</h4>
-                                <p>Application Accuracy</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="brand-logo">ENLIXO Tutor</div>
-                </div>
-            </div>
-
-        </div>
+        </main>
     </div>
-
-    <script src="assets/plugins/bootstrap/js/bootstrap.bundle.min.js?v=<?= Project::getVersion() ?>"></script>
-    <script src="assets/plugins/jquery/jquery-3.7.1.min.js"></script>
-    <script src="assets/js/script.js?v=<?= Project::getVersion() ?>"></script>
-    <script src="assets/js/functions.js?v=<?= Project::getVersion() ?>"></script>
-
+    <script type="module" src="assets/landing/signup.js?v=<?= $v ?>"></script>
 </body>
 
 </html>

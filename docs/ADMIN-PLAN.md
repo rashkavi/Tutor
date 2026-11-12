@@ -80,7 +80,7 @@ A payment that covers the invoice marks it Paid, extends the period and sends th
 | Tutors | `admin/tutors` | All tutors: plan, status, renews / trial ends, students used, balance; filters by plan, status, billing cycle; bulk e-mail reminder |
 | | `admin/add-tutor` | One page: tutor details → plan and billing (plan cards, monthly / yearly, custom price, extra students, add-ons) → how to start (free trial / paid now / complimentary) with a live summary of what will happen |
 | | `admin/tutor-details?tutor-id=` | Profile card + subscription card (change plan, extend trial, add students, discount, suspend / reactivate, cancel) + tabs Invoices, Payments, Usage, History |
-| | `admin/requested-users` | Tutor sign-up requests (existing page; restyled later, Approve opens Add Tutor filled in) |
+| | `admin/requested-users` | Tutor sign-up requests from the website: list, details, Approve opens Add Tutor filled in, Reject with a reason (done, see PLAN.md) |
 | Finance | `admin/invoices` | Every invoice; filter by status, plan, month; void, record payment, send reminder, print |
 | | `admin/tutor-payments` | Slips waiting (approve / reject), all payments, export |
 | Plans & Billing | `admin/plans` | Plans & Prices, Add-ons, Trial & Billing Rules (trial days and plan, renewal invoice days, grace days, reminders, tax), Bank Accounts (shown to tutors), Invoice details |
