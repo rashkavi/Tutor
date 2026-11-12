@@ -136,6 +136,41 @@ as they are. Chart labels inside the charts are not translated yet.
 
 Not done yet: notes are saved per browser, not in the database; the student and parent "Today's classes" rows don't show a Zoom join button.
 
+## Tutes and class page (done 2026-11-12)
+
+Migration **012_tute_delivery.sql** (additive): four columns on `class_tutes` (courier, planned post date, note to
+students, added by) and a new `tute_deliveries` table. Run it after 011.
+
+**Who gets a tute** (`Enlixo\Tutes\TuteRules`, `TuteRepository`), the same rule the old tute pages used:
+* `payment_month` empty = every active student of the class (also students who join later).
+* `payment_month` = 'YYYY-MM' = only students whose fee for that month is paid: status 3 (approved slip / cash) or 8 (card).
+  A student who pays later gets it then. A free class always gives it to everyone.
+
+**Add Tute** (`tutor/add-tute.php`, `app-tutor-add-tute.js`, `POST /api/v1/tutor/tutes`): name and description, Download
+(PDF / Word, up to 10 MB each, type checked from the file itself) or Post to their home (courier), who gets it (everyone /
+paid for a month, with how many students that is), then files, or the parcel items, courier, planned post date and a note.
+
+**Courier deliveries** (`tutor/couriered-tute.php`, `app-tutor-tute-deliveries.js`): replaces the old page that showed
+made-up numbers. One parcel per student who gets the tute; the address is copied from the student's profile when the
+parcel is made (so a parcel already sent keeps its address). Steps: To pack → Packed → Sent (courier + tracking number,
+date filled in) → Delivered, or Returned. Tick rows to move many at once; Edit one parcel to fix its address; "Add students
+who paid later"; Print labels (address labels for the ticked parcels, or every parcel still to send); Download list (CSV).
+Couriers offered: Sri Lanka Post (Speed Post / Registered Post), Domex, Prompt Xpress, Koombiyo, Pronto, Certis Lanka,
+Trans Express, Hand delivery, or Other. Sri Lanka Post tracking numbers look like BA123456789LK; students get a link to
+the Sri Lanka Post tracking page.
+
+**Student**: Tutes → My tute parcels (`portal/couriered-tute-details.php`): each parcel with its progress, courier,
+tracking number (Copy, Track parcel), where it is going and the tutor's note. Replaces the old mock page.
+
+**Class page** (`tutor/class-details.php`, `app-tutor-class-details.js`, `GET /api/v1/tutor/classes/{id}/summary`,
+`TutorDashboard::classSummary()` so the rules match the dashboard): weekly times, where, fee, medium and year; cards for
+students, fees this month, attendance (4 weeks) and the next class; attendance per week; next class days; "Needs your
+attention" (slips to approve, students who have not paid, parcels to send); links to everything in the class with counts.
+Edit Class opens `edit-class` (the old edit pop-up is gone).
+
+Not done yet: the old `tutor/api/addTute.php` is no longer used by the page but is still on the server; the parent side
+does not show tute parcels yet; no automatic SMS/WhatsApp when a parcel is sent.
+
 ## Open questions for Rashmi
 1. Recording limit default: is **3 × video length** right, or do you want a fixed number of views like V3?
 2. Plan that unlocks custom roles: the pricing sheet doesn't mention staff roles. I put it in **GROW and PRO** (START only has the Owner role). OK?

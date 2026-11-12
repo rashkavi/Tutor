@@ -53,6 +53,113 @@ final class TutorDashboard
         ];
     }
 
+    /**
+     * The small dashboard at the top of a class page (tutor/class-details.php, GET /api/v1/tutor/classes/{id}/summary).
+     * Same rules as overview(), for one class. Null when the class is not this tutor's.
+     */
+    public function classSummary(int $tutorId, int $classId, bool $money): ?array
+    {
+        $all = $this->classes($tutorId);
+        if (!isset($all[$classId])) {
+            return null;
+        }
+        $c = $all[$classId];
+        $att = $this->attendance($this->finishedSessions($tutorId, $this->now->modify('-6 weeks')->modify('monday this week'), $classId));
+        $row = $this->classRows($tutorId, [$classId => $c], $att, $money)[0];
+        $d28 = $this->now->modify('-27 days')->format('Y-m-d');
+        $d56 = $this->now->modify('-55 days')->format('Y-m-d');
+        $tomorrow = $this->now->modify('+1 day')->format('Y-m-d');
+
+        // attendance per week, oldest first (last 6 weeks)
+        $weeks = [];
+        $monday = $this->now->modify('monday this week')->setTime(0, 0);
+        for ($i = 5; $i >= 0; $i--) {
+            $from = $monday->modify("-$i weeks");
+            $to = $from->modify('+7 days');
+            $w = ['label' => $from->format('j M'), 'attended' => 0, 'watched' => 0, 'absent' => 0];
+            foreach ($att as $a) {
+                if ($a['date'] >= $from->format('Y-m-d') && $a['date'] < $to->format('Y-m-d')) {
+                    $w['attended'] += $a['attended'];
+                    $w['watched'] += $a['watched'];
+                    $w['absent'] += $a['absent'];
+                }
+            }
+            $weeks[] = $w;
+        }
+
+        // next class days of this class
+        $next = array_map(fn (array $r) => [
+            'id' => (int) $r['time_table_id'],
+            'date' => (string) $r['date'],
+            'day' => (new DateTimeImmutable((string) $r['date']))->format('D j M'),
+            'time' => $this->clock((string) $r['start_time']) . ' - ' . $this->clock((string) $r['end_time']),
+            'mode' => (int) $r['lt'] === 2 ? 'Online' : 'Physical',
+            'title' => (string) ($r['lecture_title'] ?? ''),
+            'isToday' => (string) $r['date'] === $this->now->format('Y-m-d'),
+        ], $this->db->all(
+            'SELECT tt.time_table_id, tt.`date`, tt.start_time, tt.end_time, tt.lecture_type_lecture_type_id lt, tt.lecture_title
+               FROM time_table tt
+              WHERE tt.classes_class_id = :c AND tt.time_table_status_time_table_status_id = 1 AND tt.lecture_type_lecture_type_id <> 3
+                AND (tt.`date` > :d OR (tt.`date` = :d2 AND tt.end_time > :n))
+              ORDER BY tt.`date`, tt.start_time LIMIT 4',
+            ['c' => $classId, 'd' => $this->now->format('Y-m-d'), 'd2' => $this->now->format('Y-m-d'), 'n' => $this->now->format('H:i:s')],
+        ));
+
+        $count = fn (string $sql, array $p = []) => (int) $this->db->value($sql, ['c' => $classId] + $p);
+        $tutes = $count('SELECT COUNT(*) FROM class_tutes WHERE classes_class_id = :c');
+        $recordings = $count('SELECT COUNT(*) FROM lecture_recording r JOIN time_table tt ON tt.time_table_id = r.time_table_time_table_id WHERE tt.classes_class_id = :c');
+        $pre = $this->hasTable('pre_recordings') ? $count('SELECT COUNT(*) FROM pre_recordings WHERE classes_class_id = :c') : 0;
+        $parcels = $this->hasTable('tute_deliveries')
+            ? $count("SELECT COUNT(*) FROM tute_deliveries d JOIN class_tutes ct ON ct.class_tute_id = d.class_tutes_class_tute_id WHERE ct.classes_class_id = :c AND d.status IN ('pending', 'packed')")
+            : 0;
+        $slips = $money ? $count('SELECT COUNT(*) FROM student_has_payments p JOIN students_has_classes x ON x.students_has_class_id = p.students_has_class_students_has_class_id
+                                    WHERE x.classes_class_id = :c AND p.payment_status_payment_status_id = 2') : 0;
+        $inactive = $count('SELECT COUNT(*) FROM students_has_classes WHERE classes_class_id = :c AND status_status_id <> 1');
+        $fee = $this->db->one('SELECT amount, due_date FROM class_payment_plans WHERE classes_class_id = :c ORDER BY class_payment_plan_id DESC LIMIT 1', ['c' => $classId]);
+        $times = [];
+        if ($this->hasTable('class_schedules')) {
+            foreach ($this->db->all(
+                'SELECT weekday, start_time, end_time, lecture_type_lecture_type_id lt FROM class_schedules
+                  WHERE classes_class_id = :c AND status_status_id = 1 AND (valid_until IS NULL OR valid_until >= CURDATE()) ORDER BY weekday, start_time',
+                ['c' => $classId],
+            ) as $t) {
+                $times[] = (['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][(int) $t['weekday']] ?? '') . ' ' . $this->clock((string) $t['start_time']) . ' - ' . $this->clock((string) $t['end_time'])
+                    . ((int) $t['lt'] === 2 ? ' (online)' : '');
+            }
+        }
+
+        $todo = [];
+        if ($slips) {
+            $todo[] = ['icon' => 'payments', 'tone' => 'orange', 'label' => $slips . ($slips === 1 ? ' payment slip to approve' : ' payment slips to approve'), 'href' => 'class-payments?class-id=' . $classId];
+        }
+        if ($money && $row['unpaidStudents']) {
+            $todo[] = ['icon' => 'danger', 'tone' => 'red', 'label' => $row['unpaidStudents'] . ($row['unpaidStudents'] === 1 ? ' student has not paid' : ' students have not paid'), 'href' => 'class-payments?class-id=' . $classId];
+        }
+        if ($parcels) {
+            $todo[] = ['icon' => 'tutes', 'tone' => 'purple', 'label' => $parcels . ($parcels === 1 ? ' tute parcel to send' : ' tute parcels to send'), 'href' => 'couriered-tute?class-id=' . $classId];
+        }
+
+        return [
+            'money' => $money,
+            'class' => [
+                'id' => $classId, 'name' => (string) $c['class_name'], 'active' => (int) $c['status_status_id'] === 1, 'mode' => $row['mode'],
+                'location' => (string) ($c['location'] ?? ''), 'medium' => (string) $c['medium'], 'year' => (string) $c['year'],
+                'free' => (bool) $c['is_free'], 'fee' => $fee ? (float) $fee['amount'] : null, 'dueDay' => $fee && $fee['due_date'] !== null ? (int) $fee['due_date'] : null,
+                'times' => $times,
+            ],
+            'stats' => [
+                'students' => $row['students'], 'newStudents' => $row['newStudents'], 'inactive' => $inactive,
+                'attendance' => $row['attendance'], 'attendanceBefore' => $this->rate($att, $d56, $d28, $classId), 'watched' => $row['watched'],
+                'paid' => $row['paid'], 'due' => $row['due'], 'paidPct' => $row['paidPct'], 'unpaid' => $row['unpaid'], 'unpaidStudents' => $row['unpaidStudents'],
+                'tutes' => $tutes, 'recordings' => $recordings, 'preRecordings' => $pre, 'parcels' => $parcels,
+            ],
+            'weeks' => $weeks,
+            'next' => $next,
+            'todo' => $todo,
+            'attendanceCheck' => $this->rate($att, $d28, $tomorrow, $classId),
+        ];
+    }
+
     // ---------------------------------------------------------------- exam dates
 
     /** Exam type + year pairs of the tutor's active classes, with the date the tutor set (null = not set). */

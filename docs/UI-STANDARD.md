@@ -44,6 +44,13 @@ Status pills: green = done, orange = waiting, red = overdue or rejected, always 
 name (two lines at most), medium and students, then a line and the blue pill "View Class" with round edit / ⋯ buttons.
 JS: `gridView()` in `app-tutor-classes.js`. PHP: `enlixo_class_card()`.
 
+## Plans (pricing cards)
+
+`.ex-plan` in `app-tutor-subscription.js`: a coloured band on top and an icon per plan (START blue, GROW green, PRO purple),
+name and one line, the price big with a small "LKR" and "/ month", the yearly price in green, ticked features, and the
+action at the bottom in the plan's colour. The tutor's own plan has a "Your plan" ribbon, a soft tint and a coloured frame.
+Monthly / Yearly is one switch (`.ex-plan-cycle`) with the yearly saving on it.
+
 ## Language
 
 Write plain English in the page; `assets/js/i18n-auto.js` translates it by its exact wording. Add every new label to
@@ -75,9 +82,10 @@ on every page (old pages too); `ex-btn-lg` and `ex-btn-md` are the same size and
 | 48px | `custom-btn` / `custom-outline-btn` (+ `ex-btn-md`) | Every button: page header, toolbars, forms, modals |
 | 32px | `custom-btn ex-btn-sm` / `custom-outline-btn ex-btn-sm` | Only inside a table row or a small panel tool (View, Edit, Expand all) |
 
-* One filled (`custom-btn`) button per area: the main action. Other actions are outline (`custom-outline-btn`):
-  white, a 1px blue line, blue text. Cancel / Close / Previous / Next / clear use the grey V3 secondary
-  `custom-btn-outline`. The older `ex-btn` looks the same now.
+* One dark blue (`custom-btn`) button per area: the main action. Other actions use `custom-outline-btn`
+  (Cancel / Close / Previous / Next / clear may use `custom-btn-outline`). The older `ex-btn` looks the same now.
+* **No outline-only buttons.** `custom-outline-btn` and `custom-btn-outline` are light blue blocks with blue text and no
+  border (danger: light red with red text); the main button stays dark blue. Every button has a background colour.
 * Danger: `custom-danger-btn` (red), approve: `custom-success-btn` (green), after a `BsModal.confirm`.
 * Small text links (Add new, Crop again): `.ex-link-add`.
 * In JS use `BsModal.button(text, { primary, icon, danger, onclick })`, which applies the rules above.
@@ -189,7 +197,9 @@ Previous (`previous-button`) on the left, numbered `page-item`s in the middle, N
 
 ## Loading, empty and error states
 
-* Loading: grey blocks in the shape of the page (`.ex-skeleton`, or Bootstrap `placeholder-glow`, which now looks the same: light grey with a shimmer, never dark blocks).
+* Loading: blocks in the shape of the page, in two soft colours only (`--skeleton-color-1` #EEF1F5 and `--skeleton-color-2`
+  #F8FAFC; faint white in dark mode) with one slow wave. `.skeleton`, `.ex-skeleton` and Bootstrap `.placeholder` all look the
+  same. Bars sit inside white cards; tables show a thin line between rows, never a box round each row. No dark or heavy blocks.
 * Empty: `EmptyState.empty({ title, text, action })` = V3 `.empty-state`: the `inbox` icon in a soft circle, a bold
   title and one grey line. In a table it is a row inside `tbody`. With a search or filter on: "No matching results"
   + "Try changing the search or filters." and a Clear button.

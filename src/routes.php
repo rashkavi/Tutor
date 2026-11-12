@@ -13,6 +13,7 @@ use Enlixo\Http\Controllers\RecordingController;
 use Enlixo\Http\Controllers\RoleController;
 use Enlixo\Http\Controllers\StudentBulkController;
 use Enlixo\Http\Controllers\StudentController;
+use Enlixo\Http\Controllers\TuteController;
 use Enlixo\Http\Controllers\ZoomWebhookController;
 
 return static function (Router $router, App $app): void {
@@ -60,6 +61,15 @@ return static function (Router $router, App $app): void {
     $router->get('/api/v1/tutor/classes/overview', $classes->overview(...));
     $router->post('/api/v1/tutor/classes/order', $classes->order(...));
     $router->post('/api/v1/tutor/classes/status', $classes->status(...));
+    $tutes = new TuteController($app, dirname(__DIR__) . '/assets/uploads/tutes-attachments');
+    $router->get('/api/v1/tutor/tutes/form', $tutes->form(...));
+    $router->post('/api/v1/tutor/tutes', $tutes->store(...));
+    $router->get('/api/v1/tutor/classes/{id}/courier-tutes', $tutes->courierTutes(...));
+    $router->get('/api/v1/tutor/classes/{id}/summary', $classes->summary(...));
+    $router->get('/api/v1/tutor/tutes/{id}/deliveries', $tutes->deliveries(...));
+    $router->post('/api/v1/tutor/tutes/{id}/deliveries/sync', $tutes->sync(...));
+    $router->post('/api/v1/tutor/tutes/{id}/deliveries', $tutes->updateDeliveries(...));
+    $router->get('/api/v1/student/tute-deliveries', $tutes->forStudent(...));
     $router->post('/api/v1/tutor/classes/{id}', $classes->update(...)); // keep after the fixed /classes/... routes
 
     $router->get('/api/v1/permissions', $roles->catalogue(...));

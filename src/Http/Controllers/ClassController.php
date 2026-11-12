@@ -247,4 +247,18 @@ final class ClassController
         );
         return JsonResponse::ok($result, [], 201);
     }
+
+    /** GET /api/v1/tutor/classes/{id}/summary: the small dashboard on the class page. */
+    public function summary(Request $r): JsonResponse
+    {
+        $auth = $r->auth();
+        $this->app->permissions()->require($auth, 'classes.view');
+        $money = $this->app->permissions()->can($auth, 'payments.view');
+        $data = (new \Enlixo\Dashboard\TutorDashboard($this->app->db()))
+            ->classSummary($auth->tenantId(), (int) $r->param('id'), $money);
+        if ($data === null) {
+            throw new HttpException(404, 'not_found', 'This class was not found.');
+        }
+        return JsonResponse::ok($data);
+    }
 }

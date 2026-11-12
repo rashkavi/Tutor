@@ -58,6 +58,7 @@ No packages to install. Tests use in-memory fakes, so they don't need MySQL.
 | `src/Recordings` | Watch-time limits: rules, overrides, server-counted heartbeats |
 | `src/Students`, `src/Classes` | Tutor-scoped lists for the real pages |
 | `src/Dashboard` | Numbers for the tutor, admin, student and parent dashboards (`DashboardRepository`) and date helpers (`Stats`) |
+| `src/Tutes` | Tutes: who gets a tute (all / paid for a month), courier deliveries (`TuteRules`, `TuteRepository`) |
 | `src/Scheduling` | Weekly slots → timetable sessions → Zoom meetings; Zoom OAuth / S2S clients; webhook verifier |
 | `assets/js/enlixo/core` | `ApiClient`, `Component`, `UrlState`, DOM helpers |
 | `assets/js/enlixo/components` | `DataView`, `SearchInput`, `FilterBar`, `Pagination`, `LoadingState`, `EmptyState`, `FeatureGate`, `Modal`, `Toast`, `Tabs`, `Meter` |
