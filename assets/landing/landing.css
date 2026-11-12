@@ -887,3 +887,23 @@ select.su-in { appearance: none; background: #fff url("data:image/svg+xml,%3Csvg
 .lp-ld-next small, .lp-ld-fee small { display: block; }
 .lp-lang-sec .lp-h2 { margin-bottom: 18px; }
 .lp-faq-wrap { padding-bottom: 20px; }
+
+/* footer wordmark: letters rise in one by one, a light sweeps through the brand colours, a slow wave */
+.lp-foot-word { position: relative; display: flex; justify-content: center; gap: .01em; -webkit-text-stroke: 0; background: none; color: inherit; opacity: 1 !important; transform: none !important; }
+.lp-foot-word::after { content: ''; position: absolute; left: 50%; bottom: -10%; width: 70%; height: 50%; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(47, 123, 255, .35), rgba(124, 92, 255, .15) 60%, transparent); filter: blur(30px); z-index: -1; pointer-events: none; animation: lp-word-glow 6s ease-in-out infinite; }
+.lp-foot-word span {
+  display: inline-block; color: transparent; -webkit-text-stroke: 1px rgba(148, 178, 255, .28);
+  background: linear-gradient(100deg, #12235e 0%, #1d4fd8 18%, #2f7bff 30%, #22d3ee 42%, #e0f2ff 50%, #a78bfa 58%, #7c5cff 70%, #1d4fd8 84%, #12235e 100%);
+  background-size: 600% 100%; background-position: calc(var(--i) * 20%) 0; -webkit-background-clip: text; background-clip: text;
+  opacity: 0; translate: 0 40%; transition: opacity .9s var(--ease), translate .9s var(--ease); transition-delay: calc(var(--i) * 90ms);
+  animation: lp-word-sweep 7s linear infinite, lp-word-wave 5s ease-in-out infinite; animation-delay: calc(var(--i) * -0.35s), calc(var(--i) * .25s);
+  transition-property: opacity, translate, filter;
+}
+.lp-foot-word.in span { opacity: 1; translate: 0 0; }
+.lp-foot-word span:hover { filter: drop-shadow(0 0 18px rgba(34, 211, 238, .6)); }
+@keyframes lp-word-sweep { from { background-position: 0% 0; } to { background-position: 600% 0; } }
+@keyframes lp-word-wave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4%); } }
+@keyframes lp-word-glow { 0%, 100% { opacity: .7; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .lp-foot-word span { opacity: 1; translate: 0 0; background-position: 30% 0; } }
+.lp-foot-word { line-height: 1.02; padding-top: .04em; }
+.lp-foot-word span { -webkit-text-stroke: 0; }
