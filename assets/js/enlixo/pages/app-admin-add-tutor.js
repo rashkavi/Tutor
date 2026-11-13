@@ -194,12 +194,22 @@ if (REQ?.plan === 'free') {
   inputs.comp_until.value = plusMonths(12);
   inputs.comp_reason.value = 'FREE plan: up to 50 students';
 }
+// An offer code from the landing page QR (src/Platform/Promotions.php): the plan's price less the discount, as a custom price
+if (REQ?.promo && REQ.plan === REQ.promo.plan) {
+  const pl = plan(REQ.promo.plan);
+  if (pl) {
+    customOn.checked = true;
+    customBox.classList.remove('d-none');
+    inputs.custom_price.value = String(Math.round((pl.monthly * (100 - REQ.promo.percent)) / 1000) * 10);
+    inputs.custom_price_reason.value = `Offer ${REQ.promo.code}: ${REQ.promo.title}`;
+  }
+}
 const reqBanner = REQ ? h('div', { class: 'col-12 ad-soft p-3 mb-4 d-flex align-items-center gap-3 flex-wrap' },
   icon('application', { size: 22 }),
   h('div', { class: 'flex-grow-1' },
     h('div', { class: 'text-14 main-text fw-semibold' }, `Approving request ${REQ.ref} from ${REQ.name}`),
     h('div', { class: 'text-13 sub-text' }, [REQ.subject, REQ.mode_label, REQ.district, REQ.students ? `~${REQ.students} students` : null, REQ.plan === 'free' ? 'asked for the FREE plan (up to 50 students): START, complimentary' : `asked for ${(REQ.plan ?? '').toUpperCase()} ${REQ.cycle}`].filter(Boolean).join(' · '),
-      REQ.addons.length ? ` · add-ons: ${REQ.addons.join(', ').replaceAll('_', ' ')}` : ''),
+      REQ.addons.length ? ` · add-ons: ${REQ.addons.join(', ').replaceAll('_', ' ')}` : '', REQ.promo ? ` · offer ${REQ.promo.code} (${REQ.promo.title})` : ''),
     REQ.message ? h('div', { class: 'text-13 main-text mt-1' }, `"${REQ.message}"`) : null),
   h('a', { class: 'custom-btn-outline px-3 d-inline-flex align-items-center text-decoration-none', href: `requested-users?request=${REQ.id}` }, 'View request')) : null;
 fill(root, previewNote(), reqBanner, h('div', { class: 'row g-4' },

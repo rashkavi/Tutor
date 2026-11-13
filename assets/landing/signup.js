@@ -38,6 +38,7 @@ let errors = {};
 const v = { title: '', first_name: '', last_name: '', email: '', mobile: '', whatsapp: '', nic: '', subject: '', grades: '', institute: '', mode: '', district: '', students: '', heard_from: '', plan: 'grow', cycle: 'monthly', addons: [], message: '', agree: false, website: '' };
 try { Object.assign(v, JSON.parse(sessionStorage.getItem(DRAFT) || '{}')); } catch { /* private mode */ }
 if (q.get('plan')) v.plan = q.get('plan');
+if (q.get('promo')) v.promo = q.get('promo').toUpperCase();
 if (q.get('cycle') === 'yearly' || q.get('cycle') === 'monthly') v.cycle = q.get('cycle');
 const save = () => { try { sessionStorage.setItem(DRAFT, JSON.stringify({ ...v, agree: false, website: '' })); } catch { /* ignore */ } };
 
@@ -132,6 +133,11 @@ function stepClasses() {
   ];
 }
 
+function promoFor(p) {
+  const pr = v.promo ? D.promos?.[v.promo] : null;
+  return pr && pr.plan === p.key ? pr : null;
+}
+
 function priceOf(p) {
   return v.cycle === 'yearly' ? Math.max(0, p.monthly - p.yearly_discount) : p.monthly;
 }
@@ -152,7 +158,7 @@ function stepPlan() {
         p.key === (suggest ?? 'grow') ? h('span', { class: `su-plan-pop${p.free ? ' su-plan-pop-free' : ''}` }, suggest ? 'Fits your class' : 'Most popular') : null,
         h('span', { class: 'su-plan-check' }, ic(I.check, 14)),
         h('span', { class: 'su-plan-name' }, p.name),
-        h('span', { class: 'su-plan-price' }, p.free ? 'Free' : p.custom ? "Let's talk" : lkr(priceOf(p)), p.custom ? null : h('small', {}, p.free ? ' always' : ' / month')),
+        h('span', { class: 'su-plan-price' }, p.free ? 'Free' : p.custom ? "Let's talk" : promoFor(p) ? [h('s', { class: 'su-old' }, lkr(priceOf(p))), ' ', lkr(Math.round(priceOf(p) * (100 - promoFor(p).percent) / 1000) * 10)] : lkr(priceOf(p)), p.custom ? null : h('small', {}, p.free ? ' always' : ' / month')),
         h('span', { class: 'su-plan-meta' }, p.custom ? 'Any size, price agreed with our team' : p.limit ? `Up to ${p.limit} students` : 'Unlimited students', p.free ? ' · STARTER features' : !p.custom && v.cycle === 'yearly' && p.yearly_discount ? ` · ${lkr(priceOf(p) * 12)} a year` : ''),
         h('ul', {},
           p.everything_in ? h('li', {}, ic(I.check, 13), h('b', {}, `Everything in ${p.everything_in}`)) : null,
@@ -203,7 +209,10 @@ function stepReview() {
 function render(focusFirstError = false) {
   const body = [stepYou, stepClasses, stepPlan, stepReview][step]();
   const last = step === STEPS.length - 1;
+  const promo = v.promo ? D.promos?.[v.promo] : null;
   fill(app,
+    promo ? h('div', { class: 'su-promo', role: 'status' }, h('span', { class: 'su-promo-ic', 'aria-hidden': 'true' }, '🎁'),
+      h('span', {}, h('b', { 'data-no-i18n': '' }, `${v.promo}: `), h('b', {}, promo.title), ' ', h('span', {}, 'is saved with your request. Our team adds it when your account is made.'))) : null,
     h('ol', { class: 'su-steps', 'aria-label': 'Steps' }, STEPS.map((s, i) => h('li', { class: `su-step ${i < step ? 'done' : ''} ${i === step ? 'on' : ''}`, 'aria-current': i === step ? 'step' : null },
       `${i + 1}. ${s.title}`, h('small', {}, s.sub)))),
     h('form', { class: 'su-panel', novalidate: true, onsubmit: (e) => { e.preventDefault(); last ? submit() : next(); } },

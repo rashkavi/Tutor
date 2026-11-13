@@ -148,7 +148,7 @@ function lp_icon(string $n, int $s = 22): string
                         <a role="menuitem" href="parent/"><span class="lp-dot lp-violet"><?= lp_icon('parent', 18) ?></span><span><b>Parent</b><small>Follow your child</small></span></a>
                     </div>
                 </div>
-                <a href="<?= $signup ?>" class="lp-btn lp-btn-white lp-hide-sm lp-nav-start">Start free</a>
+                <a href="<?= $signup ?>" class="lp-btn lp-btn-primary lp-hide-sm lp-nav-start">Start free</a>
                 <button type="button" class="lp-burger" id="lp-burger" aria-label="Open the menu" aria-expanded="false"><?= lp_icon('menu', 24) ?></button>
             </div>
         </div>
@@ -175,7 +175,7 @@ function lp_icon(string $n, int $s = 22): string
                     </h1>
                     <p class="lp-lead" data-reveal>Students, class fees, QR attendance, Zoom classes, secure recordings, tutes and parents. One app for Sri Lankan tutors, in Sinhala, Tamil and English.</p>
                     <div class="lp-hero-cta" data-reveal>
-                        <a href="<?= $signup ?>" class="lp-btn lp-btn-white lp-btn-lg lp-shine"><span>Start free today</span> <?= lp_icon('arrow', 18) ?></a>
+                        <a href="<?= $signup ?>" class="lp-btn lp-btn-primary lp-btn-lg lp-shine"><span>Start free today</span> <?= lp_icon('arrow', 18) ?></a>
                         <a href="#logins" class="lp-btn lp-btn-glass lp-btn-lg"><?= lp_icon('play', 16) ?> <span>Student and parent logins</span></a>
                     </div>
                     <ul class="lp-hero-facts" data-reveal>
@@ -186,8 +186,8 @@ function lp_icon(string $n, int $s = 22): string
                 </div>
 
                 <!-- live dashboard mock-up with real class covers (drawn in HTML, animated by landing.js) -->
-                <div class="lp-stage" id="lp-stage" aria-hidden="true" data-no-i18n>
-                    <div class="lp-mock" id="lp-mock">
+                <div class="lp-stage" id="lp-stage" data-parallax="0.08">
+                    <div class="lp-mock" id="lp-mock" aria-hidden="true" data-no-i18n>
                         <div class="lp-mock-bar"><i></i><i></i><i></i><span>tutor / dashboard</span></div>
                         <div class="lp-mock-body">
                             <div class="lp-mock-side"><b></b><span class="on"></span><span></span><span></span><span></span><span></span></div>
@@ -199,9 +199,9 @@ function lp_icon(string $n, int $s = 22): string
                                     <div class="lp-ms lp-ms-violet"><small>Attendance</small><b><span data-count="91">0</span>%</b><em><i style="--h:80%"></i><i style="--h:70%"></i><i style="--h:88%"></i><i style="--h:84%"></i><i style="--h:91%"></i></em></div>
                                 </div>
                                 <div class="lp-mock-classes">
-                                    <div class="lp-mc"><img src="<?= $img ?>cover-al-2029.webp" alt=""><span><b>2029 A/L Combined Maths</b><small>86 students · Tue 3:30 PM</small></span></div>
-                                    <div class="lp-mc"><img src="<?= $img ?>cover-ol-2028.webp" alt=""><span><b>2028 O/L Mathematics</b><small>94 students · Thu 4:00 PM</small></span></div>
-                                    <div class="lp-mc"><img src="<?= $img ?>cover-ol-2030.webp" alt=""><span><b>2030 O/L Mathematics</b><small>68 students · Sat 9:00 AM</small></span></div>
+                                    <div class="lp-mc"><img src="<?= $img ?>cover-1.svg" alt=""><span><b>2029 A/L Combined Maths</b><small>86 students · Tue 3:30 PM</small></span></div>
+                                    <div class="lp-mc"><img src="<?= $img ?>cover-2.svg" alt=""><span><b>2028 O/L Science</b><small>94 students · Thu 4:00 PM</small></span></div>
+                                    <div class="lp-mc"><img src="<?= $img ?>cover-3.svg" alt=""><span><b>2027 A/L Physics</b><small>68 students · Sat 9:00 AM</small></span></div>
                                 </div>
                                 <div class="lp-mock-chart">
                                     <small>Fee collection</small>
@@ -211,14 +211,15 @@ function lp_icon(string $n, int $s = 22): string
                             </div>
                         </div>
                     </div>
-                    <div class="lp-toast lp-toast-1"><span class="lp-dot lp-green"><?= lp_icon('check', 16) ?></span><span><b>Payment approved</b><small>Kavindi · LKR 3,000 · November</small></span></div>
-                    <div class="lp-toast lp-toast-2"><img src="<?= $img ?>zoom.webp" alt="" width="32" height="32"><span><b>Zoom class started</b><small>2029 A/L Combined Maths</small></span></div>
-                    <div class="lp-toast lp-toast-3"><span class="lp-dot lp-violet"><?= lp_icon('lock', 16) ?></span><span><b>Recording unlocked</b><small>Open for 7 days · 2 views left</small></span></div>
-                    <div class="lp-phone">
+                    <div aria-hidden="true" data-no-i18n class="lp-toast lp-toast-1"><span class="lp-dot lp-green"><?= lp_icon('check', 16) ?></span><span><b>Payment approved</b><small>Kavindi · LKR 3,000 · November</small></span></div>
+                    <div aria-hidden="true" data-no-i18n class="lp-toast lp-toast-2"><img src="<?= $img ?>zoom.webp" alt="" width="32" height="32"><span><b>Zoom class started</b><small>2029 A/L Combined Maths</small></span></div>
+                    <div aria-hidden="true" data-no-i18n class="lp-toast lp-toast-3"><span class="lp-dot lp-violet"><?= lp_icon('lock', 16) ?></span><span><b>Recording unlocked</b><small>Open for 7 days · 2 views left</small></span></div>
+                    <a href="offer.php?code=QR25" class="lp-scanme"><span aria-hidden="true">🎁</span> <span>Scan this QR with your phone</span></a>
+                    <div aria-hidden="true" data-no-i18n class="lp-phone">
                         <div class="lp-phone-notch"></div>
                         <div class="lp-phone-screen">
                             <small>Student ID</small>
-                            <div class="lp-qr"><?php for ($i = 0; $i < 49; $i++) { echo '<i' . ((($i * 7 + $i % 5 * 3) % 11) < 6 ? ' class="on"' : '') . '></i>'; } ?><span class="lp-scan"></span></div>
+                            <div class="lp-qr-real" data-qr="offer.php?code=QR25"><span class="lp-scan"></span></div>
                             <b>Kavindi Silva</b>
                             <small>ST-000248</small>
                         </div>
@@ -236,7 +237,7 @@ function lp_icon(string $n, int $s = 22): string
         <!-- ============ FREE FOR SMALL CLASSES ============ -->
         <section class="lp-sec lp-free" id="free">
             <div class="lp-wrap lp-free-in">
-                <div class="lp-free-copy">
+                <div class="lp-free-copy" data-reveal="left">
                     <span class="lp-eyebrow lp-eyebrow-green" data-reveal>Free for small classes</span>
                     <h2 class="lp-h2" data-reveal><span>Up to 50 students?</span><br><span class="lp-grad-green">It's completely free.</span></h2>
                     <p class="lp-sub" data-reveal>Just starting out, or teaching a small group? Use ENLIXO Tutor with the STARTER features, Zoom classes included, and pay nothing while you teach 50 students or fewer.</p>
@@ -253,8 +254,7 @@ function lp_icon(string $n, int $s = 22): string
                         <a href="#pricing" class="lp-btn lp-btn-soft lp-btn-lg">Compare plans</a>
                     </div>
                 </div>
-                <div class="lp-calc" data-reveal id="lp-calc" data-plans="<?= $e(json_encode($calcPlans)) ?>" data-free="<?= $freeLimit ?>" data-signup="<?= $signup ?>">
-                    <img class="lp-calc-award" src="<?= $img ?>award.webp" alt="" width="150" height="138" aria-hidden="true">
+                <div class="lp-calc" data-reveal="right" id="lp-calc" data-plans="<?= $e(json_encode($calcPlans)) ?>" data-free="<?= $freeLimit ?>" data-signup="<?= $signup ?>">
                     <label for="lp-calc-range" class="lp-calc-q">How many students do you teach?</label>
                     <div class="lp-calc-n"><output id="lp-calc-n" for="lp-calc-range" data-no-i18n>35</output><span>students</span></div>
                     <input type="range" id="lp-calc-range" min="5" max="700" step="5" value="35" aria-describedby="lp-calc-res">
@@ -307,13 +307,16 @@ function lp_icon(string $n, int $s = 22): string
                             <h3>QR attendance in a second</h3>
                             <p>Every student gets a digital ID with a QR code. Scan at the door and the parent knows they arrived. Absent students who watched the recording are counted too.</p>
                         </div>
-                        <div class="lp-scan-demo" aria-hidden="true" data-no-i18n>
-                            <div class="lp-scan-card"><div class="lp-qr lp-qr-sm"><?php for ($i = 0; $i < 49; $i++) { echo '<i' . ((($i * 5 + $i % 3 * 4) % 9) < 5 ? ' class="on"' : '') . '></i>'; } ?></div><span class="lp-scan"></span></div>
-                            <div class="lp-scan-log"><span>Present · 3:30 PM</span><span>Present · 3:31 PM</span><span>Present · 3:31 PM</span><span class="new">Present · 3:32 PM</span></div>
+                        <div class="lp-scan-demo">
+                            <div class="lp-scan-card"><div class="lp-qr-real lp-qr-big" data-qr="offer.php?code=QR25"></div><span class="lp-scan"></span><a href="offer.php?code=QR25" class="lp-gift-tag">Scan me · a gift inside</a></div>
+                            <div class="lp-scan-log" aria-hidden="true" data-no-i18n><span>Present · 3:30 PM</span><span>Present · 3:31 PM</span><span>Present · 3:31 PM</span><span class="new">Present · 3:32 PM</span></div>
                         </div>
                     </article>
                     <article class="lp-tile lp-t-img" data-reveal data-tilt>
-                        <img src="<?= $img ?>add-payment.webp" alt="" class="lp-tile-art" loading="lazy" aria-hidden="true">
+                        <div class="lp-tile-ui lp-ui-slip" aria-hidden="true" data-no-i18n>
+                            <div class="lp-slip"><i></i><i></i><i></i><b>LKR 3,000</b></div>
+                            <div class="lp-slip-act"><span class="ok">✓ Approved</span><small>Kavindi · Nov</small></div>
+                        </div>
                         <span class="lp-dot lp-green"><?= lp_icon('card') ?></span>
                         <h3>Fees that collect themselves</h3>
                         <p>Monthly fee per class, bank slip uploads, one-tap approval, card payments and penalties. See who owes what at a glance.</p>
@@ -325,7 +328,9 @@ function lp_icon(string $n, int $s = 22): string
                         <div class="lp-timer" aria-hidden="true"><b data-count="7" data-no-i18n>0</b><small>days left to watch</small></div>
                     </article>
                     <article class="lp-tile lp-t-img" data-reveal data-tilt>
-                        <img src="<?= $img ?>callendar.webp" alt="" class="lp-tile-art" loading="lazy" aria-hidden="true">
+                        <div class="lp-tile-ui lp-ui-week" aria-hidden="true" data-no-i18n>
+                            <?php foreach (['M' => [1, 0], 'T' => [0, 1], 'W' => [1, 1], 'T ' => [0, 0], 'F' => [1, 0], 'S' => [1, 1]] as $d => [$a, $b]) { echo '<div><small>' . trim($d) . '</small>' . ($a ? '<i class="p"></i>' : '<i></i>') . ($b ? '<i class="o"></i>' : '<i></i>') . '</div>'; } ?>
+                        </div>
                         <span class="lp-dot lp-zoom"><img src="<?= $img ?>zoom.webp" alt="" width="26" height="26"></span>
                         <h3>Timetable and Zoom</h3>
                         <p>Weekly physical and online classes, extra classes and exam countdowns. Zoom meetings are made for you, on every plan.</p>
@@ -364,7 +369,7 @@ function lp_icon(string $n, int $s = 22): string
                     <p class="lp-sub">Students sign in to the Student Portal, parents to the Parent Portal, and you run everything from your dashboard. Each one sees only what is theirs, on any phone, with no app to install.</p>
                 </div>
                 <div class="lp-portals">
-                    <article class="lp-portal lp-portal-student" data-reveal>
+                    <article class="lp-portal lp-portal-student" data-reveal="left">
                         <div class="lp-portal-dev" aria-hidden="true" data-no-i18n>
                             <img class="lp-portal-photo" src="<?= $img ?>portal-3.webp" alt="" loading="lazy">
                             <div class="lp-dev-phone">
@@ -418,7 +423,7 @@ function lp_icon(string $n, int $s = 22): string
                             <div class="lp-portal-foot"><code data-no-i18n><?= $e($host) ?>/tutor</code><a href="tutor/" class="lp-btn lp-btn-primary"><span>Tutor sign in</span> <?= lp_icon('arrow', 16) ?></a></div>
                         </div>
                     </article>
-                    <article class="lp-portal lp-portal-parent" data-reveal>
+                    <article class="lp-portal lp-portal-parent" data-reveal="right">
                         <div class="lp-portal-dev" aria-hidden="true" data-no-i18n>
                             <img class="lp-portal-photo" src="<?= $img ?>photo-1.webp" alt="" loading="lazy">
                             <div class="lp-dev-phone">
@@ -476,7 +481,7 @@ function lp_icon(string $n, int $s = 22): string
                         <li><?= lp_icon('check', 16) ?> <span>Names and class details stay as you typed them</span></li>
                     </ul>
                 </div>
-                <div class="lp-lang-demo" data-reveal id="lp-lang-demo">
+                <div class="lp-lang-demo" data-reveal="right" id="lp-lang-demo">
                     <div class="lp-ld-switch" role="tablist" aria-label="Try a language" data-no-i18n>
                         <button type="button" role="tab" data-lang="si" aria-selected="true" class="on" lang="si">සිංහල</button>
                         <button type="button" role="tab" data-lang="ta" aria-selected="false" lang="ta">தமிழ்</button>
@@ -508,6 +513,30 @@ function lp_icon(string $n, int $s = 22): string
             </div>
         </section>
 
+        <!-- ============ REAL CLASSES: photo strip that moves sideways with the scroll ============ -->
+        <section class="lp-sec lp-strip-sec" id="classes" aria-label="Made for real classes">
+            <div class="lp-words" aria-hidden="true" data-no-i18n>
+                <div class="lp-words-row" data-scroll-x="-0.35">Classes · Fees · Attendance · Recordings · Tutes · Parents · Classes · Fees · Attendance · Recordings ·</div>
+                <div class="lp-words-row lp-words-o" data-scroll-x="0.3">සිංහල · தமிழ் · English · Zoom · QR · සිංහල · தமிழ் · English · Zoom · QR ·</div>
+            </div>
+            <div class="lp-wrap">
+                <div class="lp-head" data-reveal>
+                    <span class="lp-eyebrow">Made for real classes</span>
+                    <h2 class="lp-h2"><span>Hall classes, Zoom classes,</span> <span class="lp-grad">and everything in between.</span></h2>
+                </div>
+            </div>
+            <div class="lp-strip" id="lp-strip">
+                <div class="lp-strip-track">
+                    <?php foreach ([['portal-1', 'Hall classes', 'QR attendance at the door'], ['photo-3', 'Paper classes', 'Marks and papers in one place'], ['portal-2', 'Group classes', 'Every batch, every year'], ['photo-1', 'Online on Zoom', 'Recordings for paid students'], ['portal-3', 'Revision', 'Tutes posted or online'], ['photo-2', 'Your team', 'Staff logins for assistants']] as $i => [$pic, $t, $sub]) { ?>
+                        <figure class="lp-shot<?= $i % 2 ? ' lp-shot-low' : '' ?>">
+                            <img src="<?= $img . $pic ?>.webp" alt="" loading="lazy">
+                            <figcaption><b><?= $e($t) ?></b><small><?= $e($sub) ?></small></figcaption>
+                        </figure>
+                    <?php } ?>
+                </div>
+            </div>
+        </section>
+
         <!-- ============ HOW IT WORKS ============ -->
         <section class="lp-sec" id="how">
             <div class="lp-wrap">
@@ -516,8 +545,12 @@ function lp_icon(string $n, int $s = 22): string
                     <h2 class="lp-h2"><span>Teaching on ENLIXO in</span> <span class="lp-grad">three steps.</span></h2>
                 </div>
                 <div class="lp-how">
-                    <img class="lp-how-art" src="<?= $img ?>select-user.webp" alt="" loading="lazy" aria-hidden="true" data-reveal>
-                    <ol class="lp-steps" id="lp-steps">
+                    <div class="lp-how-photo" data-reveal="left" aria-hidden="true">
+                        <img src="<?= $img ?>photo-2.webp" alt="" loading="lazy" data-parallax="-0.06">
+                        <div class="lp-how-chip c1" data-no-i18n><span class="lp-dot lp-green">✓</span><span><b>Account ready</b><small>ENLIXO team · today</small></span></div>
+                        <div class="lp-how-chip c2" data-no-i18n><span class="lp-dot lp-blue"><?= lp_icon('users', 16) ?></span><span><b>248 students added</b><small>from your Excel sheet</small></span></div>
+                    </div>
+                    <ol class="lp-steps" id="lp-steps" data-reveal="right">
                         <li data-reveal><span class="lp-step-n">1</span><div><h3>Send your request</h3><p>Tell us about your classes and pick a plan. It takes about two minutes.</p></div></li>
                         <li data-reveal><span class="lp-step-n">2</span><div><h3>We set you up</h3><p>Our team calls you, makes your account and helps you add your classes and students.</p></div></li>
                         <li data-reveal><span class="lp-step-n">3</span><div><h3>Teach, we handle the rest</h3><p>Fees, attendance and recordings run by themselves. Free up to 50 students; bigger plans start with a free trial.</p></div></li>
@@ -639,7 +672,14 @@ function lp_icon(string $n, int $s = 22): string
                     <span class="lp-eyebrow">FAQ</span>
                     <h2 class="lp-h2"><span>Questions tutors</span> <span class="lp-grad">ask us.</span></h2>
                     <p class="lp-sub">Something else? Send your request and our team will call you.</p>
-                    <img class="lp-faq-art" src="<?= $img ?>questions-concept.webp" alt="" loading="lazy" aria-hidden="true">
+                    <div class="lp-talk" data-reveal="left">
+                        <img src="<?= $img ?>photo-1.webp" alt="" loading="lazy" aria-hidden="true">
+                        <div class="lp-talk-in">
+                            <b>Rather talk to a person?</b>
+                            <span>Send your request and our team calls you within one working day.</span>
+                            <a href="<?= $signup ?>" class="lp-btn lp-btn-primary">Send a request</a>
+                        </div>
+                    </div>
                 </div>
                 <div class="lp-faq">
                     <?php $faq = [
@@ -671,7 +711,7 @@ function lp_icon(string $n, int $s = 22): string
                     <h3>Bring your class online this week.</h3>
                     <p>Send your request in two minutes. Our team calls you and sets everything up.</p>
                     <div class="lp-foot-cta-btns">
-                        <a href="<?= $signup ?>" class="lp-btn lp-btn-white lp-btn-lg lp-shine"><span>Start free today</span> <?= lp_icon('arrow', 18) ?></a>
+                        <a href="<?= $signup ?>" class="lp-btn lp-btn-primary lp-btn-lg lp-shine"><span>Start free today</span> <?= lp_icon('arrow', 18) ?></a>
                         <a href="#pricing" class="lp-btn lp-btn-glass lp-btn-lg">See pricing</a>
                     </div>
                 </div>
@@ -718,6 +758,8 @@ function lp_icon(string $n, int $s = 22): string
         </div>
     </footer>
 
+    <div class="lp-cursor" aria-hidden="true"></div><div class="lp-cursor-dot" aria-hidden="true"></div>
+    <script src="assets/landing/vendor/qrcode-generator-1.4.4.js" defer></script>
     <script src="assets/landing/landing.js?v=<?= $v ?>" defer></script>
 </body>
 

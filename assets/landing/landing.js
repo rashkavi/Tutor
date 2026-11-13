@@ -284,6 +284,79 @@
     new IntersectionObserver(([en]) => { if (en.isIntersecting && langTimer === null) startAuto(); }, { threshold: 0.4 }).observe(demo);
   }
 
+  // ---------- real QR codes: scanning opens the 25% off STARTER offer (offer.php?code=QR25) ----------
+  $$('.lp-qr-real[data-qr]').forEach((el) => {
+    if (typeof window.qrcode !== 'function') return;
+    const qr = window.qrcode(0, 'M');
+    qr.addData(new URL(el.dataset.qr, location.href).href);
+    qr.make();
+    el.insertAdjacentHTML('afterbegin', qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true }).replace(/fill="black"/g, 'fill="#050b1f"'));
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', 'QR code: scan it with your phone camera for a 25% off STARTER offer');
+  });
+
+  // ---------- cursor: a ring that follows the pointer and grows over things you can press ----------
+  if (!reduce && fine) {
+    const ring = $('.lp-cursor');
+    const dot = $('.lp-cursor-dot');
+    if (ring && dot) {
+      let mx = -100; let my = -100; let rx = -100; let ry = -100; let shown = false;
+      addEventListener('pointermove', (e) => {
+        mx = e.clientX; my = e.clientY;
+        if (!shown) { shown = true; rx = mx; ry = my; document.body.classList.add('lp-has-cursor'); }
+        dot.style.transform = `translate(${mx}px, ${my}px)`;
+        const t = e.target.closest?.('a, button, [role=tab], summary, input[type=range], label');
+        ring.classList.toggle('hover', !!t);
+        const dark = !!e.target.closest?.('.lp-hero, .lp-lang-sec, .lp-foot, .lp-t-dark, .lp-calc, .lp-plan-pop, .lp-portal-dev, .lp-shot, .lp-talk, .lp-how-photo');
+        ring.classList.toggle('on-dark', dark); dot.classList.toggle('on-dark', dark);
+      }, { passive: true });
+      document.addEventListener('pointerleave', () => { shown = false; document.body.classList.remove('lp-has-cursor'); });
+      addEventListener('pointerdown', () => ring.classList.add('down'));
+      addEventListener('pointerup', () => ring.classList.remove('down'));
+      (function loop() {
+        rx += (mx - rx) * 0.18; ry += (my - ry) * 0.18;
+        ring.style.transform = `translate(${rx}px, ${ry}px)`;
+        requestAnimationFrame(loop);
+      }());
+    }
+  }
+
+  // ---------- scroll motion: parallax, words that slide sideways, the photo strip ----------
+  if (!reduce) {
+    const par = $$('[data-parallax]');
+    const words = $$('[data-scroll-x]');
+    const strip = $('#lp-strip');
+    const track = $('.lp-strip-track');
+    let ticking = false;
+    const frame = () => {
+      ticking = false;
+      const vh = innerHeight;
+      par.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.bottom < -200 || r.top > vh + 200) return;
+        const off = (r.top + r.height / 2 - vh / 2) * Number(el.dataset.parallax);
+        el.style.translate = `0 ${off.toFixed(1)}px`;
+      });
+      words.forEach((el) => {
+        const r = el.parentElement.getBoundingClientRect();
+        if (r.bottom < -200 || r.top > vh + 200) return;
+        el.style.transform = `translateX(${((r.top - vh / 2) * Number(el.dataset.scrollX)).toFixed(1)}px)`;
+      });
+      if (strip && track) {
+        const r = strip.getBoundingClientRect();
+        if (r.bottom > -100 && r.top < vh + 100) {
+          const pr = Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height)));
+          const max = Math.max(0, track.scrollWidth - strip.clientWidth);
+          track.style.transform = `translateX(${(-pr * max).toFixed(1)}px)`;
+        }
+      }
+    };
+    const onScrollMotion = () => { if (!ticking) { ticking = true; requestAnimationFrame(frame); } };
+    addEventListener('scroll', onScrollMotion, { passive: true });
+    addEventListener('resize', onScrollMotion);
+    frame();
+  }
+
   // ---------- monthly / yearly prices ----------
   const tween = (el, to) => {
     const from = Number(el.textContent.replace(/,/g, '')) || 0;
