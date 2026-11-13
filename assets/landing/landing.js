@@ -168,6 +168,18 @@
     tabs.forEach((t) => t.addEventListener('click', () => { clearInterval(auto); auto = null; }));
   }
 
+  // ---------- page language: saved choice, else the device language (set in the <head>); buttons change it ----------
+  const setButtons = (lang) => $$('[data-set-lang]').forEach((b) => { const on = b.dataset.setLang === lang; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+  const pageLang = (lang, remember) => {
+    document.documentElement.setAttribute('data-lp-lang', lang);
+    setButtons(lang);
+    window.EnlixoI18n?.apply(lang);
+    if (remember) { try { localStorage.setItem('lang', lang); } catch { /* private mode */ } }
+  };
+  setButtons(window.LP_LANG || 'en');
+  if ((window.LP_LANG || 'en') !== 'en' && window.EnlixoI18n?.lang !== window.LP_LANG) pageLang(window.LP_LANG, false);
+  $$('[data-set-lang]').forEach((b) => b.addEventListener('click', () => pageLang(b.dataset.setLang, true)));
+
   // ---------- "how many students?" calculator: FREE up to the free limit, then the cheapest plan ----------
   const calc = $('#lp-calc');
   if (calc) {
@@ -181,19 +193,23 @@
     const note = $('#lp-calc-note');
     const cta = $('#lp-calc-cta');
     let last = '';
+    const custom = plans.find((p) => p.custom);
+    const maxLimit = Math.max(...plans.filter((p) => !p.custom && p.limit).map((p) => p.limit));
     const best = (n) => {
       if (n <= freeMax) return { key: 'free', name: 'FREE', cost: 0 };
+      if (n > maxLimit) return { key: custom?.key ?? 'pro', name: custom?.name ?? 'CUSTOM', cost: null };
       let pick = null;
       for (const p of plans) {
-        if (p.key === 'free' || p.limit === null) continue;
+        if (p.key === 'free' || p.custom || p.limit === null) continue;
         const extra = Math.max(0, n - p.limit);
         if (extra && !p.pack_price) continue;
         const packs = Math.ceil(extra / (p.pack_size || 50));
         const cost = p.monthly + packs * (p.pack_price || 0);
         if (!pick || cost < pick.cost) pick = { key: p.key, name: p.name, cost, packs };
       }
-      return pick ?? { key: 'pro', name: 'PRO', cost: null };
+      return pick ?? { key: custom?.key ?? 'pro', name: custom?.name ?? 'CUSTOM', cost: null };
     };
+    // English here; i18n-auto.js translates it (phrases and patterns in bin/i18n-phrases.py)
     const update = () => {
       const n = Number(range.value);
       out.textContent = n;
@@ -202,13 +218,13 @@
       const free = b.key === 'free';
       calc.classList.toggle('is-free', free);
       planEl.textContent = b.name;
-      priceEl.textContent = b.cost === null ? 'Custom' : `LKR ${fmt(b.cost)}`;
-      perEl.textContent = b.cost === null ? 'we send you a price' : 'a month';
+      priceEl.textContent = b.cost === null ? "Let's talk" : `LKR ${fmt(b.cost)}`;
+      perEl.textContent = b.cost === null ? 'one price for your class' : 'a month';
       note.textContent = free ? `Free while you teach up to ${freeMax} students. No card, no invoices.`
-        : b.cost === null ? 'Over the PRO limit: our team gives you a price for your class.'
-          : `${b.packs ? `Includes ${b.packs} extra pack${b.packs > 1 ? 's' : ''} of 50 students. ` : ''}Starts with a free trial.`;
+        : b.cost === null ? `More than ${maxLimit} students: we make a CUSTOM plan and price with you.`
+          : b.packs ? `Includes ${b.packs} extra pack${b.packs > 1 ? 's' : ''} of 50 students. Starts with a free trial.` : 'Starts with a free trial.';
       cta.href = `${calc.dataset.signup}?plan=${b.key}`;
-      cta.firstChild.textContent = free ? 'Start with FREE ' : `Start with ${b.name} `;
+      $('#lp-calc-cta-t').textContent = free ? 'Start with FREE' : b.cost === null ? 'Talk to us' : `Start with ${b.name}`;
       if (b.key !== last) { [planEl, priceEl].forEach((x) => { x.classList.remove('bump'); void x.offsetWidth; x.classList.add('bump'); }); last = b.key; }
     };
     range.addEventListener('input', update);
@@ -279,8 +295,8 @@
   $$('.lp-cycle button').forEach((b) => b.addEventListener('click', () => {
     const cycle = b.dataset.cycle;
     $$('.lp-cycle button').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', String(x === b)); });
-    $$('.lp-price b').forEach((p) => tween(p, Number(p.dataset[cycle])));
-    $$('.lp-price-note').forEach((n) => { n.textContent = n.dataset[`${cycle}Note`]; });
+    $$('.lp-price b[data-monthly]').forEach((p) => tween(p, Number(p.dataset[cycle])));
+    $$('.lp-price-note[data-monthly-note]').forEach((n) => { n.textContent = n.dataset[`${cycle}Note`]; });
     $$('[data-plan-link]').forEach((a) => { a.href = `tutor-registration-application.php?plan=${a.dataset.planLink}&cycle=${cycle}`; });
   }));
 })();

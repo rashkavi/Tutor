@@ -81,7 +81,7 @@ const planSection = section('Plan and Billing', 'What the tutor pays for. Prices
     h('div', { class: 'col-12 col-lg-6' },
       h('div', { class: 'text-14 main-text mb-1 d-inline-flex align-items-center gap-2' }, 'Billing', infoTip('Monthly: an invoice every month. Yearly: one invoice for 12 months with the plan\'s yearly discount.', 'Billing')),
       h('div', { class: 'd-flex align-items-center gap-3 flex-wrap' }, cycle, yearlyNote)),
-    fieldEl('packs', 'Extra Students (packs of 50)', packs, { col: 'col-12 col-lg-6', info: 'Each pack adds 50 students to the plan limit for LKR 1,000 a month (START and GROW). PRO above 300 students uses a custom price.' })),
+    fieldEl('packs', 'Extra Students (packs of 50)', packs, { col: 'col-12 col-lg-6', info: 'Each pack adds 50 students to the plan limit for LKR 1,000 a month (STARTER and GROW). Above 500 students use CUSTOM with an agreed price.' })),
   h('div', { class: 'text-14 main-text mt-4 mb-2' }, 'Add-ons'), addons,
   h('div', { class: 'form-check form-switch ex-switch-bs mt-3' }, customOn, h('label', { class: 'text-14 main-text', for: 'at-custom-on' }, 'Give this tutor a custom price')),
   customBox);

@@ -41,6 +41,16 @@ if (q.get('plan')) v.plan = q.get('plan');
 if (q.get('cycle') === 'yearly' || q.get('cycle') === 'monthly') v.cycle = q.get('cycle');
 const save = () => { try { sessionStorage.setItem(DRAFT, JSON.stringify({ ...v, agree: false, website: '' })); } catch { /* ignore */ } };
 
+// language buttons (same choice as the landing page and the app)
+const setButtons = (lang) => document.querySelectorAll('[data-set-lang]').forEach((b) => b.classList.toggle('on', b.dataset.setLang === lang));
+setButtons(window.LP_LANG || 'en');
+if ((window.LP_LANG || 'en') !== 'en') window.EnlixoI18n?.apply(window.LP_LANG);
+document.querySelectorAll('[data-set-lang]').forEach((b) => b.addEventListener('click', () => {
+  setButtons(b.dataset.setLang);
+  window.EnlixoI18n?.apply(b.dataset.setLang);
+  try { localStorage.setItem('lang', b.dataset.setLang); } catch { /* private mode */ }
+}));
+
 load();
 
 async function load() {
@@ -142,13 +152,16 @@ function stepPlan() {
         p.key === (suggest ?? 'grow') ? h('span', { class: `su-plan-pop${p.free ? ' su-plan-pop-free' : ''}` }, suggest ? 'Fits your class' : 'Most popular') : null,
         h('span', { class: 'su-plan-check' }, ic(I.check, 14)),
         h('span', { class: 'su-plan-name' }, p.name),
-        h('span', { class: 'su-plan-price' }, p.free ? 'Free' : lkr(priceOf(p)), h('small', {}, p.free ? ' always' : ' / month')),
-        h('span', { class: 'su-plan-meta' }, p.limit ? `Up to ${p.limit} students` : 'Unlimited students', p.free ? ' · START features' : v.cycle === 'yearly' && p.yearly_discount ? ` · ${lkr(priceOf(p) * 12)} a year` : ''),
+        h('span', { class: 'su-plan-price' }, p.free ? 'Free' : p.custom ? "Let's talk" : lkr(priceOf(p)), p.custom ? null : h('small', {}, p.free ? ' always' : ' / month')),
+        h('span', { class: 'su-plan-meta' }, p.custom ? 'Any size, price agreed with our team' : p.limit ? `Up to ${p.limit} students` : 'Unlimited students', p.free ? ' · STARTER features' : !p.custom && v.cycle === 'yearly' && p.yearly_discount ? ` · ${lkr(priceOf(p) * 12)} a year` : ''),
         h('ul', {},
           p.everything_in ? h('li', {}, ic(I.check, 13), h('b', {}, `Everything in ${p.everything_in}`)) : null,
           p.new_features.slice(0, p.everything_in ? 4 : 5).map((f) => h('li', {}, ic(I.check, 13), f)))))),
     errors.plan ? h('span', { class: 'su-err', role: 'alert' }, errors.plan) : null,
-    chosen?.free
+    chosen?.custom
+      ? h('div', { class: 'su-trial' }, h('span', { class: 'lp-dot lp-blue' }, ic(I.phone, 20)),
+        h('span', {}, h('b', {}, 'We call you to make your plan.'), ' Write your classes and the add-ons you need in the message on the last step, and we agree one price that fits.'))
+      : chosen?.free
       ? h('div', { class: 'su-trial su-trial-free' }, h('span', { class: 'lp-dot lp-green' }, ic(I.gift, 20)),
         h('span', {}, h('b', {}, `Free while you teach up to ${chosen.limit} students.`), ' No card and no invoices. When your class grows, you pick a paid plan and keep everything.'))
       : h('div', { class: 'su-trial' }, h('span', { class: 'lp-dot lp-violet' }, ic(I.gift, 20)),
@@ -175,7 +188,7 @@ function stepReview() {
         row('Subject', v.subject), row('Grades', v.grades), row('Institute', v.institute), row('Teaching', D.modes[v.mode]), row('District', v.district), row('Students', v.students))),
       h('div', { class: 'su-card', style: { gridColumn: '1 / -1' } }, h('h3', {}, 'Plan', edit(2)), h('dl', {},
         row('Plan', p ? (p.free ? `${p.name}, up to ${p.limit} students` : `${p.name}, ${v.cycle}`) : ''),
-        row('Price', p ? (p.free ? 'Free' : `${lkr(priceOf(p))} a month${v.cycle === 'yearly' && p.yearly_discount ? `, billed ${lkr(priceOf(p) * 12)} a year` : ''}`) : ''),
+        row('Price', p ? (p.free ? 'Free' : p.custom ? 'Agreed on a call with our team' : `${lkr(priceOf(p))} a month${v.cycle === 'yearly' && p.yearly_discount ? `, billed ${lkr(priceOf(p) * 12)} a year` : ''}`) : ''),
         row('Start', p?.free ? 'Free from day one' : `${D.trial.days}-day free trial`), row('Add-ons', v.addons.map((k) => D.addons.find((a) => a.key === k)?.name).filter(Boolean).join(', '))))),
     h('div', { class: 'su-grid', style: { marginTop: '20px' } },
       field('message', 'Anything we should know?', h('textarea', { class: 'su-in', name: 'message', maxlength: 500, placeholder: 'For example: I have 3 classes and want to move my students from WhatsApp groups.', oninput: (e) => { v.message = e.target.value; save(); } }, v.message), { opt: true, span: 's6' })),

@@ -23,15 +23,24 @@ header('X-Frame-Options: DENY');
     <link rel="icon" href="favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/landing/landing.css?v=<?= $v ?>">
+    <script>
+        // Same language as the landing page: the saved choice, else the device language.
+        (function () {
+            var saved = null;
+            try { saved = localStorage.getItem('lang'); } catch (e) { }
+            var dev = (navigator.languages || [navigator.language || '']).join(',').toLowerCase();
+            window.LP_LANG = saved || (/(^|,)si/.test(dev) ? 'si' : /(^|,)ta/.test(dev) ? 'ta' : 'en');
+        }());
+    </script>
+    <script src="assets/js/i18n-auto.js?v=<?= $v ?>"></script>
 </head>
 
 <body class="lp">
     <div class="su">
         <aside class="su-aside">
-            <div class="lp-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
-            <div class="lp-grid-bg" aria-hidden="true"></div>
+            <img class="su-aside-photo" src="assets/landing/img/portal-3.webp" alt="" aria-hidden="true">
             <a href="./" class="su-aside-logo"><img src="assets/imgs/common/enlixo-light.webp" alt="<?= $e($name) ?>"></a>
             <div class="su-aside-body">
                 <span class="lp-pill"><span class="lp-pill-tag">Free</span> <span id="su-trial-pill">Free up to 50 students, no card needed</span></span>
@@ -51,7 +60,12 @@ header('X-Frame-Options: DENY');
         <main class="su-main" id="su-root">
             <div class="su-top">
                 <a href="./" class="su-top-logo"><img src="assets/imgs/common/enlixo-dark.webp" alt="<?= $e($name) ?>"></a>
-                <span>Already a tutor? <a href="tutor/">Sign in</a></span>
+                <div class="su-top-r">
+                    <div class="lp-langsw su-langsw" role="group" aria-label="Language" data-no-i18n>
+                        <button type="button" data-set-lang="si" lang="si">සිංහල</button><button type="button" data-set-lang="ta" lang="ta">தமிழ்</button><button type="button" data-set-lang="en">English</button>
+                    </div>
+                    <span><span>Already a tutor?</span> <a href="tutor/">Sign in</a></span>
+                </div>
             </div>
             <div id="su-app">
                 <div class="su-loading" aria-busy="true">

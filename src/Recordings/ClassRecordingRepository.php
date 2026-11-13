@@ -270,7 +270,7 @@ final class ClassRecordingRepository
         $expireDate = null;
         if ($expire !== '') {
             if (!$canExpire && $expire !== ($old['expire_date'] ?? null)) {
-                $err['expire_date'] = 'Closing recordings on a date is on the PRO plan';
+                $err['expire_date'] = 'Closing recordings on a date is on the GROW plan';
             } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $expire) || !strtotime($expire)) {
                 $err['expire_date'] = 'Choose a date';
             } elseif ($expire < self::now()->format('Y-m-d') && $expire !== ($old['expire_date'] ?? null)) {

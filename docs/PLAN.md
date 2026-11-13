@@ -220,3 +220,12 @@ the request (plan, billing, add-ons); saving makes the tutor with `PlatformBilli
 announcement bar, a "Free for small classes" section with a students calculator (FREE up to 50, then the cheapest plan
 with extra packs), a FREE card in Pricing, and a "Three logins" section for the Student Portal (`/portal`), Tutor
 Dashboard (`/tutor`) and Parent Portal (`/parent`).
+
+**Packages, logo-blue landing page and Sinhala / Tamil (2026-11-13).** Migration **014_packages_2026_11.sql**
+(data only, then run `php bin/seed.php`): STARTER up to 150 students for LKR 3,000, GROW up to 500 for LKR 7,500 with
+every feature that was PRO-only (`FeatureCatalog::PRO` now means GROW and CUSTOM), CUSTOM (plan_key `pro`) priced with
+the team, FREE up to 50 unchanged; the free trial now uses GROW. Every plan has Zoom. The landing page uses the logo blue
+(#0958DA) for the hero, has no grid backgrounds, and uses images already in the system (assets/landing/img, made from
+assets/imgs/slide-img, common illustrations and class covers). It opens in the language saved before, else the device
+language (si / ta), with a switcher in the menu, the mobile menu and the footer; the words come from
+`bin/i18n-phrases.py` through `assets/js/i18n-auto.js`, like the rest of the app. The sign-up page does the same.

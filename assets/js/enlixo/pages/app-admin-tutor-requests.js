@@ -17,7 +17,7 @@ document.getElementById('requests-actions').append(ActionMenu.button('Action', [
 ]));
 
 const status = (st) => (st === 'pending' ? chip('waiting', 'Pending') : chip(st));
-const PLAN = { free: 'FREE', start: 'START', grow: 'GROW', pro: 'PRO' };
+const PLAN = { free: 'FREE', start: 'STARTER', grow: 'GROW', pro: 'CUSTOM' };
 const when = (d) => new Date(d.replace(' ', 'T')).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 const ago = (d) => {
   const m = Math.round((Date.now() - new Date(d.replace(' ', 'T'))) / 60000);

@@ -13,14 +13,14 @@ namespace Enlixo\Catalog;
 final class FeatureCatalog
 {
     public const PLANS = [
-        'start' => ['id' => 1, 'name' => 'START', 'student_limit' => 50,  'price' => 'LKR 2,500 – 3,000 / month'],
-        'grow'  => ['id' => 2, 'name' => 'GROW',  'student_limit' => 150, 'price' => 'LKR 5,000 – 6,000 / month'],
-        'pro'   => ['id' => 3, 'name' => 'PRO',   'student_limit' => 300, 'price' => 'LKR 8,000 – 10,000 / month'],
+        'start' => ['id' => 1, 'name' => 'STARTER', 'student_limit' => 150,  'price' => 'LKR 3,000 / month'],
+        'grow'  => ['id' => 2, 'name' => 'GROW',    'student_limit' => 500,  'price' => 'LKR 7,500 / month'],
+        'pro'   => ['id' => 3, 'name' => 'CUSTOM',  'student_limit' => null, 'price' => 'Price agreed with our team'],
     ];
 
     private const ALL = ['start', 'grow', 'pro'];
     private const GROW_UP = ['grow', 'pro'];
-    private const PRO = ['pro'];
+    private const PRO = ['grow', 'pro']; // November 2026: GROW gets everything that was PRO-only
     private const ADDON = [];
 
     /**

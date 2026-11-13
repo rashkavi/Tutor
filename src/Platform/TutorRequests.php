@@ -46,7 +46,7 @@ final class TutorRequests
             'districts' => array_column($this->db->all('SELECT district FROM district ORDER BY district'), 'district'),
             'modes' => self::MODES,
             'heard' => self::HEARD,
-            'trial' => ['days' => (int) $rules['trial_days'], 'plan' => strtoupper((string) $rules['trial_plan']), 'students' => (int) $rules['trial_student_cap']],
+            'trial' => ['days' => (int) $rules['trial_days'], 'plan' => strtoupper((string) ($this->catalog->planByKey((string) $rules['trial_plan'])['payment_plan'] ?? $rules['trial_plan'])), 'students' => (int) $rules['trial_student_cap']],
         ];
     }
 
@@ -57,7 +57,7 @@ final class TutorRequests
         if (!$rows) { // payment_plans not filled yet: the pricing sheet values
             $rows = [];
             foreach (FeatureCatalog::PLANS as $key => $p) {
-                $rows[] = ['payment_plan_id' => $p['id'], 'payment_plan' => $p['name'], 'plan_key' => $key, 'per_month_amount' => ['start' => 3000, 'grow' => 6000, 'pro' => 10000][$key],
+                $rows[] = ['payment_plan_id' => $p['id'], 'payment_plan' => $p['name'], 'plan_key' => $key, 'per_month_amount' => ['start' => 3000, 'grow' => 7500, 'pro' => 0][$key],
                     'annual_discount' => 0, 'student_limit' => $p['student_limit'], 'extra_pack_price' => $key === 'pro' ? null : 1000, 'tagline' => ''];
             }
         }
@@ -77,11 +77,13 @@ final class TutorRequests
                 'pack_price' => $p['extra_pack_price'] === null ? null : (float) $p['extra_pack_price'],
                 'pack_size' => Lifecycle::PACK_SIZE,
                 'tagline' => (string) ($p['tagline'] ?? ''),
-                'everything_in' => $prev === null ? null : strtoupper($prev),
+                'everything_in' => $prev === null ? null : $prevName,
                 'new_features' => $prev === null ? $mine : array_values(array_diff($mine, $prevNames)),
                 'feature_count' => count($mine),
+                'custom' => $key === 'pro',
             ];
             $prev = $key;
+            $prevName = strtoupper((string) $p['payment_plan']);
         }
         array_unshift($out, self::freePlan());
         return $out;

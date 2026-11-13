@@ -37,7 +37,7 @@ final class PdoEntitlementRepository implements EntitlementRepository
         } catch (\PDOException) {
             $saved = null;
         }
-        return ['plan' => (string) ($saved['trial_plan'] ?? 'pro'), 'cap' => (int) ($saved['trial_student_cap'] ?? 30)];
+        return ['plan' => (string) ($saved['trial_plan'] ?? 'grow'), 'cap' => (int) ($saved['trial_student_cap'] ?? 30)];
     }
 
     public function activePlanKey(int $tutorId): string

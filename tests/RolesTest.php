@@ -23,7 +23,7 @@ test('owner gets every permission the package allows', function () {
     $owner = new AuthContext(1, 'tutor', 1);
     T::true($perm->can($owner, 'payments.approve'));
     T::true($perm->can($owner, 'settings.roles'), 'custom roles on GROW');
-    T::eq(false, $perm->can($owner, 'recordings.limits'), 'needs PRO controlled access');
+    T::true($perm->can($owner, 'recordings.limits'), 'controlled access is on GROW since November 2026');
 });
 
 test('staff only get their role permissions', function () {

@@ -25,16 +25,17 @@ test('add-on unlocks a feature on any plan', function () {
 });
 
 test('student limit', function () {
-    $ent = (new EntitlementService(new FakeEntitlementRepo([7 => 'start'], [], 49)))->for(7);
-    T::true($ent->canAddStudents(1), '49 + 1 <= 50');
-    T::eq(false, $ent->canAddStudents(2), '49 + 2 > 50');
+    $ent = (new EntitlementService(new FakeEntitlementRepo([7 => 'start'], [], 149)))->for(7);
+    T::true($ent->canAddStudents(1), '149 + 1 <= 150 (STARTER)');
+    T::eq(false, $ent->canAddStudents(2), '149 + 2 > 150');
 });
 
 test('toArray lists every feature with lock state', function () {
     $arr = (new EntitlementService(new FakeEntitlementRepo([7 => 'grow'])))->for(7)->toArray();
     $byKey = array_column($arr['features'], null, 'key');
     T::eq(true, $byKey['comms.whatsapp']['unlocked']);
-    T::eq('pro', $byKey['payments.arrears']['required_plan']);
+    T::eq(true, $byKey['payments.arrears']['unlocked'], 'GROW has every feature since November 2026');
+    T::eq('grow', $byKey['payments.arrears']['required_plan'] ?? 'grow');
     T::eq(null, $byKey['zoom.enviiz_account']['required_plan'], 'add-on only');
     T::eq('GROW', $arr['plan']['name']);
 });
