@@ -46,6 +46,7 @@ final class TutorRequests
             'districts' => array_column($this->db->all('SELECT district FROM district ORDER BY district'), 'district'),
             'modes' => self::MODES,
             'heard' => self::HEARD,
+            'promos' => array_map(static fn ($p) => ['plan' => $p['plan'], 'percent' => $p['percent'], 'title' => $p['title']], Promotions::CODES),
             'trial' => ['days' => (int) $rules['trial_days'], 'plan' => strtoupper((string) ($this->catalog->planByKey((string) $rules['trial_plan'])['payment_plan'] ?? $rules['trial_plan'])), 'students' => (int) $rules['trial_student_cap']],
         ];
     }
@@ -220,6 +221,7 @@ final class TutorRequests
         $cycle = ($in['cycle'] ?? '') === 'yearly' ? 'yearly' : 'monthly';
         $offered = array_column($this->addons(), 'key');
         $addons = array_values(array_intersect(array_map('strval', (array) ($in['addons'] ?? [])), $offered));
+        $promo = Promotions::find((string) ($in['promo'] ?? ''));
         if (empty($in['agree'])) {
             $e['agree'] = 'Please agree so that our team can contact you.';
         }
@@ -229,11 +231,11 @@ final class TutorRequests
 
         $id = $this->db->insert(
             'INSERT INTO requested_users (user_fname, user_lname, email, mobile, whatsapp, nic, title_title_id, requested_date_time, request_status_request_status_id,
-                    plan_key, billing_cycle, addons, institute_name, main_subject, grades, class_mode, district, expected_students, heard_from, message, ip)
-             VALUES (:f, :l, :e, :m, :w, :nic, :t, :now, :st, :p, :c, :a, :ins, :sub, :g, :mode, :d, :n, :h, :msg, :ip)',
+                    plan_key, billing_cycle, addons, institute_name, main_subject, grades, class_mode, district, expected_students, heard_from, message, ip, promo_code)
+             VALUES (:f, :l, :e, :m, :w, :nic, :t, :now, :st, :p, :c, :a, :ins, :sub, :g, :mode, :d, :n, :h, :msg, :ip, :promo)',
             ['f' => $first, 'l' => $last, 'e' => $email, 'm' => $mobile, 'w' => $wa ?? $mobile, 'nic' => $nic === '' ? '0' : $nic, 't' => $title, 'now' => $now, 'st' => self::PENDING,
                 'p' => $plan, 'c' => $cycle, 'a' => $addons ? json_encode($addons) : null, 'ins' => $institute ?: null, 'sub' => $subject, 'g' => $grades ?: null, 'mode' => $mode,
-                'd' => $district ?: null, 'n' => $students === '' ? null : (int) $students, 'h' => $heard ?: null, 'msg' => $message ?: null, 'ip' => $ip],
+                'd' => $district ?: null, 'n' => $students === '' ? null : (int) $students, 'h' => $heard ?: null, 'msg' => $message ?: null, 'ip' => $ip, 'promo' => $promo['code'] ?? null],
         );
         return ['ref' => self::ref($id), 'id' => $id];
     }
@@ -373,6 +375,7 @@ final class TutorRequests
             'decided_at' => $r['decided_at'],
             'decided_by' => $r['decided_by'] ? trim($r['d_fname'] . ' ' . $r['d_lname']) : null,
             'decision_note' => $r['decision_note'],
+            'promo' => Promotions::find($r['promo_code'] ?? null),
         ];
     }
 }
