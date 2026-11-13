@@ -11,7 +11,7 @@ final class PlatformSettings
 {
     /** Defaults until Rashmi confirms (docs/ADMIN-PLAN.md section 8): the old 7-day trial, on PRO, 30 students, 7 grace days, no VAT. */
     public const RULES = [
-        'trial_days' => 7, 'trial_plan' => 'pro', 'trial_student_cap' => 30, 'invoice_days_before' => 7, 'grace_days' => 7,
+        'trial_days' => 7, 'trial_plan' => 'grow', 'trial_student_cap' => 30, 'invoice_days_before' => 7, 'grace_days' => 7,
         'tax_on' => false, 'tax_rate' => 18, 'invoice_prefix' => 'EN-INV',
     ];
 

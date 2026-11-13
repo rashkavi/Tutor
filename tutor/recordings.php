@@ -10,7 +10,7 @@ $tp = [
         'intro' => 'The recordings of your class days, for students who missed a class or want to watch it again.',
         'points' => [
             'Add Recording: pick the class and the class day, choose where the video is kept and paste its link. The link is checked before it is saved.',
-            'Opens on: students see the recording from that day and time. Available until (PRO): it closes after that day.',
+            'Opens on: students see the recording from that day and time. Available until (GROW): it closes after that day.',
             'Watched: how many students opened the recording.',
             'The places a recording can come from are set in Settings → Recording Types (the gear).',
         ],

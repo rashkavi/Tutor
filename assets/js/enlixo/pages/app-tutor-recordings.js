@@ -252,7 +252,7 @@ function edit(rec) {
     sec('When students can watch', 'Leave both empty to show the recording at once, with no end date.'),
     h('div', { class: 'row gx-3' },
       h('div', { class: 'col-md-6' }, field('Opens on', unlock, { info: 'Students see the recording from this day and time, for example the day after the class. Empty = at once.' })),
-      h('div', { class: 'col-md-6' }, h('div', { class: 'position-relative' }, field('Available until', expire, { info: canExpire ? 'The last day students can watch. After it the recording closes for them. Empty = no end date.' : 'Closing a recording on a date is on the PRO plan.' }),
+      h('div', { class: 'col-md-6' }, h('div', { class: 'position-relative' }, field('Available until', expire, { info: canExpire ? 'The last day students can watch. After it the recording closes for them. Empty = no end date.' : 'Closing a recording on a date is on the GROW plan.' }),
         canExpire ? null : h('span', { class: 'position-absolute top-0 end-0' }, lockBadge('recordings.expiry'))))));
 
   clearOnEdit(body);
