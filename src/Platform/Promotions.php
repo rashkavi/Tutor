@@ -6,19 +6,19 @@ namespace Enlixo\Platform;
 /**
  * Offer codes a tutor can bring to the sign-up form.
  *
- *   QR25: the QR codes on the landing page (attendance demos) open offer.php?code=QR25:
- *         "Congratulations: 25% off STARTER". The code goes with the sign-up request (requested_users.promo_code,
- *         migration 015); when the admin approves, Add Tutor starts with STARTER at 25% off as a custom price.
+ *   QR10: the QR codes on the landing page (attendance demos) open offer.php?code=QR10:
+ *         "Congratulations: 10% off STARTER". The code goes with the sign-up request (requested_users.promo_code,
+ *         migration 015); when the admin approves, Add Tutor starts with STARTER at 10% off as a custom price.
  *
  * Add a code here; nothing else changes. Codes are matched without case.
  */
 final class Promotions
 {
     public const CODES = [
-        'QR25' => [
+        'QR10' => [
             'plan' => 'start',
-            'percent' => 25,
-            'title' => '25% off STARTER',
+            'percent' => 10,
+            'title' => '10% off STARTER',
             'source' => 'Landing page QR code',
         ],
     ];
