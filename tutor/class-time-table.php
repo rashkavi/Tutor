@@ -11,7 +11,7 @@ if (!SessionUser::hasValidSession()) {
     UserPermissions::setUserPermissions($sessionUserObject['user_permissions']);
 
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['class-id']) && !empty($_GET['class-id']))) {
-        header("Location: ./class");
+        header("Location: ./classes");
     } else {
         $class_id = $_GET["class-id"];
 

@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $user = Database::search("SELECT * FROM `users`
                 INNER JOIN `user_roles` ON `users`.`user_roles_user_role_id` = `user_roles`.`user_role_id`
                 
-                WHERE (`user_whatsapp`='" . $mobile . "' OR `user_whatsapp`='" . $normalizedWhatsapp . "')");
+                WHERE (`user_whatsapp`='" . Database::escape((string) $mobile) . "' OR `user_whatsapp`='" . Database::escape((string) $normalizedWhatsapp) . "')");
                 if ($user->num_rows > 0) {
                     $data = $user->fetch_assoc();
                     if ($data["user_reset_time"] > strtotime("-5 minutes")) {

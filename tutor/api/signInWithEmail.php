@@ -7,9 +7,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $content = trim(file_get_contents('php://input'));
         $decoded = json_decode($content, true);
         if (json_last_error() == JSON_ERROR_NONE) {
-            $email = $decoded['email'];
-            $password = $decoded['password'];
-            $rememberMe = $decoded['rememberMe'];
+            $email = trim((string) ($decoded['email'] ?? ''));
+            $password = (string) ($decoded['password'] ?? '');
+            $rememberMe = !empty($decoded['rememberMe']);
             if (empty($email)) {
                 $status->email =  "Please enter your email";
             }
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $user = Database::search("SELECT * FROM `users`
                 INNER JOIN `user_roles` ON `users`.`user_roles_user_role_id` = `user_roles`.`user_role_id`
                 
-                WHERE `user_email`='" . $email . "' AND `user_roles`.`user_role_id` = 2");
+                WHERE `user_email`='" . Database::escape($email) . "' AND `user_roles`.`user_role_id` = 2");
                 if ($user->num_rows > 0) {
                     $data = $user->fetch_assoc();
                     if (password_verify($password, $data["user_password"])) {
@@ -40,10 +40,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                             SessionUser::startSession($data['user_role'], $userData);
                             setcookie("enviiz_lms_user_login", "login", time() + 3600, "/");
+                            // Remember me keeps only the e-mail address; a password is never stored in a cookie
                             if ($rememberMe) {
                                 setcookie("enviiz_lms_user_email", $email, time() + (86400 * 30), "/", "", true, true);
-                                setcookie("enviiz_lms_user_password", $password, time() + (86400 * 30), "/", "", true, true);
                             }
+                            setcookie("enviiz_lms_user_password", "", time() - 3600, "/");
 
                             require '../../vendor/autoload.php';
 

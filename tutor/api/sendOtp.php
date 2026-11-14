@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 require_once("../../includes/connection.php");
                 $user = Database::search("SELECT * FROM `users`
                 INNER JOIN `user_roles` ON `users`.`user_roles_user_role_id` = `user_roles`.`user_role_id`
-                WHERE (`user_whatsapp`='" . $normalizedWhatsapp . "' OR `user_whatsapp`='" . $mobile . "')
+                WHERE (`user_whatsapp`='" . Database::escape((string) $normalizedWhatsapp) . "' OR `user_whatsapp`='" . Database::escape((string) $mobile) . "')
                 AND `user_roles`.`user_role_id` = 2");
 
                 if ($user->num_rows > 0) {

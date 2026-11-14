@@ -18,6 +18,7 @@ use Enlixo\Core\Request;
  *   POST /api/v1/admin/tutor-requests/{id}/approve   body = the Add Tutor form → makes the tutor
  *   POST /api/v1/admin/tutor-requests/{id}/reject    {reason}
  *   POST /api/v1/admin/tutor-requests/{id}/reopen
+ *   POST /api/v1/admin/tutor-requests/{id}/note      {note, called}
  */
 final class TutorRequestController
 {
@@ -76,6 +77,13 @@ final class TutorRequestController
     {
         $auth = $this->admin($r);
         $this->app->tutorRequests()->reject((int) $r->param('id'), (string) ($r->body['reason'] ?? ''), $auth->userId);
+        return JsonResponse::ok($this->app->tutorRequests()->one((int) $r->param('id')));
+    }
+
+    public function note(Request $r): JsonResponse
+    {
+        $auth = $this->admin($r);
+        $this->app->tutorRequests()->note((int) $r->param('id'), (string) ($r->body['note'] ?? ''), !empty($r->body['called']), $auth->userId);
         return JsonResponse::ok($this->app->tutorRequests()->one((int) $r->param('id')));
     }
 

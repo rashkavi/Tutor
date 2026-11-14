@@ -60,6 +60,7 @@ return static function (Router $router, App $app): void {
     $router->post('/api/v1/admin/tutor-requests/{id}/approve', $treq->approve(...));
     $router->post('/api/v1/admin/tutor-requests/{id}/reject', $treq->reject(...));
     $router->post('/api/v1/admin/tutor-requests/{id}/reopen', $treq->reopen(...));
+    $router->post('/api/v1/admin/tutor-requests/{id}/note', $treq->note(...));
     $router->get('/api/v1/tutor/classes', $students->classes(...));
     $router->post('/api/v1/tutor/classes', $classes->store(...));
     $router->get('/api/v1/tutor/class-form', $classes->form(...));
@@ -124,6 +125,7 @@ return static function (Router $router, App $app): void {
     $router->post('/api/v1/admin/invoices/{id}/payments', $pf->recordPayment(...));
     $router->post('/api/v1/admin/invoices/{id}/void', $pf->voidInvoice(...));
     $router->get('/api/v1/admin/payments', $pf->payments(...));
+    $router->get('/api/v1/admin/payments/{id}', $pf->payment(...)); // keep before /payments/{id}/slip is fine: different segment count
     $router->get('/api/v1/admin/payments/{id}/slip', $pf->adminSlip(...));
     $router->post('/api/v1/admin/payments/{id}/approve', $pf->approve(...));
     $router->post('/api/v1/admin/payments/{id}/reject', $pf->reject(...));

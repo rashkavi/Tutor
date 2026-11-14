@@ -69,20 +69,35 @@ final class StudentRegistrar
         });
     }
 
+    private ?bool $loginPassword = null;
+
+    /** Older databases still have login_details.password (NOT NULL); the live one dropped it. */
+    private function loginHasPassword(): bool
+    {
+        return $this->loginPassword ??= (bool) $this->db->value(
+            "SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'login_details' AND COLUMN_NAME = 'password'",
+        );
+    }
+
     private function createStudent(int $tutorId, array $v, ?string $photo, string $now): int
     {
         $email = ($v['email'] ?? '') !== '' ? $v['email'] : null;
         if ($email !== null && $this->db->value('SELECT 1 FROM login_details WHERE email = :e LIMIT 1', ['e' => $email])) {
             $email = null; // another account already signs in with this e-mail; WhatsApp is the sign-in for students
         }
+        // Students sign in with a WhatsApp code; newer databases have no login_details.password column any more.
+        $params = [
+            'f' => $v['first_name'], 'l' => $v['last_name'], 'w' => $v['whatsapp'], 'e' => $email,
+            'at' => $now, 'tok' => substr(str_replace(['+', '/', '='], '', base64_encode(random_bytes(75))), 0, 100),
+        ];
+        $withPassword = $this->loginHasPassword();
+        if ($withPassword) {
+            $params['p'] = password_hash((string) random_int(100000, 999999), PASSWORD_BCRYPT);
+        }
         $loginId = $this->db->insert(
-            'INSERT INTO login_details (first_name, last_name, whatsapp, email, password, date_registered, status_status_id, verification)
-             VALUES (:f, :l, :w, :e, :p, :at, 1, :tok)',
-            [
-                'f' => $v['first_name'], 'l' => $v['last_name'], 'w' => $v['whatsapp'], 'e' => $email,
-                'p' => password_hash((string) random_int(100000, 999999), PASSWORD_BCRYPT),
-                'at' => $now, 'tok' => substr(str_replace(['+', '/', '='], '', base64_encode(random_bytes(75))), 0, 100),
-            ],
+            'INSERT INTO login_details (first_name, last_name, whatsapp, email' . ($withPassword ? ', password' : '') . ', date_registered, status_status_id, verification)
+             VALUES (:f, :l, :w, :e' . ($withPassword ? ', :p' : '') . ', :at, 1, :tok)',
+            $params,
         );
         $studentId = $this->db->insert(
             'INSERT INTO students (full_name, name_with_initials, date_of_birth, date_added, gender_gender_id, users_user_id, login_details_login_details_id, mobile, profile_img)

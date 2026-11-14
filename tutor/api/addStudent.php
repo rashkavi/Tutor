@@ -235,8 +235,10 @@ if (SessionUser::hasValidSession()) {
             $password = rand(1000, 9999);
             $hashPassword = password_hash($password, PASSWORD_BCRYPT);
 
-            $login_details_columns = " `first_name`, `last_name`, `whatsapp`, `password`, `date_registered`,  `status_status_id`,`verification`";
-            $login_details_values = "'" . $fname . "','" . $lname . "','" . normalizePhoneNumber($whatsapp) . "','" . $hashPassword . "','" . $registerTime . "','1','" . $token . "'";
+            // newer databases have no login_details.password (students sign in with a WhatsApp code)
+            $hasPasswordColumn = Database::search("SHOW COLUMNS FROM `login_details` LIKE 'password'")->num_rows > 0;
+            $login_details_columns = " `first_name`, `last_name`, `whatsapp`, " . ($hasPasswordColumn ? "`password`, " : "") . "`date_registered`,  `status_status_id`,`verification`";
+            $login_details_values = "'" . $fname . "','" . $lname . "','" . normalizePhoneNumber($whatsapp) . "'," . ($hasPasswordColumn ? "'" . $hashPassword . "'," : "") . "'" . $registerTime . "','1','" . $token . "'";
 
             if (!empty($email)) {
                 $login_details_columns .= ", `email`";

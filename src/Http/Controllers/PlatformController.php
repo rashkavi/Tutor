@@ -138,6 +138,20 @@ final class PlatformController
             ['status' => 'status', 'method' => 'method'], static fn ($p) => "{$p['ref']} {$p['tutor']} {$p['invoice']} {$p['reference']}");
     }
 
+    /** GET /admin/payments/{id}: one payment with the tutor, the invoice it pays and the tutor's billing history (payment page). */
+    public function payment(Request $r): JsonResponse
+    {
+        $this->admin($r);
+        $billing = $this->app->platformBilling();
+        $p = $billing->payments(null, (int) $r->param('id'))[0] ?? throw HttpException::notFound('This payment was not found.');
+        return JsonResponse::ok([
+            'payment' => $p,
+            'tutor' => $billing->tutor($p['tutor_id']),
+            'invoice' => $p['invoice_id'] ? ($billing->invoices(null, $p['invoice_id'])[0] ?? null) : null,
+            'history' => array_slice($billing->history($p['tutor_id']), 0, 30),
+        ]);
+    }
+
     public function approve(Request $r): JsonResponse
     {
         $auth = $this->admin($r);

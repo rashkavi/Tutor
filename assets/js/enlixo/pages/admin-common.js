@@ -218,7 +218,11 @@ export const invoiceColumns = ({ admin = true, open = (r) => invoiceDialog(r, { 
 // ---------------------------------------------------------------- payments
 export const slipUrl = (p, admin) => `${DEFAULT_API_BASE}${admin ? `/admin/payments/${p.id}/slip` : `/tutor/subscription/payments/${p.id}/slip`}`;
 
+/** On the admin side a payment opens on its own page (admin/tutor-payment-details.php, like V3's payment page). */
+export const paymentUrl = (p) => `tutor-payment-details?payment-id=${p.id ?? p}`;
+
 export function paymentDialog(p, { admin = false, reload = () => {} } = {}) {
+  if (admin) { location.href = paymentUrl(p); return; }
   const url = slipUrl(p, admin);
   const preview = h('img', { class: 'ad-slip-img', alt: `Bank slip of ${p.ref}`, src: url });
   preview.addEventListener('error', () => preview.replaceWith(h('div', { class: 'd-flex flex-column align-items-center' }, icon('receipt', { size: 40 }), h('div', { class: 'text-14 main-text fw-medium mt-2' }, 'PDF slip'))));
@@ -242,7 +246,7 @@ export function paymentDialog(p, { admin = false, reload = () => {} } = {}) {
   m = BsModal.open({ title: `Payment ${p.ref}`, subtitle: [p.tutor, p.invoice], icon: 'receipt', body, size: 'lg', footerEnd: end });
 }
 
-function rejectPayment(p, reload) {
+export function rejectPayment(p, reload) {
   const reason = h('select', { class: 'form-select custom-select', 'data-key': 'reason' },
     h('option', { value: '' }, '- Select -'),
     ['The slip amount does not match the invoice', 'The slip is not clear', 'The money has not reached our account', 'The slip was used before', 'Other'].map((x) => h('option', { value: x }, x)));

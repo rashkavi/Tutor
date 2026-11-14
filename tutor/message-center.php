@@ -30,9 +30,9 @@ if (!SessionUser::ifUserIsTutor()) {
         <script type="text/javascript" src="<?= Project::getAssetsPath() ?>/plugins/richtexteditor/rte.js"></script>
         <script type="text/javascript" src='<?= Project::getAssetsPath() ?>/plugins/richtexteditor/plugins/all_plugins.js'></script>
         <script src="<?= Project::getAssetsPath() ?>/js/init.js?v=<?= Project::getVersion() ?>"></script>
-        <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+        <link href="<?= Project::getAssetsPath() ?>/plugins/tom-select/tom-select.bootstrap5.min.css" rel="stylesheet">
 
-        <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+        <script src="<?= Project::getAssetsPath() ?>/plugins/tom-select/tom-select.complete.min.js"></script>
 
     </head>
 

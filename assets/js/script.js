@@ -35,18 +35,19 @@ $(window).on('load', function () {
     const sideMenu = $('#sideMenu');
     const appWrapper = $('#app-wrapper');
 
+    // the header user menu (not on the sign-in, OTP and password pages)
     const dropdown = document.querySelector('.header-ud-toggle-area');
-    const dropdownMenu = new bootstrap.Dropdown(dropdown);
-    let timeout;
-
-    dropdown.parentElement.addEventListener('mouseenter', function () {
-        clearTimeout(timeout);
-        dropdownMenu.show();
-    });
-
-    dropdown.parentElement.addEventListener('mouseleave', function () {
-        timeout = setTimeout(() => dropdownMenu.hide(), 300);
-    });
+    if (dropdown && window.bootstrap) {
+        const dropdownMenu = new bootstrap.Dropdown(dropdown);
+        let timeout;
+        dropdown.parentElement.addEventListener('mouseenter', function () {
+            clearTimeout(timeout);
+            dropdownMenu.show();
+        });
+        dropdown.parentElement.addEventListener('mouseleave', function () {
+            timeout = setTimeout(() => dropdownMenu.hide(), 300);
+        });
+    }
 
     // Check if elements exist
     if (toggleBtn.length && sideMenu.length && appWrapper.length) {
@@ -64,8 +65,6 @@ $(window).on('load', function () {
         toggleBtn.on('click', function () {
             setMenuState(sideMenu.hasClass('collapsed'));
         });
-    } else {
-        console.error('Required elements not found');
     }
 
 });
@@ -392,8 +391,8 @@ const toggleSkeleton = () => {
     const delay = ms => new Promise(res => setTimeout(res, ms));
     (async () => {
 
-        document.getElementById('skeleton-list').classList.add('d-none');
-        document.getElementById('real-list').classList.remove('d-none');
+        document.getElementById('skeleton-list')?.classList.add('d-none');
+        document.getElementById('real-list')?.classList.remove('d-none');
     })();
 }
 

@@ -317,6 +317,20 @@ final class TutorRequests
         });
     }
 
+    /** A remark in the request's history; $called = true marks that the team phoned the tutor (the "Called" step). */
+    public function note(int $id, string $text, bool $called, int $by): void
+    {
+        $text = trim($text);
+        if (!$called && $text === '') {
+            throw new HttpException(422, 'validation_failed', 'Write the note.', ['note' => 'Write what you want to keep, for example "Asked to call back on Monday".']);
+        }
+        if (mb_strlen($text) > 500) {
+            throw new HttpException(422, 'validation_failed', 'Up to 500 characters.', ['note' => 'Up to 500 characters.']);
+        }
+        $this->one($id);
+        $this->log($id, $by, $called ? 'Called the tutor' : 'Note', $text === '' ? null : $text);
+    }
+
     /** A rejected request back to pending (rejected by mistake). */
     public function reopen(int $id, int $by): void
     {

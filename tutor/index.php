@@ -10,9 +10,7 @@ if (SessionUser::ifUserIsTutor()) {
     if (isset($_COOKIE['enviiz_lms_user_email'])) {
         $email = $_COOKIE['enviiz_lms_user_email'];
     }
-    if (isset($_COOKIE['enviiz_lms_user_password'])) {
-        $password = $_COOKIE['enviiz_lms_user_password'];
-    }
+    // a password is never read back from a cookie (older versions stored it there)
 
 ?>
     <!DOCTYPE html>

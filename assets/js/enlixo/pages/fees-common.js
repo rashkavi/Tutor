@@ -8,6 +8,7 @@ import {
   h, fill, icon, lkr, short, day, inDays, plural, cell, person, facts, hero, panel, field, showErrors, simpleTable, BsModal, Toast, infoTip, EmptyState,
 } from './admin-common.js';
 
+
 // Step A (preview): sample data in the browser. Step B: drop the transport and the PHP API (src/Fees) answers.
 export const PREVIEW = true;
 export const api = new ApiClient(PREVIEW ? { transport: FeesMock.shared() } : {});
@@ -71,8 +72,12 @@ const breakdown = (f) => h('div', { class: 'ad-lines mb-3' },
 const timeline = (rows) => h('ul', { class: 'ad-timeline' }, rows.map((r) => h('li', {},
   h('div', { class: 'text-14 main-text' }, r.what), h('div', { class: 'text-12 sub-text' }, `${r.when} · ${r.by}`))));
 
-/** One fee: what it is, the slip, and Approve / Reject when a slip is waiting. "Approve & Next" opens the next slip. */
-export async function feeDialog(id, { reload = () => {}, queue = false } = {}) {
+/** One fee opens on its own page (tutor/fee-details.php, like V3's student payment page). queue = "Check One by One". */
+export const feeUrl = (id, queue = false) => `fee-details?fee-id=${id}${queue ? '&queue=1' : ''}`;
+export function feeDialog(id, { queue = false } = {}) { location.href = feeUrl(id, queue); }
+
+/** The older pop-up version of one fee (kept for reference; every caller now uses the page). */
+export async function feeDialogModal(id, { reload = () => {}, queue = false } = {}) {
   const { data: f } = await api.get(`/tutor/fees/${id}`);
   const side = h('div', { class: 'd-flex flex-column align-items-end gap-2' }, feeChip(f.status));
   const meta = f.status === 'paid' ? `Paid ${day(f.paid_on)} · ${f.method} · receipt ${f.receipt}`
@@ -96,7 +101,7 @@ export async function feeDialog(id, { reload = () => {}, queue = false } = {}) {
       const { data } = await api.post(`/tutor/fees/${f.id}/approve`, {});
       m.close(); reload();
       Toast.success(`Approved. ${f.student.name} has paid ${f.month_label}; the receipt was sent on WhatsApp.`);
-      if (queue && data.next) feeDialog(data.next, { reload, queue });
+      if (queue && data.next) feeDialogModal(data.next, { reload, queue });
     } }));
   } else if (['unpaid', 'overdue', 'rejected'].includes(f.status)) {
     start.push(BsModal.button('Send Reminder', { onclick: () => { window.open(waLink(f.student.whatsapp, reminderText({ student: f.student, class: f.class, months: [{ label: f.month_label }], total: f.net })), '_blank'); } }));
@@ -107,7 +112,7 @@ export async function feeDialog(id, { reload = () => {}, queue = false } = {}) {
   m = BsModal.open({ title: f.status === 'waiting' ? 'Check Payment Slip' : `${f.month_label} Fee`, subtitle: [f.student.name, f.class.short, f.month_label], icon: f.status === 'waiting' ? 'receipt' : 'payments', body, size: 'xl', footerStart: start, footerEnd: end });
 }
 
-function rejectDialog(f, reload) {
+export function rejectDialog(f, reload) {
   const reason = h('select', { class: 'form-select custom-select', 'data-key': 'reason' }, h('option', { value: '' }, '- Select -'), f.reasons.map((x) => h('option', { value: x }, x)));
   const note = h('textarea', { class: 'form-control custom-input', rows: 3, placeholder: 'Add a short note for the student (optional)', 'data-limit': '200' });
   const body = h('div', {}, h('p', { class: 'text-14 sub-text' }, 'The student sees the reason in the app and can upload a new slip. The fee stays unpaid.'),
