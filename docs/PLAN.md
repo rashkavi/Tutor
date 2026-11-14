@@ -235,7 +235,10 @@ again (no grid); the theme blue is used for buttons, links and accents. No carto
 approval, week timetable), class covers made for the page (assets/landing/img/cover-*.svg) and the class photos, plus a
 "Made for real classes" photo strip that moves sideways as you scroll, side reveals, parallax and a cursor ring (all
 off for touch screens and "reduce motion"). The QR codes in the hero phone and the QR attendance tile are real
-(assets/landing/vendor/qrcode-generator-1.4.4.js, MIT) and open **offer.php?code=QR25**: "Congratulations, 25% off
-STARTER", which leads to the sign-up with `promo=QR25`. Codes live in `src/Platform/Promotions.php`; migration
+(assets/landing/vendor/qrcode-generator-1.4.4.js, MIT) and open **offer.php?code=QR10**: "Congratulations, 25% off
+STARTER", which leads to the sign-up with `promo=QR10`. Codes live in `src/Platform/Promotions.php`; migration
 **015_promo_codes.sql** adds `requested_users.promo_code`; approving such a request opens Add Tutor with STARTER and the
 discounted custom price filled in.
+Update (2026-11-14): the offer is now **QR10, 10% off STARTER** (no "gift" labels next to the QR codes); the big
+ENLIXO word in the footer is gone; the landing page shows a short logo screen and fades in on load; corners are a
+moderate 8–16px; the "Most popular" badge is a centred pill on the card's top edge.

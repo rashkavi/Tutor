@@ -1,6 +1,10 @@
 // ENLIXO Tutor landing page (index.php): reveal on scroll, counters, word rotator, 3D tilt, star field,
 // nav, sign-in menu, role tabs, monthly / yearly prices. Everything stops for "reduce motion".
 (() => {
+  // ---------- page load: logo screen, then the content fades in ----------
+  const ready = () => { document.body.classList.add('lp-ready'); setTimeout(() => document.body.classList.remove('lp-loading'), 900); };
+  if (document.readyState === 'complete') setTimeout(ready, 250); else addEventListener('load', () => setTimeout(ready, 250), { once: true });
+  setTimeout(ready, 1600); // never wait longer than this
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -284,7 +288,7 @@
     new IntersectionObserver(([en]) => { if (en.isIntersecting && langTimer === null) startAuto(); }, { threshold: 0.4 }).observe(demo);
   }
 
-  // ---------- real QR codes: scanning opens the 25% off STARTER offer (offer.php?code=QR25) ----------
+  // ---------- real QR codes: scanning opens the 10% off STARTER offer (offer.php?code=QR10) ----------
   $$('.lp-qr-real[data-qr]').forEach((el) => {
     if (typeof window.qrcode !== 'function') return;
     const qr = window.qrcode(0, 'M');
@@ -292,7 +296,7 @@
     qr.make();
     el.insertAdjacentHTML('afterbegin', qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true }).replace(/fill="black"/g, 'fill="#050b1f"'));
     el.setAttribute('role', 'img');
-    el.setAttribute('aria-label', 'QR code: scan it with your phone camera for a 25% off STARTER offer');
+    el.setAttribute('aria-label', 'QR code: scan it with your phone camera');
   });
 
   // ---------- cursor: a ring that follows the pointer and grows over things you can press ----------

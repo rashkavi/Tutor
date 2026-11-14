@@ -1,6 +1,6 @@
 <?php
-// Offer page opened by the QR codes on the landing page: offer.php?code=QR25 → "Congratulations: 25% off STARTER".
-// The button takes the tutor to the sign-up with the plan and the code (tutor-registration-application.php?plan=start&promo=QR25);
+// Offer page opened by the QR codes on the landing page: offer.php?code=QR10 → "Congratulations: 10% off STARTER".
+// The button takes the tutor to the sign-up with the plan and the code (tutor-registration-application.php?plan=start&promo=QR10);
 // the code is saved with the request and the admin's Add Tutor starts with the discounted price. Codes: src/Platform/Promotions.php.
 require_once __DIR__ . '/includes/Project.php';
 $config = require __DIR__ . '/src/bootstrap.php';
@@ -31,7 +31,7 @@ header('X-Frame-Options: DENY');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
-    <title><?= $promo ? 'You found a gift' : 'Offer' ?> | <?= $e($name) ?></title>
+    <title><?= $promo ? 'Your STARTER discount' : 'Offer' ?> | <?= $e($name) ?></title>
     <meta name="theme-color" content="#050b1f">
     <link rel="icon" href="favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,7 +62,7 @@ header('X-Frame-Options: DENY');
         <?php if ($promo) { ?>
             <div class="of-copy">
                 <span class="of-kicker"><span class="lp-announce-tag">QR</span> <span>You scanned the ENLIXO QR code</span></span>
-                <h1 class="of-h1"><span>Congratulations!</span><br><span class="lp-grad-green">You found a gift.</span></h1>
+                <h1 class="of-h1"><span>Congratulations!</span><br><span class="lp-grad-green">Your discount is ready.</span></h1>
                 <p class="of-lead">Here is <b data-no-i18n><?= (int) $promo['percent'] ?>%</b> <span>off the STARTER plan, just for scanning. Sign up with this code and our team adds it to your account.</span></p>
 
                 <div class="of-price" aria-label="Price with the offer">

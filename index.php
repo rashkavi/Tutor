@@ -114,7 +114,8 @@ function lp_icon(string $n, int $s = 22): string
     <script src="assets/js/i18n-auto.js?v=<?= $v ?>"></script>
 </head>
 
-<body class="lp">
+<body class="lp lp-loading">
+    <div class="lp-loader" aria-hidden="true"><img src="assets/imgs/common/enlixo-light.webp" alt=""><i></i></div>
     <a class="lp-skip" href="#main">Skip to the content</a>
 
     <!-- ============ NAV ============ -->
@@ -214,12 +215,11 @@ function lp_icon(string $n, int $s = 22): string
                     <div aria-hidden="true" data-no-i18n class="lp-toast lp-toast-1"><span class="lp-dot lp-green"><?= lp_icon('check', 16) ?></span><span><b>Payment approved</b><small>Kavindi · LKR 3,000 · November</small></span></div>
                     <div aria-hidden="true" data-no-i18n class="lp-toast lp-toast-2"><img src="<?= $img ?>zoom.webp" alt="" width="32" height="32"><span><b>Zoom class started</b><small>2029 A/L Combined Maths</small></span></div>
                     <div aria-hidden="true" data-no-i18n class="lp-toast lp-toast-3"><span class="lp-dot lp-violet"><?= lp_icon('lock', 16) ?></span><span><b>Recording unlocked</b><small>Open for 7 days · 2 views left</small></span></div>
-                    <a href="offer.php?code=QR25" class="lp-scanme"><span aria-hidden="true">🎁</span> <span>Scan this QR with your phone</span></a>
                     <div aria-hidden="true" data-no-i18n class="lp-phone">
                         <div class="lp-phone-notch"></div>
                         <div class="lp-phone-screen">
                             <small>Student ID</small>
-                            <div class="lp-qr-real" data-qr="offer.php?code=QR25"><span class="lp-scan"></span></div>
+                            <div class="lp-qr-real" data-qr="offer.php?code=QR10"><span class="lp-scan"></span></div>
                             <b>Kavindi Silva</b>
                             <small>ST-000248</small>
                         </div>
@@ -308,7 +308,7 @@ function lp_icon(string $n, int $s = 22): string
                             <p>Every student gets a digital ID with a QR code. Scan at the door and the parent knows they arrived. Absent students who watched the recording are counted too.</p>
                         </div>
                         <div class="lp-scan-demo">
-                            <div class="lp-scan-card"><div class="lp-qr-real lp-qr-big" data-qr="offer.php?code=QR25"></div><span class="lp-scan"></span><a href="offer.php?code=QR25" class="lp-gift-tag">Scan me · a gift inside</a></div>
+                            <div class="lp-scan-card"><div class="lp-qr-real lp-qr-big" data-qr="offer.php?code=QR10"></div><span class="lp-scan"></span></div>
                             <div class="lp-scan-log" aria-hidden="true" data-no-i18n><span>Present · 3:30 PM</span><span>Present · 3:31 PM</span><span>Present · 3:31 PM</span><span class="new">Present · 3:32 PM</span></div>
                         </div>
                     </article>
@@ -745,8 +745,6 @@ function lp_icon(string $n, int $s = 22): string
                     <a href="https://enviiz.com" target="_blank" rel="noopener">About ENVIIZ</a>
                 </nav>
             </div>
-
-            <div class="lp-foot-word" aria-hidden="true" data-reveal data-no-i18n><?php foreach (str_split('ENLIXO') as $i => $ch) { echo '<span style="--i:' . $i . '">' . $ch . '</span>'; } ?></div>
 
             <div class="lp-foot-bottom">
                 <span><span data-no-i18n>&copy; <?= date('Y') ?> <?= $e($name) ?>.</span> <span>All rights reserved.</span> <span>Made in Sri Lanka.</span></span>
