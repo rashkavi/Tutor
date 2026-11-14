@@ -29,6 +29,12 @@ $config = [
         'webhook_secret' => getenv('ZOOM_WEBHOOK_SECRET') ?: '',
         'schedule_weeks_ahead' => 2,
     ],
+    'bunny' => [
+        // Bunny Stream video library. The library id is public (it is in every embed URL); the API key is secret.
+        // Empty key = video uploads to Bunny fail with a clear error instead of using a key from the code.
+        'library_id' => getenv('BUNNY_LIBRARY_ID') ?: '594208',
+        'api_key' => getenv('BUNNY_API_KEY') ?: '',
+    ],
     'ai' => [
         // Google AI Studio key for "Generate thumbnail" on the class form. Empty = the button makes a simple cover in the browser instead.
         'gemini_api_key' => getenv('GEMINI_API_KEY') ?: '',

@@ -8,8 +8,6 @@ class Project
     private const SUB_FOLDER_INCLUDES_PATH = "../includes";
     private const SUB_FOLDER_API_ASSETS_PATH = "../../assets";
     private const VERSION = "1.0.8";
-    private const BUNNY_LIBRARY_ID = "594208";
-    private const BUNNY_API_KEY   = "ba6ab531-6fb3-4889-811fb7c1c0a4-62a3-4361";
 
     public static function getBaseName()
     {
@@ -55,13 +53,25 @@ class Project
         return 'Parent Dashboard |' . self::BASE_NAME;
     }
 
+    // Bunny Stream settings come from config/config.php (env vars BUNNY_LIBRARY_ID / BUNNY_API_KEY,
+    // or config/config.local.php). Never put the key in this file: it is committed to git.
     public static function getBunnyLibraryId()
     {
-        return self::BUNNY_LIBRARY_ID;
+        return (string) (self::bunnyConfig()['library_id'] ?? '');
     }
 
     public static function getBunnyApiKey()
     {
-        return self::BUNNY_API_KEY;
+        return (string) (self::bunnyConfig()['api_key'] ?? '');
+    }
+
+    private static function bunnyConfig()
+    {
+        static $bunny = null;
+        if ($bunny === null) {
+            $config = require dirname(__DIR__) . '/config/config.php';
+            $bunny = is_array($config['bunny'] ?? null) ? $config['bunny'] : [];
+        }
+        return $bunny;
     }
 }

@@ -3,13 +3,17 @@ $status = new stdClass();
 require_once("../../includes/UserClass.php");
 require_once("../../includes/connection.php");
 require_once("../../includes/UserPermissionsClass.php");
+require_once("../../includes/Project.php");
 if (SessionUser::ifUserIsTutor()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-        $BUNNY_LIBRARY_ID = "594208";
-        $BUNNY_API_KEY   = "ba6ab531-6fb3-4889-811fb7c1c0a4-62a3-4361";
+        $BUNNY_LIBRARY_ID = Project::getBunnyLibraryId();
+        $BUNNY_API_KEY   = Project::getBunnyApiKey();
+        if ($BUNNY_API_KEY === '' || $BUNNY_LIBRARY_ID === '') {
+            die("Video upload is not configured (set BUNNY_API_KEY on the server)");
+        }
 
         // 1️⃣ Validate input
         if (!isset($_POST['title'], $_FILES['video'])) {

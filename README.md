@@ -41,7 +41,11 @@ No packages to install. Tests use in-memory fakes, so they don't need MySQL.
 1. Run the files in `database/migrations/` in order (`001_…`, `002_…`) on the existing `enlixo_tutor` database.
    It only **adds** tables and columns; nothing existing is renamed or dropped. Take a backup first.
 2. Copy `config/config.php` to `config/config.local.php` (or set env vars) with DB details, `APP_KEY`
-   (`php -r "echo base64_encode(random_bytes(32));"`) and Zoom keys.
+   (`php -r "echo base64_encode(random_bytes(32));"`), Zoom keys and the Bunny Stream key:
+   - `BUNNY_API_KEY` (or `bunny.api_key` in `config.local.php`): the Bunny Stream library API key
+     (Bunny dashboard → Stream → your library → API). Required for tutor video uploads in `tutor/api/addVideo.php`.
+     Empty by default; never commit it.
+   - `BUNNY_LIBRARY_ID` (or `bunny.library_id`): the Stream library id. Defaults to the current library.
 3. `php bin/seed.php` writes the package features and permission list to the database.
 4. Upload `api/v1/` with its `.htaccess` (it sends every `/api/v1/*` request to `index.php`).
 5. Cron, once a day: `php bin/generate-sessions.php` (creates timetable sessions + Zoom meetings for the next 2 weeks).
