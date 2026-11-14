@@ -211,7 +211,7 @@ const reqBanner = REQ ? h('div', { class: 'col-12 ad-soft p-3 mb-4 d-flex align-
     h('div', { class: 'text-13 sub-text' }, [REQ.subject, REQ.mode_label, REQ.district, REQ.students ? `~${REQ.students} students` : null, REQ.plan === 'free' ? 'asked for the FREE plan (up to 50 students): START, complimentary' : `asked for ${(REQ.plan ?? '').toUpperCase()} ${REQ.cycle}`].filter(Boolean).join(' · '),
       REQ.addons.length ? ` · add-ons: ${REQ.addons.join(', ').replaceAll('_', ' ')}` : '', REQ.promo ? ` · offer ${REQ.promo.code} (${REQ.promo.title})` : ''),
     REQ.message ? h('div', { class: 'text-13 main-text mt-1' }, `"${REQ.message}"`) : null),
-  h('a', { class: 'custom-btn-outline px-3 d-inline-flex align-items-center text-decoration-none', href: `requested-users?request=${REQ.id}` }, 'View request')) : null;
+  h('a', { class: 'custom-btn-outline px-3 d-inline-flex align-items-center text-decoration-none', href: `requested-user-details?id=${REQ.id}` }, 'View request')) : null;
 fill(root, previewNote(), reqBanner, h('div', { class: 'row g-4' },
   h('div', { class: 'col-12 col-xl-8' }, details, planSection, startSection),
   h('div', { class: 'col-12 col-xl-4' }, sumBox)));

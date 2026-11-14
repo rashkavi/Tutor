@@ -242,3 +242,23 @@ discounted custom price filled in.
 Update (2026-11-14): the offer is now **QR10, 10% off STARTER** (no "gift" labels next to the QR codes); the big
 ENLIXO word in the footer is gone; the landing page shows a short logo screen and fades in on load; corners are a
 moderate 8–16px; the "Most popular" badge is a centred pill on the card's top edge.
+
+## Detail pages instead of pop-ups (2026-11-14)
+
+Ideas taken from ENLIXO V3 (requested-student-details.php, student-payment.php); nothing in V3 was changed.
+One request, one fee and one payment now open on their own page instead of a modal, with one look
+(`assets/js/enlixo/components/DetailPage.js`: profile card, steps, receipt card, sections, history; styles in enlixo-ui.css):
+
+* **admin/requested-user-details.php?id=** (`app-admin-tutor-request.js`): the tutor's card (call / WhatsApp / e-mail,
+  copy buttons), steps Received → Called → Decision → Tutor account, sections Classes / Plan they picked / Request
+  details, history. Actions: Mark as Called, Add Note (`POST /admin/tutor-requests/{id}/note`), WhatsApp, Reject,
+  Open Again; Approve opens Add Tutor filled in.
+* **tutor/fee-details.php?fee-id=** (`app-tutor-fee.js`): the student's card, steps Fee made → Slip uploaded →
+  Checked → Receipt, the fee card, the slip, the breakdown, history. Approve / Reject / Record Payment / reminder /
+  receipt; `&queue=1` (Check One by One) opens the next slip after Approve. Still on sample data (FeesMock) like the rest
+  of Student Fees.
+* **admin/tutor-payment-details.php?payment-id=** (`app-admin-payment.js`, `GET /admin/payments/{id}`): the tutor's
+  card, steps Invoice → Slip → Checked → Tutor active, the payment card, the slip, the invoice lines, billing history.
+
+`feeDialog()` and `paymentDialog(…, { admin: true })` now go to these pages, so every list, dashboard and card that
+opened the pop-up opens the page.

@@ -1,11 +1,12 @@
 // Admin → Requested Tutors (admin/requested-users.php). Online tutor sign-up requests.
-// GET /admin/tutor-requests (all, with counts); the list filters in the page. A row opens the request:
-// Approve → add-tutor?request=ID (Add Tutor filled in), Reject {reason}, Open again.
+// GET /admin/tutor-requests (all, with counts); the list filters in the page. A row opens the request's own page
+// (admin/requested-user-details.php). Approve → add-tutor?request=ID (Add Tutor filled in), Reject {reason}, Open again.
 import { DataView } from '../components/DataView.js';
 import { ActionMenu } from '../components/Popover.js';
 import { QuickGuide } from '../components/QuickGuide.js';
 import { StatCard } from '../components/StatCard.js';
-import { api, h, fill, icon, BsModal, Toast, chip, cell, person, facts, plural } from './admin-common.js';
+import { api, h, fill, icon, cell, person, plural } from './admin-common.js';
+import { PLAN, statusChip as status, detailsUrl, rejectRequest, reopenRequest } from './tutor-request-common.js';
 
 QuickGuide.attachAll();
 const root = document.getElementById('requests-page');
@@ -16,9 +17,6 @@ document.getElementById('requests-actions').append(ActionMenu.button('Action', [
   { label: 'Plans & Prices', icon: 'plans', href: 'plans' },
 ]));
 
-const status = (st) => (st === 'pending' ? chip('waiting', 'Pending') : chip(st));
-const PLAN = { free: 'FREE', start: 'STARTER', grow: 'GROW', pro: 'CUSTOM' };
-const when = (d) => new Date(d.replace(' ', 'T')).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 const ago = (d) => {
   const m = Math.round((Date.now() - new Date(d.replace(' ', 'T'))) / 60000);
   if (m < 60) return `${Math.max(1, m)} min ago`;
@@ -77,7 +75,7 @@ const view = new DataView({
       ['Heard from', (r) => r.heard_from], ['Message', (r) => r.message], ['Requested', (r) => r.requested_at], ['Status', (r) => r.status], ['Decision note', (r) => r.decision_note ?? '']],
   },
   columns: [
-    { key: 'name', label: 'Tutor', sortable: true, render: (r) => h('button', { type: 'button', class: 'btn p-0 border-0 text-start', onclick: () => open(r.id) }, person(r.name, r.institute || r.email)) },
+    { key: 'name', label: 'Tutor', sortable: true, render: (r) => h('a', { class: 'text-decoration-none', href: detailsUrl(r.id) }, person(r.name, r.institute || r.email)) },
     { key: 'subject', label: 'Teaches', sortable: true, render: (r) => cell(r.subject || '-', [r.grades, r.mode_label].filter(Boolean).join(' · ')) },
     { key: 'plan', label: 'Plan Asked', sortable: true, render: (r) => cell(r.promo ? `${PLAN[r.plan] ?? '-'} · ${r.promo.code}` : (PLAN[r.plan] ?? '-'), r.plan ? `${r.plan === 'free' ? 'Up to 50 students' : r.cycle === 'yearly' ? 'Yearly' : 'Monthly'}${r.students ? ` · ~${r.students} students` : ''}` : null) },
     { key: 'mobile', label: 'Contact', render: (r) => h('div', { class: 'd-flex flex-column' },
@@ -86,11 +84,11 @@ const view = new DataView({
     { key: 'requested_at', label: 'Requested', sortable: true, render: (r) => cell(ago(r.requested_at), r.ref) },
     { key: 'status', label: 'Status', render: (r) => status(r.status) },
     { key: 'actions', label: '', width: '48px', render: (r) => ActionMenu.kebab([
-      { label: 'View request', icon: 'view', onClick: () => open(r.id) },
+      { label: 'View request', icon: 'view', href: detailsUrl(r.id) },
       r.status === 'pending' && { label: 'Approve', icon: 'check', href: `add-tutor?request=${r.id}` },
-      r.status === 'pending' && { label: 'Reject', icon: 'close', onClick: () => reject(r) },
+      r.status === 'pending' && { label: 'Reject', icon: 'close', onClick: () => rejectRequest(r, refresh) },
       r.status === 'approved' && r.tutor_id && { label: 'Open tutor', icon: 'tutors', href: `tutor-details?tutor-id=${r.tutor_id}` },
-      r.status === 'rejected' && { label: 'Open again', icon: 'undo', onClick: () => reopen(r) },
+      r.status === 'rejected' && { label: 'Open again', icon: 'undo', onClick: () => reopenRequest(r, refresh) },
     ].filter(Boolean), `Actions for ${r.name}`) },
   ],
   empty: { icon: 'application', title: 'No requests here', text: 'Tutors who send the sign-up form on the website show here.' },
@@ -100,6 +98,7 @@ await load();
 view.mount(holder);
 if (new URLSearchParams(location.search).get('request')) open(Number(new URLSearchParams(location.search).get('request')));
 
+
 async function load() {
   const { data } = await api.get('/admin/tutor-requests');
   all = data.requests;
@@ -108,79 +107,5 @@ async function load() {
 }
 async function refresh() { await load(); view.reload(); }
 
-async function open(id) {
-  let r;
-  try { r = (await api.get(`/admin/tutor-requests/${id}`)).data; } catch (e) { Toast.error(e.message); return; }
-  const m = BsModal.open({
-    title: r.name,
-    subtitle: `${r.ref} · requested ${when(r.requested_at)}`,
-    icon: 'application',
-    size: 'lg',
-    body: h('div', { class: 'd-flex flex-column gap-4' },
-      h('div', { class: 'd-flex flex-wrap gap-2 align-items-center' }, status(r.status),
-        r.decided_at ? h('span', { class: 'text-13 sub-text' }, `${r.status === 'approved' ? 'Approved' : 'Rejected'} by ${r.decided_by ?? 'admin'} on ${when(r.decided_at)}`) : null),
-      r.status === 'rejected' && r.decision_note ? h('div', { class: 'ad-soft p-3 text-14' }, h('b', {}, 'Reason: '), r.decision_note) : null,
-      h('div', {}, h('div', { class: 'sub-topic mb-2' }, 'Contact'), facts([
-        ['E-mail', h('a', { href: `mailto:${r.email}`, class: 'text-decoration-none' }, r.email)],
-        ['Mobile', h('a', { href: `tel:${r.mobile}`, class: 'text-decoration-none' }, r.mobile)],
-        ['WhatsApp', h('a', { href: wa(r.whatsapp || r.mobile), target: '_blank', rel: 'noopener', class: 'text-decoration-none' }, r.whatsapp || r.mobile)],
-        ['NIC', r.nic || '-'],
-      ])),
-      h('div', {}, h('div', { class: 'sub-topic mb-2' }, 'Classes'), facts([
-        ['Main subject', r.subject || '-'], ['Grades or exams', r.grades || '-'], ['Institute', r.institute || '-'], ['Teaching', r.mode_label || '-'],
-        ['District', r.district || '-'], ['Students', r.students ?? '-'], ['Heard from', r.heard_from || '-'],
-      ])),
-      h('div', {}, h('div', { class: 'sub-topic mb-2' }, 'Plan they picked'), facts([
-        ['Plan', PLAN[r.plan] ?? '-'], ['Billing', r.cycle === 'yearly' ? 'Yearly' : 'Monthly'], r.promo ? ['Offer code', `${r.promo.code}: ${r.promo.title}`] : null, ['Add-ons', r.addons.length ? r.addons.join(', ').replaceAll('_', ' ') : 'None', true],
-      ])),
-      r.message ? h('div', {}, h('div', { class: 'sub-topic mb-2' }, 'Message'), h('div', { class: 'ad-soft p-3 text-14', style: { whiteSpace: 'pre-wrap' } }, r.message)) : null,
-      r.history.length ? h('div', {}, h('div', { class: 'sub-topic mb-2' }, 'History'),
-        h('ul', { class: 'list-unstyled m-0 d-flex flex-column gap-2' }, r.history.map((x) => h('li', { class: 'text-13' }, h('b', {}, x.what), ` · ${x.by} · ${when(x.at)}`, x.note ? h('div', { class: 'sub-text' }, x.note) : null)))) : null),
-    footerStart: [h('a', { class: 'custom-btn-outline d-inline-flex align-items-center gap-2 px-3 text-decoration-none', href: wa(r.whatsapp || r.mobile), target: '_blank', rel: 'noopener' }, icon('whatsapp', { size: 18 }), 'WhatsApp')],
-    footerEnd: [
-      BsModal.button('Close', { onclick: () => m.close() }),
-      r.status === 'pending' ? BsModal.button('Reject', { danger: true, onclick: () => { m.close(); reject(r); } }) : null,
-      r.status === 'pending' ? BsModal.button('Approve', { success: true, onclick: () => { location.href = `add-tutor?request=${r.id}`; } }) : null,
-      r.status === 'approved' && r.tutor_id ? BsModal.button('Open Tutor', { primary: true, onclick: () => { location.href = `tutor-details?tutor-id=${r.tutor_id}`; } }) : null,
-      r.status === 'rejected' ? BsModal.button('Open Again', { primary: true, onclick: () => { m.close(); reopen(r); } }) : null,
-    ].filter(Boolean),
-  });
-}
-
-function reject(r) {
-  const reason = h('textarea', { class: 'form-control custom-input', rows: 3, maxlength: 255, placeholder: 'For example: Not a tutor, wrong numbers, asked to join later', id: 'rq-reason' });
-  const err = h('div', { class: 'text-12 text-dark-red mt-1 d-none' });
-  const m = BsModal.open({
-    title: `Reject ${r.name}?`,
-    subtitle: 'The request moves to Rejected. You can open it again later.',
-    icon: 'close',
-    tone: 'danger',
-    body: h('div', {}, h('label', { class: 'text-14 main-text mb-1 required', for: 'rq-reason' }, 'Reason'), reason, err, h('div', { class: 'text-12 sub-text mt-1' }, 'Only admins see the reason. No e-mail is sent.')),
-    footerEnd: [
-      BsModal.button('Cancel', { onclick: () => m.close() }),
-      BsModal.button('Reject Request', { danger: true, onclick: async (e) => {
-        const btn = e.currentTarget;
-        btn.disabled = true;
-        try {
-          await api.post(`/admin/tutor-requests/${r.id}/reject`, { reason: reason.value });
-          m.close();
-          Toast.success(`${r.name}'s request was rejected.`);
-          refresh();
-        } catch (x) {
-          btn.disabled = false;
-          err.textContent = x.details?.reason ?? x.message;
-          err.classList.remove('d-none');
-          reason.classList.add('is-invalid');
-        }
-      } }),
-    ],
-  });
-}
-
-async function reopen(r) {
-  try {
-    await api.post(`/admin/tutor-requests/${r.id}/reopen`, {});
-    Toast.success(`${r.name}'s request is pending again.`);
-    refresh();
-  } catch (e) { Toast.error(e.message); }
-}
+// One request opens on its own page (like V3's requested student page)
+function open(id) { location.href = detailsUrl(id); }
