@@ -9,7 +9,7 @@ if (!SessionUser::ifUserIsTutor()) {
 
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['class-id']) && !empty($_GET['class-id']))) {
-        header("Location: ./class");
+        header("Location: ./classes");
     } else {
         date_default_timezone_set('Asia/Colombo');
         $class_id = $_GET["class-id"];

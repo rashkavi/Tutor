@@ -12,57 +12,61 @@ if ($('#file-selector-input').attr('multiple')) {
     allowMultipleFiles = true;
 }
 
-// Upload files with browse button
-fileSelector.onclick = () => fileSelectorInput.click();
+// The drop box is only on some pages (and some load this file without it): wire it only when it is there.
+if (fileSelector && fileSelectorInput && dropArea && listSection) {
+    // Upload files with browse button
+    fileSelector.onclick = () => fileSelectorInput.click();
 
-fileSelectorInput.onchange = () => {
-    listSection.innerHTML = '';
-    if (allowMultipleFiles) {
-        [...fileSelectorInput.files].forEach((file) => {
-            if (typeValidation(file.type)) {
-                uploadMultipleFile(file);
+    fileSelectorInput.onchange = () => {
+        listSection.innerHTML = '';
+        if (allowMultipleFiles) {
+            [...fileSelectorInput.files].forEach((file) => {
+                if (typeValidation(file.type)) {
+                    uploadMultipleFile(file);
+                }
+            });
+        } else {
+            const file = fileSelectorInput.files[0];
+            if (file && typeValidation(file.type)) {
+                uploadSingleFile(file);
             }
-        });
-    } else {
-        const file = fileSelectorInput.files[0];
-        if (file && typeValidation(file.type)) {
-            uploadSingleFile(file);
         }
-    }
-};
+    };
 
-// Handle drag-over effect
-dropArea.ondragover = (e) => {
-    e.preventDefault();
-    dropArea.classList.add('drag-over-effect');
-};
+    // Handle drag-over effect
+    dropArea.ondragover = (e) => {
+        e.preventDefault();
+        dropArea.classList.add('drag-over-effect');
+    };
 
-// Remove drag-over effect when leaving the drop area
-dropArea.ondragleave = () => {
-    dropArea.classList.remove('drag-over-effect');
-};
+    // Remove drag-over effect when leaving the drop area
+    dropArea.ondragleave = () => {
+        dropArea.classList.remove('drag-over-effect');
+    };
 
-// Handle file drop
-dropArea.ondrop = (e) => {
-    listSection.innerHTML = '';
-    e.preventDefault();
-    dropArea.classList.remove('drag-over-effect');
+    // Handle file drop
+    dropArea.ondrop = (e) => {
+        listSection.innerHTML = '';
+        e.preventDefault();
+        dropArea.classList.remove('drag-over-effect');
 
-    if (allowMultipleFiles) {
-        [...e.dataTransfer.files].forEach((file) => {
-            if (typeValidation(file.type)) {
-                uploadMultipleFile(file);
+        if (allowMultipleFiles) {
+            [...e.dataTransfer.files].forEach((file) => {
+                if (typeValidation(file.type)) {
+                    uploadMultipleFile(file);
+                }
+            });
+        } else {
+            const file = e.dataTransfer.files[0];
+            if (file && typeValidation(file.type)) {
+                uploadSingleFile(file);
             }
-        });
-    } else {
-        const file = e.dataTransfer.files[0];
-        if (file && typeValidation(file.type)) {
-            uploadSingleFile(file);
         }
-    }
-};
+    };
 
-// Validate file type
+    // Validate file type
+}
+
 function typeValidation(type) {
     return true;
 }

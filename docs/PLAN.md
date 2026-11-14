@@ -262,3 +262,10 @@ One request, one fee and one payment now open on their own page instead of a mod
 
 `feeDialog()` and `paymentDialog(…, { admin: true })` now go to these pages, so every list, dashboard and card that
 opened the pop-up opens the page.
+
+## Tutor QA: end-to-end test cases (2026-11-14)
+
+- `tests/e2e/` holds 50 browser test cases (Playwright, no test runner) for the tutor journey: sign in, plan active, every tutor page opens, create a class, add a student, class pages, language switch, sign out. A case also fails on any JS error, HTTP 5xx or PHP warning.
+- Run: `php tests/e2e/setup-qa-tutor.php` (QA tutor `qa.tutor@enlixo.test`, STARTER plan active), then `node tests/e2e/tutor-journey.e2e.js http://127.0.0.1:8082` and `node tests/e2e/make-report.js` (PDF in `docs/qa/QA-report-tutor.pdf`). Results JSON / failure screenshots go to `tests/e2e/results/` (git-ignored).
+- Fixed on the way: sign-in page JS errors, SQL text in the sign-in e-mail (500), password kept in the remember-me cookie, `./class` 404 redirects, fileChooser / duplicate applyValidation crashes, student save on databases without `login_details.password`, Tom Select served locally.
+- Still open: WhatsApp token in `tutor/api/sendOtp.php` (move to `secure/.env` and rotate), OTP sign-in without a Tutor role filter, hidden remember-me checkbox, Student Fees on sample data.

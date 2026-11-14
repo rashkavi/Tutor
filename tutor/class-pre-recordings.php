@@ -8,7 +8,7 @@ if (!SessionUser::ifUserIsTutor()) {
 } else {
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['class-id']) && !empty($_GET['class-id']))) {
-        header("Location: ./class");
+        header("Location: ./classes");
     } else {
         $class_id = $_GET["class-id"];
 
