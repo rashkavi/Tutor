@@ -8,19 +8,20 @@ if (!SessionUser::ifUserIsStudent()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Student');
 
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['class-id']) && !empty($_GET['class-id']) && isset($_GET['tute-id']) && !empty($_GET['tute-id']))) {
-        header("Location: ./level-details");
+        header("Location: ./tutes");
     } else {
 
-        $class_id = $_GET["class-id"];
-        $tute_id = $_GET["tute-id"];
+        $class_id = (int) $_GET["class-id"];
+        $tute_id = (int) $_GET["tute-id"];
 
         $query = "SELECT * FROM `class_tutes` 
         INNER JOIN `classes` ON `classes_class_id`=`class_id`
-        WHERE `classes_class_id` = '" . $class_id . "' AND `class_tute_id`='" . $_GET['tute-id'] . "'";
+        WHERE `classes_class_id` = '" . $class_id . "' AND `class_tute_id`='" . $tute_id . "'
+        AND `classes_class_id` IN (SELECT `classes_class_id` FROM `students_has_classes` WHERE `students_student_id` = '" . (int) $sessionUserObject['student_id'] . "' AND `status_status_id` = 1)";
 
         $class = Database::search($query);
         if (!($class->num_rows > 0)) {
-            header("Location: ./course-overview");
+            header("Location: ./tutes");
         } else {
             $classData = $class->fetch_assoc();
 

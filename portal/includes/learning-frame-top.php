@@ -2,7 +2,7 @@
 /**
  * Page frame of the student Time Table and Recordings pages (head, side menu, header, skeleton, .ac-page start).
  * Set $lf before including it at the top level of the page (the header reads $sessionUserObject):
- *   $lf = ['title' => 'Class Recordings', 'menu' => 'Class Recordings', 'js' => ['js/recordings.js'], 'icons' => ['play']];
+ *   $lf = ['title' => 'Class Recordings', 'menu' => 'Class Recordings', 'js' => ['js/recordings.js'], 'css' => [...], 'icons' => ['play']];
  *   include __DIR__ . '/includes/learning-frame-top.php';   ...page body...   include __DIR__ . '/includes/learning-frame-bottom.php';
  */
 require_once __DIR__ . '/../../includes/enlixo/student-learning.php';
@@ -21,6 +21,9 @@ $lf += ['title' => '', 'menu' => '', 'js' => [], 'icons' => []];
     <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
     <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
     <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/portal-learning.css?v=<?= Project::getVersion() ?>">
+    <?php foreach ($lf['css'] ?? [] as $href) { ?>
+        <link rel="stylesheet" href="<?= sl_e($href) ?>?v=<?= Project::getVersion() ?>">
+    <?php } ?>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script src="<?= Project::getAssetsPath() ?>/js/init.js?v=<?= Project::getVersion() ?>"></script>
 </head>

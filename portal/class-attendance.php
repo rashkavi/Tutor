@@ -8,14 +8,14 @@ if (!SessionUser::ifUserIsStudent()) {
 } else {
     $sessionUserObject = SessionUser::getCurrentUserObject('Student');
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['class-id']) && !empty($_GET['class-id']))) {
-        header("Location: ./level-details");
+        header("Location: ./attendance");
     } else {
-        $class_id = $_GET['class-id'];
+        $class_id = (int) $_GET['class-id'];
         $isClassValid = Database::search("SELECT * FROM `students_has_classes`
         INNER JOIN `classes` ON `classes_class_id`=`class_id`
         WHERE `students_student_id`='" . $sessionUserObject['student_id'] . "' AND `classes_class_id`='" . $class_id . "'");
         if (!($isClassValid->num_rows > 0)) {
-            header("Location: ./course-overview");
+            header("Location: ./attendance");
         } else {
             $class = $isClassValid->fetch_assoc();
 
@@ -103,6 +103,7 @@ if (!SessionUser::ifUserIsStudent()) {
                                         AND a.students_student_id = '" . $sessionUserObject["student_id"] . "'
                                 WHERE 
                                     shc.status_status_id = 1
+                                        AND shc.students_student_id = '" . (int) $sessionUserObject["student_id"] . "'
                                         AND TIMESTAMP(tt.date, tt.start_time) <= '" . $date->format('Y-m-d H:i:s') . "'
                                         AND tt.time_table_status_time_table_status_id = 1 AND lecture_type_lecture_type_id != 3
                                         AND class.class_id = '" . $class_id . "'

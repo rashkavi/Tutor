@@ -36,7 +36,7 @@ const sendOTP = (btn) => {
             if (response.done) {
                 showToast("success", response.done);
                 $("#content-div").html(`
-                <p class="text-24 sub-topic-color fw-medium lh-lg">Tutor Login</p>
+                <p class="text-24 sub-topic-color fw-medium lh-lg">Student Login</p>
 
                 <div class="d-flex justify-content-center gap-2 mb-3">
                     ${Array.from({ length: 6 }).map((_, i) => `

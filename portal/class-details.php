@@ -10,9 +10,9 @@ if (!SessionUser::ifUserIsStudent()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Student');
 
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['class-id']) && !empty($_GET['class-id']))) {
-        header("Location: ./class");
+        header("Location: ./classes");
     } else {
-        $class_id = $_GET["class-id"];
+        $class_id = (int) $_GET["class-id"];
 
         $query = " SELECT 
                                                     classes.*,
