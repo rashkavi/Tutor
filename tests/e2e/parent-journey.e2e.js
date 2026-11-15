@@ -220,6 +220,14 @@ const slipPng = () => {
     await p().waitForTimeout(1500);
     t.expect(!(await p().locator('.modal.show').count()), 'A pop-up opened');
   });
+  await t.tc('PA-36', 'No pop-ups', 'A class in the Time Table opens the class day page', ['Open Time Table', 'Tap a class'], 'The class day page with the attendance of the children', async () => {
+    await t.open('parent/time-table', 3500);
+    const item = p().locator('a.m-lec, a.mv-lec, a[href*="class-day?time-table-id="]').first();
+    t.expect(await item.count(), 'No class link in the Time Table');
+    await p().goto(await item.evaluate((a) => a.href));
+    await p().waitForTimeout(2000);
+    t.expect(path_().endsWith('/class-day') && /Attendance/.test(await text()), `Opened ${path_()}`);
+  });
   await t.tc('PA-35', 'Security', "Another class's class day does not open", ['Open /parent/class-day for a class none of the children is in'], 'Sent back to the Time Table', async () => {
     const ids = JSON.parse(execFileSync('php', [path.join(__dirname, 'qa-lookup.php')]).toString());
     await t.open(`parent/class-day?time-table-id=${ids.other_day}`, 1500);

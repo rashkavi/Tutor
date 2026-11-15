@@ -49,7 +49,7 @@
         }
     };
     const typeIcon = (type) => ((type || '').toLowerCase() === 'physical' ? icon('physical') : icon('online'));
-    const detailsUrl = (l) => 'time-table-class-details?time-table-id=' + encodeURIComponent(l.lectureId);
+    const detailsUrl = (l) => (document.getElementById('timeTable')?.dataset.details || 'time-table-class-details?time-table-id=') + encodeURIComponent(l.lectureId);
 
     // ------------------------------------------------------------------ one class card (phone day list + week view)
     const cardHtml = (l) => {

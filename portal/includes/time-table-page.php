@@ -3,12 +3,15 @@
  * The student Time Table (ENLIXO V3 student portal "Lecture Schedule Calendar"), shared by
  * portal/time-table.php (every class) and portal/class-time-table.php?class-id=<id> ($ttClass = that class).
  * Needs $sessionUserObject; $ttClass = null or the class row from sl_student_class(). Script: portal/js/time-table.js.
+ * The parent portal uses it too: $ttFrame = extra $lf keys (side, header, js) and $ttDetails = the class day page
+ * ('class-day?time-table-id='), $ttIntro = the line under the title.
  */
 require_once __DIR__ . '/../../includes/enlixo/student-learning.php';
 $ttClass = $ttClass ?? null;
 $ttTitle = $ttClass ? $ttClass['class_name'] . ' Time Table' : 'Time Table';
 $lf = ['title' => $ttTitle, 'menu' => $ttClass ? 'Classes' : 'Time Table', 'js' => ['js/time-table.js'],
     'icons' => ['physical', 'online', 'teacher', 'chevron-right', 'calendar', 'calendar-empty']];
+$lf = ($ttFrame ?? []) + $lf;
 include __DIR__ . '/learning-frame-top.php';
 ?>
                             <?php
@@ -19,11 +22,11 @@ include __DIR__ . '/learning-frame-top.php';
                                     ['Time Table', null],
                                 ], '', '<a class="custom-btn" href="./time-table">' . enlixo_icon('timetable', 18) . 'All Classes</a>');
                             } else {
-                                sl_page_title('Time Table', [], 'See every class you are in by week or month. Tap a class to open its details.');
+                                sl_page_title('Time Table', [], $ttIntro ?? 'See every class you are in by week or month. Tap a class to open its details.');
                             }
                             ?>
 
-                            <div class="ac-card p-3 p-lg-4" id="timeTable" data-class-id="<?= $ttClass ? (int) $ttClass['class_id'] : '' ?>">
+                            <div class="ac-card p-3 p-lg-4" id="timeTable" data-class-id="<?= $ttClass ? (int) $ttClass['class_id'] : '' ?>" data-details="<?= sl_e($ttDetails ?? 'time-table-class-details?time-table-id=') ?>">
                                 <!-- Phones and tablets: month grid, tap a day to see its classes below -->
                                 <div class="d-lg-none">
                                     <div class="m-cal">
