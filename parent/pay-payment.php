@@ -10,7 +10,7 @@ if (!SessionUser::ifUserIsParent()) {
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['payment-id']) && !empty($_GET['payment-id']))) {
         header("Location: ./payments");
     } else {
-        $payment_id = $_GET["payment-id"];
+        $payment_id = (int) $_GET["payment-id"]; require_once __DIR__ . '/../includes/enlixo/parent-scope.php'; if (!(ps_fee_child((int) (SessionUser::getCurrentUserObject('Parent')['user_id'] ?? 0), $payment_id))) { header('Location: ./payments'); exit; } // only the parent's own children
 
         $query = "
         SELECT 
@@ -63,7 +63,7 @@ if (!SessionUser::ifUserIsParent()) {
        LEFT JOIN student_has_penalty_payments penalty
             ON penalty.student_has_payments_student_has_payment_id = cpp.student_has_payment_id
        WHERE  `cpp`.`student_has_payment_id`='" . $payment_id . "'
-        AND `cpp`.`payment_status_payment_status_id` = 1
+        AND `cpp`.`payment_status_payment_status_id` IN (1, 4)
         ";
 
         $payment = Database::search($query);
@@ -459,7 +459,7 @@ if (!SessionUser::ifUserIsParent()) {
                 <script src="<?= Project::getAssetsPath() ?>/plugins/jquery/jquery-3.7.1.min.js"></script>
                 <script src="<?= Project::getAssetsPath() ?>/js/script.js?v=<?= Project::getVersion() ?>"></script>
                 <script src="js/functions.js?v=<?= Project::getVersion() ?>"></script>
-                <script src="js/fileChooser.js"></script>
+                <script src="<?= Project::getAssetsPath() ?>/js/fileChooser.js?v=<?= Project::getVersion() ?>"></script>
 
             </body>
 

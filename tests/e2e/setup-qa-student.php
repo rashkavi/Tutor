@@ -112,7 +112,8 @@ foreach ($classes as $classId) {
 $db->execute(
     'UPDATE login_details SET verification = :o, reset_time = :t, status_status_id = 1
       WHERE login_details_id = (SELECT login_details_login_details_id FROM students WHERE student_id = :s)',
-    ['o' => QA_OTP, 't' => (string) time(), 's' => $studentId],
+    // 'expired' as the first argument: the code was sent 10 minutes ago (the sign-in must refuse it)
+    ['o' => QA_OTP, 't' => date('Y-m-d H:i:s', time() - (($argv[1] ?? '') === 'expired' ? 600 : 0)), 's' => $studentId],
 );
 
 // ids the tests use: a fee of each status, a recording / tute / class day of the student's classes, and things of

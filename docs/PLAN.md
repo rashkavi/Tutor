@@ -269,3 +269,10 @@ opened the pop-up opens the page.
 - Run: `php tests/e2e/setup-qa-tutor.php` (QA tutor `qa.tutor@enlixo.test`, STARTER plan active), then `node tests/e2e/tutor-journey.e2e.js http://127.0.0.1:8082` and `node tests/e2e/make-report.js` (PDF in `docs/qa/QA-report-tutor.pdf`). Results JSON / failure screenshots go to `tests/e2e/results/` (git-ignored).
 - Fixed on the way: sign-in page JS errors, SQL text in the sign-in e-mail (500), password kept in the remember-me cookie, `./class` 404 redirects, fileChooser / duplicate applyValidation crashes, student save on databases without `login_details.password`, Tom Select served locally.
 - Still open: WhatsApp token in `tutor/api/sendOtp.php` (move to `secure/.env` and rotate), OTP sign-in without a Tutor role filter, hidden remember-me checkbox, Student Fees on sample data.
+
+## Student and parent QA, Child Progress (2026-11-15)
+
+- Tests: `node tests/e2e/student-journey.e2e.js` (61 cases) and `node tests/e2e/parent-journey.e2e.js` (66 cases), phone (390 px) then desktop; they run `setup-qa-student.php` / `setup-qa-parent.php` themselves. Report: `node tests/e2e/make-report-portal.js` -> `docs/qa/QA-report-student-parent.pdf`.
+- Sign-in codes: `includes/WhatsAppOtp.php` (`whatsapp_send_otp()`, `otp_still_valid()`): the code only goes to WhatsApp, never into an API answer; valid 5 minutes; used once. Parents now need the code (before, the number alone signed in). Set `WHATSAPP_TOKEN` on the server and rotate the old token.
+- Parent access: every parent page / API checks `includes/enlixo/parent-scope.php` (`ps_children`, `ps_class_children`, `ps_fee_child`, `ps_recording_child`); a parent only sees their own children.
+- New: `parent/child-progress.php` (needs-attention list, 30-day attendance, recent class days, missed classes and whether the recording was watched, next 7 days, fees) from `ps_progress()`; student and parent Payments use `includes/enlixo/student-fees.php` (ENLIXO V3 portal style, phone first).

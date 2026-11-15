@@ -1,128 +1,53 @@
 <?php
+// Parent sign-in, step 1: send a 6-digit code to the parent's WhatsApp. The code is saved with the time it was sent
+// and is NEVER returned in this answer (it used to be, so anyone could sign in with only a phone number).
+require_once("../../includes/connection.php");
+require_once("../../includes/WhatsAppOtp.php");
+header('Content-Type: application/json');
 $status = new stdClass();
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if ($_SERVER['CONTENT_TYPE'] == 'application/json') {
-        $content = trim(file_get_contents('php://input'));
-        $decoded = json_decode($content, true);
-        if (json_last_error() == JSON_ERROR_NONE) {
-            $mobile = $decoded['mobile'];
 
-            $normalizedWhatsapp = normalizePhoneNumber($mobile);
-            if (empty($mobile)) {
-                $status->mobile =  "Please enter your mobile number";
-            } else if (!$normalizedWhatsapp) {
-                $status->mobile =  "Please enter a valid mobile number";
-            }
-
-            if (!property_exists($status, 'mobile')) {
-                require_once("../../includes/connection.php");
-                $user = Database::search("SELECT * FROM `parents`
-                WHERE `whatsapp`='" . $normalizedWhatsapp . "' OR `whatsapp`='" . $mobile . "'");
-
-                if ($user->num_rows > 0) {
-                    $data = $user->fetch_assoc();
-                    $otp = random_int(100000, 999999);
-                    // $curl = curl_init();
-                    // curl_setopt_array($curl, array(
-                    //     CURLOPT_URL => 'https://graph.facebook.com/v21.0/470586202805184/messages',
-                    //     CURLOPT_RETURNTRANSFER => true,
-                    //     CURLOPT_POST => true,
-                    //     CURLOPT_HTTPHEADER => array(
-                    //         "Authorization: Bearer EAAGrCyhRGJ8BO06DlCZCpR6425WPYUrQQoqmUu6HeShIUZCX3nFlRUSXu4IbQW22V4a6wafFQMKY7K1Pngauin60c41ObN9KYrUQ3TfEm2l1BIk5tZCmN1yAnzoqWjN2BL4XW6aoDc4mZB1B3BJfvIBtrwtucmleH2Gr2JdZAkTEmqW6ZCNq4yMiIKwqRD9gaV5ND7DboZCD8KPuxWlII45FgU5RvlnSMqJ5CgpTQ5kcBLWJ0s40y1TYHeN49mzMYNL",
-                    //         "Content-Type: application/json"
-                    //     ),
-                    //     CURLOPT_POSTFIELDS => json_encode([
-                    //         "messaging_product" => "whatsapp",
-                    //         "recipient_type" => "individual",
-                    //         "to" => $normalizedWhatsapp,
-                    //         "type" => "template",
-                    //         "template" => [
-                    //             "name" => "send_otp",
-                    //             "language" => [
-                    //                 "code" => "en_US"
-                    //             ],
-                    //             "components" => [
-                    //                 [
-                    //                     "type" => "body",
-                    //                     "parameters" => [
-                    //                         [
-                    //                             "type" => "text",
-                    //                             "text" => $otp
-                    //                         ]
-                    //                     ]
-                    //                 ],
-                    //                 [
-                    //                     "type" => "button",
-                    //                     "sub_type" => "url",
-                    //                     "index" => "0",
-                    //                     "parameters" => [
-                    //                         [
-                    //                             "type" => "text",
-                    //                             "text" => $otp
-                    //                         ]
-                    //                     ]
-                    //                 ]
-                    //             ]
-                    //         ]
-                    //     ])
-                    // ));
-                    // $response = curl_exec($curl);
-                    // curl_close($curl);
-
-                    // $curlData = json_decode($response, true);
-
-                    // if (isset($curlData['error'])) {
-                    //     $status->error = "OTP could not be sent. Please try again.";
-                    // } else {
-                    //     date_default_timezone_set("Asia/Colombo");
-                    //     $date = date('Y-m-d H:i:s');
-                    //     Database::iud("UPDATE `users` SET `user_reset_time`='" . $date . "',`user_verification`='" . $otp . "' WHERE `user_id`='" . $data['user_id'] . "'");
-
-                    //     $status->done = "OTP sent successfully";
-                    //     $status->otp = $otp;
-                    // }
-
-                    date_default_timezone_set("Asia/Colombo");
-                    $date = date('Y-m-d H:i:s');
-                    Database::iud("UPDATE `parents` SET `reset_time`='" . $date . "',`verification`='" . $otp . "' WHERE `parent_id`='" . $data['parent_id'] . "'");
-
-                    $status->done = "OTP sent successfully";
-                    $status->otp = $otp;
-                } else {
-                    $status->mobile = "Incorrect whatsapp number";
-                }
-            }
-        } else {
-            http_response_code(400);
-            $status->error = 'Invalid JSON';
-        }
-    } else {
-        http_response_code(400);
-        $status->error = 'Invalid Content-Type';
-    }
-} else {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || stripos((string) ($_SERVER['CONTENT_TYPE'] ?? ''), 'application/json') !== 0) {
     http_response_code(400);
-    $status->error = 'Invalid request method';
+    echo json_encode(['error' => 'Invalid request']);
+    exit;
 }
+$decoded = json_decode(trim((string) file_get_contents('php://input')), true);
+$mobile = trim((string) ($decoded['mobile'] ?? ''));
+$normalized = parent_phone($mobile);
 
-echo (json_encode($status));
+if ($mobile === '') {
+    $status->mobile = "Please enter your WhatsApp number";
+} elseif (!$normalized) {
+    $status->mobile = "Please enter a valid WhatsApp number, for example 0771234567";
+} else {
+    $parent = Database::search("SELECT `parent_id` FROM `parents` WHERE `whatsapp` = '" . Database::escape($normalized) . "' OR `whatsapp` = '" . Database::escape($mobile) . "' LIMIT 1");
+    if ($parent->num_rows === 0) {
+        $status->mobile = "This WhatsApp number is not registered as a parent. Ask the tutor to add it.";
+    } else {
+        $parentId = (int) $parent->fetch_assoc()['parent_id'];
+        $otp = random_int(100000, 999999);
+        if (!whatsapp_send_otp($normalized, $otp)) {
+            $status->error = "The code could not be sent to WhatsApp. Please try again in a minute.";
+        } else {
+            $date = (new DateTime('now', new DateTimeZone('Asia/Colombo')))->format('Y-m-d H:i:s');
+            Database::iud("UPDATE `parents` SET `reset_time` = '" . $date . "', `verification` = '" . $otp . "' WHERE `parent_id` = '" . $parentId . "'");
+            $status->done = "We sent a 6-digit code to your WhatsApp";
+        }
+    }
+}
+echo json_encode($status);
 
-
-function normalizePhoneNumber($number)
+function parent_phone(string $number)
 {
     $number = preg_replace('/[\s\-()]/', '', $number);
-    if (preg_match('/^0([7][0-9]{8})$/', $number)) {
+    if (preg_match('/^0(7[0-9]{8})$/', $number)) {
         return '+94' . substr($number, 1);
     }
-    if (preg_match('/^94([7][0-9]{8})$/', $number)) {
+    if (preg_match('/^94(7[0-9]{8})$/', $number)) {
         return '+94' . substr($number, 2);
     }
     if (preg_match('/^\+?[1-9][0-9]{7,14}$/', $number)) {
-        if ($number[0] !== '+') {
-            return '+' . $number;
-        }
-        return $number;
+        return $number[0] === '+' ? $number : '+' . $number;
     }
-
     return false;
 }

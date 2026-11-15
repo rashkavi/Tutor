@@ -12,7 +12,7 @@ if (!SessionUser::ifUserIsParent()) {
 
     if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['recording-id']) && !empty($_GET['recording-id'])) {
 
-        $recording_id = $_GET["recording-id"];
+        $recording_id = (int) $_GET["recording-id"]; require_once __DIR__ . '/../includes/enlixo/parent-scope.php'; if (!(ps_recording_child((int) (SessionUser::getCurrentUserObject('Parent')['user_id'] ?? 0), $recording_id, 'lecture'))) { header('Location: ./classes'); exit; } // only the parent's own children
 
       
         $query = "SELECT * FROM `lecture_recording` 
@@ -25,7 +25,7 @@ if (!SessionUser::ifUserIsParent()) {
 
         $recording = Database::search($query);
         if ($recording->num_rows == 0) {
-            header("Location: ./class-recordings");
+            header("Location: ./classes");
         } else {
             $recordingData = $recording->fetch_assoc();
             function formatDuration(int $minutes): string
@@ -128,7 +128,7 @@ if (!SessionUser::ifUserIsParent()) {
                                                                         <div class="col-12 col-md-6 my-3 file-item cursor-pointer" onclick="viewLectureAttachment('<?php echo $attachmentData['attachment'] ?>', '<?php echo $attachmentData['attachment_name'] ?>')">
                                                                             <div class="p-3 bl-solid">
                                                                                 <div class="d-flex">
-                                                                                    <img src="assets/imgs/icons/pdf.png" alt="Lecture Attachment" class="h-48 w-auto">
+                                                                                    <img src="<?= Project::getAssetsPath() ?>/imgs/icons/pdf.png" alt="Lecture Attachment" class="h-48 w-auto">
                                                                                     <div class="d-flex flex-column px-4">
                                                                                         <span class="name"><?php echo $attachmentData["attachment_name"] ?></span>
                                                                                         <span class="text-muted text-12">Click to view</span>

@@ -7,8 +7,8 @@ if (SessionUser::ifUserIsParent()) {
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-        $payment_id = isset($_POST['payment_id']) ? $_POST['payment_id'] : 0;
-        $method = isset($_POST['method']) ? $_POST['method'] : 0;
+        $payment_id = (int) ($_POST['payment_id'] ?? 0);
+        $method = (int) ($_POST['method'] ?? 0);
         $payment_slip;
 
         if (empty($payment_id) || $payment_id == 0) {
@@ -24,7 +24,11 @@ if (SessionUser::ifUserIsParent()) {
             INNER JOIN `students_has_classes` `shi` 
                 ON `cpp`.`students_has_class_students_has_class_id` = `shi`.`students_has_class_id`
                                                                                                       
+            INNER JOIN `parents_has_students` `phs`
+                ON `phs`.`students_student_id` = `shi`.`students_student_id`
             WHERE  `cpp`.`student_has_payment_id`='" . $payment_id . "'
+            AND `phs`.`parents_parent_id` = '" . (int) $sessionUserObject['user_id'] . "'
+            AND `cpp`.`payment_status_payment_status_id` IN (1, 4)
             ";
 
             $isValidPaymentId = Database::search($query);

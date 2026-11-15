@@ -11,6 +11,7 @@ class load_side_menu
         $menuItems = [
             ["Dashboard", "material-symbols:team-dashboard-outline", "dashboard", "dashboard"],
             ["My Children", "fa7-solid:children", "my-children", "my-children"],
+            ["Child Progress", "solar:chart-2-linear", "child-progress", "child-progress"],
             ["Classes", "mingcute:classify-add-line", "classes", "classes"],
             ["Time Table", "eos-icons:storage-class-outlined", "time-table", "time-table"],
             ["Attendance", "gg:check-o", "attendance", "attendance"],

@@ -2,6 +2,7 @@
 $status = new stdClass();
 require_once("../../includes/connection.php");
 require_once("../../includes/Project.php");
+require_once("../../includes/WhatsAppOtp.php");
 require_once("../../tutor/includes/security-helpers.php");
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($_SERVER['CONTENT_TYPE'] == 'application/json') {
@@ -29,9 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 WHERE (`user_whatsapp`='" . Database::escape((string) $mobile) . "' OR `user_whatsapp`='" . Database::escape((string) $normalizedWhatsapp) . "')");
                 if ($user->num_rows > 0) {
                     $data = $user->fetch_assoc();
-                    if ($data["user_reset_time"] > strtotime("-5 minutes")) {
+                    if (otp_still_valid($data["user_reset_time"]) && (string) $data["user_verification"] !== "") {
                         if ($data["status_status_id"] == 1) {
-                            if ($otp == $data["user_verification"]) {
+                            if (hash_equals((string) $data["user_verification"], (string) $otp)) {
                                 include_once "../../includes/UserClass.php";
                                 $data["user_password"] = null;
 

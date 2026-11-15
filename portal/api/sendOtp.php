@@ -81,7 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             Database::iud("UPDATE `login_details` SET `reset_time`='" . $date . "',`verification`='" . $otp . "' WHERE `login_details_id`='" . $data['login_details_id'] . "'");
 
                             $status->done = "OTP sent successfully";
-                            $status->otp = $otp;
                         }
                     } else {
                         $status->mobile =  "Your account is deactivated.";

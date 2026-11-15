@@ -365,7 +365,6 @@ if (!SessionUser::ifUserIsParent()) {
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="<?= Project::getAssetsPath() ?>/js/script.js?v=<?= Project::getVersion() ?>"></script>
         <script src="<?= Project::getAssetsPath() ?>/js/functions.js?v=<?= Project::getVersion() ?>"></script>
-        <script src="js/script.js?v=<?= Project::getVersion() ?>"></script>
 
     </body>
 

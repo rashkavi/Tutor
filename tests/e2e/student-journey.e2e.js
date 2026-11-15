@@ -110,6 +110,17 @@ const slipPng = () => {
     const r = await post('api/signIn.php', { mobile: qa.whatsapp, otp: '000000' });
     t.expect(/incorrect/i.test(r.body) && !/"done"/.test(r.body), `Answer: ${r.body.slice(0, 120)}`);
   });
+  await t.tc('ST-08', 'Security', 'The send-code answer never contains the code', ['Ask for a code for the QA number'], 'The answer has no code in it (only WhatsApp gets it)', async () => {
+    const r = await post('api/sendOtp.php', { mobile: qa.whatsapp });
+    t.expect(!/"otp"\s*:\s*"?\d{6}/.test(r.body), `The answer gives the code away: ${r.body.slice(0, 120)}`);
+    qa = setup(); // sendOtp may have saved a new code; put the test code back
+  });
+  await t.tc('ST-09', 'Security', 'A code older than 5 minutes is refused', ['Use a code that was sent 10 minutes ago'], 'Refused: "timed out"', async () => {
+    execFileSync('php', [path.join(__dirname, 'setup-qa-student.php'), 'expired']);
+    const r = await post('api/signIn.php', { mobile: qa.whatsapp, otp: qa.otp });
+    qa = setup();
+    t.expect(!/"done"/.test(r.body), `An old code still signed in: ${r.body.slice(0, 120)}`);
+  });
   await t.tc('ST-06', 'Sign in', 'Student signs in with the WhatsApp code on a phone', ['Type the WhatsApp number, press Send', 'Type the 6-digit code in the boxes', 'Press Verify'], 'The OTP screen says Student Login; the dashboard opens with the name', async () => {
     await p().route('**/portal/api/sendOtp.php', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ done: 'OTP sent' }) }));
     await t.open('portal/', 800);
