@@ -120,7 +120,8 @@ if (!SessionUser::hasValidSession()) {
 
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/style.css?v=<?= Project::getVersion() ?>">
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/skeleton.css?v=<?= Project::getVersion() ?>">
-                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
+                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-fees.css?v=<?= Project::getVersion() ?>">
+        <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
                 <link href="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.css" rel="stylesheet">
 
                 <script src="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.js"></script>
@@ -184,7 +185,7 @@ if (!SessionUser::hasValidSession()) {
                                                 if ($paymentData['payment_status_id'] != 1) {
                                                 ?>
                                                     <div class="col-12 col-md-2 mt-3 m-md-0 d-flex justify-content-end align-items-center">
-                                                        <button class="custom-btn w-100" type="button" onclick="openUpdatePaymentStatusModal();">
+                                                        <button class="custom-btn w-100" type="button" onclick="document.getElementById('sp-decide').scrollIntoView({ behavior: 'smooth', block: 'center' });">
                                                             Update Payment Status
                                                         </button>
                                                     </div>
@@ -194,6 +195,45 @@ if (!SessionUser::hasValidSession()) {
 
                                             </div>
                                         </div>
+                                        <?php if ($paymentData['payment_status_id'] != 1) { ?>
+                                            <!-- Approve / Reject on the page itself (no pop-up) -->
+                                            <div class="col-12 mb-4">
+                                                <div class="component-theme p-4 sp-decide" id="sp-decide">
+                                                    <div class="d-flex align-items-center gap-3 mb-3">
+                                                        <span class="sp-decide-ico"><iconify-icon icon="solar:shield-check-linear" width="22" height="22"></iconify-icon></span>
+                                                        <div>
+                                                            <div class="text-18 main-text fw-semibold">Check this payment</div>
+                                                            <div class="text-13 sub-text">Compare the slip below with your bank account, then approve it or reject it with a note for the student.</div>
+                                                        </div>
+                                                    </div>
+                                                    <input type="hidden" id="status-selector" value="<?= in_array((int) $paymentData['payment_status_id'], [3, 4], true) ? (int) $paymentData['payment_status_id'] : '' ?>">
+                                                    <div class="sp-choices" role="radiogroup" aria-label="Payment status">
+                                                        <button type="button" class="sp-choice is-good <?= (int) $paymentData['payment_status_id'] === 3 ? 'is-on' : '' ?>" data-value="3" role="radio">
+                                                            <iconify-icon icon="solar:check-circle-linear" width="24" height="24"></iconify-icon>
+                                                            <span><strong>Approve</strong><small>The money is in your account</small></span>
+                                                        </button>
+                                                        <button type="button" class="sp-choice is-bad <?= (int) $paymentData['payment_status_id'] === 4 ? 'is-on' : '' ?>" data-value="4" role="radio">
+                                                            <iconify-icon icon="solar:close-circle-linear" width="24" height="24"></iconify-icon>
+                                                            <span><strong>Reject</strong><small>The slip is wrong or unclear</small></span>
+                                                        </button>
+                                                    </div>
+                                                    <span id="status-selector-feedback" class="text-dark-red text-12"></span>
+                                                    <label class="text-14 main-text mt-3 d-block" for="note">Note to the student</label>
+                                                    <textarea class="form-control custom-input mt-2" id="note" rows="3" placeholder="Add a note, for example the reason for rejecting the slip" data-limit="100"></textarea>
+                                                    <span id="note-feedback" class="text-dark-red text-12"></span>
+                                                    <div class="d-flex justify-content-end mt-3">
+                                                        <button type="button" class="custom-btn px-5" id="sp-save" onclick="if (!document.getElementById('status-selector').value) { document.getElementById('status-selector-feedback').textContent = 'Choose Approve or Reject.'; return; } updatePaymentStatus(this, <?= (int) $paymentData['student_has_payment_id'] ?>);">Save</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <script>
+                                                document.querySelectorAll('.sp-choice').forEach((b) => b.addEventListener('click', () => {
+                                                    document.querySelectorAll('.sp-choice').forEach((x) => { x.classList.toggle('is-on', x === b); x.setAttribute('aria-checked', x === b ? 'true' : 'false'); });
+                                                    document.getElementById('status-selector').value = b.dataset.value;
+                                                    document.getElementById('status-selector-feedback').textContent = '';
+                                                }));
+                                            </script>
+                                        <?php } ?>
                                         <div class="col-12">
                                             <div class="row p-4 m-0 g-0 component-theme w-100">
                                                 <div class="col-12">
@@ -813,45 +853,6 @@ if (!SessionUser::hasValidSession()) {
                         </div>
                     </div>
                 </div>
-
-                <div class="modal fade" id="updatePaymentStatus" tabindex="-1" role="dialog" aria-labelledby="updatePaymentStatusTitle" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="exampleModalLongTitle">Update Payment Status</h5>
-                            </div>
-                            <div class="modal-body">
-                                <div class="col-12 p-0 g-0">
-                                    <div class="row gx-4 gy-3">
-                                        <div class="col-12 d-flex flex-column">
-                                            <label class="text-14 main-text required" for="">Payment Status</label>
-                                            <select class="form-select custom-select mt-2" id="status-selector">
-                                                <?php
-                                                $status = Database::search("SELECT * FROM `payment_status` WHERE `payment_status_id` IN (3,4)");
-                                                while ($data = $status->fetch_assoc()) {
-                                                ?>
-                                                    <option value="<?= $data["payment_status_id"]; ?>" <?= $data["payment_status_id"] == $paymentData["payment_status_id"] ? "selected" : ""; ?>><?= $data["payment_status"]; ?></option>
-                                                <?php
-                                                }
-                                                ?>
-                                            </select>
-                                            <span id="status-selector-feedback" class="text-dark-red text-12"></span>
-                                        </div>
-                                        <div class="col-12 d-flex flex-column">
-                                            <label class="text-14 main-text" for="">Note</label>
-                                            <textarea class="form-control custom-input mt-2" id="note" rows="5"></textarea>
-                                            <span id="note-feedback" class="text-dark-red text-12"></span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="col-12 col-md-4 custom-btn" onclick="updatePaymentStatus(this,<?= $paymentData['student_has_payment_id'] ?>);">Update</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
 
                 <script src="<?= Project::getAssetsPath() ?>/plugins/bootstrap/js/bootstrap.bundle.min.js?v=<?= Project::getVersion() ?>"></script>
                 <script src="<?= Project::getAssetsPath() ?>/plugins/jquery/jquery-3.7.1.min.js"></script>

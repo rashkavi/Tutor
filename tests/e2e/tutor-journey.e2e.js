@@ -182,6 +182,61 @@ const stamp = Date.now().toString().slice(-6);
       t.expect(!/class-id=/.test(p.url()) || p.url().includes(String(classId)) || /classes/.test(p.url()), `Redirected to ${p.url()}`);
     });
   }
+  // ------------------------------------------------------------------ main actions open PAGES, not pop-ups
+  const ids = JSON.parse(require('child_process').execFileSync('php', [path.join(__dirname, 'qa-lookup.php')]).toString());
+  const noModal = async () => t.expect(!(await p.locator('.modal.show').count()), 'A pop-up opened');
+  const mockFee = (status) => p.evaluate(async (st) => { const { FeesMock } = await import('/assets/js/enlixo/mock/FeesMock.js'); const m = FeesMock.shared(); const f = m.fees.find((x) => x.status === st && x.net > 0); return f ? { id: f.id, student: f.student } : null; }, status);
+  await t.tc('TC-60', 'No pop-ups', 'Rejecting a slip happens on the fee page', ['Open a fee with a slip to check', 'Press Reject'], 'The reason form opens inside the page, no pop-up', async () => {
+    await t.open('tutor/fees', 2500);
+    const f = await mockFee('waiting');
+    t.expect(f, 'No slip to check in the sample data');
+    await t.open(`tutor/fee-details?fee-id=${f.id}`, 2500);
+    await p.click('.fe-reject-btn');
+    await p.waitForTimeout(800);
+    t.expect(await p.isVisible('#fe-reject'), 'No reject form on the page');
+    await noModal();
+  });
+  await t.tc('TC-61', 'No pop-ups', 'Record Payment is a page and saving opens the receipt page', ['Open Record Payment for a student who owes', 'Press Save & Give Receipt'], 'Record Payment page, then the Receipt page with the receipt number', async () => {
+    await t.open('tutor/fees', 2500);
+    const f = await mockFee('unpaid');
+    await t.open(`tutor/record-payment?student-id=${f.student}&months=${f.id}`, 3000);
+    await noModal();
+    await p.locator('button[data-save]').last().click();
+    await p.waitForURL(/fee-receipt/, { timeout: 10000 });
+    await p.waitForTimeout(2000);
+    t.expect(/RC-\d+/.test(await text('.fe-receipt-no')), 'No receipt number');
+    await noModal();
+  });
+  await t.tc('TC-62', 'No pop-ups', 'Free Card / Discount is a page', ['Open a student Fee Card', 'Press Free Card / Discount'], 'The form opens as a page', async () => {
+    await t.open('tutor/fees', 2500);
+    const f = await mockFee('unpaid');
+    await t.open(`tutor/student-fees?student-id=${f.student}`, 3000);
+    await p.locator('#card-actions button', { hasText: 'Free Card' }).first().click();
+    await p.waitForTimeout(2500);
+    t.expect(/fee-concession/.test(p.url()) || /upgrade|GROW/i.test(await text()), `Stayed on ${p.url()}`);
+    await noModal();
+  });
+  await t.tc('TC-63', 'No pop-ups', 'Approving a real payment slip happens on the payment page', ['Open a student payment that waits for approval'], 'An Approve / Reject card is on the page; no pop-up', async () => {
+    t.expect(ids.tutor_fee, 'No payment of a QA class');
+    await t.open(`tutor/student-payment?payment-id=${ids.tutor_fee}`, 2500);
+    t.expect(await p.isVisible('#sp-decide'), 'No approve / reject card');
+    await p.click('.sp-choice[data-value="3"]');
+    t.expect((await p.inputValue('#status-selector')) === '3', 'Approve not chosen');
+    await noModal();
+  });
+  await t.tc('TC-64', 'No pop-ups', 'An invoice and Pay Now open the invoice page', ['Open My Subscription', 'Open an invoice'], 'The invoice page with the amount (and how to pay while it is open)', async () => {
+    t.expect(ids.tutor_invoice, 'The QA tutor has no invoice');
+    await t.open(`tutor/invoice?invoice-id=${ids.tutor_invoice}`, 3000);
+    t.expect(/Invoice total/.test(await text()), 'Invoice not shown');
+    await noModal();
+  });
+  await t.tc('TC-65', 'No pop-ups', 'Clicking a day in the Time Table shows its classes on the page', ['Open Time Table', 'Click a day'], 'A panel under the calendar lists the classes of that day; no pop-up', async () => {
+    await t.open('tutor/time-table', 3000);
+    await p.locator('.ex-cal-cell[data-date]').first().click();
+    await p.waitForTimeout(800);
+    t.expect(await p.isVisible('#eventDayPanel'), 'No day panel');
+    await noModal();
+  });
   await t.tc('TC-55', 'Language', 'Switching to Sinhala translates the menu, English brings it back', ['Choose සිංහල in the language menu', 'Then English'], 'Menu reads උපකරණ පුවරුව, then Dashboard', async () => {
     await t.open('tutor/dashboard', 2000);
     await p.evaluate(() => { localStorage.setItem('lang', 'si'); return window.EnlixoI18n?.apply('si'); });

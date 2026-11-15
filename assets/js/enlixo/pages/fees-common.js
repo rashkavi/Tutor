@@ -76,59 +76,34 @@ const timeline = (rows) => h('ul', { class: 'ad-timeline' }, rows.map((r) => h('
 export const feeUrl = (id, queue = false) => `fee-details?fee-id=${id}${queue ? '&queue=1' : ''}`;
 export function feeDialog(id, { queue = false } = {}) { location.href = feeUrl(id, queue); }
 
-/** The older pop-up version of one fee (kept for reference; every caller now uses the page). */
-export async function feeDialogModal(id, { reload = () => {}, queue = false } = {}) {
-  const { data: f } = await api.get(`/tutor/fees/${id}`);
-  const side = h('div', { class: 'd-flex flex-column align-items-end gap-2' }, feeChip(f.status));
-  const meta = f.status === 'paid' ? `Paid ${day(f.paid_on)} · ${f.method} · receipt ${f.receipt}`
-    : f.status === 'waiting' ? `Slip uploaded ${f.slip.uploaded.slice(0, 10)}, check it against your bank account`
-      : f.status === 'free' ? 'Free card: nothing to pay this month'
-        : `Due ${day(f.due)} (${inDays(f.due)})`;
-  const body = h('div', {},
-    hero(f.status === 'paid' ? 'Paid' : 'Fee to pay', lkr(f.net), side, meta),
-    h('div', { class: 'row g-4' },
-      h('div', { class: 'col-md-6' },
-        facts([['Student', `${f.student.name} (${f.student.sid})`, true], ['Class', f.class.name, true], ['Month', f.month_label], ['Due date', day(f.due)], f.checked_by && ['Checked by', f.checked_by], f.reason && ['Reason', f.reason, true]]),
-        breakdown(f)),
-      h('div', { class: 'col-md-6' }, slipView(f))),
-    h('div', { class: 'text-15 fw-semibold main-text mb-2 mt-2' }, 'History'), timeline(f.history));
-  let m;
-  const end = [BsModal.button('Close', { onclick: () => m.close() })];
-  const start = [];
-  if (f.status === 'waiting') {
-    end.splice(0, 1, BsModal.button('Reject', { danger: true, onclick: () => { m.close(); rejectDialog(f, reload); } }));
-    end.push(BsModal.button(queue ? 'Approve & Next' : 'Approve', { success: true, onclick: async () => {
-      const { data } = await api.post(`/tutor/fees/${f.id}/approve`, {});
-      m.close(); reload();
-      Toast.success(`Approved. ${f.student.name} has paid ${f.month_label}; the receipt was sent on WhatsApp.`);
-      if (queue && data.next) feeDialogModal(data.next, { reload, queue });
-    } }));
-  } else if (['unpaid', 'overdue', 'rejected'].includes(f.status)) {
-    start.push(BsModal.button('Send Reminder', { onclick: () => { window.open(waLink(f.student.whatsapp, reminderText({ student: f.student, class: f.class, months: [{ label: f.month_label }], total: f.net })), '_blank'); } }));
-    end.push(BsModal.button('Record Payment', { primary: true, onclick: () => { m.close(); recordPayment({ student: f.student.id, select: [f.id], reload }); } }));
-  } else if (f.status === 'paid' && f.receipt_id) {
-    end.push(BsModal.button('View Receipt', { primary: true, onclick: () => { m.close(); receiptDialog(f.receipt_id); } }));
-  }
-  m = BsModal.open({ title: f.status === 'waiting' ? 'Check Payment Slip' : `${f.month_label} Fee`, subtitle: [f.student.name, f.class.short, f.month_label], icon: f.status === 'waiting' ? 'receipt' : 'payments', body, size: 'xl', footerStart: start, footerEnd: end });
-}
-
-export function rejectDialog(f, reload) {
+/** Reject a slip, drawn INSIDE the fee page (no pop-up): reason + note + Reject Slip / Cancel. */
+export function rejectPanel(f, { onDone = () => {}, onCancel = () => {} } = {}) {
   const reason = h('select', { class: 'form-select custom-select', 'data-key': 'reason' }, h('option', { value: '' }, '- Select -'), f.reasons.map((x) => h('option', { value: x }, x)));
   const note = h('textarea', { class: 'form-control custom-input', rows: 3, placeholder: 'Add a short note for the student (optional)', 'data-limit': '200' });
-  const body = h('div', {}, h('p', { class: 'text-14 sub-text' }, 'The student sees the reason in the app and can upload a new slip. The fee stays unpaid.'),
+  const panel = h('div', { class: 'fe-reject', id: 'fe-reject' },
+    h('div', { class: 'd-flex align-items-center gap-2 mb-2' }, h('span', { class: 'fe-reject-ico' }, icon('danger', { size: 18 })), h('span', { class: 'text-16 main-text fw-semibold' }, 'Reject this slip')),
+    h('p', { class: 'text-14 sub-text' }, `${f.student.name} sees the reason in the app and can upload a new slip. The fee stays unpaid.`),
     field('Reason', reason, { required: true, info: 'Why the slip cannot be accepted. The student reads this, so choose the closest reason, for example "The slip is not clear".' }),
-    field('Note to the student', note));
-  const m = BsModal.open({ title: 'Reject this Slip?', subtitle: [f.student.name, f.month_label, lkr(f.net)], icon: 'danger', tone: 'danger', body, footerEnd: [
-    BsModal.button('Cancel', { onclick: () => m.close() }),
-    BsModal.button('Reject Slip', { primary: true, danger: true, onclick: async () => {
-      try { await api.post(`/tutor/fees/${f.id}/reject`, { reason: reason.value, note: note.value }); } catch (e) { showErrors(m.el, e.details ?? {}); return; }
-      m.close(); Toast.success(`Slip rejected. ${f.student.name} was told why.`); reload();
-    } }),
-  ] });
+    field('Note to the student', note),
+    h('div', { class: 'd-flex justify-content-end gap-2 flex-wrap' },
+      h('button', { type: 'button', class: 'custom-outline-btn px-4', onclick: onCancel }, 'Cancel'),
+      h('button', { type: 'button', class: 'custom-danger-btn custom-btn px-4', id: 'fe-reject-go', onclick: async () => {
+        try { await api.post(`/tutor/fees/${f.id}/reject`, { reason: reason.value, note: note.value }); } catch (e) { showErrors(panel, e.details ?? {}); return; }
+        Toast.success(`Slip rejected. ${f.student.name} was told why.`); onDone();
+      } }, 'Reject Slip')));
+  return panel;
 }
 
-/** Cash / bank deposit / card taken at the class: pick the student, tick the months, save, give the receipt. */
-export async function recordPayment({ student = null, select = [], reload = () => {} } = {}) {
+/** Cash / bank deposit / card taken at the class: opens the Record Payment page (tutor/record-payment.php). */
+export function recordPayment({ student = null, select = [] } = {}) {
+  const q = new URLSearchParams();
+  if (student) q.set('student-id', student);
+  if (select.length) q.set('months', select.join(','));
+  location.href = `record-payment${q.toString() ? `?${q}` : ''}`;
+}
+
+/** The Record Payment page: pick the student, tick the months, how they paid; Save gives the receipt page. */
+export async function mountRecordPayment(root, actions, { student = null, select = [] } = {}) {
   const { data: students } = await api.get('/tutor/fees/students');
   const pick = h('select', { class: 'form-select custom-select', 'data-key': 'student' }, h('option', { value: '' }, '- Select -'),
     students.map((s) => h('option', { value: s.id, selected: s.id === student }, `${s.name} · ${s.sid}`)));
@@ -176,23 +151,33 @@ export async function recordPayment({ student = null, select = [], reload = () =
       field('Note', note),
       h('div', { class: 'form-check form-switch d-flex align-items-center gap-2 mb-3' }, send, h('label', { class: 'form-check-label text-14 main-text', for: 'rp-send' }, 'Send the receipt to the student on WhatsApp')),
       h('div', { class: 'ad-hero mb-0' }, h('div', {}, h('div', { class: 'text-13 sub-text' }, 'Total received'), h('div', { class: 'ad-hero-amount' }, total), count))));
-  const m = BsModal.open({ title: 'Record a Payment', subtitle: ['Cash, bank deposit or card taken by you', 'A receipt number is given at once'], icon: 'wallet', body, size: 'xl', footerEnd: [
-    BsModal.button('Cancel', { onclick: () => m.close() }),
-    BsModal.button('Save & Give Receipt', { primary: true, onclick: async () => {
-      const items = [...picked.keys()].filter((k) => typeof k === 'number');
-      const payload = { student: pick.value, items: items.length || picked.size ? [...picked.keys()] : [], method: m.el.querySelector('input[name="rp-method"]:checked')?.value, paid_on: date.value, reference: ref.value, note: note.value, total: sum(), send: send.checked };
-      try {
-        const { data } = await api.post('/tutor/fees/payments', payload);
-        m.close(); reload(); Toast.success(`Saved. Receipt ${data.no} is ready${send.checked ? ' and was sent on WhatsApp' : ''}.`); receiptDialog(data.receipt);
-      } catch (e) { showErrors(m.el, e.details ?? {}); if (!e.details) Toast.error(e.message); }
-    } }),
-  ] });
+  const save = async (btn) => {
+    const items = [...picked.keys()].filter((k) => typeof k === 'number');
+    const payload = { student: pick.value, items: items.length || picked.size ? [...picked.keys()] : [], method: root.querySelector('input[name="rp-method"]:checked')?.value, paid_on: date.value, reference: ref.value, note: note.value, total: sum(), send: send.checked };
+    btn.disabled = true;
+    try {
+      const { data } = await api.post('/tutor/fees/payments', payload);
+      Toast.success(`Saved. Receipt ${data.no} is ready${send.checked ? ' and was sent on WhatsApp' : ''}.`);
+      location.href = `fee-receipt?receipt-id=${data.receipt}&saved=1`;
+    } catch (e) { btn.disabled = false; showErrors(root, e.details ?? {}); if (!e.details) Toast.error(e.message); }
+  };
+  const saveBtn = (cls) => h('button', { type: 'button', class: `custom-btn ${cls}`, 'data-save': '1', onclick: (e) => save(e.currentTarget) }, 'Save & Give Receipt');
+  fill(actions, h('a', { class: 'custom-outline-btn ex-btn-lg px-4 text-decoration-none', href: student ? `student-fees?student-id=${student}` : 'fees' }, 'Cancel'), saveBtn('ex-btn-lg px-5'));
+  fill(root, previewNote(), h('div', { class: 'component-theme p-4 fe-page-form' },
+    h('div', { class: 'd-flex align-items-center gap-3 mb-4' }, h('span', { class: 'fe-form-ico' }, icon('wallet', { size: 22 })),
+      h('div', {}, h('div', { class: 'text-18 main-text fw-semibold' }, 'Record a Payment'), h('div', { class: 'text-13 sub-text' }, 'Cash, bank deposit or card taken by you · a receipt number is given at once'))),
+    body,
+    h('div', { class: 'd-flex justify-content-end mt-4' }, saveBtn('px-5'))));
   loadStudent();
 }
 
-/** The receipt: same layout on screen, on paper (Print) and in the WhatsApp PDF. */
-export async function receiptDialog(id) {
+/** Opens the receipt page (tutor/fee-receipt.php). */
+export function receiptDialog(id) { location.href = `fee-receipt?receipt-id=${id}`; }
+
+/** The receipt page: same layout on screen, on paper (Print) and in the WhatsApp PDF. */
+export async function mountReceipt(root, actions, id) {
   const { data: r } = await api.get(`/tutor/fees/receipts/${id}`);
+  document.title = `Receipt ${r.no} - Tutor`;
   const paper = h('div', { class: 'fe-receipt', id: 'fe-receipt' },
     h('div', { class: 'd-flex justify-content-between align-items-start gap-3' },
       h('div', {}, h('div', { class: 'fe-receipt-brand' }, r.tutor.brand), h('div', { class: 'text-12 sub-text' }, r.tutor.address), h('div', { class: 'text-12 sub-text' }, r.tutor.phone)),
@@ -201,14 +186,25 @@ export async function receiptDialog(id) {
     h('div', { class: 'ad-lines' }, r.lines.map((l) => h('div', { class: 'ad-line' }, h('span', {}, l.text, l.discount ? h('span', { class: 'text-12 sub-text ms-2' }, `(${lkr(l.amount)} - ${lkr(l.discount)})`) : null, l.penalty ? h('span', { class: 'text-12 sub-text ms-2' }, `incl. late fee ${lkr(l.penalty)}`) : null), h('span', {}, lkr(l.net)))),
       h('div', { class: 'ad-line ad-line-total' }, h('span', {}, 'Total paid'), h('span', {}, lkr(r.amount)))),
     h('div', { class: 'text-12 sub-text mt-3 text-center' }, r.footer));
-  const m = BsModal.open({ title: `Receipt ${r.no}`, subtitle: [r.student.name, lkr(r.amount), day(r.paid_on)], icon: 'receipt', body: paper, size: 'lg',
-    footerStart: [BsModal.button('Send on WhatsApp', { onclick: () => window.open(waLink(r.student.whatsapp, `Payment received, thank you. Receipt ${r.no}: ${r.lines.map((l) => l.text).join(', ')}, ${lkr(r.amount)}. ${r.tutor.brand}`), '_blank') })],
-    footerEnd: [BsModal.button('Close', { onclick: () => m.close() }), BsModal.button('Print', { primary: true, onclick: () => { document.body.classList.add('fe-printing'); window.print(); document.body.classList.remove('fe-printing'); } })] });
+  const wa = () => window.open(waLink(r.student.whatsapp, `Payment received, thank you. Receipt ${r.no}: ${r.lines.map((l) => l.text).join(', ')}, ${lkr(r.amount)}. ${r.tutor.brand}`), '_blank');
+  const print = () => { document.body.classList.add('fe-printing'); window.print(); document.body.classList.remove('fe-printing'); };
+  fill(actions,
+    h('button', { type: 'button', class: 'custom-outline-btn ex-btn-lg px-4 d-inline-flex align-items-center gap-2', onclick: wa }, icon('whatsapp', { size: 18 }), 'Send on WhatsApp'),
+    h('button', { type: 'button', class: 'custom-btn ex-btn-lg px-5 d-inline-flex align-items-center gap-2', onclick: print }, icon('printer', { size: 18 }), 'Print'));
+  fill(root, previewNote(), h('div', { class: 'fe-receipt-page' }, paper,
+    h('div', { class: 'd-flex justify-content-center gap-2 flex-wrap mt-3 fe-no-print' },
+      h('a', { class: 'custom-outline-btn px-4 text-decoration-none', href: `student-fees?student-id=${r.student.id ?? ''}` }, 'Student Fee Card'),
+      h('a', { class: 'custom-outline-btn px-4 text-decoration-none', href: 'fees' }, 'All Student Fees'))));
 }
 
-/** Free card / half card / discount for one student in one class, from a month, with a reason (PRO: fees.advanced). */
-export function concessionDialog({ student, classes, reload = () => {} }) {
+/** Opens the Free Card / Discount page (tutor/fee-concession.php) for one student (PRO: fees.advanced). */
+export function concessionDialog({ student }) {
   if (!has('fees.advanced')) return gate.openUpgrade('fees.advanced');
+  location.href = `fee-concession?student-id=${student.id}`;
+}
+
+/** Free card / half card / discount for one student in one class, from a month, with a reason: the page body. */
+export function mountConcession(root, actions, { student, classes }) {
   const cls = h('select', { class: 'form-select custom-select', 'data-key': 'enrolment' }, h('option', { value: '' }, '- Select -'), classes.map((c) => h('option', { value: c.enrolment, selected: classes.length === 1 }, `${c.name} · ${lkr(c.fee)}`)));
   const types = [['free', 'gift', 'Free card', 'Pays nothing'], ['half', 'sale', 'Half card', 'Pays 50%'], ['percent', 'price', 'Discount %', 'For example 10%'], ['fixed', 'money', 'Discount LKR', 'For example 500']];
   const value = h('input', { class: 'form-control custom-input', type: 'number', min: 1, placeholder: 'Enter the discount, for example 10', 'data-key': 'value' });
@@ -224,13 +220,20 @@ export function concessionDialog({ student, classes, reload = () => {} }) {
     h('div', { class: 'mt-3' }, valueWrap),
     h('div', { class: 'row gx-3' }, h('div', { class: 'col-md-6' }, field('From month', from, { required: true, info: 'The first fee month it applies to. A fee already paid is not changed.' })), h('div', { class: 'col-md-6' }, field('Until month', to, { info: 'Leave empty to keep it until you stop it from the student\'s Fee Card.' }))),
     field('Reason', reason, { required: true, info: 'Kept with the student and shown on their Fee Card, so you remember later why they pay less.' }));
-  const m = BsModal.open({ title: 'Give a Free Card or Discount', subtitle: [student.name, student.sid], icon: 'gift', body, size: 'lg', footerEnd: [
-    BsModal.button('Cancel', { onclick: () => m.close() }),
-    BsModal.button('Save', { primary: true, onclick: async () => {
-      try { await api.post('/tutor/fees/concessions', { enrolment: cls.value, type: m.el.querySelector('input[name="cc-type"]:checked')?.value, value: value.value, from: from.value, to: to.value, reason: reason.value }); } catch (e) { showErrors(m.el, e.details ?? {}); return; }
-      m.close(); Toast.success(`Saved. ${student.name}'s fee changes from ${from.value}.`); reload();
-    } }),
-  ] });
+  const back = `student-fees?student-id=${student.id}`;
+  const save = async (btn) => {
+    btn.disabled = true;
+    try { await api.post('/tutor/fees/concessions', { enrolment: cls.value, type: root.querySelector('input[name="cc-type"]:checked')?.value, value: value.value, from: from.value, to: to.value, reason: reason.value }); } catch (e) { btn.disabled = false; showErrors(root, e.details ?? {}); return; }
+    Toast.success(`Saved. ${student.name}'s fee changes from ${from.value}.`);
+    setTimeout(() => { location.href = back; }, 600);
+  };
+  const saveBtn = (cls2) => h('button', { type: 'button', class: `custom-btn ${cls2}`, onclick: (e) => save(e.currentTarget) }, 'Save');
+  fill(actions, h('a', { class: 'custom-outline-btn ex-btn-lg px-4 text-decoration-none', href: back }, 'Cancel'), saveBtn('ex-btn-lg px-5'));
+  fill(root, previewNote(), h('div', { class: 'component-theme p-4 fe-page-form' },
+    h('div', { class: 'd-flex align-items-center gap-3 mb-4' }, h('span', { class: 'fe-form-ico' }, icon('gift', { size: 22 })),
+      h('div', {}, h('div', { class: 'text-18 main-text fw-semibold' }, 'Give a Free Card or Discount'), h('div', { class: 'text-13 sub-text' }, `${student.name} · ${student.sid}`))),
+    body,
+    h('div', { class: 'd-flex justify-content-end mt-4' }, saveBtn('px-5'))));
 }
 
 /** Reminder for students who owe fees. One student: opens WhatsApp with the text (every plan). Many: sent by the WhatsApp API (GROW+). */

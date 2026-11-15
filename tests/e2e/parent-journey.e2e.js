@@ -211,6 +211,22 @@ const slipPng = () => {
     t.expect(path_().endsWith('/child-progress'), `Opened ${path_()}`);
   });
 
+  await t.tc('PA-34', 'No pop-ups', 'A class in the Attendance calendar opens its own page', ['Open Attendance', 'Click a class in the calendar'], 'The class day page opens; no pop-up', async () => {
+    await t.open('parent/attendance', 3000);
+    const item = p().locator('.tt-mini, .lecture-item').first();
+    t.expect(await item.count(), 'No class in the calendar this month');
+    await item.click({ force: true });
+    await p().waitForURL(/class-day/, { timeout: 10000 });
+    await p().waitForTimeout(1500);
+    t.expect(!(await p().locator('.modal.show').count()), 'A pop-up opened');
+  });
+  await t.tc('PA-35', 'Security', "Another class's class day does not open", ['Open /parent/class-day for a class none of the children is in'], 'Sent back to the Time Table', async () => {
+    const ids = JSON.parse(execFileSync('php', [path.join(__dirname, 'qa-lookup.php')]).toString());
+    await t.open(`parent/class-day?time-table-id=${ids.other_day}`, 1500);
+    t.expect(path_().endsWith('/time-table'), `Opened ${path_()}`);
+    await t.open(`parent/class-day?time-table-id=${ids.child_day}`, 2000);
+    t.expect(path_().endsWith('/class-day') && /Attendance/.test(await text()), 'The child\'s class day did not open');
+  });
   // ------------------------------------------------------------------ the same pages on a desktop
   qa = setup();
   await t.useViewport(DESKTOP);

@@ -6,7 +6,7 @@ import { QuickGuide } from '../components/QuickGuide.js';
 import { ActionMenu } from '../components/Popover.js';
 import { DetailPage } from '../components/DetailPage.js';
 import {
-  api, h, fill, icon, lkr, day, inDays, feeChip, previewNote, slipView, waLink, reminderText, recordPayment, receiptDialog, rejectDialog, Toast, feeUrl,
+  api, h, fill, icon, lkr, day, inDays, feeChip, previewNote, slipView, waLink, reminderText, recordPayment, receiptDialog, rejectPanel, Toast, feeUrl,
 } from './fees-common.js';
 
 QuickGuide.attachAll();
@@ -16,6 +16,7 @@ const q = new URLSearchParams(location.search);
 const id = Number(q.get('fee-id') || 0);
 const queue = q.get('queue') === '1';
 let f = null;
+let rejecting = false; // the Reject panel is open on the page (no pop-up)
 
 fill(root, DetailPage.loading());
 load();
@@ -33,6 +34,12 @@ async function load() {
 const TONE = { paid: 'ex-receipt-green', waiting: 'ex-receipt-orange', overdue: 'ex-receipt-red', rejected: 'ex-receipt-red' };
 const DOT = { paid: 'var(--dark-green)', waiting: 'var(--dark-orange)', overdue: 'var(--dark-red)', rejected: 'var(--dark-red)', free: 'var(--dark-purple)' };
 
+function openReject() {
+  rejecting = true;
+  draw();
+  setTimeout(() => document.getElementById('fe-reject')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+}
+
 async function approve() {
   try {
     const { data } = await api.post(`/tutor/fees/${f.id}/approve`, {});
@@ -47,14 +54,14 @@ function draw() {
   const remind = () => window.open(waLink(f.student.whatsapp, reminderText({ student: f.student, class: f.class, months: [{ label: f.month_label }], total: f.net })), '_blank');
   // ---- header buttons
   const items = [
-    st === 'waiting' && { label: 'Reject Slip', icon: 'close', danger: true, onClick: () => rejectDialog(f, load) },
+    st === 'waiting' && { label: 'Reject Slip', icon: 'close', danger: true, onClick: openReject },
     ['unpaid', 'overdue', 'rejected'].includes(st) && { label: 'Send WhatsApp Reminder', icon: 'whatsapp', onClick: remind },
-    ['unpaid', 'overdue', 'rejected'].includes(st) && { label: 'Record Payment', icon: 'wallet', onClick: () => recordPayment({ student: f.student.id, select: [f.id], reload: load }) },
+    ['unpaid', 'overdue', 'rejected'].includes(st) && { label: 'Record Payment', icon: 'wallet', onClick: () => recordPayment({ student: f.student.id, select: [f.id] }) },
     f.receipt_id && { label: 'Print Receipt', icon: 'printer', onClick: () => receiptDialog(f.receipt_id) },
     { label: 'Student Fee Card', icon: 'students', href: `student-fees?student-id=${f.student.id}` },
   ].filter(Boolean);
-  const main = st === 'waiting' ? h('button', { type: 'button', class: 'custom-btn ex-btn-lg px-5 border-0', onclick: approve }, queue ? 'Approve & Next' : 'Approve')
-    : ['unpaid', 'overdue', 'rejected'].includes(st) ? h('button', { type: 'button', class: 'custom-btn ex-btn-lg px-5 border-0', onclick: () => recordPayment({ student: f.student.id, select: [f.id], reload: load }) }, 'Record Payment')
+  const main = st === 'waiting' ? [h('button', { type: 'button', class: 'custom-outline-btn ex-btn-lg px-4 fe-reject-btn', onclick: openReject }, 'Reject'), h('button', { type: 'button', class: 'custom-btn ex-btn-lg px-5 border-0', onclick: approve }, queue ? 'Approve & Next' : 'Approve')]
+    : ['unpaid', 'overdue', 'rejected'].includes(st) ? h('button', { type: 'button', class: 'custom-btn ex-btn-lg px-5 border-0', onclick: () => recordPayment({ student: f.student.id, select: [f.id] }) }, 'Record Payment')
       : f.receipt_id ? h('button', { type: 'button', class: 'custom-btn ex-btn-lg px-5 border-0', onclick: () => receiptDialog(f.receipt_id) }, 'View Receipt') : null;
   fill(actions, ActionMenu.button('Actions', items, { className: 'custom-outline-btn ex-btn-lg px-4 d-inline-flex align-items-center gap-2' }), main);
 
@@ -91,6 +98,7 @@ function draw() {
       }),
       st === 'rejected' && f.reason ? h('div', { class: 'ex-panel-soft p-3 mt-3 text-14' }, h('b', {}, 'Why the slip was rejected: '), f.reason) : null,
     ]),
+    st === 'waiting' && rejecting ? rejectPanel(f, { onDone: () => { rejecting = false; load(); }, onCancel: () => { rejecting = false; draw(); } }) : null,
     h('div', { class: 'row g-4' },
       h('div', { class: 'col-12 col-lg-7' }, DetailPage.card('Payment Slip', slipView(f), { cls: 'h-100' })),
       h('div', { class: 'col-12 col-lg-5' }, DetailPage.card('Breakdown', breakdown, { cls: 'h-100' }))),

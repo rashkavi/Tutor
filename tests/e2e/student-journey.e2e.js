@@ -217,6 +217,15 @@ const slipPng = () => {
     t.expect(toggle > 0, 'No menu button in the header');
   });
 
+  await t.tc('ST-32', 'No pop-ups', 'A class in the Attendance calendar opens its own page', ['Open Attendance', 'Click a class in the calendar'], 'The class day page opens; no pop-up', async () => {
+    await t.open('portal/attendance', 3000);
+    const item = p().locator('.tt-mini, .lecture-item').first();
+    t.expect(await item.count(), 'No class in the calendar this month');
+    await item.click({ force: true });
+    await p().waitForURL(/time-table-class-details/, { timeout: 10000 });
+    await p().waitForTimeout(1500);
+    t.expect(!(await p().locator('.modal.show').count()), 'A pop-up opened');
+  });
   // ------------------------------------------------------------------ the same pages on a desktop
   qa = setup();
   await t.useViewport(DESKTOP);
