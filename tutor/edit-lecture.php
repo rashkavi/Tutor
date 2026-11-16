@@ -10,7 +10,7 @@ if (!SessionUser::hasValidSession()) {
 
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['time-table-id']) && !empty($_GET['time-table-id']))) {
-        header("Location: ./lecture-schedule");
+        header("Location: ./time-table");
     } else {
 
         $lecture_id = $_GET['time-table-id'];
@@ -34,7 +34,7 @@ if (!SessionUser::hasValidSession()) {
 
         $lecture = Database::search($query);
         if ($lecture->num_rows == 0) {
-            header("Location: ./lecture-schedule");
+            header("Location: ./time-table");
         } else {
             $lectureData = $lecture->fetch_assoc();
 

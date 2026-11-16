@@ -1,0 +1,71 @@
+/* Tutor Lecture Details page (tutor/lecture-details.php). Theme variables only (light + dark), phone first. */
+.ld-hero { display: flex; gap: 20px; align-items: center; padding: 24px; border-left: 4px solid var(--dark-theme); }
+.ld-date { flex: none; width: 76px; height: 86px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--light-theme); color: var(--dark-theme); line-height: 1.1; }
+.ld-date strong { font-size: 28px; }
+.ld-date span { font-size: 13px; font-weight: 600; text-transform: uppercase; }
+.ld-date small { font-size: 11px; color: var(--sub-text); }
+.ld-hero-main { min-width: 0; }
+.ld-title { font-size: 22px; font-weight: 700; margin: 4px 0 2px; color: var(--main-text-color, var(--dark-color)); overflow-wrap: anywhere; }
+.ld-sub { font-size: 14px; color: var(--sub-text); }
+.ld-when { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; color: var(--main-text-color, var(--dark-color)); flex-wrap: wrap; }
+.ld-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; font-size: 12px; font-weight: 600; background: var(--body-color); color: var(--sub-text); }
+.ld-chip.is-good { background: var(--light-green); color: var(--dark-green-blue); }
+.ld-chip.is-bad { background: var(--light-red); color: var(--dark-red); }
+.ld-chip.is-blue { background: var(--light-theme); color: var(--dark-theme); }
+.ld-chip.is-live { background: var(--dark-red); color: #fff; }
+
+.ld-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.ld-act { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--custom-white); text-decoration: none; border: 1px solid transparent; transition: border-color .15s ease, transform .15s ease; }
+.ld-act:hover { border-color: var(--dark-theme); transform: translateY(-2px); }
+.ld-act strong { display: block; font-size: 14px; color: var(--main-text-color, var(--dark-color)); }
+.ld-act small { display: block; font-size: 12px; color: var(--sub-text); }
+.ld-act-ico { flex: none; width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; background: var(--light-theme); color: var(--dark-theme); }
+
+.ld-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; }
+.ld-facts > div { min-width: 0; }
+.ld-facts .is-wide { grid-column: 1 / -1; }
+.ld-facts span { display: block; font-size: 12px; color: var(--sub-text); }
+.ld-facts strong { display: block; font-size: 14px; font-weight: 600; color: var(--main-text-color, var(--dark-color)); overflow-wrap: anywhere; }
+.ld-facts a { color: var(--dark-theme); text-decoration: none; }
+.ld-link { display: flex !important; align-items: center; gap: 8px; }
+.ld-copy { border: 0; background: var(--light-theme); color: var(--dark-theme); width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+
+.ld-files { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ld-file { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line-color); text-decoration: none; }
+.ld-file:hover { border-color: var(--dark-theme); }
+.ld-file > span { flex: 1; }
+.ld-file strong { display: block; font-size: 14px; color: var(--main-text-color, var(--dark-color)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ld-file small { display: block; font-size: 12px; color: var(--sub-text); }
+
+.ld-att { display: flex; align-items: center; gap: 24px; }
+.ld-ring { --pct: 0; flex: none; width: 104px; height: 104px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--dark-green-blue) calc(var(--pct) * 1%), var(--light-theme) 0); }
+.ld-ring > span { width: 82px; height: 82px; border-radius: 50%; background: var(--custom-white); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+.ld-ring strong { font-size: 20px; color: var(--main-text-color, var(--dark-color)); }
+.ld-ring small { font-size: 11px; color: var(--sub-text); }
+.ld-att ul { list-style: none; margin: 0; padding: 0; flex: 1; }
+.ld-att li { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 14px; color: var(--sub-text); }
+.ld-att li strong { margin-left: auto; color: var(--main-text-color, var(--dark-color)); }
+.ld-att li i { width: 10px; height: 10px; background: var(--light-theme); }
+.ld-att li i.is-good { background: var(--dark-green-blue); }
+.ld-att li i.is-bad { background: var(--dark-red); }
+.ld-att li i.is-purple { background: var(--dark-purple, #8e44ad); }
+
+.ld-recs { list-style: none; margin: 0; padding: 0; }
+.ld-recs li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--line-color); }
+.ld-recs li:last-child { border-bottom: 0; }
+.ld-recs li > span.min-w-0 { flex: 1; }
+.ld-recs strong { display: block; font-size: 14px; color: var(--main-text-color, var(--dark-color)); overflow-wrap: anywhere; }
+.ld-recs small { display: block; font-size: 12px; color: var(--sub-text); }
+.ld-rec-ico { flex: none; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background: var(--light-theme); color: var(--dark-theme); }
+
+@media (max-width: 1199.98px) { .ld-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 575.98px) {
+  .ld-hero { flex-direction: column; align-items: flex-start; padding: 18px; }
+  .ld-actions, .ld-facts, .ld-files { grid-template-columns: minmax(0, 1fr); }
+  .ld-att { flex-direction: column; align-items: stretch; }
+  .ld-ring { align-self: center; }
+  .ld-recs li { flex-wrap: wrap; }
+}
+.ld-file-ico { position: relative; flex: none; width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; background: var(--light-red); color: var(--dark-red); }
+.ld-file-ico em { position: absolute; bottom: -6px; right: -6px; font-style: normal; font-size: 9px; font-weight: 700; padding: 1px 4px; background: var(--dark-red); color: #fff; }
+.ld-menu .ex-ico { margin-right: 12px; color: var(--sub-text); }
