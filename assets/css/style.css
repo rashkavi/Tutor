@@ -4445,3 +4445,28 @@ header .ex-ico { display: inline-flex; align-items: center; }
 /* A list (DataView) placed inside a card that already has padding: no second card and no second p-4 gap */
 .component-theme .ex-dv.component-theme,
 .ex-hd-panel .ex-dv.component-theme { padding: 0 !important; background: transparent !important; border: 0 !important; box-shadow: none !important; }
+
+/* ---------- ONE button look everywhere (2026-11-16) ----------
+   Every button has a background colour and looks the same as the main button: theme blue with white text
+   (.custom-btn). The old light-blue "outline" look (.custom-outline-btn / .custom-btn-outline) is no longer used:
+   those classes now draw the same filled button. Danger buttons (Delete, Reject) are filled red. */
+.custom-outline-btn, .custom-btn-outline,
+[data-custom-theme="dark"] .custom-outline-btn, [data-custom-theme="dark"] .custom-btn-outline {
+  background-color: var(--dark-theme, #0061D2) !important; color: #fff !important; border: 0 !important;
+}
+.custom-outline-btn:hover:not(:disabled), .custom-btn-outline:hover:not(:disabled),
+.custom-outline-btn:focus-visible, .custom-btn-outline:focus-visible,
+.custom-outline-btn[aria-expanded="true"], .custom-btn-outline[aria-expanded="true"] {
+  background-color: var(--main-button-hover, #0b51b3) !important; color: #fff !important;
+}
+.custom-outline-btn .ex-ico, .custom-btn-outline .ex-ico, .custom-outline-btn iconify-icon, .custom-btn-outline iconify-icon { color: #fff !important; }
+.custom-outline-btn.ex-btn-danger-fill, .custom-outline-btn.ex-danger-outline, .ex-danger-outline, .fe-reject-btn,
+[data-custom-theme="dark"] .custom-outline-btn.ex-btn-danger-fill, [data-custom-theme="dark"] .ex-danger-outline {
+  background-color: var(--dark-red, #D85E44) !important; color: #fff !important; border: 0 !important;
+}
+.custom-outline-btn.ex-btn-danger-fill:hover:not(:disabled), .ex-danger-outline:hover:not(:disabled), .fe-reject-btn:hover:not(:disabled) {
+  background-color: var(--red-button-hover, #d47b67) !important; color: #fff !important;
+}
+.ex-pcard-round, .ex-pcard-tools .ex-kebab,
+[data-custom-theme="dark"] .ex-pcard-round, [data-custom-theme="dark"] .ex-pcard-tools .ex-kebab { background: var(--dark-theme, #0061D2) !important; color: #fff !important; }
+.ex-pcard-round:hover, .ex-pcard-tools .ex-kebab:hover, .ex-pcard-tools .ex-kebab[aria-expanded="true"] { background: var(--main-button-hover, #0b51b3) !important; }

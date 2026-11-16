@@ -66,7 +66,6 @@
 .fe-form-ico, .fe-reject-ico { flex: none; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: var(--light-theme); color: var(--dark-theme); }
 .fe-reject-ico { width: 34px; height: 34px; background: var(--light-red); color: var(--dark-red); }
 .fe-reject { background: var(--custom-white); border: 1px solid var(--dark-red); border-left-width: 4px; padding: 20px; animation: fe-in .2s ease; }
-.fe-reject-btn { color: var(--dark-red) !important; border-color: var(--dark-red) !important; }
 .fe-receipt-page { max-width: 760px; margin: 0 auto; }
 .fe-receipt-page .fe-receipt { background: var(--custom-white); padding: 32px; box-shadow: 0 1px 3px rgba(15, 23, 42, .08); }
 @keyframes fe-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }

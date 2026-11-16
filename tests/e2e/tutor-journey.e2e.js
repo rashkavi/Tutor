@@ -253,6 +253,61 @@ const stamp = Date.now().toString().slice(-6);
     await t.open('tutor/lecture-details?time-table-id=1', 2000);
     t.expect(/Lecture not found/.test(await text()), 'Another tutor\'s lecture opened');
   });
+  // ------------------------------------------------------------------ Message Center (run the server with MAIL_DRIVER=log WHATSAPP_DRIVER=log)
+  const logLines = () => { try { return fs.readFileSync(path.join(__dirname, '..', '..', 'storage', 'messages.log'), 'utf8').trim().split('\n').length; } catch { return 0; } };
+  await t.tc('TC-70', 'Messages', 'Send an e-mail to every student of the classes', ['Open Message Center', 'Choose E-mail, All classes, Students', 'Write a subject and a message with {name}', 'Press Send E-mail'], 'The message page sends everyone and shows Finished; nothing pops up', async () => {
+    const before = logLines();
+    await t.open('tutor/message-center', 3000);
+    await p.locator('.mc-tile', { hasText: 'E-mail' }).click();
+    await p.waitForTimeout(400);
+    await p.locator('.mc-check-all input').check();
+    await p.fill('#mc-subject', `QA notice ${stamp}`);
+    await p.fill('#mc-body', 'Hi {name}, no {class} class this Saturday. – {tutor}');
+    await p.waitForTimeout(800);
+    t.expect(/will get it/.test(await text('#mc-preview')), 'No preview of who gets it');
+    await p.click('#mc-send');
+    await p.waitForURL(/message\?id=/, { timeout: 10000 });
+    await p.waitForFunction(() => /Finished/.test(document.querySelector('.mc-progress')?.innerText ?? ''), null, { timeout: 30000 });
+    t.expect(!(await p.locator('.modal.show').count()), 'A pop-up opened');
+    t.expect(logLines() > before, 'No e-mail was sent (is the server running with MAIL_DRIVER=log?)');
+  });
+  await t.tc('TC-71', 'Messages', 'An empty message is refused with clear messages', ['Choose E-mail', 'Leave the subject and message empty', 'Press Send E-mail'], 'Subject and Message show what to fill in; nothing is sent', async () => {
+    await t.open('tutor/message-center', 3000);
+    await p.locator('.mc-tile', { hasText: 'E-mail' }).click();
+    await p.waitForTimeout(400);
+    await p.locator('.mc-check-all input').check();
+    await p.click('#mc-send');
+    await p.waitForTimeout(1500);
+    t.expect(/message-center/.test(p.url()), 'Left the page');
+    t.expect((await p.locator('.is-invalid').count()) >= 2, 'Fields not marked');
+  });
+  await t.tc('TC-72', 'Messages', 'WhatsApp from my phone: each person has an Open WhatsApp button', ['Choose WhatsApp (From your phone)', 'Write a message', 'Press Continue to WhatsApp', 'Press Open WhatsApp for the first person'], 'wa.me opens with the message; that person shows Sent', async () => {
+    await t.open('tutor/message-center', 3000);
+    await p.locator('.mc-check-all input').check();
+    await p.fill('#mc-body', 'Hi {name}, QA WhatsApp test.');
+    await p.click('#mc-send');
+    await p.waitForURL(/message\?id=/, { timeout: 10000 });
+    await p.waitForTimeout(2000);
+    const link = p.locator('.mc-person a[href^="https://wa.me/"]').first();
+    t.expect(await link.count(), 'No Open WhatsApp button');
+    t.expect(/text=Hi%20/.test(await link.getAttribute('href')), 'The message is not in the WhatsApp link');
+    const [popup] = await Promise.all([p.context().waitForEvent('page', { timeout: 5000 }).catch(() => null), link.click()]);
+    if (popup) await popup.close();
+    await p.waitForTimeout(1500);
+    t.expect(/1 of \d+ opened/.test(await text('.mc-progress')), 'Not marked as sent');
+  });
+  await t.tc('TC-73', 'Messages', 'WhatsApp Settings shows the three ways; own number is locked on STARTER', ['Open Settings › WhatsApp'], 'From my phone is in use; My WhatsApp Business number says GROW plan with See plans; connecting is refused by the API', async () => {
+    await t.open('tutor/whatsapp-settings', 3000);
+    const body = await text();
+    for (const s of ['From my phone', 'My WhatsApp Business number', 'ENLIXO WhatsApp number', 'In use', 'Send a test message']) t.expect(body.includes(s), `Missing "${s}"`);
+    const r = await t.api('POST', '/tutor/whatsapp/connect', { phone_number_id: '109876543210987', token: 'x'.repeat(60), template: 'class_notice', lang: 'en' });
+    t.expect(r.status === 402, `Connect answered ${r.status}`);
+  });
+  await t.tc('TC-74', 'Messages', 'Sent Messages lists what was sent', ['Open Message Center'], 'The table shows the e-mail and the WhatsApp message', async () => {
+    await t.open('tutor/message-center', 3500);
+    const hist = await text('#mc-history');
+    t.expect(hist.includes(`QA notice ${stamp}`) && /WhatsApp/.test(hist), 'History is missing a message');
+  });
   await t.tc('TC-55', 'Language', 'Switching to Sinhala translates the menu, English brings it back', ['Choose සිංහල in the language menu', 'Then English'], 'Menu reads උපකරණ පුවරුව, then Dashboard', async () => {
     await t.open('tutor/dashboard', 2000);
     await p.evaluate(() => { localStorage.setItem('lang', 'si'); return window.EnlixoI18n?.apply('si'); });
