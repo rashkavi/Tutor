@@ -6,9 +6,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $content = trim(file_get_contents('php://input'));
         $decoded = json_decode($content, true);
         if (json_last_error() == JSON_ERROR_NONE) {
-            $token = $decoded['token'];
-            $setupStatus = $decoded['status'];
-            $password = $decoded['password'];
+            $token = preg_replace('/[^A-Za-z0-9]/', '', (string) ($decoded['token'] ?? '')); // tokens are letters and digits only
+            $setupStatus = (int) ($decoded['status'] ?? 0);
+            $password = (string) ($decoded['password'] ?? '');
             if (empty($token)) {
                 $status->code =  "The link is invalid or expired. Please check your email and try again.";
             }
@@ -26,7 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $data = $isValidCode->fetch_assoc();
                     date_default_timezone_set("Asia/Colombo");
 
-                    if ($setupStatus == 1) {
+                    if ($setupStatus == 1 && is_numeric($data["user_reset_time"]) && (int) $data["user_reset_time"] < strtotime("-7 days")) {
+                        // the welcome link (src/Platform/TutorWelcome.php) works for 7 days
+                        $status->code = "This link has expired. Sign in with a WhatsApp code, or ask ENLIXO for a new link.";
+                    } elseif ($setupStatus == 1) {
                         $hashPassword = password_hash($password, PASSWORD_BCRYPT);
                         Database::iud("UPDATE `users` SET `user_password`='" . $hashPassword . "',`user_verification`='',`user_reset_time`='' WHERE `user_verification`='" . $token . "'");
                         $status->done = "Password updated successfully";

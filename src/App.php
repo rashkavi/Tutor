@@ -55,6 +55,18 @@ final class App
         return $this->once('gemini', fn () => new GeminiImageClient(new CurlHttpClient(90), (string) ($c['gemini_api_key'] ?? ''), (string) ($c['gemini_image_model'] ?? 'gemini-2.5-flash-image')));
     }
 
+    /** The one e-mail sender (MAIL_DRIVER=log writes to storage/messages.log). */
+    public function mailer(): \Enlixo\Messaging\Mailer
+    {
+        $m = $this->config['messaging'] ?? [];
+        return $this->once('mailer', fn () => new \Enlixo\Messaging\Mailer($m['mail'] ?? [], (string) ($m['mail_driver'] ?? 'smtp'), dirname(__DIR__) . '/storage/messages.log'));
+    }
+
+    public function tutorWelcome(): \Enlixo\Platform\TutorWelcome
+    {
+        return $this->once('welcome', fn () => new \Enlixo\Platform\TutorWelcome($this->db(), $this->mailer()));
+    }
+
     /** Message Center: e-mail and WhatsApp to students and parents (src/Messaging). */
     public function messages(): \Enlixo\Messaging\MessageService
     {
@@ -65,7 +77,7 @@ final class App
             return new \Enlixo\Messaging\MessageService(
                 $this->db(),
                 $this->entitlements(),
-                new \Enlixo\Messaging\Mailer($m['mail'] ?? [], (string) ($m['mail_driver'] ?? 'smtp'), $log),
+                $this->mailer(),
                 new \Enlixo\Messaging\WhatsAppCloud((string) ($m['whatsapp_driver'] ?? 'cloud'), $log, (string) ($m['whatsapp']['graph_version'] ?? 'v22.0')),
                 new \Enlixo\Messaging\SecretBox((string) ($this->config['app']['key'] ?? ''), $root . '/secure/messaging.key'),
                 $m,

@@ -12,9 +12,7 @@ if (SessionUser::ifUserIsAdmin()) {
     if (isset($_COOKIE['enviiz_lms_admin_email'])) {
         $email = $_COOKIE['enviiz_lms_admin_email'];
     }
-    if (isset($_COOKIE['enviiz_lms_admin_password'])) {
-        $password = $_COOKIE['enviiz_lms_admin_password'];
-    }
+    // a password is never read back from a cookie (older versions stored it there)
 
 ?>
     <!DOCTYPE html>
@@ -39,7 +37,6 @@ if (SessionUser::ifUserIsAdmin()) {
     <body class="overflow-hidden">
         <div class="notifications"></div>
         <!-- Include Section -->
-        <!-- <?php include './includes/loader.php' ?> -->
         <!-- Main Content Section (Initially Hidden) -->
         <div class="vh-100 container-fluid overflow-hidden">
             <div class="row h-100 align-items-center justify-content-center">
@@ -57,14 +54,14 @@ if (SessionUser::ifUserIsAdmin()) {
 
                                 <div class="col-12 col-lg-10 col-xxl-8 mb-4 mb-md-2 mb-xl-4 justify-content-start">
                                     <label class="form-label text-14 sub-topic-color" data-i18n="email">Email</label>
-                                    <input type="email" class="form-control custom-input" id="email" style="height: 3.2rem;" <?= $email != null ? "value='" . $email . "'" : "" ?> />
+                                    <input type="email" class="form-control custom-input" id="email" style="height: 3.2rem;" <?= $email != null ? 'value="' . htmlspecialchars((string) $email, ENT_QUOTES, 'UTF-8') . '"' : '' ?> />
                                     <span id="email-feedback" class="text-dark-red text-12"></span>
                                 </div>
 
                                 <div class="col-12 col-lg-10 col-xxl-8 mb-4 mb-md-2 mb-xl-4 justify-content-start">
                                     <label class="form-label text-14 sub-topic-color" data-i18n="password">Password</label>
                                     <div class="d-flex align-items-center justify-content-end" style="height: 3.2rem;">
-                                        <input type="password" class="h-100 w-100 sub-text form-control custom-input" id="password" <?= $password != null ? "value='" . $password . "'" : "" ?>>
+                                        <input type="password" class="h-100 w-100 sub-text form-control custom-input" id="password" >
                                         <iconify-icon icon="tabler:eye-off" width="20" height="20" class="sub-text password-toggle" id="togglePassword" onclick="togglePasswordVisibility();"></iconify-icon>
                                     </div>
                                     <span id="password-feedback" class="text-dark-red text-12"></span>

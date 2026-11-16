@@ -36,6 +36,18 @@ if ($id === 0) {
 }
 
 $db->execute('UPDATE users SET user_password = :p, status_status_id = 1 WHERE user_id = :u', ['p' => password_hash(QA_PASSWORD, PASSWORD_DEFAULT), 'u' => $id]);
+// every run starts from the same place: STARTER, active, paid for 30 days (billing tests change it)
+$sub = (int) ($db->value('SELECT users_has_payment_plan_id FROM users_has_payment_plans WHERE users_user_id = :u ORDER BY users_has_payment_plan_id DESC LIMIT 1', ['u' => $id]) ?? 0);
+if ($sub) {
+    $extra = (bool) $db->value("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users_has_payment_plans' AND COLUMN_NAME = 'trial_plan_key'");
+    $db->execute(
+        "UPDATE users_has_payment_plans SET payment_plans_payment_plan_id = (SELECT payment_plan_id FROM payment_plans WHERE plan_key = 'start'), status = 'active', status_reason = NULL,
+                period_start = CURDATE(), period_end = DATE_ADD(CURDATE(), INTERVAL 30 DAY), grace_until = NULL, cancel_at_period_end = 0, next_plan_id = NULL"
+            . ($extra ? ', trial_plan_key = NULL, trial_student_cap = NULL' : '') . ' WHERE users_has_payment_plan_id = :s',
+        ['s' => $sub],
+    );
+    $db->execute("UPDATE platform_invoices SET status = 'void', void_reason = 'QA reset' WHERE users_has_payment_plan_id = :s AND status IN ('open', 'part')", ['s' => $sub]);
+}
 $status = $app->platformBilling()->accessStatus($id);
 
 echo json_encode(['id' => $id, 'email' => QA_EMAIL, 'password' => QA_PASSWORD, 'mobile' => QA_MOBILE, 'plan_status' => $status], JSON_PRETTY_PRINT), "\n";

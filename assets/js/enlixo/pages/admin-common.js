@@ -114,31 +114,9 @@ export function subscriptionCard(t, plan, { actions = null, forTutor = false } =
 }
 
 // ---------------------------------------------------------------- invoices
-export function invoiceDialog(inv, { admin = false, onPay = null, reload = () => {} } = {}) {
-  const lines = h('div', { class: 'ad-lines' },
-    inv.lines.map((l) => h('div', { class: 'ad-line' }, h('span', {}, l.text), h('span', {}, lkr(l.amount)))),
-    inv.tax ? h('div', { class: 'ad-line' }, h('span', {}, 'Tax'), h('span', {}, lkr(inv.tax))) : null,
-    h('div', { class: 'ad-line ad-line-total' }, h('span', {}, 'Total'), h('span', {}, lkr(inv.total))),
-    inv.paid ? h('div', { class: 'ad-line' }, h('span', {}, 'Paid'), h('span', {}, lkr(inv.paid))) : null);
-  const body = h('div', {},
-    hero('Invoice total', lkr(inv.total), chip(inv.status), inv.status === 'paid' ? 'Paid in full' : inv.status === 'void' ? `Void: ${inv.void_reason}` : `Due ${day(inv.due)} (${inDays(inv.due)})`),
-    facts([['Tutor', inv.tutor], ['Plan', inv.plan], ['Period', `${day(inv.period_from)} - ${day(inv.period_to)}`, true], ['Issued', day(inv.issued)], ['Due date', day(inv.due)]]),
-    h('div', { class: 'text-15 fw-semibold main-text mb-2' }, 'What it is for'), lines);
-  const open = ['open', 'overdue', 'part'].includes(inv.status);
-  let m;
-  const print = BsModal.button('Print', { onclick: () => window.print() });
-  const end = [BsModal.button('Close', { onclick: () => m.close() })];
-  if (open && admin) {
-    end.push(BsModal.button('Record Payment', { primary: true, onclick: () => { m.close(); recordPayment(inv, reload); } }));
-  } else if (open && onPay) {
-    end.push(BsModal.button('Pay Now', { primary: true, onclick: () => { m.close(); onPay(inv); } }));
-  }
-  const start = [print];
-  if (open && admin) {
-    start.push(BsModal.button('Send Reminder', { onclick: () => sendReminder(inv.tutor_id) }));
-    start.push(BsModal.button('Void', { danger: true, onclick: () => { m.close(); voidInvoice(inv, reload); } }));
-  }
-  m = BsModal.open({ title: inv.number, subtitle: [inv.tutor, inv.plan, day(inv.issued)], icon: 'invoice', body, size: 'lg', footerStart: start, footerEnd: end });
+/** An invoice opens its own page: admin/invoice.php (admin) or tutor/invoice.php (tutor), never a pop-up. */
+export function invoiceDialog(inv, { admin = false } = {}) {
+  location.href = `invoice?invoice-id=${inv.id ?? inv}`;
 }
 
 /** Payment reminder e-mail (the server says whether the e-mail went out). */
@@ -171,39 +149,6 @@ export const showErrors = (root, map) => {
   Object.entries(map).forEach(([id, msg]) => { const el = root.querySelector(`[data-key="${id}"]`); if (!el) return; el.classList.add('is-invalid'); const err = root.querySelector(`[data-err="${el.id}"]`); if (err) { err.textContent = msg; err.classList.remove('d-none'); } });
 };
 
-function recordPayment(inv, reload) {
-  const amount = h('input', { class: 'form-control custom-input', type: 'number', value: inv.total - inv.paid, placeholder: 'Enter the amount received', 'data-key': 'amount' });
-  const method = h('select', { class: 'form-select custom-select', 'data-key': 'method' }, ['Bank transfer', 'Bank deposit', 'Cash', 'Cheque', 'Card'].map((x) => h('option', { value: x }, x)));
-  const date = h('input', { class: 'form-control custom-input', type: 'date', value: new Date().toISOString().slice(0, 10), 'data-key': 'date', placeholder: 'Choose the day the money arrived' });
-  const ref = h('input', { class: 'form-control custom-input', placeholder: 'Enter the bank reference or cheque number', 'data-key': 'reference', 'data-limit': 'text' });
-  const body = h('div', { class: 'row gx-3' },
-    h('div', { class: 'col-md-6' }, field('Amount (LKR)', amount, { required: true, info: 'The money received for this invoice. Less than the total leaves the invoice Part Paid.' })),
-    h('div', { class: 'col-md-6' }, field('Paid on', date, { required: true })),
-    h('div', { class: 'col-md-6' }, field('Method', method, { required: true })),
-    h('div', { class: 'col-md-6' }, field('Reference', ref, { info: 'Bank reference, cheque number or receipt book number, so finance can find it later. For example 004512.' })));
-  const m = BsModal.open({ title: 'Record a Payment', subtitle: [inv.number, inv.tutor, lkr(inv.total)], icon: 'wallet', body, footerEnd: [
-    BsModal.button('Cancel', { onclick: () => m.close() }),
-    BsModal.button('Save Payment', { primary: true, onclick: async () => {
-      const ok = await trySave(m.el, () => api.post(`/admin/invoices/${inv.id}/payments`, { amount: amount.value, method: method.value, date: date.value, reference: ref.value }));
-      if (!ok) return;
-      m.close(); Toast.success(Number(amount.value) >= inv.total - inv.paid ? 'Payment recorded. The invoice is paid and the tutor is active.' : 'Payment recorded. The invoice is part paid.'); reload();
-    } }),
-  ] });
-}
-
-async function voidInvoice(inv, reload) {
-  const reason = h('textarea', { class: 'form-control custom-input', rows: 3, placeholder: 'Say why this invoice is cancelled', 'data-key': 'reason', 'data-limit': '200' });
-  const body = h('div', {}, h('p', { class: 'text-14 sub-text' }, 'A void invoice stays in the list with its reason. The tutor no longer has to pay it.'), field('Reason', reason, { required: true }));
-  const m = BsModal.open({ title: 'Void this Invoice?', subtitle: [inv.number, lkr(inv.total)], icon: 'danger', tone: 'danger', body, footerEnd: [
-    BsModal.button('Cancel', { onclick: () => m.close() }),
-    BsModal.button('Void Invoice', { primary: true, danger: true, onclick: async () => {
-      if (!reason.value.trim()) { showErrors(m.el, { reason: 'Give a reason. It is kept with the invoice.' }); return; }
-      if (!await trySave(m.el, () => api.post(`/admin/invoices/${inv.id}/void`, { reason: reason.value }))) return;
-      m.close(); Toast.success('Invoice void.'); reload();
-    } }),
-  ] });
-}
-
 export const invoiceColumns = ({ admin = true, open = (r) => invoiceDialog(r, { admin }) } = {}) => [
   { key: 'number', label: 'Invoice', sortable: true, render: (r) => cell(r.number, `${day(r.period_from)} - ${day(r.period_to)}`) },
   admin && { key: 'tutor', label: 'Tutor', sortable: true, render: (r) => cell(r.tutor, r.brand) },
@@ -223,6 +168,8 @@ export const paymentUrl = (p) => `tutor-payment-details?payment-id=${p.id ?? p}`
 
 export function paymentDialog(p, { admin = false, reload = () => {} } = {}) {
   if (admin) { location.href = paymentUrl(p); return; }
+  // tutor: the payment is shown on its invoice page (tutor/invoice.php), not in a pop-up
+  if (p.invoice_id) { location.href = `invoice?invoice-id=${p.invoice_id}`; return; }
   const url = slipUrl(p, admin);
   const preview = h('img', { class: 'ad-slip-img', alt: `Bank slip of ${p.ref}`, src: url });
   preview.addEventListener('error', () => preview.replaceWith(h('div', { class: 'd-flex flex-column align-items-center' }, icon('receipt', { size: 40 }), h('div', { class: 'text-14 main-text fw-medium mt-2' }, 'PDF slip'))));
@@ -246,20 +193,26 @@ export function paymentDialog(p, { admin = false, reload = () => {} } = {}) {
   m = BsModal.open({ title: `Payment ${p.ref}`, subtitle: [p.tutor, p.invoice], icon: 'receipt', body, size: 'lg', footerEnd: end });
 }
 
-export function rejectPayment(p, reload) {
+/** Reject a slip: on the payment page itself (admin/tutor-payment-details.php?reject=1). */
+export function rejectPayment(p) { location.href = `${paymentUrl(p)}&reject=1`; }
+
+/** The reject form, drawn inside the payment page (no pop-up). */
+export function rejectPanel(p, { onDone = () => {}, onCancel = () => {} } = {}) {
   const reason = h('select', { class: 'form-select custom-select', 'data-key': 'reason' },
     h('option', { value: '' }, '- Select -'),
     ['The slip amount does not match the invoice', 'The slip is not clear', 'The money has not reached our account', 'The slip was used before', 'Other'].map((x) => h('option', { value: x }, x)));
   const note = h('textarea', { class: 'form-control custom-input', rows: 3, placeholder: 'Add a note for the tutor', 'data-key': 'note', 'data-limit': '200' });
-  const body = h('div', {}, h('p', { class: 'text-14 sub-text' }, 'The tutor sees the reason on their Billing page and can upload the slip again.'),
-    field('Reason', reason, { required: true }), field('Note to the tutor', note));
-  const m = BsModal.open({ title: 'Reject this Payment?', subtitle: [p.ref, p.tutor, lkr(p.amount)], icon: 'danger', tone: 'danger', body, footerEnd: [
-    BsModal.button('Cancel', { onclick: () => m.close() }),
-    BsModal.button('Reject Payment', { primary: true, danger: true, onclick: async () => {
-      if (!await trySave(m.el, () => api.post(`/admin/payments/${p.id}/reject`, { reason: reason.value, note: note.value }))) return;
-      m.close(); Toast.success('Payment rejected. The tutor has been told why.'); reload();
-    } }),
-  ] });
+  const box = h('div', { class: 'component-theme p-4 ad-panel is-danger', id: 'pay-reject' });
+  const go = h('button', { type: 'button', class: 'custom-btn custom-danger-btn px-5', onclick: async () => {
+    go.disabled = true;
+    try { await api.post(`/admin/payments/${p.id}/reject`, { reason: reason.value, note: note.value }); Toast.success('Payment rejected. The tutor has been told why.'); onDone(); } catch (e) { go.disabled = false; showErrors(box, e.details?.fields ?? e.details ?? {}); Toast.error(e.message); }
+  } }, 'Reject Payment');
+  fill(box,
+    h('div', { class: 'd-flex align-items-center gap-3 mb-3' }, h('span', { class: 'fe-reject-ico' }, icon('danger', { size: 18 })),
+      h('div', {}, h('div', { class: 'text-18 main-text fw-semibold' }, 'Reject this payment?'), h('div', { class: 'text-13 sub-text' }, 'The tutor sees the reason on their Billing page and can upload the slip again.'))),
+    field('Reason', reason, { required: true }), field('Note to the tutor', note),
+    h('div', { class: 'd-flex justify-content-end gap-2' }, h('button', { type: 'button', class: 'custom-btn px-4', onclick: onCancel }, 'Cancel'), go));
+  return box;
 }
 
 export const paymentColumns = ({ admin = true, reload = () => {} } = {}) => [

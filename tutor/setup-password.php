@@ -7,7 +7,7 @@ if (SessionUser::ifUserIsTutor()) {
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['token']) && !empty($_GET['token']))) {
         header("Location: ./index");
     } else {
-        $token = $_GET['token'];
+        $token = preg_replace('/[^A-Za-z0-9]/', '', (string) $_GET['token']);
 ?>
         <!DOCTYPE html>
         <html lang="en">
@@ -26,7 +26,7 @@ if (SessionUser::ifUserIsTutor()) {
             <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
         </head>
 
-        <body onload="initPasswordSetup('<?= $token ?>',1);">
+        <body onload="initPasswordSetup(<?= htmlspecialchars(json_encode($token), ENT_QUOTES) ?>,1);">
             <div class="notifications"></div>
             <div class="container">
                 <div class="card">

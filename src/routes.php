@@ -136,6 +136,7 @@ return static function (Router $router, App $app): void {
     $router->get('/api/v1/admin/tutors/{id}', $pf->tutor(...));
     $router->post('/api/v1/admin/tutors/{id}/{action}', $pf->tutorAction(...));
     $router->get('/api/v1/admin/invoices', $pf->invoices(...));
+    $router->get('/api/v1/admin/invoices/{id}', $pf->invoice(...));
     $router->post('/api/v1/admin/invoices/{id}/payments', $pf->recordPayment(...));
     $router->post('/api/v1/admin/invoices/{id}/void', $pf->voidInvoice(...));
     $router->get('/api/v1/admin/payments', $pf->payments(...));

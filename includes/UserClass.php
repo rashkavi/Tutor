@@ -70,12 +70,47 @@ class SessionUser
 
     public static function ifUserIsStudent()
     {
-        return self::getCurrentUserRole('Student') === "Student";
+        if (self::getCurrentUserRole('Student') !== "Student") {
+            return false;
+        }
+        // the tutor's ENLIXO subscription ended (suspended / cancelled): the student is signed out (includes/TutorAccess.php)
+        $u = self::getCurrentUserObject('Student');
+        if (!self::tutorAccessOk('student', (int) ($u['student_id'] ?? 0))) {
+            self::destroySession('Student');
+            return false;
+        }
+        return true;
     }
 
     public static function ifUserIsParent()
     {
-        return self::getCurrentUserRole('Parent') === "Parent";
+        if (self::getCurrentUserRole('Parent') !== "Parent") {
+            return false;
+        }
+        $u = self::getCurrentUserObject('Parent');
+        if (!self::tutorAccessOk('parent', (int) ($u['user_id'] ?? 0))) {
+            self::destroySession('Parent');
+            return false;
+        }
+        return true;
+    }
+
+    /** Checked once per request; a paused tutor closes the portal for their students and parents. */
+    private static array $accessCache = [];
+    private static function tutorAccessOk(string $kind, int $id): bool
+    {
+        if ($id <= 0) {
+            return true;
+        }
+        $key = $kind . ':' . $id;
+        if (!array_key_exists($key, self::$accessCache)) {
+            require_once __DIR__ . '/TutorAccess.php';
+            self::$accessCache[$key] = $kind === 'student' ? tutor_access_student($id) : tutor_access_parent($id);
+            if (!self::$accessCache[$key] && !headers_sent()) {
+                setcookie('enlixo_paused', '1', time() + 600, '/'); // the sign-in page explains why
+            }
+        }
+        return self::$accessCache[$key];
     }
 
     public static function getCurrentUserObject($userRole)

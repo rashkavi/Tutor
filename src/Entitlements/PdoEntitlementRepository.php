@@ -17,15 +17,18 @@ final class PdoEntitlementRepository implements EntitlementRepository
     /** The live subscription row (migration 007), or null on an older database. */
     private function subscription(int $tutorId): ?array
     {
-        try {
-            return $this->db->one(
-                'SELECT uhp.status, uhp.extra_packs, pp.plan_key FROM users_has_payment_plans uhp
+        $sql = static fn (string $extra) => 'SELECT uhp.status, uhp.extra_packs, pp.plan_key' . $extra . ' FROM users_has_payment_plans uhp
                    JOIN payment_plans pp ON pp.payment_plan_id = uhp.payment_plans_payment_plan_id
-                  WHERE uhp.users_user_id = :tutor ORDER BY uhp.users_has_payment_plan_id DESC LIMIT 1',
-                ['tutor' => $tutorId],
-            );
+                  WHERE uhp.users_user_id = :tutor ORDER BY uhp.users_has_payment_plan_id DESC LIMIT 1';
+        try {
+            // migration 017: a trial on a chosen plan
+            return $this->db->one($sql(', uhp.trial_plan_key, uhp.trial_student_cap'), ['tutor' => $tutorId]);
         } catch (\PDOException) {
-            return null;
+            try {
+                return $this->db->one($sql(''), ['tutor' => $tutorId]);
+            } catch (\PDOException) {
+                return null;
+            }
         }
     }
 
@@ -45,7 +48,7 @@ final class PdoEntitlementRepository implements EntitlementRepository
         // Admin side billing (migration 007): a free trial gets the trial plan's features, everyone else their plan.
         $sub = $this->subscription($tutorId);
         if ($sub !== null && $sub['status'] !== null) {
-            return $sub['status'] === 'trial' ? $this->trialRules()['plan'] : (string) $sub['plan_key'];
+            return $sub['status'] === 'trial' ? ((string) ($sub['trial_plan_key'] ?? '') ?: $this->trialRules()['plan']) : (string) $sub['plan_key'];
         }
         // Before migration 007: prefer the plan with an accepted payment covering today; otherwise the latest assigned plan.
         $key = $this->db->value(
@@ -87,7 +90,7 @@ final class PdoEntitlementRepository implements EntitlementRepository
     {
         $sub = $this->subscription($tutorId);
         if ($sub !== null && $sub['status'] === 'trial') {
-            return $this->trialRules()['cap'];
+            return isset($sub['trial_student_cap']) && $sub['trial_student_cap'] !== null ? (int) $sub['trial_student_cap'] : $this->trialRules()['cap'];
         }
         $limit = $this->planStudentLimit($planKey);
         return $limit === null || $sub === null ? $limit : $limit + (int) $sub['extra_packs'] * 50;

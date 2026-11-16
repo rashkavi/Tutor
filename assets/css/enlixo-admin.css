@@ -86,3 +86,44 @@
 .ad-todo > :last-child { flex-shrink: 0; text-align: right; white-space: nowrap; }
 .ad-todo .ad-bar { width: 64px; }
 .ad-hero-red { background: var(--light-red); box-shadow: inset 3px 0 0 var(--dark-red); }
+
+/* ---------- Pages instead of pop-ups (admin invoice, manage plan, welcome banner), 2026-11-16 ---------- */
+.ld-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.ld-act { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--custom-white); text-decoration: none; border: 1px solid transparent; transition: border-color .15s ease, transform .15s ease; width: 100%; }
+.ld-act:hover { border-color: var(--dark-theme); transform: translateY(-2px); }
+.ld-act strong { display: block; font-size: 14px; color: var(--main-text-color, var(--dark-color)); }
+.ld-act small { display: block; font-size: 12px; color: var(--sub-text); }
+.ld-act-ico { flex: none; width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; background: var(--light-theme); color: var(--dark-theme); }
+.ld-act.is-danger .ld-act-ico { background: var(--light-red); color: var(--dark-red); }
+.ld-act.is-danger:hover { border-color: var(--dark-red); }
+.ld-act.is-on { border-color: var(--dark-theme); box-shadow: inset 0 0 0 1px var(--dark-theme); }
+.fe-form-ico, .fe-reject-ico { flex: none; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: var(--light-theme); color: var(--dark-theme); }
+.fe-reject-ico { width: 34px; height: 34px; background: var(--light-red); color: var(--dark-red); }
+.ad-panel { border-top: 3px solid var(--dark-theme); animation: ad-in .2s ease; }
+.ad-panel.is-danger { border-top-color: var(--dark-red); }
+@keyframes ad-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.ad-pay-list { list-style: none; margin: 0; padding: 0; }
+.ad-pay-list li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--line-color); flex-wrap: wrap; }
+.ad-pay-list li:last-child { border-bottom: 0; }
+.ad-pay-list strong { display: block; font-size: 14px; color: var(--main-text-color, var(--dark-color)); }
+.ad-pay-list small { display: block; font-size: 12px; color: var(--sub-text); }
+.ad-welcome { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 20px; border-left: 4px solid var(--dark-green-blue); background: var(--custom-white); }
+.ad-welcome.is-warn { border-left-color: #f39c12; }
+.ad-welcome strong { display: block; font-size: 15px; color: var(--main-text-color, var(--dark-color)); }
+.ad-welcome small { display: block; font-size: 13px; color: var(--sub-text); }
+.ad-welcome code { display: block; margin-top: 4px; font-size: 12px; color: var(--dark-theme); overflow-wrap: anywhere; }
+.ad-welcome-ico { flex: none; width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; background: var(--light-green); color: var(--dark-green-blue); }
+.ad-welcome.is-warn .ad-welcome-ico { background: var(--light-orange); color: #c46d00; }
+.tp-plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.tp-plan { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 14px; border: 1px solid var(--line-color); background: var(--custom-white); cursor: pointer; margin: 0; }
+.tp-plan input { position: absolute; opacity: 0; pointer-events: none; }
+.tp-plan strong { font-size: 16px; color: var(--main-text-color, var(--dark-color)); }
+.tp-plan small { font-size: 12px; color: var(--sub-text); }
+.tp-plan.is-on { border-color: var(--dark-theme); box-shadow: inset 0 0 0 1px var(--dark-theme); background: var(--light-theme); }
+.tp-plan:focus-within { outline: 2px solid var(--dark-theme); outline-offset: 2px; }
+.tp-days { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.tp-days button { border: 0; padding: 6px 14px; background: var(--dark-theme); color: #fff; font-size: 13px; }
+.tp-summary { padding: 14px 16px; background: var(--light-theme); color: var(--main-text-color, var(--dark-color)); font-size: 14px; }
+.tp-summary li { margin-bottom: 4px; }
+@media (max-width: 1199.98px) { .ld-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 575.98px) { .ld-actions { grid-template-columns: minmax(0, 1fr); } }

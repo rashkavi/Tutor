@@ -162,7 +162,8 @@ async function save() {
   root.querySelectorAll('[id$="-err"]').forEach((el) => el.classList.add('d-none'));
   try {
     const { data } = await api.post(REQ ? `/admin/tutor-requests/${REQ.id}/approve` : '/admin/tutors', body);
-    Toast.success(`${body.first_name} ${body.last_name} added. They can sign in with ${body.email}.${REQ ? (data.mailed ? ' A welcome e-mail was sent.' : ' The welcome e-mail could not be sent; tell them by phone.') : ''}`);
+    Toast.success(`${body.first_name} ${body.last_name} added.`);
+    try { sessionStorage.setItem(`enlixo-welcome-${data.id}`, JSON.stringify({ ...(data.welcome ?? {}), whatsapp: body.whatsapp || body.mobile, name: body.first_name })); } catch { /* storage blocked */ }
     setTimeout(() => { location.href = `tutor-details?tutor-id=${data.id}`; }, 900);
   } catch (e) {
     const errs = e.details ?? {};

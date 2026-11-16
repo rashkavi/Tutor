@@ -2528,3 +2528,15 @@ a.ex-hd-stat:hover .ex-hd-go { opacity: 1; }
 .ex-pcard-round, .ex-pcard-tools .ex-kebab,
 [data-custom-theme="dark"] .ex-pcard-round, [data-custom-theme="dark"] .ex-pcard-tools .ex-kebab { background: var(--dark-theme, #0061D2) !important; color: #fff !important; }
 .ex-pcard-round:hover, .ex-pcard-tools .ex-kebab:hover, .ex-pcard-tools .ex-kebab[aria-expanded="true"] { background: var(--main-button-hover, #0b51b3) !important; }
+
+/* Tutor billing: plan card trial line and the banner on every tutor page (tutor/includes/side-menu.php) */
+.ex-plan-trial { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; font-weight: 600; color: #fff; opacity: .95; }
+.ex-plan-trial.is-due { color: #ffd2c7; }
+.ex-bill-banner { flex: 0 0 100%; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 16px; padding: 12px 16px; background: var(--custom-white); border-left: 4px solid #f39c12; }
+.ex-bill-banner.is-bad { border-left-color: var(--dark-red); }
+.ex-bill-banner .ex-bill-ico { color: #f39c12; flex: none; }
+.ex-bill-banner.is-bad .ex-bill-ico { color: var(--dark-red); }
+.ex-bill-text { flex: 1 1 260px; font-size: 14px; color: var(--sub-text); }
+.ex-bill-text strong { color: var(--main-text-color, var(--dark-color)); }
+.ex-bill-btn { height: 40px !important; padding: 0 22px; text-decoration: none; }
+@media (max-width: 575.98px) { .ex-bill-btn { width: 100%; } }

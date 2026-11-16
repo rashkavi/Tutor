@@ -3,9 +3,11 @@ require_once "../includes/nav-item.php";
 require_once __DIR__ . "/../../includes/enlixo/icons.php";
 
 // Admin side billing (migration 007): while the subscription is suspended or cancelled the tutor can only open
-// Finance -> My Subscription (to pay); every other page sends them there. The API refuses the same calls (api/v1/index.php).
+// Renew (tutor/renew.php: what happened and how to pay), the invoice page, My Subscription and My Profile; every
+// other page sends them to Renew. Their students and parents cannot sign in meanwhile (includes/TutorAccess.php).
+// The API refuses the same calls (api/v1/index.php).
 if (isset($sessionUserObject['user_id']) && class_exists('SessionUser') && SessionUser::ifUserIsTutor()
-    && basename((string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH), '.php') !== 'subscription') {
+    && !in_array(basename((string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH), '.php'), ['subscription', 'renew', 'invoice', 'my-profile'], true)) {
     try {
         $enlixoSub = Database::search("SELECT `status` FROM `users_has_payment_plans` WHERE `users_user_id` = '" . (int) $sessionUserObject['user_id'] . "' ORDER BY `users_has_payment_plan_id` DESC LIMIT 1");
         $enlixoSub = $enlixoSub ? $enlixoSub->fetch_assoc() : null;
@@ -13,7 +15,7 @@ if (isset($sessionUserObject['user_id']) && class_exists('SessionUser') && Sessi
         $enlixoSub = null; // before migration 007
     }
     if ($enlixoSub && in_array($enlixoSub['status'] ?? '', ['suspended', 'cancelled'], true)) {
-        echo '<script>location.replace("subscription");</script></body></html>';
+        echo '<script>location.replace("renew");</script></body></html>';
         exit;
     }
 }
@@ -133,7 +135,13 @@ class load_side_menu
             }
             $ent = $app->entitlements()->for($tutorId);
             $name = \Enlixo\Catalog\FeatureCatalog::PLANS[$ent->planKey]['name'] ?? strtoupper($ent->planKey);
-            return ['key' => $ent->planKey, 'name' => $name, 'count' => $ent->studentCount, 'limit' => $ent->studentLimit];
+            $sub = $app->db()->one('SELECT status, trial_ends_at, period_end, grace_until FROM users_has_payment_plans WHERE users_user_id = :t ORDER BY users_has_payment_plan_id DESC LIMIT 1', ['t' => $tutorId]) ?? [];
+            $open = $app->db()->one("SELECT platform_invoice_id id, total - paid AS amount, due_on FROM platform_invoices WHERE users_user_id = :t AND status IN ('open', 'part') ORDER BY due_on LIMIT 1", ['t' => $tutorId]);
+            $today = (new \DateTimeImmutable('now', new \DateTimeZone('Asia/Colombo')))->format('Y-m-d');
+            $left = static fn (?string $d) => $d ? (int) round((strtotime($d) - strtotime($today)) / 86400) : null;
+            return ['key' => $ent->planKey, 'name' => $name, 'count' => $ent->studentCount, 'limit' => $ent->studentLimit,
+                'status' => (string) ($sub['status'] ?? ''), 'trial_left' => $left($sub['trial_ends_at'] ?? null), 'trial_ends' => $sub['trial_ends_at'] ?? null,
+                'grace_left' => $left($sub['grace_until'] ?? null), 'invoice' => $open ? ['id' => (int) $open['id'], 'amount' => (float) $open['amount'], 'due' => $open['due_on'], 'left' => $left($open['due_on'])] : null];
         } catch (\Throwable $e) {
             error_log('Side menu plan card: ' . $e->getMessage());
             return null;
@@ -190,11 +198,41 @@ class load_side_menu
                         <span class="ex-plan-name"><?= self::e($plan['name']) ?> plan</span>
                         <?php if ($plan['key'] !== 'pro') { ?><span class="ex-plan-up">Upgrade</span><?php } ?>
                     </span>
+                    <?php if ($plan['status'] === 'trial' && $plan['trial_left'] !== null) { ?>
+                        <span class="ex-plan-trial"><?= enlixo_icon('hourglass', 14) ?>Free trial · <?= $plan['trial_left'] > 0 ? (int) $plan['trial_left'] . ($plan['trial_left'] === 1 ? ' day' : ' days') . ' left' : 'ends today' ?></span>
+                    <?php } elseif (in_array($plan['status'], ['due', 'overdue'], true) && $plan['invoice']) { ?>
+                        <span class="ex-plan-trial is-due"><?= enlixo_icon('warning', 14) ?><?= $plan['status'] === 'overdue' ? 'Overdue' : 'Payment due' ?> · LKR <?= number_format($plan['invoice']['amount']) ?></span>
+                    <?php } ?>
                     <?php if ($plan['limit']) { ?>
                         <span class="ex-plan-meter" role="progressbar" aria-label="Students used" aria-valuenow="<?= (int) $plan['count'] ?>" aria-valuemin="0" aria-valuemax="<?= (int) $plan['limit'] ?>"><span style="width: <?= $pct ?>%"></span></span>
                         <span class="ex-plan-use"><?= (int) $plan['count'] ?> of <?= (int) $plan['limit'] ?> students</span>
                     <?php } ?>
                 </a>
+            <?php } ?>
+
+            <?php
+            // banner at the top of every tutor page (phones too): trial ending soon, payment due / overdue
+            $banner = null;
+            if ($plan && $plan['status'] === 'trial' && $plan['trial_left'] !== null && $plan['trial_left'] <= 5) {
+                $banner = ['warn', 'Your free trial ' . ($plan['trial_left'] > 0 ? 'ends in ' . $plan['trial_left'] . ($plan['trial_left'] === 1 ? ' day' : ' days') : 'ends today') . '.', 'Choose your plan and pay so your students keep their access.', $plan['invoice'] ? 'invoice?invoice-id=' . $plan['invoice']['id'] . '#pay' : 'subscription?tab=plans', $plan['invoice'] ? 'Pay Now' : 'Choose Plan'];
+            } elseif ($plan && $plan['status'] === 'overdue' && $plan['invoice']) {
+                $banner = ['bad', 'Your ENLIXO payment of LKR ' . number_format($plan['invoice']['amount']) . ' is overdue.', $plan['grace_left'] !== null && $plan['grace_left'] >= 0 ? 'Pay within ' . $plan['grace_left'] . ($plan['grace_left'] === 1 ? ' day' : ' days') . ', or your account and your students\' access are paused.' : 'Pay now so your account and your students\' access stay on.', 'invoice?invoice-id=' . $plan['invoice']['id'] . '#pay', 'Pay Now'];
+            } elseif ($plan && $plan['status'] === 'due' && $plan['invoice'] && $plan['invoice']['left'] !== null && $plan['invoice']['left'] <= 3) {
+                $banner = ['warn', 'Your ENLIXO invoice of LKR ' . number_format($plan['invoice']['amount']) . ' is due ' . ($plan['invoice']['left'] > 0 ? 'in ' . $plan['invoice']['left'] . ($plan['invoice']['left'] === 1 ? ' day' : ' days') : 'today') . '.', 'Pay by bank transfer and upload the slip.', 'invoice?invoice-id=' . $plan['invoice']['id'] . '#pay', 'Pay Now'];
+            }
+            if ($banner) { ?>
+                <template id="ex-bill-banner"><div class="ex-bill-banner is-<?= self::e($banner[0]) ?>" role="status">
+                    <?= enlixo_icon($banner[0] === 'bad' ? 'warning' : 'hourglass', 20, 'ex-bill-ico') ?>
+                    <span class="ex-bill-text"><strong><?= self::e($banner[1]) ?></strong> <?= self::e($banner[2]) ?></span>
+                    <a class="custom-btn ex-bill-btn" href="<?= self::e($banner[3]) ?>"><?= self::e($banner[4]) ?></a>
+                </div></template>
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const t = document.getElementById('ex-bill-banner');
+                        const at = document.querySelector('#real-list > .row, #real-list > .ac-page, #real-list, .contentBodyArea');
+                        if (t && at && !/(\/subscription|\/invoice|\/renew)/.test(location.pathname)) at.prepend(t.content.cloneNode(true));
+                    });
+                </script>
             <?php } ?>
 
             <div class="ex-user-card">

@@ -41,6 +41,6 @@ const view = new DataView({
     filename: `invoices-${new Date().toISOString().slice(0, 10)}.csv`,
     columns: [['Invoice', (r) => r.number], ['Tutor', (r) => r.tutor], ['Institute', (r) => r.brand], ['Plan', (r) => r.plan], ['Period from', (r) => r.period_from], ['Period to', (r) => r.period_to], ['Issued', (r) => r.issued], ['Due', (r) => r.due], ['Total', (r) => r.total], ['Paid', (r) => r.paid], ['Status', (r) => r.status]],
   },
-  columns: invoiceColumns({ admin: true, open: (r) => invoiceDialog(r, { admin: true, reload }) }),
+  columns: invoiceColumns({ admin: true, open: (r) => invoiceDialog(r) }),
   empty: { icon: 'invoice', title: 'No invoices yet', text: 'Invoices appear here when trials end and paid periods start.' },
 }).mount(holder);

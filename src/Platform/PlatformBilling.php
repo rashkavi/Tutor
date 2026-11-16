@@ -787,6 +787,32 @@ final class PlatformBilling
                     $this->db->execute("UPDATE users_has_payment_plans SET trial_ends_at = :d, trial_extended = 1, status = 'trial', status_reason = NULL WHERE users_has_payment_plan_id = :id", ['d' => Lifecycle::addDays($base, $days)] + $id);
                     $this->log($tutorId, 'extend', sprintf('Trial extended by %d days, now ends %s', $days, Lifecycle::addDays($base, $days)), $reason, ['trial_ends' => $s['trial_ends_at']], ['trial_ends' => Lifecycle::addDays($base, $days)], $by);
                     return 'Trial extended.';
+                case 'trial':
+                    // Admin › Give a Trial: a free trial on a chosen plan (its features and students) for N days, then
+                    // the first invoice of that plan as usual. Not over a period the tutor already paid for.
+                    if ($byTutor) {
+                        throw HttpException::forbidden();
+                    }
+                    $plan = $this->catalog->planByKey((string) ($in['plan'] ?? '')) ?? throw new HttpException(422, 'validation_failed', 'Choose a plan.', ['plan' => 'Choose the plan of the trial.']);
+                    $days = (int) ($in['days'] ?? 0);
+                    if ($days < 1 || $days > 60) {
+                        throw new HttpException(422, 'validation_failed', 'Enter 1 to 60 days.', ['days' => 'Enter 1 to 60 days, for example 14.']);
+                    }
+                    if ($s['period_end'] !== null && $s['period_end'] > $this->today && in_array($s['status'], ['active', 'due'], true)) {
+                        throw new HttpException(409, 'conflict', sprintf('This tutor has paid until %s. Change the plan instead, or give the trial after that day.', Lifecycle::addDays((string) $s['period_end'], -1)));
+                    }
+                    $cycle = ($in['cycle'] ?? $s['billing_cycle']) === 'yearly' ? 'yearly' : 'monthly';
+                    $cap = $plan['student_limit'] === null ? null : (int) $plan['student_limit'];
+                    $ends = Lifecycle::addDays($this->today, $days);
+                    $this->voidUnpaid($s, 'Free trial given', $by);
+                    $this->db->execute(
+                        "UPDATE users_has_payment_plans SET payment_plans_payment_plan_id = :p, billing_cycle = :c, status = 'trial', status_reason = NULL,
+                                trial_ends_at = :e, trial_extended = 0, period_start = NULL, period_end = NULL, grace_until = NULL, cancel_at_period_end = 0,
+                                next_plan_id = NULL, trial_plan_key = :k, trial_student_cap = :cap WHERE users_has_payment_plan_id = :id",
+                        ['p' => $plan['payment_plan_id'], 'c' => $cycle, 'e' => $ends, 'k' => $plan['plan_key'], 'cap' => $cap] + $id,
+                    );
+                    $this->log($tutorId, 'trial', sprintf('Free %d-day trial on %s, ends %s (then %s, %s)', $days, strtoupper((string) $plan['payment_plan']), $ends, strtoupper((string) $plan['payment_plan']), $cycle), $reason ?: null, ['status' => $s['status'], 'plan' => $s['payment_plans_payment_plan_id']], ['status' => 'trial', 'plan' => $plan['plan_key'], 'trial_ends' => $ends], $by);
+                    return sprintf('Free trial on %s until %s.', strtoupper((string) $plan['payment_plan']), $ends);
                 case 'plan':
                     // a tutor may choose monthly / yearly only while no paid period runs (the change then applies to the first invoice)
                     $paying = $s['period_end'] !== null && $s['period_end'] > $this->today && in_array($s['status'], ['active', 'due'], true);
