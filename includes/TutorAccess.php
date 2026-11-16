@@ -10,6 +10,7 @@
 require_once __DIR__ . '/connection.php';
 
 const TUTOR_ACCESS_CLOSED = ['suspended', 'cancelled'];
+const PARENT_PLAN_MESSAGE = "Parent login is not part of your tutor's ENLIXO plan yet, so you get class updates by WhatsApp or e-mail instead. Ask your tutor about the parent app.";
 const TUTOR_ACCESS_MESSAGE = "Your tutor's ENLIXO account is paused at the moment, so the class portal is closed. Nothing is lost: it opens again as soon as your tutor renews. Please contact your tutor.";
 
 if (!function_exists('tutor_access_student')) {
@@ -49,6 +50,35 @@ if (!function_exists('tutor_access_student')) {
             }
             $r = Database::search(tutor_access_open_sql($kids));
             return $r && $r->num_rows > 0;
+        } catch (\Throwable $e) {
+            return true;
+        }
+    }
+
+    /**
+     * Parent login is a STARTER (and up) feature: a parent can sign in when at least one tutor of their children's
+     * active classes has 'parents.login' in their plan. FREE tutors' parents get WhatsApp / e-mail notices instead.
+     */
+    function tutor_parent_login_allowed(int $parentId): bool
+    {
+        try {
+            $kids = "SELECT students_student_id FROM parents_has_students WHERE parents_parent_id = '" . $parentId . "'";
+            $r = Database::search("SELECT DISTINCT c.tutor_id FROM students_has_classes h JOIN classes c ON c.class_id = h.classes_class_id
+                                    WHERE h.students_student_id IN ($kids) AND h.status_status_id = 1");
+            if (!$r || $r->num_rows === 0) {
+                return true; // no class yet: the sign-in already says so
+            }
+            require_once dirname(__DIR__) . '/src/Legacy/Bridge.php';
+            $app = \Enlixo\Legacy\Bridge::app();
+            if ($app === null) {
+                return true;
+            }
+            while ($row = $r->fetch_assoc()) {
+                if ($app->entitlements()->has((int) $row['tutor_id'], 'parents.login')) {
+                    return true;
+                }
+            }
+            return false;
         } catch (\Throwable $e) {
             return true;
         }

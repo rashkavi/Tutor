@@ -8,6 +8,15 @@ if (!SessionUser::ifUserIsTutor()) {
 } else {
 
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
+    // Zoom integration (auto-created meetings) is STARTER and up; on FREE the tutor pastes the link per class day
+    $zoomOnPlan = true;
+    try {
+        require_once __DIR__ . '/../src/Legacy/Bridge.php';
+        $bridgeApp = \Enlixo\Legacy\Bridge::app();
+        $zoomOnPlan = $bridgeApp === null || $bridgeApp->entitlements()->has((int) $sessionUserObject['user_id'], 'zoom.tutor_integration');
+    } catch (\Throwable $e) {
+        $zoomOnPlan = true;
+    }
 ?>
     <!DOCTYPE html>
     <html lang="en">
@@ -199,9 +208,15 @@ if (!SessionUser::ifUserIsTutor()) {
                                                                             <i class="fas fa-info-circle"></i> Not connected
                                                                         </div>
 
+                                                                        <?php if ($zoomOnPlan) { ?>
                                                                         <button class="btn-connect" onclick="connectZoom(<?= $intergration['integration_id']  ?>)">
                                                                             <i class="fas fa-plug"></i> Connect Zoom
                                                                         </button>
+                                                                        <?php } else { ?>
+                                                                        <a class="btn-connect text-decoration-none" href="upgrade?feature=zoom.tutor_integration" title="Zoom integration comes with STARTER">
+                                                                            <i class="fas fa-lock"></i> Unlock with STARTER
+                                                                        </a>
+                                                                        <?php } ?>
                                                                     </div>
                                                                 </div>
                                                             </div>

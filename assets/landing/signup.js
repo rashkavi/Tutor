@@ -159,7 +159,7 @@ function stepPlan() {
         h('span', { class: 'su-plan-check' }, ic(I.check, 14)),
         h('span', { class: 'su-plan-name' }, p.name),
         h('span', { class: 'su-plan-price' }, p.free ? 'Free' : p.custom ? "Let's talk" : promoFor(p) ? [h('s', { class: 'su-old' }, lkr(priceOf(p))), ' ', lkr(Math.round(priceOf(p) * (100 - promoFor(p).percent) / 1000) * 10)] : lkr(priceOf(p)), p.custom ? null : h('small', {}, p.free ? ' always' : ' / month')),
-        h('span', { class: 'su-plan-meta' }, p.custom ? 'Any size, price agreed with our team' : p.limit ? `Up to ${p.limit} students` : 'Unlimited students', p.free ? ' · STARTER features' : !p.custom && v.cycle === 'yearly' && p.yearly_discount ? ` · ${lkr(priceOf(p) * 12)} a year` : ''),
+        h('span', { class: 'su-plan-meta' }, p.custom ? 'Any size, price agreed with our team' : p.limit ? `Up to ${p.limit} students` : 'Unlimited students', p.free ? ' · 3 classes, the basics' : !p.custom && v.cycle === 'yearly' && p.yearly_discount ? ` · ${lkr(priceOf(p) * 12)} a year` : ''),
         h('ul', {},
           p.everything_in ? h('li', {}, ic(I.check, 13), h('b', {}, `Everything in ${p.everything_in}`)) : null,
           p.new_features.slice(0, p.everything_in ? 4 : 5).map((f) => h('li', {}, ic(I.check, 13), f)))))),
@@ -294,7 +294,7 @@ function done(ref) {
     h('ul', { class: 'su-next' },
       h('li', {}, h('span', { class: 'lp-dot lp-blue' }, ic(I.phone, 16)), h('span', {}, 'We call or WhatsApp you within one working day.')),
       h('li', {}, h('span', { class: 'lp-dot lp-green' }, ic(I.mail, 16)), h('span', {}, `Your sign-in details come to ${v.email}.`)),
-      h('li', {}, h('span', { class: 'lp-dot lp-violet' }, ic(I.rocket, 16)), h('span', {}, p?.free ? 'Your FREE plan starts when your account is ready.' : `Your ${D.trial.days}-day free trial starts when your account is ready.`))),
+      h('li', {}, h('span', { class: 'lp-dot lp-violet' }, ic(I.rocket, 16)), h('span', {}, p?.free ? 'Your FREE plan starts when your account is ready.' : `Your ${D.trial.days}-day free trial starts when your account is ready. Not ready to pay after it? You move to FREE and keep everything.`))),
     h('div', { class: 'lp-hero-cta lp-center' }, h('a', { href: './', class: 'lp-btn lp-btn-dark' }, 'Back to the home page'))));
   window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
   if (!reduce) confetti();

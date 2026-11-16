@@ -44,7 +44,7 @@ function stats() {
   const s = D.stats;
   const arrears = has('payments.arrears')
     ? { icon: 'warning', label: 'Owed From Earlier Months', value: lkr(s.arrears.value), trend: s.arrears.students ? { text: plural(s.arrears.students, 'student'), dir: 'down' } : null, caption: 'still not paid', menu: [{ label: 'Show unpaid students', icon: 'filter', onClick: () => tabs.show('unpaid') }] }
-    : { icon: 'lock', label: 'Owed From Earlier Months', value: 'PRO', caption: 'Arrears tracking is on PRO', onClick: () => gate.openUpgrade('payments.arrears') };
+    : { icon: 'lock', label: 'Owed From Earlier Months', value: 'GROW', caption: 'Arrears tracking is on GROW', onClick: () => gate.openUpgrade('payments.arrears') };
   return StatCard.row([
     { icon: 'wallet', label: 'Collected', value: lkr(s.collected.value), trend: StatCard.trend(s.collected.value, s.collected.before), caption: 'against last month', bars: s.collected.bars, menu: [{ label: 'Show receipts', icon: 'view', onClick: () => tabs.show('receipts') }] },
     { icon: 'hourglass', label: 'Still to Collect', value: lkr(s.to_collect.value), trend: s.to_collect.overdue ? { text: `${s.to_collect.overdue} overdue`, dir: 'down' } : null, caption: `${plural(s.to_collect.students, 'student')} not paid`, onClick: () => { tabs.show('month'); } },
@@ -138,7 +138,7 @@ function slipList(panelEl) {
 }
 
 function unpaidList(panelEl) {
-  if (!has('payments.arrears')) panelEl.append(h('div', { class: 'ad-preview mb-3' }, icon('lock', { size: 18 }), h('span', {}, h('b', {}, 'This month only. '), 'Students who owe from earlier months are listed with PRO (Arrears Tracking). ', h('a', { href: '#', class: 'dark-theme', onclick: (e) => { e.preventDefault(); gate.openUpgrade('payments.arrears'); } }, 'See what PRO adds'))));
+  if (!has('payments.arrears')) panelEl.append(h('div', { class: 'ad-preview mb-3' }, icon('lock', { size: 18 }), h('span', {}, h('b', {}, 'This month only. '), 'Students who owe from earlier months are listed with GROW (Arrears Tracking). ', h('a', { href: '#', class: 'dark-theme', onclick: (e) => { e.preventDefault(); gate.openUpgrade('payments.arrears'); } }, 'See what GROW adds'))));
   let rows = [];
   const view = new DataView({
     api, endpoint: '/tutor/fees/unpaid', key: 'fees-unpaid', urlPrefix: 'u_', perPage: 10, perPageOptions: [10, 25, 50, 100], noun: ['student', 'students'],

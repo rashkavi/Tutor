@@ -55,6 +55,7 @@ class load_side_menu
             ['Finance', 'finance', null, '', [], [
                 ['Student Fees', null, 'fees', '', ['Student Fees', 'Payments']],
                 ['My Subscription', null, 'subscription', '', ['My Subscription', 'Billing']],
+                ['Upgrade Plan', null, 'upgrade', '', ['Upgrade']],
             ]],
             ['Communication', 'communication', null, '', [], [
                 ['Message Center', null, 'message-center', 'message-center', ['Message Center']],
@@ -139,7 +140,24 @@ class load_side_menu
             $open = $app->db()->one("SELECT platform_invoice_id id, total - paid AS amount, due_on FROM platform_invoices WHERE users_user_id = :t AND status IN ('open', 'part') ORDER BY due_on LIMIT 1", ['t' => $tutorId]);
             $today = (new \DateTimeImmutable('now', new \DateTimeZone('Asia/Colombo')))->format('Y-m-d');
             $left = static fn (?string $d) => $d ? (int) round((strtotime($d) - strtotime($today)) / 86400) : null;
+            // the limit closest to full (80 % or more) and the next plan, for the upgrade nudges (docs/PLANS.md)
+            $plans = \Enlixo\Catalog\FeatureCatalog::PLANS;
+            $hot = null;
+            foreach ($ent->toArray()['limits'] as $l) {
+                if ($l['percent'] !== null && $l['percent'] >= 80 && ($hot === null || $l['percent'] > $hot['percent'])) {
+                    $hot = $l + ['next_name' => $l['next'] ? ($plans[$l['next']]['name'] ?? strtoupper($l['next'])) : null,
+                        'next_limit' => $l['next'] ? \Enlixo\Catalog\FeatureCatalog::limitFor($l['key'], $l['next']) : null];
+                }
+            }
+            if ($ent->studentLimit && $ent->studentCount >= 0.9 * $ent->studentLimit && ($hot === null || $hot['percent'] < 100)) {
+                $nextKey = \Enlixo\Catalog\FeatureCatalog::nextPlan($ent->paidPlanKey());
+                $hot = ['key' => 'students', 'name' => 'Students', 'unit' => 'students', 'period' => 'total', 'used' => $ent->studentCount, 'limit' => $ent->studentLimit,
+                    'percent' => min(100, (int) round($ent->studentCount / $ent->studentLimit * 100)), 'next' => $nextKey,
+                    'next_name' => $nextKey ? ($plans[$nextKey]['name'] ?? null) : null, 'next_limit' => $nextKey ? ($plans[$nextKey]['student_limit'] ?? null) : null];
+            }
+            $paid = $ent->paidPlanKey();
             return ['key' => $ent->planKey, 'name' => $name, 'count' => $ent->studentCount, 'limit' => $ent->studentLimit,
+                'paid_key' => $paid, 'paid_name' => $plans[$paid]['name'] ?? strtoupper($paid), 'preview_left' => $left($ent->previewUntil), 'hot' => $hot,
                 'status' => (string) ($sub['status'] ?? ''), 'trial_left' => $left($sub['trial_ends_at'] ?? null), 'trial_ends' => $sub['trial_ends_at'] ?? null,
                 'grace_left' => $left($sub['grace_until'] ?? null), 'invoice' => $open ? ['id' => (int) $open['id'], 'amount' => (float) $open['amount'], 'due' => $open['due_on'], 'left' => $left($open['due_on'])] : null];
         } catch (\Throwable $e) {
@@ -192,13 +210,15 @@ class load_side_menu
 
             <?php if ($plan) {
                 $pct = $plan['limit'] ? min(100, (int) round($plan['count'] / max(1, $plan['limit']) * 100)) : 0; ?>
-                <a class="ex-plan-card ex-plan-<?= self::e($plan['key']) ?>" href="subscription?tab=plans">
+                <a class="ex-plan-card ex-plan-<?= self::e($plan['paid_key']) ?>" href="<?= $plan['paid_key'] === 'pro' ? 'subscription' : 'upgrade' ?>">
                     <span class="d-flex align-items-center gap-2">
                         <?= enlixo_icon('crown', 18, 'ex-plan-crown') ?>
-                        <span class="ex-plan-name"><?= self::e($plan['name']) ?> plan</span>
-                        <?php if ($plan['key'] !== 'pro') { ?><span class="ex-plan-up">Upgrade</span><?php } ?>
+                        <span class="ex-plan-name"><?= self::e($plan['paid_name']) ?> plan</span>
+                        <?php if ($plan['paid_key'] !== 'pro') { ?><span class="ex-plan-up">Upgrade</span><?php } ?>
                     </span>
-                    <?php if ($plan['status'] === 'trial' && $plan['trial_left'] !== null) { ?>
+                    <?php if ($plan['preview_left'] !== null) { ?>
+                        <span class="ex-plan-trial is-preview"><?= enlixo_icon('magic', 14) ?>Trying <?= self::e($plan['name']) ?> · <?= $plan['preview_left'] > 0 ? (int) $plan['preview_left'] . ($plan['preview_left'] === 1 ? ' day' : ' days') . ' left' : 'last day' ?></span>
+                    <?php } elseif ($plan['status'] === 'trial' && $plan['trial_left'] !== null) { ?>
                         <span class="ex-plan-trial"><?= enlixo_icon('hourglass', 14) ?>Free trial · <?= $plan['trial_left'] > 0 ? (int) $plan['trial_left'] . ($plan['trial_left'] === 1 ? ' day' : ' days') . ' left' : 'ends today' ?></span>
                     <?php } elseif (in_array($plan['status'], ['due', 'overdue'], true) && $plan['invoice']) { ?>
                         <span class="ex-plan-trial is-due"><?= enlixo_icon('warning', 14) ?><?= $plan['status'] === 'overdue' ? 'Overdue' : 'Payment due' ?> · LKR <?= number_format($plan['invoice']['amount']) ?></span>
@@ -219,21 +239,61 @@ class load_side_menu
                 $banner = ['bad', 'Your ENLIXO payment of LKR ' . number_format($plan['invoice']['amount']) . ' is overdue.', $plan['grace_left'] !== null && $plan['grace_left'] >= 0 ? 'Pay within ' . $plan['grace_left'] . ($plan['grace_left'] === 1 ? ' day' : ' days') . ', or your account and your students\' access are paused.' : 'Pay now so your account and your students\' access stay on.', 'invoice?invoice-id=' . $plan['invoice']['id'] . '#pay', 'Pay Now'];
             } elseif ($plan && $plan['status'] === 'due' && $plan['invoice'] && $plan['invoice']['left'] !== null && $plan['invoice']['left'] <= 3) {
                 $banner = ['warn', 'Your ENLIXO invoice of LKR ' . number_format($plan['invoice']['amount']) . ' is due ' . ($plan['invoice']['left'] > 0 ? 'in ' . $plan['invoice']['left'] . ($plan['invoice']['left'] === 1 ? ' day' : ' days') : 'today') . '.', 'Pay by bank transfer and upload the slip.', 'invoice?invoice-id=' . $plan['invoice']['id'] . '#pay', 'Pay Now'];
+            } elseif ($plan && $plan['preview_left'] !== null) {
+                $banner = ['up', 'You are trying ' . $plan['name'] . ' free · ' . ($plan['preview_left'] > 0 ? $plan['preview_left'] . ($plan['preview_left'] === 1 ? ' day' : ' days') . ' left.' : 'last day today.'), 'Upgrade to keep these features. Everything you set up stays.', 'upgrade?plan=' . $plan['key'], 'Upgrade to ' . $plan['name']];
+            } elseif ($plan && $plan['hot'] && $plan['hot']['next_name']) {
+                $h = $plan['hot'];
+                $full = $h['used'] >= $h['limit'];
+                $banner = ['up', $h['used'] > $h['limit']
+                        ? sprintf('You have %d %s; %s allows %d.', $h['used'], $h['unit'], $plan['paid_name'], $h['limit'])
+                        : sprintf('You have used %d of your %d %s%s.', $h['used'], $h['limit'], $h['unit'], $h['period'] === 'month' ? ' this month' : ''),
+                    sprintf('%s%s gives you %s.', $full ? 'To add more, upgrade. ' : '', $h['next_name'], $h['next_limit'] === null ? 'unlimited ' . $h['unit'] : $h['next_limit'] . ' ' . $h['unit'] . ($h['period'] === 'month' ? ' a month' : '')),
+                    'upgrade?limit=' . rawurlencode($h['key']), 'See ' . $h['next_name']];
             }
             if ($banner) { ?>
                 <template id="ex-bill-banner"><div class="ex-bill-banner is-<?= self::e($banner[0]) ?>" role="status">
-                    <?= enlixo_icon($banner[0] === 'bad' ? 'warning' : 'hourglass', 20, 'ex-bill-ico') ?>
+                    <?= enlixo_icon($banner[0] === 'bad' ? 'warning' : ($banner[0] === 'up' ? 'crown' : 'hourglass'), 20, 'ex-bill-ico') ?>
                     <span class="ex-bill-text"><strong><?= self::e($banner[1]) ?></strong> <?= self::e($banner[2]) ?></span>
                     <a class="custom-btn ex-bill-btn" href="<?= self::e($banner[3]) ?>"><?= self::e($banner[4]) ?></a>
                 </div></template>
                 <script>
                     document.addEventListener('DOMContentLoaded', () => {
+                        // the menu is printed twice (desktop + phone): one banner only, in the first content row
                         const t = document.getElementById('ex-bill-banner');
-                        const at = document.querySelector('#real-list > .row, #real-list > .ac-page, #real-list, .contentBodyArea');
-                        if (t && at && !/(\/subscription|\/invoice|\/renew)/.test(location.pathname)) at.prepend(t.content.cloneNode(true));
+                        const at = ['#real-list > .row', '#real-list > .ac-page', '#real-list', '.contentBodyArea'].map((q) => document.querySelector(q)).find(Boolean);
+                        if (t && at && !document.querySelector('.ex-bill-banner:not(.is-hit)') && !/(\/subscription|\/invoice|\/renew|\/upgrade)/.test(location.pathname)) at.prepend(t.content.cloneNode(true));
                     });
                 </script>
             <?php } ?>
+            <script>
+                // A plan limit or a locked feature hit while working (ApiClient fires enlixo:upgrade): an upgrade card at the
+                // top of the page, never a pop-up. "See plan" opens the Upgrade page for that limit / feature.
+                if (!window.__exUpgradeCard) window.addEventListener('enlixo:upgrade', (ev) => {
+                    const d = ev.detail || {};
+                    const at = ['#real-list > .row', '#real-list > .ac-page', '#real-list', '.contentBodyArea'].map((q) => document.querySelector(q)).find(Boolean);
+                    if (!at) return;
+                    document.querySelector('.ex-bill-banner.is-hit')?.remove();
+                    const names = { free: 'FREE', start: 'STARTER', grow: 'GROW', pro: 'CUSTOM' };
+                    const plan = names[d.required_plan] || 'a bigger plan';
+                    const href = 'upgrade?' + (d.limit ? 'limit=' + encodeURIComponent(d.limit) : 'feature=' + encodeURIComponent(d.feature || ''));
+                    const box = document.createElement('div');
+                    box.className = 'ex-bill-banner is-up is-hit';
+                    box.setAttribute('role', 'alert');
+                    const txt = document.createElement('span');
+                    txt.className = 'ex-bill-text';
+                    const b = document.createElement('strong');
+                    b.textContent = d.code === 'limit_reached' ? 'You reached a limit of your plan.' : 'This is part of ' + plan + '.';
+                    txt.append(b, ' ' + (d.message || ''));
+                    const a = document.createElement('a');
+                    a.className = 'custom-btn ex-bill-btn';
+                    a.href = href;
+                    a.textContent = d.required_plan ? 'See ' + plan : 'See plans';
+                    box.append(txt, a);
+                    at.prepend(box);
+                    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                });
+                window.__exUpgradeCard = true;
+            </script>
 
             <div class="ex-user-card">
                 <?php if (!empty($sessionUser["user_image"]) && file_exists(Project::getAssetsPath() . '/imgs/users/' . $sessionUser["user_image"])) { ?>

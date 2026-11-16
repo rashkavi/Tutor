@@ -5,6 +5,8 @@ require_once("../../includes/connection.php");
 require_once("../../includes/project.php");
 if (SessionUser::hasValidSession()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
+    require_once __DIR__ . '/../../includes/enlixo/plan-guard.php';
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') { enlixo_plan_guard($status, (int) ($sessionUserObject['user_id'] ?? 0), 'recordings.month'); } // plan limit (FREE: docs/PLANS.md)
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $id = isset($_POST['id']) ? trim($_POST['id']) : 0;
         $expireDate = isset($_POST['expire_date']) ? trim($_POST['expire_date']) : '';

@@ -307,7 +307,26 @@ final class PlatformBilling
             }
             $s['status'] = $s['status'] ?: 'trial';
             $rules = $this->settings->rules();
+            if ($this->isFreePlan((int) $s['payment_plans_payment_plan_id']) && !in_array($s['status'], ['suspended', 'cancelled'], true)) {
+                return ['issued' => false, 'changed' => false]; // FREE is never invoiced
+            }
             $renewal = Lifecycle::renewalDate($s);
+            // a downgrade to FREE waits for the end of the paid period, then nothing more is invoiced
+            if ($s['next_plan_id'] && $this->isFreePlan((int) $s['next_plan_id'])) {
+                if ($renewal !== null && $this->today >= $renewal) {
+                    $this->moveToFree($s, 'Moved to FREE at the end of the paid period', null);
+                    return ['issued' => false, 'changed' => true];
+                }
+                return ['issued' => false, 'changed' => false];
+            }
+            // reverse trial: a trial (or an upgrade from FREE) that ends unpaid goes back to FREE when the students fit,
+            // instead of closing the class portal (rule 'trial_to_free', on unless the admin turns it off)
+            if ($s['status'] === 'trial' && $s['period_start'] === null && $s['trial_ends_at'] !== null && $this->today >= $s['trial_ends_at']
+                && ($rules['trial_to_free'] ?? true) && $this->freePlan() !== null
+                && (int) ($this->studentCounts($tutorId)[$tutorId] ?? 0) <= (int) $this->freePlan()['student_limit']) {
+                $this->moveToFree($s, 'The trial ended without a payment: moved to FREE (everything is kept)', null);
+                return ['issued' => false, 'changed' => true];
+            }
             $invoiced = $renewal !== null && (bool) $this->db->value(
                 "SELECT 1 FROM platform_invoices WHERE users_has_payment_plan_id = :s AND kind = 'period' AND period_from = :f AND status <> 'void'",
                 ['s' => $s['users_has_payment_plan_id'], 'f' => $renewal],
@@ -334,6 +353,32 @@ final class PlatformBilling
         $this->log((int) $s['users_user_id'], 'status_' . $status, $summary, $logReason ?? ($by === null ? $reason : null), ['status' => $s['status']], ['status' => $status], $by);
     }
 
+    private function freePlan(): ?array
+    {
+        return $this->catalog->planByKey('free');
+    }
+
+    private function isFreePlan(int $planId): bool
+    {
+        $free = $this->freePlan();
+        return $free !== null && (int) $free['payment_plan_id'] === $planId;
+    }
+
+    /** FREE from today: never invoiced, open invoices void, the data stays. */
+    private function moveToFree(array $s, string $summary, ?int $by, ?string $reason = null): void
+    {
+        $free = $this->freePlan() ?? throw new HttpException(409, 'conflict', 'The FREE plan is not set up yet.');
+        $this->voidUnpaid($s, 'Moved to FREE', $by, null);
+        $this->db->execute(
+            "UPDATE users_has_payment_plans SET payment_plans_payment_plan_id = :p, status = 'active', status_reason = NULL, status_changed_at = NOW(),
+                    trial_ends_at = NULL, trial_plan_key = NULL, trial_student_cap = NULL, period_start = :t, period_end = NULL, next_plan_id = NULL,
+                    grace_until = NULL, cancel_at_period_end = 0, extra_packs = 0, custom_price = NULL, custom_price_reason = NULL
+              WHERE users_has_payment_plan_id = :id",
+            ['p' => $free['payment_plan_id'], 't' => $this->today, 'id' => $s['users_has_payment_plan_id']],
+        );
+        $this->log((int) $s['users_user_id'], 'plan', $summary, $reason, ['plan' => $this->catalog->planById((int) $s['payment_plans_payment_plan_id'])['plan_key'] ?? null, 'status' => $s['status']], ['plan' => 'free', 'status' => 'active'], $by);
+    }
+
     // ================================================================ invoices
 
     /** The invoice for the billing period that starts on $from (plan, packs, monthly add-ons). */
@@ -353,6 +398,27 @@ final class PlatformBilling
     {
         $rules = $this->settings->rules();
         $sum = Lifecycle::total($lines, (bool) $rules['tax_on'], (float) $rules['tax_rate']);
+        // one period invoice per period (unique key): a void one for the same period (an upgrade from FREE that was
+        // not paid, then tried again) is made again with today's lines instead of a second invoice
+        $void = $kind === 'period' && $from !== null ? $this->db->one(
+            "SELECT platform_invoice_id, invoice_number FROM platform_invoices WHERE users_has_payment_plan_id = :s AND kind = 'period' AND period_from = :f AND status = 'void'",
+            ['s' => $s['users_has_payment_plan_id'], 'f' => $from],
+        ) : null;
+        if ($void !== null) {
+            $plan = $this->catalog->planById((int) $s['payment_plans_payment_plan_id']);
+            $this->db->execute(
+                "UPDATE platform_invoices SET plan_name = :pl, billing_cycle = :c, period_to = :t, issued_on = :i, due_on = :d, subtotal = :sub, tax = :tax, total = :tot,
+                        paid = 0, status = :st, void_reason = NULL, created_by = :by WHERE platform_invoice_id = :id",
+                ['pl' => strtoupper((string) $plan['payment_plan']), 'c' => $s['billing_cycle'], 't' => $to, 'i' => $this->today, 'd' => $due, 'sub' => $sum['subtotal'], 'tax' => $sum['tax'],
+                    'tot' => $sum['total'], 'st' => $sum['total'] > 0 ? 'open' : 'paid', 'by' => $by, 'id' => $void['platform_invoice_id']],
+            );
+            $this->db->execute('DELETE FROM platform_invoice_lines WHERE platform_invoice_id = :i', ['i' => $void['platform_invoice_id']]);
+            foreach ($lines as $i => $l) {
+                $this->db->execute('INSERT INTO platform_invoice_lines (platform_invoice_id, description, amount, sort_order) VALUES (:i, :d, :a, :o)', ['i' => $void['platform_invoice_id'], 'd' => $l['text'], 'a' => $l['amount'], 'o' => $i]);
+            }
+            $this->log((int) $s['users_user_id'], 'invoice', sprintf('Invoice %s made again for LKR %s, due %s', $void['invoice_number'], number_format($sum['total']), $due), null, null, ['invoice' => $void['invoice_number'], 'total' => $sum['total']], $by);
+            return (int) $void['platform_invoice_id'];
+        }
         $prefix = $rules['invoice_prefix'] . '-' . substr($this->today, 0, 4) . '-';
         $last = (string) ($this->db->value('SELECT invoice_number FROM platform_invoices WHERE invoice_number LIKE :p ORDER BY invoice_number DESC LIMIT 1 FOR UPDATE', ['p' => $prefix . '%']) ?? '');
         $number = $prefix . str_pad((string) ((int) substr($last, strlen($prefix)) + 1), 5, '0', STR_PAD_LEFT);
@@ -688,7 +754,7 @@ final class PlatformBilling
                 $addonIds[] = $offered[$k];
             }
         }
-        $start = (string) ($in['start'] ?? 'trial');
+        $start = $plan !== null && $plan['plan_key'] === 'free' ? 'free' : (string) ($in['start'] ?? 'trial'); // FREE: no trial, no invoice
         $trialDays = 0;
         $startDate = $this->today;
         $paidNow = 'no';
@@ -703,6 +769,8 @@ final class PlatformBilling
                 $e['start_date'] = 'Choose a day from the last month or later.';
             }
             $paidNow = in_array($in['paid_now'] ?? 'no', ['no', 'bank', 'cash'], true) ? $in['paid_now'] : 'no';
+        } elseif ($start === 'free') {
+            $packs = 0;
         } elseif ($start === 'comp') {
             $until = $this->dateOrError($in['comp_until'] ?? '', 'comp_until', $e, false);
             if ($until !== null && $until <= $this->today) {
@@ -724,14 +792,14 @@ final class PlatformBilling
                  VALUES (:t, :f, :l, :e, :m, :w, NOW(), 1, :role, :by)',
                 ['t' => $title, 'f' => $first, 'l' => $last, 'e' => $email, 'm' => $mobile, 'w' => $wa, 'role' => self::TUTOR_ROLE, 'by' => $by],
             );
-            $status = ['trial' => 'trial', 'paid' => 'due', 'comp' => 'complimentary'][$start];
+            $status = ['trial' => 'trial', 'paid' => 'due', 'comp' => 'complimentary', 'free' => 'active'][$start];
             $sid = $this->db->insert(
                 'INSERT INTO users_has_payment_plans (users_user_id, payment_plans_payment_plan_id, added_by, date_added, status, billing_cycle, trial_ends_at, period_start, period_end,
                         custom_price, custom_price_reason, extra_packs, status_reason, institute_name, main_subject, admin_note, status_changed_at)
                  VALUES (:u, :p, :by, NOW(), :st, :c, :te, :ps, :pe, :cp, :cpr, :x, :sr, :b, :sub, :n, NOW())',
                 ['u' => $uid, 'p' => $plan['payment_plan_id'], 'by' => $by, 'st' => $status, 'c' => $cycle,
                     'te' => $start === 'trial' ? Lifecycle::addDays($this->today, $trialDays) : ($start === 'paid' ? $startDate : null),
-                    'ps' => $start === 'comp' ? $this->today : null, 'pe' => $start === 'comp' ? Lifecycle::addDays((string) $in['comp_until'], 1) : null,
+                    'ps' => in_array($start, ['comp', 'free'], true) ? $this->today : null, 'pe' => $start === 'comp' ? Lifecycle::addDays((string) $in['comp_until'], 1) : null,
                     'cp' => $custom === '' ? null : round((float) $custom, 2), 'cpr' => $custom === '' ? null : $customReason, 'x' => $packs,
                     'sr' => $start === 'comp' ? mb_substr(trim((string) $in['comp_reason']), 0, 200) : null,
                     'b' => $brand ?: null, 'sub' => $subject ?: null, 'n' => $note ?: null],
@@ -742,6 +810,7 @@ final class PlatformBilling
             $what = match ($start) {
                 'trial' => sprintf('Added with a %d-day free trial on %s (then %s, %s)', $trialDays, strtoupper((string) $rules['trial_plan']), strtoupper((string) $plan['payment_plan']), $cycle),
                 'paid' => sprintf('Added on %s, %s, starting %s', strtoupper((string) $plan['payment_plan']), $cycle, $startDate),
+                'free' => 'Added on the FREE plan (up to ' . (int) $plan['student_limit'] . ' students, never invoiced)',
                 default => sprintf('Added with free %s access until %s', strtoupper((string) $plan['payment_plan']), $in['comp_until']),
             };
             $this->log($uid, $start === 'trial' ? 'added_trial' : 'added', $what, $start === 'comp' ? trim((string) $in['comp_reason']) : ($custom !== '' ? 'Custom price: ' . $customReason : null), null, null, $by);
@@ -823,6 +892,24 @@ final class PlatformBilling
                         $this->payNow($s, $by);
                     }
                     return $msg;
+                case 'preview':
+                    // "Try the next plan free for 7 days": once per tutor, no invoice, the tutor's own plan stays
+                    $plan = $this->catalog->planByKey((string) ($in['plan'] ?? '')) ?? throw new HttpException(422, 'validation_failed', 'Choose a plan.', ['plan' => 'Choose the plan to try.']);
+                    $current = $this->catalog->planById((int) $s['payment_plans_payment_plan_id']);
+                    if ($plan['plan_key'] === 'pro' || (int) $plan['sort_order'] <= (int) ($current['sort_order'] ?? 0)) {
+                        throw new HttpException(422, 'validation_failed', 'Choose a bigger plan than yours.', ['plan' => 'Only STARTER or GROW can be tried.']);
+                    }
+                    if (!empty($s['preview_used_at']) && !(!$byTutor && $reason !== '')) {
+                        throw new HttpException(409, 'conflict', 'You have already tried a plan. Upgrade to keep the features, or ask ENLIXO.');
+                    }
+                    if (in_array($s['status'], ['suspended', 'cancelled'], true) || $s['status'] === 'trial') {
+                        throw new HttpException(409, 'conflict', $s['status'] === 'trial' ? 'You are on a free trial already.' : 'Renew your subscription first.');
+                    }
+                    $days = max(1, min(14, (int) ($in['days'] ?? 7)));
+                    $until = Lifecycle::addDays($this->today, $days);
+                    $this->db->execute('UPDATE users_has_payment_plans SET preview_plan_key = :k, preview_until = :u, preview_used_at = NOW() WHERE users_has_payment_plan_id = :id', ['k' => $plan['plan_key'], 'u' => $until] + $id);
+                    $this->log($tutorId, 'preview', sprintf('Trying %s free until %s%s', strtoupper((string) $plan['payment_plan']), $until, $byTutor ? ' (by the tutor)' : ''), $reason ?: null, null, ['preview' => $plan['plan_key'], 'until' => $until], $by);
+                    return sprintf('You are trying %s until %s. Everything you set up stays when you upgrade.', strtoupper((string) $plan['payment_plan']), $until);
                 case 'pay_now':
                     $this->payNow($s, $by);
                     return 'Your invoice is ready. Pay it and upload the slip.';
@@ -922,6 +1009,33 @@ final class PlatformBilling
         $students = (int) ($this->studentCounts($tutorId)[$tutorId] ?? 0);
         $paidPeriod = $s['period_start'] !== null && $s['period_end'] !== null && $s['period_end'] > $this->today && in_array($s['status'], ['active', 'due'], true);
         $label = strtoupper((string) $new['payment_plan']);
+        if ($new['plan_key'] === 'free') { // down to FREE: the students must fit; a paid period runs to its end first
+            if ($students > (int) $new['student_limit']) {
+                throw new HttpException(422, 'validation_failed', sprintf('FREE allows %d students and %d are active. Make some students inactive first.', (int) $new['student_limit'], $students), ['plan' => 'Too many active students for FREE.']);
+            }
+            if ($paidPeriod) {
+                $this->db->execute('UPDATE users_has_payment_plans SET next_plan_id = :p WHERE users_has_payment_plan_id = :id', ['p' => $new['payment_plan_id']] + $id);
+                $this->log($tutorId, 'plan', sprintf('Moves to FREE at the end of the paid period (%s)%s', $s['period_end'], $byTutor ? ', asked by the tutor' : ''), null, ['plan' => $old['plan_key']], ['next_plan' => 'free'], $by);
+                return sprintf('You keep %s until %s, then move to FREE.', strtoupper((string) $old['payment_plan']), Lifecycle::addDays((string) $s['period_end'], -1));
+            }
+            $this->moveToFree($s, 'Plan changed to FREE' . ($byTutor ? ' (by the tutor)' : ''), $by);
+            return 'FREE is your plan now.';
+        }
+        if ($old['plan_key'] === 'free') {
+            // up from FREE: the new plan works today; its first invoice is made now and is due in N days. Not paid by
+            // then = back to FREE (reverse trial in tickTutor), so trying a paid plan never closes the class portal.
+            $limit = $new['student_limit'] === null ? null : (int) $new['student_limit'];
+            $days = max(1, (int) ($this->settings->rules()['upgrade_pay_days'] ?? 7));
+            $this->db->execute(
+                "UPDATE users_has_payment_plans SET payment_plans_payment_plan_id = :p, billing_cycle = :c, status = 'trial', status_reason = NULL, status_changed_at = NOW(),
+                        trial_ends_at = :e, trial_plan_key = :k, trial_student_cap = :cap, period_start = NULL, period_end = NULL, next_plan_id = NULL,
+                        preview_plan_key = NULL, preview_until = NULL WHERE users_has_payment_plan_id = :id",
+                ['p' => $new['payment_plan_id'], 'c' => $cycle, 'e' => Lifecycle::addDays($this->today, $days), 'k' => $new['plan_key'], 'cap' => $limit] + $id,
+            );
+            $this->log($tutorId, 'plan', sprintf('Upgraded from FREE to %s, %s%s: pay within %d days to keep it', $label, $cycle, $byTutor ? ' (by the tutor)' : '', $days), null, ['plan' => 'free'], ['plan' => $new['plan_key']], $by);
+            $this->payNow($this->db->one('SELECT * FROM users_has_payment_plans WHERE users_has_payment_plan_id = :id', $id), $by);
+            return sprintf('%s is on. Pay the invoice within %d days to keep it.', $label, $days);
+        }
         if (!$paidPeriod) { // trial, complimentary, or nothing paid yet: switch now, the open invoice is made again with the new price
             $this->voidUnpaid($s, 'Plan changed', $by);
             $this->db->execute('UPDATE users_has_payment_plans SET payment_plans_payment_plan_id = :p, billing_cycle = :c, next_plan_id = NULL WHERE users_has_payment_plan_id = :id', ['p' => $new['payment_plan_id'], 'c' => $cycle] + $id);

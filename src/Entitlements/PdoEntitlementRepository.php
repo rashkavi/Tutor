@@ -107,6 +107,64 @@ final class PdoEntitlementRepository implements EntitlementRepository
         ), 'feature_key');
     }
 
+    public function usage(int $tutorId): array
+    {
+        $month = date('Y-m-01 00:00:00');
+        $count = function (string $sql, array $args): int {
+            try {
+                return (int) $this->db->value($sql, $args);
+            } catch (\PDOException) {
+                return 0; // table not there yet (older database): nothing counted
+            }
+        };
+        return [
+            'classes' => $count('SELECT COUNT(*) FROM classes WHERE tutor_id = :t AND status_status_id = :a', ['t' => $tutorId, 'a' => self::STATUS_ACTIVE]),
+            'tutes.month' => $count(
+                'SELECT COUNT(*) FROM class_tutes ct JOIN classes c ON c.class_id = ct.classes_class_id WHERE c.tutor_id = :t AND ct.date_added >= :m',
+                ['t' => $tutorId, 'm' => $month],
+            ),
+            'recordings.month' => $count(
+                'SELECT COUNT(*) FROM lecture_recording r JOIN time_table tt ON tt.time_table_id = r.time_table_time_table_id
+                   JOIN classes c ON c.class_id = tt.classes_class_id WHERE c.tutor_id = :t AND r.added_at >= :m',
+                ['t' => $tutorId, 'm' => $month],
+            ),
+            // one per person reached: sent, or waiting to be sent from a message made this month
+            'messages.month' => $count(
+                "SELECT COUNT(*) FROM tutor_message_recipients r JOIN tutor_messages m ON m.message_id = r.message_id
+                  WHERE m.tutor_id = :t AND r.status IN ('sent', 'pending') AND m.created_at >= :m",
+                ['t' => $tutorId, 'm' => $month],
+            ),
+        ];
+    }
+
+    public function preview(int $tutorId): ?array
+    {
+        try {
+            $row = $this->db->one(
+                'SELECT preview_plan_key, preview_until FROM users_has_payment_plans WHERE users_user_id = :t ORDER BY users_has_payment_plan_id DESC LIMIT 1',
+                ['t' => $tutorId],
+            );
+        } catch (\PDOException) {
+            return null; // before migration 018
+        }
+        if (!$row || !$row['preview_plan_key'] || !$row['preview_until'] || $row['preview_until'] < date('Y-m-d')) {
+            return null;
+        }
+        return ['plan' => (string) $row['preview_plan_key'], 'until' => (string) $row['preview_until']];
+    }
+
+    public function previewUsed(int $tutorId): bool
+    {
+        try {
+            return (bool) $this->db->value(
+                'SELECT preview_used_at IS NOT NULL FROM users_has_payment_plans WHERE users_user_id = :t ORDER BY users_has_payment_plan_id DESC LIMIT 1',
+                ['t' => $tutorId],
+            );
+        } catch (\PDOException) {
+            return false;
+        }
+    }
+
     public function activeStudentCount(int $tutorId): int
     {
         return (int) $this->db->value(

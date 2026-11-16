@@ -267,6 +267,15 @@ final class PlatformController
         return JsonResponse::ok(['message' => $this->app->platformBilling()->action($auth->userId, 'plan', $in, $auth->userId, true)]);
     }
 
+    /** POST /tutor/subscription/preview {plan}: try a bigger plan free for 7 days, once (no invoice, own plan stays). */
+    public function startPreview(Request $r): JsonResponse
+    {
+        $auth = $this->tutorOwner($r);
+        $msg = $this->app->platformBilling()->action($auth->userId, 'preview', ['plan' => (string) $r->input('plan', ''), 'days' => 7], $auth->userId, true);
+        $this->app->entitlements()->forget($auth->userId);
+        return JsonResponse::ok(['message' => $msg, 'access' => $this->app->entitlements()->for($auth->userId)->toArray()]);
+    }
+
     /** POST /tutor/subscription/pay-now: make the next invoice now, so the tutor can pay before the trial / period ends. */
     public function payNow(Request $r): JsonResponse
     {

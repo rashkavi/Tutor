@@ -33,7 +33,7 @@ export const chip = (status, text = null) => {
 };
 
 export const STATUS_OPTIONS = ['trial', 'active', 'due', 'overdue', 'suspended', 'complimentary', 'cancelled'].map((v) => ({ value: v, label: TONES[v][1] }));
-export const PLAN_OPTIONS = [{ value: 'start', label: 'START' }, { value: 'grow', label: 'GROW' }, { value: 'pro', label: 'PRO' }];
+export const PLAN_OPTIONS = [{ value: 'free', label: 'FREE' }, { value: 'start', label: 'STARTER' }, { value: 'grow', label: 'GROW' }, { value: 'pro', label: 'CUSTOM' }];
 
 /** Grey strip under the header while the pages run on sample data. */
 export const previewNote = () => (PREVIEW

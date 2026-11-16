@@ -52,7 +52,7 @@ const details = section('Tutor Details', 'Who the tutor is and how to reach them
     fieldEl('note', 'Note for the Team', input('Enter a note only admins see', { 'data-limit': '200' }), { info: 'Only ENLIXO admins see this. For example "Met at the Colombo education fair".' })));
 
 // ---------- 2. plan and billing ----------
-const planCards = h('div', { class: 'row g-3' }, L.plans.map((p) => h('div', { class: 'col-12 col-md-4' },
+const planCards = h('div', { class: 'row g-3' }, L.plans.map((p) => h('div', { class: 'col-12 col-md-6 col-xl-3' },
   h('label', { class: 'ad-plan-card' }, radio('plan', p.key, p.key === 'grow'),
     h('span', { class: 'ad-pick-check' }, icon('check', { size: 16 })),
     h('span', { class: `ad-plan-tile ad-plan-${p.key}`, style: { width: '40px', height: '40px' } }, icon('crown', { size: 20 })),
@@ -132,13 +132,16 @@ function summary() {
   const total = planCost + packCost + addonCost;
   packs.disabled = !p.pack_price;
   yearlyNote.textContent = `Yearly saves ${lkr(p.yearly_discount * 12)} on ${p.name}`;
-  const start = val('start');
+  const isFree = p.key === 'free'; // FREE: never invoiced, no trial / start choice
+  startSection.classList.toggle('d-none', isFree);
+  const start = isFree ? 'free' : val('start');
   const name = `${inputs.first_name.value} ${inputs.last_name.value}`.trim() || 'New tutor';
   const days = Math.max(1, Number(inputs.trial_days.value) || R.trial_days);
   const steps = {
     trial: [`${name} gets every ${plan(R.trial_plan).name} feature for ${plural(days, 'day')} (up to ${R.trial_student_cap} students).`, `The trial ends on ${day(plusDays(days))}. The first ${p.name} invoice of ${lkr(total)} is made 3 days before and shows on the tutor's My Subscription page.`, `Not paid ${plural(R.grace_days, 'day')} after the trial ends: the account is paused until the slip is approved.`],
     paid: [`The first invoice of ${lkr(total)} is made today for ${yearly ? '12 months' : '1 month'}.`, inputs.paid_now.value === 'no' ? `It is due on ${day(inputs.start_date.value)}; the tutor uploads the slip on their Billing page.` : 'It is marked paid, so the plan starts at once.', `Next renewal: ${day(plusMonths(months))}.`],
     comp: [`${name} uses ${p.name} free until ${day(inputs.comp_until.value)}.`, `No invoice now. The first invoice is made ${plural(R.invoice_days_before, 'day')} before the free period ends.`],
+    free: [`${name} starts on FREE: up to ${p.limit} students, never invoiced.`, 'No parent login, QR attendance or Zoom auto-scheduling, and 3 classes; the tutor sees what STARTER adds on their Upgrade page.', 'They can try STARTER or GROW free for 7 days once, or upgrade any time from the app.'],
   }[start];
   const row = (a, b) => h('div', { class: 'ad-sum-row' }, h('span', { class: 'sub-text' }, a), h('span', { class: 'main-text fw-medium text-end' }, b));
   fill(sumBox,
@@ -149,7 +152,7 @@ function summary() {
     row(yearly ? 'Plan, 12 months' : 'Plan, 1 month', `${lkr(planCost)}${customOn.checked && inputs.custom_price.value ? ' (custom)' : ''}`),
     packCost ? row(`Extra students, ${n} × 50`, lkr(packCost)) : null,
     ...picked.map((a) => row(a.name, monthlyAddon(a) ? lkr(a.price * months) : a.model === 'One-time' ? `${lkr(a.price)} once, billed apart` : 'by usage')),
-    h('div', { class: 'ad-sum-row' }, h('span', { class: 'main-text fw-semibold' }, start === 'comp' ? 'To pay' : 'Each invoice'), h('span', { class: 'main-topic' }, start === 'comp' ? lkr(0) : lkr(total))),
+    h('div', { class: 'ad-sum-row' }, h('span', { class: 'main-text fw-semibold' }, ['comp', 'free'].includes(start) ? 'To pay' : 'Each invoice'), h('span', { class: 'main-topic' }, ['comp', 'free'].includes(start) ? lkr(0) : lkr(total))),
     h('div', { class: 'text-14 main-text fw-semibold mt-4 mb-2' }, 'What happens when you save'),
     h('ol', { class: 'ad-steps' }, steps.map((s, i) => h('li', {}, h('span', { class: 'ad-step-dot' }, String(i + 1)), h('span', {}, s)))),
     h('button', { type: 'button', class: 'custom-btn w-100 mt-3', onclick: save }, REQ ? 'Approve and Add Tutor' : 'Add Tutor'));
@@ -184,13 +187,13 @@ if (REQ) {
   set('mobile', REQ.mobile); if (REQ.whatsapp && REQ.whatsapp !== REQ.mobile) set('whatsapp', REQ.whatsapp);
   set('brand', REQ.institute); set('subject', REQ.subject); set('note', `Online request ${REQ.ref}`);
   [planCards, cycle, addons].forEach((n) => n.querySelectorAll('input').forEach((x) => {
-    if (x.name === 'plan' && REQ.plan) x.checked = x.value === (REQ.plan === 'free' ? 'start' : REQ.plan);
+    if (x.name === 'plan' && REQ.plan) x.checked = x.value === (REQ.plan === 'free' && !plan('free') ? 'start' : REQ.plan);
     if (x.name === 'cycle') x.checked = x.value === REQ.cycle;
     if (x.name === 'addon') x.checked = REQ.addons.includes(x.value);
   }));
 }
-// FREE (up to 50 students): START with complimentary access, so no invoice is made while the class stays small.
-if (REQ?.plan === 'free') {
+// FREE (up to 50 students): the FREE plan (migration 018); on an older database START with complimentary access.
+if (REQ?.plan === 'free' && !plan('free')) {
   startSection.querySelectorAll('input[name="start"]').forEach((x) => { x.checked = x.value === 'comp'; });
   inputs.comp_until.value = plusMonths(12);
   inputs.comp_reason.value = 'FREE plan: up to 50 students';

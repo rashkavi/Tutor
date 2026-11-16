@@ -157,5 +157,6 @@ return static function (Router $router, App $app): void {
     $router->post('/api/v1/tutor/subscription/payments', $pf->uploadSlip(...));
     $router->post('/api/v1/tutor/subscription/change', $pf->changeMyPlan(...));
     $router->post('/api/v1/tutor/subscription/pay-now', $pf->payNow(...));
+    $router->post('/api/v1/tutor/subscription/preview', $pf->startPreview(...));
     $router->get('/api/v1/tutor/subscription/payments/{id}/slip', $pf->mySlip(...));
 };

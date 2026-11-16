@@ -36,6 +36,8 @@ if (!property_exists($status, 'mobile') && !property_exists($status, 'otp')) {
         $status->otp = "Incorrect code. Please check the WhatsApp message.";
     } elseif (!tutor_access_parent((int) $data['parent_id'])) {
         $status->error = TUTOR_ACCESS_MESSAGE; // every class of the children belongs to a tutor whose subscription ended
+    } elseif (!tutor_parent_login_allowed((int) $data['parent_id'])) {
+        $status->error = PARENT_PLAN_MESSAGE; // parent login is a STARTER feature; the children's tutors are on FREE
     } else {
         // the code works once
         Database::iud("UPDATE `parents` SET `verification` = '', `reset_time` = '' WHERE `parent_id` = '" . (int) $data['parent_id'] . "'");

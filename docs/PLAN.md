@@ -313,3 +313,7 @@ Run `database/migrations/016_messaging.sql` (additive: `tutor_messages`, `tutor_
 - **Rules while the language is si / ta** (same place): no negative letter-spacing (it breaks joined letters), taller heading lines, button words may wrap inside the button, stat card titles take a second line instead of "...". The landing / sign-up page has the same rules in `assets/landing/landing.css` (smaller big headings, sign-up side panel scrolls instead of covering the logo, footer links wrap).
 - **Phone layout fixes found on the way (every language):** page header buttons wrap (`.ex-header-actions`), Time Table month arrows only on a phone, Monthly / Yearly switch on My Subscription fits.
 - Still English in si / ta: some texts drawn by the newer pages (for example "Schedule a Class", "Child Progress", "Billing period") are not in `assets/i18n/phrases.*.json` yet; add them with `bin/i18n-phrases.py`.
+
+## FREE / STARTER / GROW and the upgrade path (2026-11-16)
+
+See `docs/PLANS.md`. FREE is a real plan (migration 018), limits in `FeatureCatalog::limits()`, enforced by `EntitlementService::requireWithin()`; parent login is STARTER; Upgrade page `tutor/upgrade.php`, nudges (menu card, 80 % banners, limit card, dashboard card, locks), "Try free for 7 days" once, upgrade from FREE with a 7-day invoice, reverse trial back to FREE. Tests: `tests/e2e/plans-journey.e2e.js` (10 cases), `tests/EntitlementsTest.php`.

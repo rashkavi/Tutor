@@ -37,10 +37,17 @@ if (SessionUser::ifUserIsParent()) {
                             <div class="col-12 col-lg-6 d-flex flex-column mb-4 mb-md-2 mb-xl-4 align-items-center justify-content-center" id="content-div">
                                 <?php if (!empty($_COOKIE['enlixo_paused'])) { ?>
                                     <script>document.cookie = 'enlixo_paused=; Max-Age=0; path=/';</script>
+                                    <?php if ($_COOKIE['enlixo_paused'] === 'plan') { ?>
+                                        <div class="ex-paused-note" role="alert">
+                                            <strong>Parent login is not open for your tutor</strong>
+                                            <span>Your tutor's ENLIXO plan does not include the parent app yet, so you get class updates by WhatsApp or e-mail. Ask your tutor about it.</span>
+                                        </div>
+                                    <?php } else { ?>
                                     <div class="ex-paused-note" role="alert">
                                         <strong>The class portal is paused</strong>
                                         <span>Your tutor's ENLIXO account is paused at the moment. Nothing is lost: it opens again as soon as your tutor renews. Please contact your tutor.</span>
                                     </div>
+                                    <?php } ?>
                                 <?php } ?>
                                 <p class="text-24 sub-topic-color fw-medium lh-lg">Parent Login</p>
                                 <div class="w-100 mb-4 mb-md-2 mb-xl-4 justify-content-start">

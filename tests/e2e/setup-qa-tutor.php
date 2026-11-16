@@ -40,11 +40,14 @@ $db->execute('UPDATE users SET user_password = :p, status_status_id = 1 WHERE us
 $sub = (int) ($db->value('SELECT users_has_payment_plan_id FROM users_has_payment_plans WHERE users_user_id = :u ORDER BY users_has_payment_plan_id DESC LIMIT 1', ['u' => $id]) ?? 0);
 if ($sub) {
     $extra = (bool) $db->value("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users_has_payment_plans' AND COLUMN_NAME = 'trial_plan_key'");
+    $preview = (bool) $db->value("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users_has_payment_plans' AND COLUMN_NAME = 'preview_plan_key'");
+    // php setup-qa-tutor.php free  -> the QA tutor on the FREE plan (upgrade tests); default STARTER, paid 30 days
+    $free = ($argv[1] ?? '') === 'free' && (bool) $db->value("SELECT 1 FROM payment_plans WHERE plan_key = 'free'");
     $db->execute(
-        "UPDATE users_has_payment_plans SET payment_plans_payment_plan_id = (SELECT payment_plan_id FROM payment_plans WHERE plan_key = 'start'), status = 'active', status_reason = NULL,
-                period_start = CURDATE(), period_end = DATE_ADD(CURDATE(), INTERVAL 30 DAY), grace_until = NULL, cancel_at_period_end = 0, next_plan_id = NULL"
-            . ($extra ? ', trial_plan_key = NULL, trial_student_cap = NULL' : '') . ' WHERE users_has_payment_plan_id = :s',
-        ['s' => $sub],
+        "UPDATE users_has_payment_plans SET payment_plans_payment_plan_id = (SELECT payment_plan_id FROM payment_plans WHERE plan_key = :k), status = 'active', status_reason = NULL,
+                period_start = CURDATE(), period_end = " . ($free ? 'NULL' : 'DATE_ADD(CURDATE(), INTERVAL 30 DAY)') . ", trial_ends_at = NULL, grace_until = NULL, cancel_at_period_end = 0, next_plan_id = NULL"
+            . ($extra ? ', trial_plan_key = NULL, trial_student_cap = NULL' : '') . ($preview ? ', preview_plan_key = NULL, preview_until = NULL, preview_used_at = NULL' : '') . ' WHERE users_has_payment_plan_id = :s',
+        ['s' => $sub, 'k' => $free ? 'free' : 'start'],
     );
     $db->execute("UPDATE platform_invoices SET status = 'void', void_reason = 'QA reset' WHERE users_has_payment_plan_id = :s AND status IN ('open', 'part')", ['s' => $sub]);
 }

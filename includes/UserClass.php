@@ -105,9 +105,11 @@ class SessionUser
         $key = $kind . ':' . $id;
         if (!array_key_exists($key, self::$accessCache)) {
             require_once __DIR__ . '/TutorAccess.php';
-            self::$accessCache[$key] = $kind === 'student' ? tutor_access_student($id) : tutor_access_parent($id);
+            $open = $kind === 'student' ? tutor_access_student($id) : tutor_access_parent($id);
+            $planOk = $kind !== 'parent' || !$open || tutor_parent_login_allowed($id); // parent login: STARTER and up
+            self::$accessCache[$key] = $open && $planOk;
             if (!self::$accessCache[$key] && !headers_sent()) {
-                setcookie('enlixo_paused', '1', time() + 600, '/'); // the sign-in page explains why
+                setcookie('enlixo_paused', $open ? 'plan' : '1', time() + 600, '/'); // the sign-in page explains why
             }
         }
         return self::$accessCache[$key];

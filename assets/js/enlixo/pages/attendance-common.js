@@ -53,7 +53,7 @@ export const rateBar = (rate, sub = null) => (rate == null ? cell('-', sub) : h(
 export const previewNote = () => (PREVIEW
   ? h('div', { class: 'col-12 ad-preview mb-4' }, icon('info', { size: 18 }),
     h('span', {}, h('b', {}, 'Preview with sample data. '), 'Scans, marks and settings work on this page, but nothing is saved yet. Your real classes and students come in the next step.',
-      gate && gate.plan !== 'pro' ? ` Showing the ${gate.plan.toUpperCase()} plan.` : ''))
+      gate && gate.plan?.key !== 'pro' ? ` Showing the ${gate.plan?.name ?? ''} plan.` : ''))
   : null);
 
 // ------------------------------------------------------------------ period filter (Dashboard)
