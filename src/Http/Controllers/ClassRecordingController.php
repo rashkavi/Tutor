@@ -184,6 +184,9 @@ final class ClassRecordingController
         $auth = $this->manage($r);
         $tutor = $auth->tenantId();
         $id = isset($r->routeParams['id']) ? (int) $r->param('id') : null;
+        if ($id === null) {
+            $this->app->entitlements()->requireWithin($tutor, 'recordings.month'); // FREE: 8 a month
+        }
         $res = $this->recordings()->save($tutor, $id, $r->body, $auth->userId, $this->app->entitlements()->for($tutor)->has('recordings.expiry'));
         $new = $res['new'];
         $this->log($r, $auth, $id ? 'updated' : 'added', 'recording', $new['id'], $id

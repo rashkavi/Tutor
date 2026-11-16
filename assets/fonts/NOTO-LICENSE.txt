@@ -1,0 +1,2 @@
+noto-sans-sinhala.woff2 and noto-sans-tamil.woff2: Noto Sans Sinhala / Noto Sans Tamil (Sinhala and Tamil letters only),
+Copyright The Noto Project Authors, SIL Open Font License 1.1 (https://openfontlicense.org). Used by assets/js/i18n-auto.js.

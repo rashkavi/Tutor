@@ -6,6 +6,8 @@ require_once("../../includes/UserPermissionsClass.php");
 require_once("../../includes/Project.php");
 if (SessionUser::ifUserIsTutor()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
+    require_once __DIR__ . '/../../includes/enlixo/plan-guard.php';
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') { enlixo_plan_guard($status, (int) ($sessionUserObject['user_id'] ?? 0), 'classes'); } // plan limit (FREE: docs/PLANS.md)
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $subject = isset($_POST['subject']) ? $_POST['subject'] : '';

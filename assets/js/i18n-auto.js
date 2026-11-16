@@ -174,8 +174,36 @@
         observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
     }
 
+    // Sinhala and Tamil letters: the pages ask for 'Inter', which has none, so the browser used whatever system font it
+    // found (a different look on every phone, tiny Tamil on buttons). These faces add Noto Sans Sinhala / Tamil to the
+    // 'Inter' family for those letters only (unicode-range), so every 'Inter' font stack shows them the same way. The
+    // English design's negative letter-spacing breaks the joined letters, so it is switched off in those languages.
+    function fonts() {
+        if (document.getElementById('enlixo-indic-fonts')) return;
+        const f = `${base()}fonts/`;
+        const face = (family, file, range) => `@font-face{font-family:'${family}';src:url('${f}${file}') format('woff2');font-weight:100 900;font-style:normal;font-display:swap;unicode-range:${range};}`;
+        const si = 'U+0964-0965,U+0D81-0DF4,U+1CF2,U+200C-200D,U+25CC';
+        const ta = 'U+0964-0965,U+0B82-0BFA,U+200C-200D,U+20B9,U+25CC';
+        const css = ['Inter', 'Noto Sans Sinhala'].map((n) => face(n, 'noto-sans-sinhala.woff2', si)).join('')
+            + ['Inter', 'Noto Sans Tamil'].map((n) => face(n, 'noto-sans-tamil.woff2', ta)).join('')
+            + 'html:is([lang=si],[lang=ta]) body *:not(code):not(pre){letter-spacing:normal !important}'
+            + 'html:is([lang=si],[lang=ta]) :is(h1,h2,h3,h4,h5,h6){line-height:1.35}'
+            // Bootstrap gives body / buttons / inputs a system-ui stack without 'Inter': add the Noto fonts there too
+            + "html:is([lang=si],[lang=ta]) :is(body,button,input,select,textarea,.btn,.form-control,.form-select){font-family:'Inter','Noto Sans Sinhala','Noto Sans Tamil',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}"
+            // translated button words are longer: let them wrap inside the button instead of running out of it
+            + 'html:is([lang=si],[lang=ta]) :is(.custom-btn,.custom-outline-btn,.custom-btn-outline,.lp-btn){white-space:normal;line-height:1.25;text-align:center;overflow-wrap:break-word}'
+            + 'html:is([lang=si],[lang=ta]) .current-lang-text{white-space:nowrap}'
+            // stat card titles were cut with "..." after one line; longer translated titles take a second line
+            + 'html:is([lang=si],[lang=ta]) :is(.stats-mini-title,.stats-mini-period){white-space:normal;overflow:visible;text-overflow:clip}';
+        const s = document.createElement('style');
+        s.id = 'enlixo-indic-fonts';
+        s.textContent = css;
+        document.head.appendChild(s);
+    }
+
     async function apply(code) {
         code = ['en', 'si', 'ta'].includes(code) ? code : 'en';
+        if (code !== 'en') fonts();
         if (code !== 'en') {
             const d = await load(code);
             dict = d.map;

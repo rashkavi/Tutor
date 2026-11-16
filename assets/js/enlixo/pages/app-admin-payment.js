@@ -4,13 +4,14 @@
 import { QuickGuide } from '../components/QuickGuide.js';
 import { ActionMenu } from '../components/Popover.js';
 import { DetailPage } from '../components/DetailPage.js';
-import { api, h, fill, icon, lkr, day, chip, invoiceDialog, rejectPayment, slipUrl, trySave, Toast } from './admin-common.js';
+import { api, h, fill, icon, lkr, day, chip, invoiceDialog, rejectPanel, slipUrl, trySave, Toast } from './admin-common.js';
 
 QuickGuide.attachAll();
 const root = document.getElementById('payment-page');
 const actions = document.getElementById('payment-actions');
 const id = Number(new URLSearchParams(location.search).get('payment-id') || 0);
 let d = null;
+let rejecting = new URLSearchParams(location.search).get('reject') === '1'; // the reject form is on the page
 
 fill(root, DetailPage.loading());
 load();
@@ -38,13 +39,13 @@ const DOT = { approved: 'var(--dark-green)', waiting: 'var(--dark-orange)', reje
 function draw() {
   const { payment: p, tutor: t, invoice: inv } = d;
   const items = [
-    p.status === 'waiting' && { label: 'Reject Payment', icon: 'close', danger: true, onClick: () => rejectPayment(p, load) },
+    p.status === 'waiting' && { label: 'Reject Payment', icon: 'close', danger: true, onClick: () => { rejecting = true; draw(); setTimeout(() => document.getElementById('pay-reject')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60); } },
     p.slip && { label: 'Open Slip', icon: 'view', href: slipUrl(p, true) },
-    inv && { label: 'View Invoice', icon: 'invoice', onClick: () => invoiceDialog(inv, { admin: true, reload: load }) },
+    inv && { label: 'View Invoice', icon: 'invoice', href: `invoice?invoice-id=${inv.id}` },
     { label: 'Open Tutor', icon: 'tutors', href: `tutor-details?tutor-id=${t.id}` },
     { label: 'WhatsApp', icon: 'whatsapp', href: DetailPage.waLink(t.whatsapp || t.mobile) },
   ].filter(Boolean);
-  const main = p.status === 'waiting' ? h('button', { type: 'button', class: 'custom-btn ex-btn-lg px-5 border-0', onclick: approve }, 'Approve')
+  const main = p.status === 'waiting' ? [h('button', { type: 'button', class: 'custom-btn custom-danger-btn ex-btn-lg px-4 border-0', onclick: () => { rejecting = true; draw(); setTimeout(() => document.getElementById('pay-reject')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60); } }, 'Reject'), h('button', { type: 'button', class: 'custom-btn ex-btn-lg px-5 border-0', onclick: approve }, 'Approve')]
     : h('a', { class: 'custom-btn ex-btn-lg px-5 text-decoration-none d-inline-flex align-items-center', href: `tutor-details?tutor-id=${t.id}` }, 'Open Tutor');
   fill(actions, ActionMenu.button('Actions', items, { className: 'custom-outline-btn ex-btn-lg px-4 d-inline-flex align-items-center gap-2' }), main);
 
@@ -68,7 +69,7 @@ function draw() {
     inv.tax ? h('div', { class: 'ex-line' }, h('span', {}, 'Tax'), h('span', {}, lkr(inv.tax))) : null,
     h('div', { class: 'ex-line ex-line-total' }, h('span', {}, 'Invoice total'), h('span', {}, lkr(inv.total))),
     h('div', { class: 'ex-line' }, h('span', {}, 'Paid so far'), h('span', {}, lkr(inv.paid))),
-    h('div', { class: 'd-flex justify-content-between align-items-center mt-3' }, chip(inv.status), h('button', { type: 'button', class: 'custom-btn-outline ex-btn-sm px-3', onclick: () => invoiceDialog(inv, { admin: true, reload: load }) }, 'View Invoice')))
+    h('div', { class: 'd-flex justify-content-between align-items-center mt-3' }, chip(inv.status), h('button', { type: 'button', class: 'custom-btn-outline ex-btn-sm px-3', onclick: () => invoiceDialog(inv) }, 'View Invoice')))
     : h('div', { class: 'text-14 sub-text' }, 'This payment was made before invoices were used.');
 
   const right = [
@@ -80,6 +81,7 @@ function draw() {
       }),
       p.status === 'rejected' && p.reason ? h('div', { class: 'ex-panel-soft p-3 mt-3 text-14' }, h('b', {}, 'Why it was rejected: '), p.reason) : null,
     ]),
+    p.status === 'waiting' && rejecting ? rejectPanel(p, { onDone: () => { rejecting = false; load(); }, onCancel: () => { rejecting = false; draw(); } }) : null,
     h('div', { class: 'row g-4' },
       h('div', { class: 'col-12 col-lg-7' }, DetailPage.card('Payment Slip', slip, { cls: 'h-100' })),
       h('div', { class: 'col-12 col-lg-5' }, DetailPage.card(inv ? `Invoice ${inv.number}` : 'Invoice', lines, { cls: 'h-100' }))),

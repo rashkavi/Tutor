@@ -13,6 +13,8 @@ final class PlatformSettings
     public const RULES = [
         'trial_days' => 7, 'trial_plan' => 'grow', 'trial_student_cap' => 30, 'invoice_days_before' => 7, 'grace_days' => 7,
         'tax_on' => false, 'tax_rate' => 18, 'invoice_prefix' => 'EN-INV',
+        // a trial (or an upgrade from FREE) that ends unpaid moves to FREE when the students fit, instead of pausing
+        'trial_to_free' => true, 'upgrade_pay_days' => 7,
     ];
 
     private ?array $rules = null;

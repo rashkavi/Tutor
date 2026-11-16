@@ -19,11 +19,14 @@ if ($info === null) {
     require_once __DIR__ . '/src/bootstrap.php';
     $info = ['plans' => [], 'comparison' => Enlixo\Platform\TutorRequests::comparison(), 'addons' => [], 'trial' => ['days' => 7, 'plan' => 'GROW', 'students' => 30]];
     foreach (Enlixo\Catalog\FeatureCatalog::PLANS as $k => $p) {
+        if ($k === 'free') {
+            $info['plans'][] = Enlixo\Platform\TutorRequests::freePlan();
+            continue;
+        }
         $info['plans'][] = ['key' => $k, 'name' => $p['name'], 'monthly' => ['start' => 3000, 'grow' => 7500, 'pro' => 0][$k], 'yearly_discount' => 0, 'limit' => $p['student_limit'],
             'pack_price' => $k === 'pro' ? null : 1000, 'pack_size' => 50, 'tagline' => '', 'everything_in' => null, 'new_features' => [], 'custom' => $k === 'pro',
             'feature_count' => count(Enlixo\Catalog\FeatureCatalog::featuresForPlan($k))];
     }
-    array_unshift($info['plans'], Enlixo\Platform\TutorRequests::freePlan());
     foreach (Enlixo\Catalog\FeatureCatalog::features() as $f) {
         if (isset($f['addon'])) {
             $info['addons'][] = ['key' => $f['addon']['key'], 'name' => $f['addon']['name'], 'note' => $f['addon']['pricing']];
@@ -240,14 +243,14 @@ function lp_icon(string $n, int $s = 22): string
                 <div class="lp-free-copy" data-reveal="left">
                     <span class="lp-eyebrow lp-eyebrow-green" data-reveal>Free for small classes</span>
                     <h2 class="lp-h2" data-reveal><span>Up to 50 students?</span><br><span class="lp-grad-green">It's completely free.</span></h2>
-                    <p class="lp-sub" data-reveal>Just starting out, or teaching a small group? Use ENLIXO Tutor with the STARTER features, Zoom classes included, and pay nothing while you teach 50 students or fewer.</p>
+                    <p class="lp-sub" data-reveal>Just starting out, or teaching a small group? Run your classes on ENLIXO Tutor and pay nothing while you teach 50 students or fewer. When you want parents, Zoom auto-scheduling or QR attendance, try STARTER free for 7 days.</p>
                     <ul class="lp-free-list" data-reveal>
-                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Students, classes and timetable</span></li>
-                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Zoom classes and recordings</span></li>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Students, 3 classes and the timetable</span></li>
                         <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Fees with bank slips and approval</span></li>
-                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>QR and manual attendance</span></li>
-                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Tutes and study material</span></li>
-                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Student and parent logins</span></li>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Attendance marked by hand</span></li>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>4 tutes and 8 recordings a month</span></li>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>100 e-mail and WhatsApp notices a month</span></li>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Online classes with your own Zoom link</span></li>
                     </ul>
                     <div class="lp-hero-cta" data-reveal>
                         <a href="<?= $signup ?>?plan=free" class="lp-btn lp-btn-green lp-btn-lg lp-shine"><span>Start free, no card</span> <?= lp_icon('arrow', 18) ?></a>
@@ -616,8 +619,9 @@ function lp_icon(string $n, int $s = 22): string
                                         <li class="lp-strong"><?= lp_icon('plus', 16) ?> <span>+LKR <?= $lkr($p['pack_price']) ?> per <?= (int) $p['pack_size'] ?> more students</span></li>
                                     <?php } ?>
                                     <?php if (!$pop) { ?>
-                                        <li class="lp-strong lp-zoom-li"><img src="<?= $img ?>zoom.webp" alt="" width="16" height="16"> <span>Zoom classes included</span></li>
+                                        <li class="lp-strong lp-zoom-li"><img src="<?= $img ?>zoom.webp" alt="" width="16" height="16"> <span><?= $isFree ? 'Paste your Zoom link per class' : 'Zoom meetings made for you' ?></span></li>
                                     <?php } ?>
+                                    <li class="lp-strong"><?= lp_icon('sparkle', 16) ?> <span><?= $isFree ? '3 classes · 4 tutes · 8 recordings a month' : ($p['key'] === 'start' ? 'Unlimited classes, tutes and recordings' : 'Unlimited everything') ?></span></li>
                                     <?php if ($p['everything_in']) { ?><li class="lp-strong"><?= lp_icon('sparkle', 16) ?> <span>Everything in <?= $e($p['everything_in']) ?>, plus:</span></li><?php } ?>
                                     <?php $list = array_values(array_filter($p['new_features'], static fn ($f) => !str_contains($f, 'Zoom')));
                                     foreach (array_slice($list, 0, $pop ? 9 : 5) as $f) { echo '<li>' . lp_icon('check', 16) . ' <span>' . $e($f) . '</span></li>'; }
@@ -635,6 +639,13 @@ function lp_icon(string $n, int $s = 22): string
                         <table>
                             <thead><tr><th scope="col">Feature</th><?php foreach ($info['plans'] as $p) { echo '<th scope="col" data-no-i18n>' . $e($p['name']) . '</th>'; } ?></tr></thead>
                             <tbody>
+                                <tr class="lp-cat"><th colspan="<?= count($info['plans']) + 1 ?>" scope="colgroup">Limits</th></tr>
+                                <tr><th scope="row">Students</th><?php foreach ($info['plans'] as $p) { echo '<td data-no-i18n>' . ($p['limit'] === null ? 'Any' : (int) $p['limit']) . '</td>'; } ?></tr>
+                                <?php foreach (Enlixo\Catalog\FeatureCatalog::limits() as $lim) { ?>
+                                    <tr><th scope="row"><?= $e($lim['name']) ?><?= $lim['period'] === 'month' ? ' a month' : '' ?></th>
+                                        <?php foreach ($info['plans'] as $p) { $v = $lim['plans'][$p['key']] ?? null; echo $v === null ? '<td>Unlimited</td>' : '<td data-no-i18n>' . (int) $v . '</td>'; } ?>
+                                    </tr>
+                                <?php } ?>
                                 <?php foreach ($info['comparison'] as $cat) { if ($cat['category'] === 'Team') { continue; } ?>
                                     <tr class="lp-cat"><th colspan="<?= count($info['plans']) + 1 ?>" scope="colgroup"><?= $e($cat['category']) ?></th></tr>
                                     <?php foreach ($cat['rows'] as $row) { ?>
@@ -683,7 +694,8 @@ function lp_icon(string $n, int $s = 22): string
                 </div>
                 <div class="lp-faq">
                     <?php $faq = [
-                        ['Is it really free up to 50 students?', 'Yes. If you teach 50 students or fewer, you use ENLIXO Tutor with the STARTER features, Zoom classes included, and pay nothing. No card is needed. When your class grows, you pick a plan and everything you added stays.'],
+                        ['Is it really free up to 50 students?', 'Yes. FREE gives you students, 3 classes, fees, attendance, tutes and recordings at no cost, with no card. Parent login, Zoom auto-scheduling and QR attendance come with STARTER. When your class grows, you move up and everything you added stays.'],
+                        ['Can I try STARTER or GROW before I pay?', 'Yes. From the app you can try STARTER or GROW free for 7 days, once, with no invoice. If you upgrade from FREE and do not pay within 7 days, you simply go back to FREE and nothing is lost.'],
                         ['Do students and parents get their own login?', 'Yes. Students sign in to the Student Portal and parents to the Parent Portal, each with their own password. A parent with more than one child sees all of them in one login. You make the logins from your dashboard.'],
                         ['Can I use the system in Sinhala or Tamil?', 'Yes. Tutors, students and parents can each choose Sinhala, Tamil or English, and change it any time from the top of the page.'],
                         ['What is in the CUSTOM plan?', 'For classes bigger than 500 students, or when you need several add-ons. You talk to our team, and we agree on a plan and one price that fits your class.'],

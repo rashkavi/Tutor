@@ -5,7 +5,7 @@ namespace Enlixo\Entitlements;
 
 interface EntitlementRepository
 {
-    /** Plan key ('start' | 'grow' | 'pro') of the tutor's current package. */
+    /** Plan key ('free' | 'start' | 'grow' | 'pro') of the tutor's current package (a running preview not included). */
     public function activePlanKey(int $tutorId): string;
 
     /** @return list<string> feature keys included in the plan */
@@ -20,4 +20,17 @@ interface EntitlementRepository
     public function activeAddonFeatureKeys(int $tutorId): array;
 
     public function activeStudentCount(int $tutorId): int;
+
+    /**
+     * What the tutor used against the plan limits (FeatureCatalog::limits()): classes now, tutes / recordings /
+     * messages this calendar month.
+     * @return array<string, int>
+     */
+    public function usage(int $tutorId): array;
+
+    /** A running "try the next plan" preview: ['plan' => key, 'until' => 'Y-m-d'], or null. */
+    public function preview(int $tutorId): ?array;
+
+    /** True once the tutor has used their one preview. */
+    public function previewUsed(int $tutorId): bool;
 }

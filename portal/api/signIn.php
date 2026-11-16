@@ -3,6 +3,7 @@ $status = new stdClass();
 require_once('../../includes/UserClass.php');
 require_once('../../includes/connection.php');
 require_once('../../includes/WhatsAppOtp.php');
+require_once('../../includes/TutorAccess.php');
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($_SERVER['CONTENT_TYPE'] == 'application/json') {
         $content = trim(file_get_contents('php://input'));
@@ -38,6 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                                 if ($course->num_rows == 0) {
                                     $status->error = 'You have no access to any course';
+                                } elseif (!tutor_access_student((int) $data["student_id"])) {
+                                    $status->error = TUTOR_ACCESS_MESSAGE; // the tutor's ENLIXO subscription ended
                                 } else {
 
                                     Database::iud("UPDATE `login_details` SET `verification`='',`reset_time`='' WHERE `login_details_id`='" . $data["login_details_id"] . "'");

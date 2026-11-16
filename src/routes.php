@@ -136,6 +136,7 @@ return static function (Router $router, App $app): void {
     $router->get('/api/v1/admin/tutors/{id}', $pf->tutor(...));
     $router->post('/api/v1/admin/tutors/{id}/{action}', $pf->tutorAction(...));
     $router->get('/api/v1/admin/invoices', $pf->invoices(...));
+    $router->get('/api/v1/admin/invoices/{id}', $pf->invoice(...));
     $router->post('/api/v1/admin/invoices/{id}/payments', $pf->recordPayment(...));
     $router->post('/api/v1/admin/invoices/{id}/void', $pf->voidInvoice(...));
     $router->get('/api/v1/admin/payments', $pf->payments(...));
@@ -156,5 +157,6 @@ return static function (Router $router, App $app): void {
     $router->post('/api/v1/tutor/subscription/payments', $pf->uploadSlip(...));
     $router->post('/api/v1/tutor/subscription/change', $pf->changeMyPlan(...));
     $router->post('/api/v1/tutor/subscription/pay-now', $pf->payNow(...));
+    $router->post('/api/v1/tutor/subscription/preview', $pf->startPreview(...));
     $router->get('/api/v1/tutor/subscription/payments/{id}/slip', $pf->mySlip(...));
 };

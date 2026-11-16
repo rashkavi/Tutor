@@ -4470,3 +4470,7 @@ header .ex-ico { display: inline-flex; align-items: center; }
 .ex-pcard-round, .ex-pcard-tools .ex-kebab,
 [data-custom-theme="dark"] .ex-pcard-round, [data-custom-theme="dark"] .ex-pcard-tools .ex-kebab { background: var(--dark-theme, #0061D2) !important; color: #fff !important; }
 .ex-pcard-round:hover, .ex-pcard-tools .ex-kebab:hover, .ex-pcard-tools .ex-kebab[aria-expanded="true"] { background: var(--main-button-hover, #0b51b3) !important; }
+
+/* Sign-in pages of students / parents: the tutor's ENLIXO subscription ended (includes/TutorAccess.php) */
+.ex-paused-note { display: flex; flex-direction: column; gap: 4px; width: 100%; margin-bottom: 16px; padding: 14px 16px; border-left: 4px solid #f39c12; background: rgba(243, 156, 18, .12); font-size: 14px; color: var(--main-text-color, #4E5566); }
+.ex-paused-note strong { color: var(--main-text-color, #1D2026); }

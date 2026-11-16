@@ -49,6 +49,12 @@ final class FakeEntitlementRepo implements EntitlementRepository
     public function tutorStudentLimit(int $tutorId, string $planKey): ?int { return $this->planStudentLimit($planKey); }
     public function activeAddonFeatureKeys(int $tutorId): array { return $this->addons[$tutorId] ?? []; }
     public function activeStudentCount(int $tutorId): int { return $this->students; }
+    /** @var array<string,int> */
+    public array $used = [];
+    public ?array $previewRow = null;
+    public function usage(int $tutorId): array { return $this->used; }
+    public function preview(int $tutorId): ?array { return $this->previewRow; }
+    public function previewUsed(int $tutorId): bool { return $this->previewRow !== null; }
 }
 
 final class FakeRoleRepo implements RoleRepository

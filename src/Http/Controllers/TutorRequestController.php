@@ -69,8 +69,8 @@ final class TutorRequestController
         $id = (int) $r->param('id');
         $tutorId = $this->app->tutorRequests()->approve($id, $r->body, $auth->userId, $this->app->platformBilling());
         $req = $this->app->tutorRequests()->one($id);
-        $sent = PlatformController::mail((string) $r->body['email'], (string) $r->body['first_name'], 'Welcome to ENLIXO Tutor', self::welcomeHtml((string) $r->body['first_name'], (string) $r->body['email']));
-        return JsonResponse::ok(['id' => $tutorId, 'request' => $req, 'mailed' => $sent], [], 201);
+        $welcome = $this->app->tutorWelcome()->send($tutorId, PlatformController::baseUrl($r));
+        return JsonResponse::ok(['id' => $tutorId, 'request' => $req, 'mailed' => $welcome['sent'], 'welcome' => $welcome], [], 201);
     }
 
     public function reject(Request $r): JsonResponse
@@ -108,14 +108,4 @@ final class TutorRequestController
             . '<p>ENLIXO Tutor</p></div>';
     }
 
-    private static function welcomeHtml(string $name, string $email): string
-    {
-        $url = rtrim((string) (class_exists('Project') ? \Project::getBaseUrl() : ''), '/') . '/tutor/';
-        return '<div style="font-family:Arial,sans-serif;font-size:14px;color:#1f2937;line-height:1.6">'
-            . '<p>Hi ' . self::esc($name) . ',</p>'
-            . '<p>Your ENLIXO Tutor account is ready.</p>'
-            . '<p>Sign in at <a href="' . self::esc($url) . '">' . self::esc($url) . '</a> with <b>' . self::esc($email) . '</b>. '
-            . 'The first time, the sign-in page sends a code to this e-mail address and asks you to set your password.</p>'
-            . '<p>ENLIXO Tutor</p></div>';
-    }
 }

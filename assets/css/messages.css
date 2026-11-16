@@ -94,3 +94,39 @@
   .mc-tiles, .mc-checks { grid-template-columns: minmax(0, 1fr); }
   .mc-person .table-btn { margin-left: 50px; }
 }
+
+/* ---------- Tutor Renew page (tutor/renew.php) ---------- */
+.rn-hero { display: flex; align-items: flex-start; gap: 18px; padding: 26px; color: #fff; background: linear-gradient(135deg, #0b3a8c, #0061d2); }
+.rn-hero.is-off { background: linear-gradient(135deg, #5b1d14, #c0392b); }
+.rn-hero.is-wait { background: linear-gradient(135deg, #6b4a00, #d68910); }
+.rn-hero h2 { font-size: 24px; font-weight: 700; margin: 0 0 6px; color: #fff; }
+.rn-hero p { margin: 0; font-size: 15px; opacity: .92; max-width: 720px; }
+.rn-hero-ico { flex: none; width: 60px; height: 60px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, .16); }
+.rn-tag { display: inline-flex; padding: 3px 10px; font-size: 12px; background: rgba(255, 255, 255, .16); color: #fff; }
+.rn-steps { list-style: none; margin: 0; padding: 0; }
+.rn-step { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px dashed var(--line-color); }
+.rn-step:last-child { border-bottom: 0; }
+.rn-step strong { display: block; font-size: 15px; color: var(--main-text-color, var(--dark-color)); }
+.rn-step small { display: block; font-size: 13px; color: var(--sub-text); }
+.rn-step-n { flex: none; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; background: var(--light-theme); color: var(--dark-theme); font-weight: 700; }
+.rn-step.is-now .rn-step-n { background: var(--dark-theme); color: #fff; }
+.rn-step.is-done .rn-step-n { background: var(--dark-green-blue); color: #fff; }
+.rn-note { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; background: var(--light-theme); font-size: 13px; color: var(--main-text-color, var(--dark-color)); }
+.rn-plans { display: grid; gap: 10px; }
+.rn-plan { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border: 1px solid var(--line-color); }
+.rn-plan strong { font-size: 15px; color: var(--main-text-color, var(--dark-color)); }
+.rn-plan small { font-size: 12px; color: var(--sub-text); }
+.rn-plan.is-on { border-color: var(--dark-theme); background: var(--light-theme); }
+.rn-price { font-size: 15px; font-weight: 700; color: var(--main-text-color, var(--dark-color)); }
+.rn-price small { font-weight: 400; }
+.rn-current { align-self: flex-start; margin-top: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; background: var(--dark-theme); color: #fff; }
+@media (max-width: 575.98px) {
+  .rn-hero { flex-direction: column; padding: 20px; }
+  .rn-hero h2 { font-size: 20px; }
+}
+
+/* Renew: header buttons stack on a phone instead of running past the edge */
+@media (max-width: 575.98px) {
+  #rn-actions { display: flex; flex-wrap: wrap; gap: .75rem; width: 100%; }
+  #rn-actions > a { flex: 1 1 100%; justify-content: center; display: inline-flex; align-items: center; }
+}

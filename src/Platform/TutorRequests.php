@@ -86,23 +86,32 @@ final class TutorRequests
             $prev = $key;
             $prevName = strtoupper((string) $p['payment_plan']);
         }
-        array_unshift($out, self::freePlan());
+        if (!in_array('free', array_column($out, 'key'), true)) { // before migration 018: FREE is not a plan row yet
+            array_unshift($out, self::freePlan());
+        }
+        foreach ($out as &$p) {
+            if ($p['key'] === 'free') {
+                $p['free'] = true;
+                $p['tagline'] = $p['tagline'] ?: 'Free for tutors with up to ' . self::FREE_LIMIT . ' students';
+            }
+        }
+        unset($p);
         return $out;
     }
 
     /**
-     * FREE: tutors with up to 50 students use the START features at no cost. On approval it becomes START with
-     * complimentary access (PlatformBilling 'comp'), so nothing is invoiced while the tutor stays small.
+     * FREE: up to 50 students with the basics (FeatureCatalog plan 'free', migration 018): no parent login, 3 classes,
+     * monthly limits on tutes, recordings and notifications, never invoiced. On approval the tutor is on the FREE plan.
      */
     public const FREE_LIMIT = 50;
 
     public static function freePlan(): array
     {
-        $start = array_values(array_map(static fn ($f) => $f['name'], array_filter(FeatureCatalog::features(), static fn ($f) => in_array('start', $f['plans'], true))));
+        $mine = array_values(array_map(static fn ($f) => $f['name'], array_filter(FeatureCatalog::features(), static fn ($f) => in_array('free', $f['plans'], true))));
         return [
             'key' => 'free', 'name' => 'FREE', 'monthly' => 0.0, 'yearly_discount' => 0.0, 'limit' => self::FREE_LIMIT,
             'pack_price' => null, 'pack_size' => Lifecycle::PACK_SIZE, 'tagline' => 'Free for tutors with up to ' . self::FREE_LIMIT . ' students',
-            'everything_in' => null, 'new_features' => $start, 'feature_count' => count($start), 'free' => true, 'same_as' => 'start',
+            'everything_in' => null, 'new_features' => $mine, 'feature_count' => count($mine), 'free' => true,
         ];
     }
 

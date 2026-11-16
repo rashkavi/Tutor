@@ -45,6 +45,13 @@ if (isset($_COOKIE['enviiz_lms_student_password'])) {
                             </div>
 
                             <div class="col-12 col-lg-6 d-flex flex-column mb-4 mb-md-2 mb-xl-4 align-items-center justify-content-center" id="content-div">
+                                <?php if (!empty($_COOKIE['enlixo_paused'])) { ?>
+                                    <script>document.cookie = 'enlixo_paused=; Max-Age=0; path=/';</script>
+                                    <div class="ex-paused-note" role="alert">
+                                        <strong>The class portal is paused</strong>
+                                        <span>Your tutor's ENLIXO account is paused at the moment. Nothing is lost: it opens again as soon as your tutor renews. Please contact your tutor.</span>
+                                    </div>
+                                <?php } ?>
                                 <p class="text-24 sub-topic-color fw-medium lh-lg">Student Login</p>
                                 <div class="w-100 mb-4 mb-md-2 mb-xl-4 justify-content-start">
                                     <input

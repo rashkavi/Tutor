@@ -81,7 +81,7 @@ final class PlatformController
     {
         $auth = $this->admin($r);
         $id = $this->app->platformBilling()->addTutor($r->body, $auth->userId);
-        return JsonResponse::ok(['id' => $id], [], 201);
+        return JsonResponse::ok(['id' => $id, 'welcome' => $this->app->tutorWelcome()->send($id, self::baseUrl($r))], [], 201);
     }
 
     public function tutor(Request $r): JsonResponse
@@ -116,6 +116,17 @@ final class PlatformController
         }
         unset($i);
         return self::page($rows, $r, ['status' => 'status', 'plan' => 'plan_key'], static fn ($i) => "{$i['number']} {$i['tutor']} {$i['brand']}");
+    }
+
+    /** One invoice with its payments and the tutor (admin/invoice.php). */
+    public function invoice(Request $r): JsonResponse
+    {
+        $this->admin($r);
+        $b = $this->app->platformBilling();
+        $inv = $b->invoices(null, (int) $r->param('id'))[0] ?? throw \Enlixo\Core\HttpException::notFound('This invoice was not found.');
+        $tutorId = (int) ($inv['tutor_id'] ?? 0);
+        $payments = array_values(array_filter($b->payments($tutorId ?: null), static fn ($p) => ($p['invoice_id'] ?? null) === $inv['id'] || ($p['invoice'] ?? null) === $inv['number']));
+        return JsonResponse::ok(['invoice' => $inv, 'payments' => $payments]);
     }
 
     public function recordPayment(Request $r): JsonResponse
@@ -256,6 +267,15 @@ final class PlatformController
         return JsonResponse::ok(['message' => $this->app->platformBilling()->action($auth->userId, 'plan', $in, $auth->userId, true)]);
     }
 
+    /** POST /tutor/subscription/preview {plan}: try a bigger plan free for 7 days, once (no invoice, own plan stays). */
+    public function startPreview(Request $r): JsonResponse
+    {
+        $auth = $this->tutorOwner($r);
+        $msg = $this->app->platformBilling()->action($auth->userId, 'preview', ['plan' => (string) $r->input('plan', ''), 'days' => 7], $auth->userId, true);
+        $this->app->entitlements()->forget($auth->userId);
+        return JsonResponse::ok(['message' => $msg, 'access' => $this->app->entitlements()->for($auth->userId)->toArray()]);
+    }
+
     /** POST /tutor/subscription/pay-now: make the next invoice now, so the tutor can pay before the trial / period ends. */
     public function payNow(Request $r): JsonResponse
     {
@@ -270,30 +290,34 @@ final class PlatformController
         return new FileResponse((string) file_get_contents($f['path']), $f['name'], $f['type'], true);
     }
 
+    /** Address of this site for links in e-mails: Project::getBaseUrl(), else the address the admin is using. */
+    public static function baseUrl(Request $r): string
+    {
+        $root = dirname(__DIR__, 3);
+        require_once $root . '/includes/Project.php';
+        $cfg = rtrim((string) \Project::getBaseUrl(), '/');
+        if ($cfg !== '' && !str_contains($cfg, 'localhost')) {
+            return $cfg;
+        }
+        $host = (string) ($r->header('host') ?? ($_SERVER['HTTP_HOST'] ?? 'localhost'));
+        $https = ($_SERVER['HTTPS'] ?? '') === 'on' || ($r->header('x-forwarded-proto') ?? '') === 'https';
+        return ($https ? 'https' : 'http') . '://' . $host;
+    }
+
     // ------------------------------------------------------------ e-mail (the legacy PHPMailer setup)
 
     public static function mail(string $to, string $name, string $subject, string $html): bool
     {
-        $root = dirname(__DIR__, 3);
+        // one sender for every e-mail (src/Messaging/Mailer.php: MAIL_* settings, MAIL_DRIVER=log in tests)
         try {
-            require_once $root . '/includes/Project.php';
-            if (!function_exists('sendMail')) {
-                $cwd = getcwd();
-                chdir($root . '/includes/phpmailer');
-                try {
-                    require_once 'mail-process.php';
-                } finally {
-                    chdir($cwd ?: $root);
-                }
+            $app = \Enlixo\Legacy\Bridge::app();
+            if ($app === null) {
+                return false;
             }
-            ob_start();
-            try {
-                return (bool) \sendMail($to, $name, $subject, $html);
-            } finally {
-                ob_end_clean();
-            }
+            $text = trim(html_entity_decode(strip_tags(preg_replace('/<(br|\/p|\/div|\/li)[^>]*>/i', "\n", $html) ?? ''), ENT_QUOTES, 'UTF-8'));
+            return $app->mailer()->send($to, $name, $subject, $html, $text, null, 'ENLIXO Tutor')['ok'];
         } catch (\Throwable $e) {
-            error_log('Reminder e-mail failed: ' . $e->getMessage());
+            error_log('E-mail to ' . $to . ' failed: ' . $e->getMessage());
             return false;
         }
     }

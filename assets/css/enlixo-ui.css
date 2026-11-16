@@ -2528,3 +2528,60 @@ a.ex-hd-stat:hover .ex-hd-go { opacity: 1; }
 .ex-pcard-round, .ex-pcard-tools .ex-kebab,
 [data-custom-theme="dark"] .ex-pcard-round, [data-custom-theme="dark"] .ex-pcard-tools .ex-kebab { background: var(--dark-theme, #0061D2) !important; color: #fff !important; }
 .ex-pcard-round:hover, .ex-pcard-tools .ex-kebab:hover, .ex-pcard-tools .ex-kebab[aria-expanded="true"] { background: var(--main-button-hover, #0b51b3) !important; }
+
+/* Tutor billing: plan card trial line and the banner on every tutor page (tutor/includes/side-menu.php) */
+.ex-plan-trial { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; font-weight: 600; color: #fff; opacity: .95; }
+.ex-plan-trial.is-due { color: #ffd2c7; }
+.ex-bill-banner { flex: 0 0 100%; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 16px; padding: 12px 16px; background: var(--custom-white); border-left: 4px solid #f39c12; }
+.ex-bill-banner.is-bad { border-left-color: var(--dark-red); }
+.ex-bill-banner .ex-bill-ico { color: #f39c12; flex: none; }
+.ex-bill-banner.is-bad .ex-bill-ico { color: var(--dark-red); }
+.ex-bill-text { flex: 1 1 260px; font-size: 14px; color: var(--sub-text); }
+.ex-bill-text strong { color: var(--main-text-color, var(--dark-color)); }
+.ex-bill-btn { height: 40px !important; padding: 0 22px; text-decoration: none; }
+@media (max-width: 575.98px) { .ex-bill-btn { width: 100%; } }
+
+/* Page header buttons wrap to a second line on a phone instead of running past the edge (longer in Sinhala / Tamil) */
+.ex-header-actions { flex-wrap: wrap; }
+.ex-header-actions > * { min-width: 0; max-width: 100%; }
+@media (max-width: 575.98px) {
+  .ex-header-actions > :is(a, button):not(.ex-gear):not(.ex-info-btn) { flex: 1 1 auto; }
+}
+/* Time Table month nav on a phone: arrows only (the words are long in Sinhala / Tamil and pushed the title off) */
+@media (max-width: 767.98px) {
+  .ex-cal-nav :is(.previous-button, .next-button) span { display: none; }
+  .ex-cal-nav :is(.previous-button, .next-button) { flex: none; min-width: 48px; }
+  .ex-cal-title { min-width: 0; text-align: center; }
+  .ex-cal-title h2 { font-size: 18px; }
+}
+/* Monthly / Yearly switch on My Subscription: fits a phone in every language */
+@media (max-width: 575.98px) {
+  .ex-plan-cycle { display: flex; flex-wrap: wrap; max-width: 100%; }
+  .ex-plan-cycle-btn { flex: 1 1 auto; justify-content: center; padding: 0 12px; }
+}
+
+/* Upgrade nudges (docs/PLANS.md): trying a plan, a limit nearly used up, a limit / locked feature hit */
+.ex-plan-trial.is-preview { color: #fff3c4; }
+.ex-bill-banner.is-up { border-left-color: var(--dark-theme, #0061D2); background: linear-gradient(90deg, rgba(0, 97, 210, .08), var(--custom-white) 60%); }
+.ex-bill-banner.is-up .ex-bill-ico { color: var(--dark-theme, #0061D2); }
+.ex-bill-banner.is-hit { animation: ex-hit-in .35s ease-out; }
+@keyframes ex-hit-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .ex-bill-banner.is-hit { animation: none; } }
+.flex-column > .ex-bill-banner { flex: 0 0 auto; }
+/* Dashboard "Your plan" card */
+.ex-dash-plan-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.ex-dash-plan-use { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+.ex-dash-use { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--main-text-color, #4E5566); }
+.ex-dash-use b { color: var(--dark-color, #1D2026); font-weight: 600; white-space: nowrap; }
+.ex-dash-use small { color: var(--sub-text, #8C94A3); }
+.ex-dash-meter { display: block; height: 6px; background: var(--table-header-color, #F1F3F6); overflow: hidden; }
+.ex-dash-meter > span { display: block; height: 100%; background: var(--dark-theme, #0061D2); }
+.ex-dash-use.is-near .ex-dash-meter > span { background: #f5b100; }
+.ex-dash-use.is-full .ex-dash-meter > span { background: var(--dark-red, #D85E44); }
+.ex-dash-plan-pitch { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 16px; padding: 12px 14px; background: rgba(0, 97, 210, .07); font-size: 14px; color: var(--main-text-color, #4E5566); }
+.ex-dash-plan-pitch .ex-ico { color: var(--dark-theme, #0061D2); }
+.ex-dash-plan-pitch > span { flex: 1 1 260px; }
+.ex-dash-try { font-weight: 600; color: var(--dark-theme, #0061D2); white-space: nowrap; }
+[data-custom-theme="dark"] .ex-dash-try { color: #8cb8ff; }
+.ex-tf-choice.is-locked { opacity: .85; border-style: dashed; cursor: pointer; }
+.ex-tf-choice.is-locked:hover { opacity: 1; }

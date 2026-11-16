@@ -41,8 +41,13 @@ async function load() {
     h('button', { type: 'button', class: 'custom-outline-btn ex-btn-lg px-4 d-inline-flex align-items-center gap-2', onclick: () => window.print() }, icon('printer', { size: 18 }), 'Print'),
     open && !waiting ? h('a', { class: 'custom-btn ex-btn-lg px-5 text-decoration-none', href: '#pay', onclick: (e) => { e.preventDefault(); document.getElementById('pay')?.scrollIntoView({ behavior: 'smooth' }); } }, 'Pay Now')
       : h('a', { class: 'custom-btn ex-btn-lg px-5 text-decoration-none', href: 'subscription' }, 'My Subscription'));
+  const mine = D.payments.filter((p) => p.invoice_id === inv.id);
+  const paysCard = mine.length ? DetailPage.card('Payments for this invoice', h('ul', { class: 'ad-pay-list' }, mine.map((p) => h('li', {},
+    h('span', { class: 'min-w-0 flex-grow-1' }, h('strong', {}, `${lkr(p.amount)} · ${p.method}`), h('small', {}, `${day(p.date)}${p.reference ? ` · Ref ${p.reference}` : ''}`),
+      p.status === 'rejected' && p.reason ? h('small', { class: 'text-dark-red' }, `Not accepted: ${p.reason}. Please upload the slip again.`) : null),
+    chip(p.status))))) : null;
   fill(root, previewNote(), h('div', { class: 'row g-4' },
-    h('div', { class: pay ? 'col-12 col-xl-6' : 'col-12' }, invoiceCard),
+    h('div', { class: pay ? 'col-12 col-xl-6' : 'col-12' }, invoiceCard, paysCard ? h('div', { class: 'mt-4' }, paysCard) : null),
     pay ? h('div', { class: 'col-12 col-xl-6', id: 'pay' }, pay) : null));
   if (location.hash === '#pay') setTimeout(() => document.getElementById('pay')?.scrollIntoView({ behavior: 'smooth' }), 100);
 }

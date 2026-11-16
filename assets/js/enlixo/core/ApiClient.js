@@ -1,6 +1,6 @@
 // One HTTP client for every page. Standard envelope: { ok, data, meta } / { ok:false, error:{ code, message, details } }.
 // - cancels the previous request with the same `key` (stale search results never win)
-// - turns `feature_locked` into a FeatureLockedError so pages can open the upgrade modal
+// - turns `feature_locked` / `limit_reached` into a FeatureLockedError and fires `enlixo:upgrade` (upgrade card on the page)
 // - works against MockBackend in demo mode
 export class ApiError extends Error {
   constructor(status, code, message, details = {}) {
@@ -44,7 +44,11 @@ export class ApiClient {
         : await this.#fetch(method, path, body, controller.signal);
       if (!res.payload?.ok) {
         const e = res.payload?.error ?? { code: 'network', message: 'Something went wrong.' };
-        const Err = e.code === 'feature_locked' ? FeatureLockedError : ApiError;
+        const Err = e.code === 'feature_locked' || e.code === 'limit_reached' ? FeatureLockedError : ApiError;
+        // plan limits and locked features: the page shows an upgrade card (tutor side menu listens for this)
+        if ((e.code === 'feature_locked' || e.code === 'limit_reached') && typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('enlixo:upgrade', { detail: { code: e.code, message: e.message, ...(e.details ?? {}) } }));
+        }
         throw new Err(res.status, e.code, e.message, e.details ?? {});
       }
       return { data: res.payload.data, meta: res.payload.meta ?? {} };

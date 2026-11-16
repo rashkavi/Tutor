@@ -16,6 +16,8 @@ const MAX_BYTES = 10 * 1024 * 1024;
 const OK_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
 
 let meta = null;
+let courierLocked = false;
+let tuteLimit = null;
 const state = { type: 'download', who: 'all', month: '', files: [], items: [''], courier: '', courierOther: '', dispatch: '', note: '' };
 
 QuickGuide.attachAll();
@@ -27,7 +29,11 @@ load();
 
 async function load() {
   try {
-    meta = (await api.get('/tutor/tutes/form', { class: String(classId) })).data;
+    const [m, access] = await Promise.all([api.get('/tutor/tutes/form', { class: String(classId) }).then((r) => r.data), api.get('/me/access').then((r) => r.data).catch(() => null)]);
+    meta = m;
+    // posting tutes is STARTER and up (tutes.courier); FREE has 4 tutes a month (shown under the title)
+    courierLocked = access ? !access.features.find((f) => f.key === 'tutes.courier')?.unlocked : false;
+    tuteLimit = access?.limits.find((l) => l.key === 'tutes.month') ?? null;
     state.month = meta.this_month;
     draw();
   } catch (e) {
@@ -84,7 +90,14 @@ function draw() {
     section(2, 'How students get it', null,
       h('div', { class: 'row g-3' },
         h('div', { class: 'col-12 col-lg-6' }, choice('type', 'download', state.type, 'tutes', 'Download (PDF or Word)', 'Students download it from their class page.', (v) => { state.type = v; draw(); })),
-        h('div', { class: 'col-12 col-lg-6' }, choice('type', 'courier', state.type, 'location', 'Post to their home (courier)', 'A parcel is made for each student, with their address. You mark each one as packed, sent and delivered.', (v) => { state.type = v; draw(); }))),
+        h('div', { class: 'col-12 col-lg-6' }, courierLocked
+          ? h('a', { class: 'ex-tf-choice is-locked text-decoration-none', href: 'upgrade?feature=tutes.courier' },
+            h('span', { class: 'ex-tf-choice-ico' }, icon('lock', { size: 22 })),
+            h('span', { class: 'min-w-0' }, h('span', { class: 'ex-tf-choice-title' }, 'Post to their home (courier) ', h('span', { class: 'ex-lock-badge' }, 'STARTER')),
+              h('span', { class: 'ex-tf-choice-text' }, 'Parcels with each student\'s address, labels and tracking numbers. Tap to see STARTER.')))
+          : choice('type', 'courier', state.type, 'location', 'Post to their home (courier)', 'A parcel is made for each student, with their address. You mark each one as packed, sent and delivered.', (v) => { state.type = v; draw(); }))),
+      tuteLimit && tuteLimit.limit !== null ? h('div', { class: `text-13 mt-2 ${tuteLimit.used >= tuteLimit.limit ? 'text-dark-red' : 'sub-text'}` },
+        `${tuteLimit.used} of ${tuteLimit.limit} tutes used this month on your plan. `, h('a', { href: 'upgrade?limit=tutes.month', class: 'dark-theme' }, 'Unlimited tutes with STARTER')) : null,
       err('type')),
     section(3, 'Who gets it', null, who),
     section(4, state.type === 'download' ? 'Files' : 'Parcel and delivery', null, body),

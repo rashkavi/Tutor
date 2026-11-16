@@ -1405,3 +1405,29 @@ body.lp-ready .lp-marquee { transition-delay: .6s; }
 .lp-hero-copy [data-reveal] { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .lp-loader { display: none; } body.lp-loading { overflow: auto; } body.lp-loading .lp-nav, body.lp-loading .lp-hero-copy > *, body.lp-loading .lp-stage, body.lp-loading .lp-marquee { opacity: 1; transform: none; } }
 .of-h1 { font-size: clamp(36px, 4.6vw, 60px); }
+
+/* ---------- Sinhala and Tamil (html[lang=si|ta], set by i18n-auto.js) ----------
+   The English design uses tight letter-spacing and line-height and 'Inter' in font shorthands; Sinhala and Tamil letters
+   are taller and wider, so: the Noto fonts on every control, no negative letter-spacing (it breaks the letter joins),
+   taller lines, slightly smaller big headings, and long words may wrap instead of running out of their box. */
+html:is([lang=si], [lang=ta]) body.lp :is(button, input, select, textarea, .lp-btn) { font-family: 'Inter', 'Noto Sans Sinhala', 'Noto Sans Tamil', sans-serif; }
+html:is([lang=si], [lang=ta]) body.lp :is(h1, h2, h3, h4, b, strong, .lp-h1, .lp-h2, .lp-eyebrow, .lp-pill-tag, .lp-plan-name, .lp-plan-badge, .lp-announce-tag, .su-plan-name, .su-plan-pop, .su-card h3, .lp-compare th, .lp-words-row) { letter-spacing: 0; }
+html:is([lang=si], [lang=ta]) body.lp :is(h1, h2, h3, .lp-h1, .lp-h2) { line-height: 1.3; }
+html:is([lang=si], [lang=ta]) .lp-h1 { font-size: clamp(30px, 4.2vw, 52px); }
+html:is([lang=si], [lang=ta]) .lp-h2, html:is([lang=si], [lang=ta]) .lp-cta h2 { font-size: clamp(26px, 3.4vw, 40px); }
+html:is([lang=si], [lang=ta]) .su-aside h1 { font-size: clamp(26px, 2.6vw, 36px); }
+html:is([lang=si], [lang=ta]) .su-panel h2, html:is([lang=si], [lang=ta]) .su-done h2 { font-size: 24px; }
+html:is([lang=si], [lang=ta]) .lp-role h3 { font-size: 26px; }
+html:is([lang=si], [lang=ta]) .lp-btn { white-space: normal; height: auto; min-height: 44px; padding-top: 10px; padding-bottom: 10px; line-height: 1.35; text-align: center; }
+html:is([lang=si], [lang=ta]) .su-step { font-size: 12px; line-height: 1.4; }
+
+/* the sign-up side panel: longer text scrolls inside it instead of pushing over the logo */
+.su-aside { overflow-y: auto; scrollbar-width: none; }
+.su-aside::-webkit-scrollbar { display: none; }
+.su-aside-logo { flex: none; margin-bottom: 20px; }
+.su-aside .lp-pill { flex-wrap: wrap; }
+
+/* footer links and notes wrap on a phone (they were max-content and ran off the screen) */
+.lp-foot-col a { max-width: 100%; white-space: normal; }
+.lp-foot-trust span { align-items: flex-start; }
+.lp-foot-in > * { min-width: 0; }

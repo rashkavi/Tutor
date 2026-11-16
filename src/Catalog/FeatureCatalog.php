@@ -13,12 +13,16 @@ namespace Enlixo\Catalog;
 final class FeatureCatalog
 {
     public const PLANS = [
+        'free'  => ['id' => 4, 'name' => 'FREE',    'student_limit' => 50,   'price' => 'Free'],
         'start' => ['id' => 1, 'name' => 'STARTER', 'student_limit' => 150,  'price' => 'LKR 3,000 / month'],
         'grow'  => ['id' => 2, 'name' => 'GROW',    'student_limit' => 500,  'price' => 'LKR 7,500 / month'],
         'pro'   => ['id' => 3, 'name' => 'CUSTOM',  'student_limit' => null, 'price' => 'Price agreed with our team'],
     ];
 
-    private const ALL = ['start', 'grow', 'pro'];
+    /** Every plan, FREE included. */
+    private const ALL = ['free', 'start', 'grow', 'pro'];
+    /** STARTER and up: what a paying tutor gets that FREE does not (November 2026 plan matrix, docs/PLANS.md). */
+    private const PAID = ['start', 'grow', 'pro'];
     private const GROW_UP = ['grow', 'pro'];
     private const PRO = ['grow', 'pro']; // November 2026: GROW gets everything that was PRO-only
     private const ADDON = [];
@@ -33,11 +37,12 @@ final class FeatureCatalog
             // Class & Student Management
             'classes.setup'          => ['name' => 'Subject / Grade / Language Setup', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Create classes by subject, grade and medium.'],
             'students.registration'  => ['name' => 'Student Registration', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Register students and approve join requests.'],
-            'parents.login'          => ['name' => 'Parent Login', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Parents log in to follow their children.'],
+            'parents.login'          => ['name' => 'Parent Login', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Parents log in to follow their children.'],
             'timetable.manage'       => ['name' => 'Timetable Management', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Plan lessons per class.'],
             'classes.scheduling'     => ['name' => 'Physical & Online Class Scheduling', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Weekly schedules for physical and online classes.'],
             'tutes.manage'           => ['name' => 'Tute / Material Management', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Share tutes and materials per class.'],
-            'exams.mcq'              => ['name' => 'MCQ Exams + Grading', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Online MCQ papers with auto marking.'],
+            'tutes.courier'          => ['name' => 'Tute Posting & Courier Tracking', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Post printed tutes to students\' homes: parcels, address labels and tracking numbers.'],
+            'exams.mcq'              => ['name' => 'MCQ Exams + Grading', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Online MCQ papers with auto marking.'],
             'fees.class_based'       => ['name' => 'Class-Based Fee Setup', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Monthly fee per class.'],
             'fees.advanced'          => ['name' => 'Advanced Class-Based Fee Logic', 'category' => 'Class & Student Management', 'plans' => self::PRO, 'description' => 'Discounts, penalties and custom fee rules per student.'],
 
@@ -50,7 +55,7 @@ final class FeatureCatalog
             'payments.enviiz_gateway'  => ['name' => 'ENVIIZ Payment Gateway', 'category' => 'Payment Management', 'plans' => self::ADDON, 'description' => 'Card payments through the ENVIIZ gateway.', 'addon' => ['key' => 'enviiz_gateway', 'name' => 'ENVIIZ Payment Gateway', 'pricing' => '+ LKR 2,000/month + 2–3% per transaction']],
 
             // Classes & Recordings
-            'zoom.tutor_integration'      => ['name' => 'Tutor Zoom Integration', 'category' => 'Classes & Recordings', 'plans' => self::ALL, 'description' => 'Connect your Zoom and auto-create class meetings.'],
+            'zoom.tutor_integration'      => ['name' => 'Zoom Integration & Auto-Scheduling', 'category' => 'Classes & Recordings', 'plans' => self::PAID, 'description' => 'Connect your Zoom once: every online class day gets its meeting and link by itself. On FREE you paste the Zoom link for each class day.'],
             'zoom.enviiz_account'         => ['name' => 'ENVIIZ Zoom Account', 'category' => 'Classes & Recordings', 'plans' => self::ADDON, 'description' => 'Use our licensed Zoom account.', 'addon' => ['key' => 'enviiz_zoom', 'name' => 'ENVIIZ Zoom Account', 'pricing' => 'LKR 1,500–2,000/month']],
             'recordings.upload'           => ['name' => 'Non-Secured Recordings (Tutor Upload)', 'category' => 'Classes & Recordings', 'plans' => self::ALL, 'description' => 'Share class recordings with students.'],
             'recordings.controlled_access'=> ['name' => 'Controlled Recording Access', 'category' => 'Classes & Recordings', 'plans' => self::PRO, 'description' => 'Limit how long each student can watch a recording.'],
@@ -66,7 +71,7 @@ final class FeatureCatalog
 
             // Attendance & ID
             'attendance.manual'  => ['name' => 'Manual Attendance', 'category' => 'Attendance & ID', 'plans' => self::ALL, 'description' => 'Mark attendance by hand.'],
-            'attendance.qr'      => ['name' => 'QR-Based Attendance', 'category' => 'Attendance & ID', 'plans' => self::ALL, 'description' => 'Scan student QR codes.'],
+            'attendance.qr'      => ['name' => 'QR-Based Attendance', 'category' => 'Attendance & ID', 'plans' => self::PAID, 'description' => 'Scan student QR codes.'],
             'attendance.export'  => ['name' => 'Attendance Reports Export', 'category' => 'Attendance & ID', 'plans' => self::GROW_UP, 'description' => 'Export attendance to Excel / PDF.'],
             'id.digital'         => ['name' => 'Digital Student ID (QR)', 'category' => 'Attendance & ID', 'plans' => self::GROW_UP, 'description' => 'Each student gets a QR ID card in the app.'],
             'id.cards'           => ['name' => 'Student ID Cards', 'category' => 'Attendance & ID', 'plans' => self::GROW_UP, 'description' => 'Make and print student ID cards with the QR code or barcode used for attendance.'],
@@ -81,6 +86,51 @@ final class FeatureCatalog
             // Team (not on the pricing sheet yet: GROW and PRO, to be confirmed)
             'staff.custom_roles' => ['name' => 'Staff Accounts & Custom Roles', 'category' => 'Team', 'plans' => self::GROW_UP, 'description' => 'Add assistants and choose exactly what each role can do.'],
         ];
+    }
+
+    /**
+     * Monthly / total limits per plan (null = unlimited). Usage is counted by PdoEntitlementRepository::usage().
+     * key => [name, unit, period ('month' | 'total'), help, [plan => limit]]
+     * @return array<string, array{name:string, unit:string, period:string, help:string, plans:array<string, ?int>}>
+     */
+    public static function limits(): array
+    {
+        return [
+            'classes'          => ['name' => 'Classes', 'unit' => 'classes', 'period' => 'total', 'help' => 'Active classes you run at the same time.',
+                                   'plans' => ['free' => 3, 'start' => null, 'grow' => null, 'pro' => null]],
+            'tutes.month'      => ['name' => 'Tutes', 'unit' => 'tutes', 'period' => 'month', 'help' => 'Tutes you add this month (download or post).',
+                                   'plans' => ['free' => 4, 'start' => null, 'grow' => null, 'pro' => null]],
+            'recordings.month' => ['name' => 'Recordings', 'unit' => 'recordings', 'period' => 'month', 'help' => 'Class recordings you add this month.',
+                                   'plans' => ['free' => 8, 'start' => null, 'grow' => null, 'pro' => null]],
+            'messages.month'   => ['name' => 'Notifications', 'unit' => 'messages', 'period' => 'month', 'help' => 'E-mail and WhatsApp messages sent from Message Center this month (one per person).',
+                                   'plans' => ['free' => 100, 'start' => 1000, 'grow' => null, 'pro' => null]],
+        ];
+    }
+
+    public static function limitFor(string $limitKey, string $planKey): ?int
+    {
+        $plans = self::limits()[$limitKey]['plans'] ?? [];
+        return array_key_exists($planKey, $plans) ? $plans[$planKey] : null;
+    }
+
+    /** The plan a tutor is pushed to next: FREE -> STARTER -> GROW -> CUSTOM, null on CUSTOM. */
+    public static function nextPlan(string $planKey): ?string
+    {
+        $keys = array_keys(self::PLANS);
+        $i = array_search($planKey, $keys, true);
+        return $i === false ? 'start' : ($keys[$i + 1] ?? null);
+    }
+
+    /** Cheapest plan that lifts a limit above $needed (or removes it). */
+    public static function lowestPlanForLimit(string $limitKey, int $needed): ?string
+    {
+        foreach (array_keys(self::PLANS) as $plan) {
+            $l = self::limitFor($limitKey, $plan);
+            if ($l === null || $l >= $needed) {
+                return $plan;
+            }
+        }
+        return null;
     }
 
     /** Cheapest plan that includes the feature, or null for add-on-only features. */

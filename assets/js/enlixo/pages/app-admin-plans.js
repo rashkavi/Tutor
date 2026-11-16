@@ -18,15 +18,25 @@ const sw = (checked, label, onchange = null) => { const id = `sw-${Math.random()
 const reload = async () => { ({ data: D } = await api.get('/admin/plans')); show(tab); };
 const head = (title, info, action = null) => h('div', { class: 'd-flex justify-content-between align-items-center gap-3 mb-3' },
   h('span', { class: 'sub-topic d-inline-flex align-items-center gap-2' }, title, infoTip(info, title)), action);
-/** fields: [key, label, input, info, required, col]; save(values) returns the request promise. */
+/** fields: [key, label, input, info, required, col]; save(values) returns the request promise.
+ *  The form opens at the top of the panel on the page itself (no pop-up); Cancel or Save closes it. */
 const editDialog = (title, sub, ico, fields, save, done) => {
   fields.forEach(([key, , el]) => { el.dataset.key = key; });
-  const m = BsModal.open({ title, subtitle: sub, icon: ico, body: h('div', { class: 'row gx-3' }, fields.map(([, label, el, info, req, col]) => h('div', { class: col ?? 'col-md-6' }, field(label, el, { info, required: req })))),
-    footerEnd: [BsModal.button('Cancel', { onclick: () => m.close() }), BsModal.button('Save', { primary: true, onclick: async () => {
-      const values = Object.fromEntries(fields.map(([key, , el]) => [key, el.value]));
-      if (!await trySave(m.el, () => save(values))) return;
-      m.close(); Toast.success(done); reload();
-    } })] });
+  document.getElementById('pl-edit')?.remove();
+  const box = h('div', { class: 'ad-panel component-theme p-4 mb-4', id: 'pl-edit', style: { border: '1px solid var(--line-color)' } });
+  const saveBtn = h('button', { type: 'button', class: 'custom-btn px-5', id: 'pl-save', onclick: async () => {
+    const values = Object.fromEntries(fields.map(([key, , el]) => [key, el.value]));
+    saveBtn.disabled = true;
+    if (!await trySave(box, () => save(values))) { saveBtn.disabled = false; return; }
+    Toast.success(done); reload();
+  } }, 'Save');
+  fill(box,
+    h('div', { class: 'd-flex align-items-center gap-3 mb-3' }, h('span', { class: 'fe-form-ico' }, icon(ico, { size: 22 })),
+      h('div', {}, h('div', { class: 'text-18 main-text fw-semibold' }, title), h('div', { class: 'text-13 sub-text' }, [].concat(sub ?? []).join(' · ')))),
+    h('div', { class: 'row gx-3' }, fields.map(([, label, el, info, req, col]) => h('div', { class: col ?? 'col-md-6' }, field(label, el, { info, required: req })))),
+    h('div', { class: 'd-flex justify-content-end gap-2' }, h('button', { type: 'button', class: 'custom-btn px-4', onclick: () => box.remove() }, 'Cancel'), saveBtn));
+  right.prepend(box);
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 const toggle = async (req, okText) => { if (await trySave(document.body, req)) { Toast.success(okText); reload(); } else reload(); };
 
@@ -115,12 +125,17 @@ function bankDialog(b) {
   ], (v) => (b ? api.put(`/admin/bank-accounts/${b.id}`, v) : api.post('/admin/bank-accounts', v)), b ? 'Bank account saved.' : 'Bank account added.');
 }
 function removeBank(b) {
-  const m = BsModal.open({ title: 'Remove this Bank Account?', subtitle: [b.bank, b.number], icon: 'danger', tone: 'danger',
-    body: h('p', { class: 'text-14 sub-text m-0' }, 'Tutors will no longer see it. Payments already made to it are not changed.'),
-    footerEnd: [BsModal.button('Cancel', { onclick: () => m.close() }), BsModal.button('Remove', { primary: true, danger: true, onclick: async () => {
-      if (!await trySave(m.el, () => api.delete(`/admin/bank-accounts/${b.id}`))) return;
-      m.close(); Toast.success('Bank account removed.'); reload();
-    } })] });
+  document.getElementById('pl-edit')?.remove();
+  const box = h('div', { class: 'ad-panel is-danger component-theme p-4 mb-4', id: 'pl-edit', style: { border: '1px solid var(--line-color)' } },
+    h('div', { class: 'd-flex align-items-center gap-3 mb-2' }, h('span', { class: 'fe-reject-ico' }, icon('danger', { size: 18 })),
+      h('div', {}, h('div', { class: 'text-18 main-text fw-semibold' }, `Remove ${b.bank} ${b.number}?`), h('div', { class: 'text-13 sub-text' }, 'Tutors will no longer see it. Payments already made to it are not changed.'))),
+    h('div', { class: 'd-flex justify-content-end gap-2' }, h('button', { type: 'button', class: 'custom-btn px-4', onclick: () => box.remove() }, 'Cancel'),
+      h('button', { type: 'button', class: 'custom-btn custom-danger-btn px-5', onclick: async () => {
+        if (!await trySave(box, () => api.delete(`/admin/bank-accounts/${b.id}`))) return;
+        Toast.success('Bank account removed.'); reload();
+      } }, 'Remove')));
+  right.prepend(box);
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 const right = h('div', { class: 'col-12 col-lg-9 p-4' });

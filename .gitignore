@@ -2,3 +2,6 @@
 .DS_Store
 /secure/
 /storage/
+
+# slips uploaded while using / testing the app (files already in git stay tracked)
+assets/uploads/payment-slips/*

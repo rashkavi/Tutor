@@ -221,6 +221,8 @@ final class MessageService
         if (!$people) {
             throw HttpException::validation(['classes' => 'Nobody is in the chosen classes yet.']);
         }
+        // the plan's messages a month (FREE 100, STARTER 1,000, GROW unlimited): one per person reached
+        $this->entitlements->requireWithin($tutorId, 'messages.month', count(array_filter($people, static fn ($p) => $p['address'] !== null)));
         $now = $this->now();
         $id = $this->db->transaction(function () use ($tutorId, $byUserId, $channel, $mode, $audience, $subject, $body, $classes, $people, $now) {
             $skipped = count(array_filter($people, static fn ($p) => $p['address'] === null));

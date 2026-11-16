@@ -1,0 +1,295 @@
+// Tutor → Upgrade Plan (tutor/upgrade.php). One page, no pop-ups, built to move a tutor one plan up when it pays off:
+//   1. why now: the feature or limit they hit (?feature= / ?limit=), else what the next plan adds
+//   2. what they use: students and every monthly limit, with what the next plan gives
+//   3. the plans side by side (monthly / yearly), the recommended one marked; "Try free for 7 days" once, "Upgrade"
+//      opens an inline confirm with the price and what happens next
+//   4. every feature per plan, then answers to the usual worries (data kept, how to pay, going back)
+// Data: GET /me/access (plan, limits, usage, features per plan, preview) + GET /tutor/subscription (prices, status).
+import { QuickGuide } from '../components/QuickGuide.js';
+import { api, h, fill, icon, lkr, day, plural, Toast } from './admin-common.js';
+
+QuickGuide.attachAll();
+const root = document.getElementById('up-page');
+const actions = document.getElementById('up-actions');
+const q = new URLSearchParams(location.search);
+const ENLIXO_PHONE = '0769679778';
+const ORDER = ['free', 'start', 'grow', 'pro'];
+let A = null; // access
+let S = null; // subscription
+let cycle = 'monthly';
+let confirming = null; // plan key with the confirm panel open
+
+fill(root, h('div', { class: 'component-theme p-5 text-center sub-text' }, 'Loading…'));
+load();
+
+async function load() {
+  try {
+    [A, S] = await Promise.all([api.get('/me/access').then((r) => r.data), api.get('/tutor/subscription').then((r) => r.data)]);
+  } catch (e) {
+    fill(root, h('div', { class: 'component-theme p-4 text-dark-red' }, e.message));
+    return;
+  }
+  if (S.tutor.cycle === 'yearly') cycle = 'yearly';
+  LIMITS = Object.fromEntries(A.limits.map((l) => [l.key, l.plans ?? {}]));
+  draw();
+}
+
+const rank = (k) => ORDER.indexOf(k);
+const planOf = (k) => S.plans.find((p) => p.key === k);
+const nameOf = (k) => planOf(k)?.name ?? (A.plans[k]?.name ?? k.toUpperCase());
+const featureByKey = (k) => A.features.find((f) => f.key === k);
+const paidKey = () => A.paid_plan?.key ?? A.plan.key;
+const limitText = (l, plan) => {
+  const v = l.limitsByPlan?.[plan];
+  return v === null || v === undefined ? 'Unlimited' : `${v} ${l.unit}${l.period === 'month' ? ' a month' : ''}`;
+};
+
+/** The plan to recommend: the one the feature / limit needs, else ?plan=, else the next plan. */
+function recommended() {
+  const f = q.get('feature') ? featureByKey(q.get('feature')) : null;
+  if (f?.required_plan) return f.required_plan;
+  const l = q.get('limit') ? A.limits.find((x) => x.key === q.get('limit')) : null;
+  if (l?.next) return l.next;
+  if (q.get('limit') === 'students') return A.next_plan?.key ?? null;
+  if (q.get('plan') && rank(q.get('plan')) > rank(paidKey())) return q.get('plan');
+  return A.next_plan?.key ?? null;
+}
+
+function monthlyPrice(p) {
+  return cycle === 'yearly' ? Math.max(0, p.monthly - p.yearly_discount) : p.monthly;
+}
+
+function draw() {
+  const mine = paidKey();
+  const rec = recommended();
+  const t = S.tutor;
+  const canPreview = !A.preview_used && !A.preview && t.status !== 'trial' && !['suspended', 'cancelled'].includes(t.status);
+
+  fill(actions,
+    h('a', { class: 'custom-btn ex-btn-lg px-4 text-decoration-none d-inline-flex align-items-center gap-2', href: '#up-compare' }, icon('checklist', { size: 18 }), 'Compare Plans'),
+    rec && rec !== 'pro' ? h('button', { type: 'button', class: 'custom-btn ex-btn-lg px-5', onclick: () => openConfirm(rec) }, `Upgrade to ${nameOf(rec)}`)
+      : h('a', { class: 'custom-btn ex-btn-lg px-5 text-decoration-none', href: 'subscription' }, 'My Subscription'));
+
+  fill(root,
+    whyCard(rec, canPreview),
+    A.preview ? previewNote() : null,
+    usageCard(rec),
+    plansCard(rec, canPreview),
+    compareCard(),
+    faqCard());
+  if (confirming) setTimeout(() => document.getElementById('up-confirm')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+}
+
+// ---------- 1. why now ----------
+function whyCard(rec, canPreview) {
+  const f = q.get('feature') ? featureByKey(q.get('feature')) : null;
+  const l = q.get('limit') ? A.limits.find((x) => x.key === q.get('limit')) : null;
+  const recName = rec ? nameOf(rec) : null;
+  let title; let text; let ico = 'crown';
+  if (f && !f.unlocked) {
+    title = `Unlock ${f.name}`;
+    text = `${f.description} It comes with ${recName ?? 'a bigger plan'}.`;
+    ico = 'lock';
+  } else if (l) {
+    title = l.limit === null ? `${l.name}: unlimited on your plan`
+      : l.used > l.limit ? `You have ${l.used} ${l.unit}; ${nameOf(paidKey())} allows ${l.limit}`
+        : l.used === l.limit ? `You used all ${l.limit} ${l.unit}${l.period === 'month' ? ' of this month' : ''}` : `You used ${l.used} of ${l.limit} ${l.unit}`;
+    text = `${l.help} ${recName ? `${recName} gives you ${limitText(withPlans(l), rec).toLowerCase()}.` : ''}`;
+    ico = 'growth';
+  } else if (q.get('limit') === 'students') {
+    title = `${A.students.count} of ${A.students.limit} students`;
+    text = recName ? `${recName} takes up to ${planOf(rec)?.limit ?? 'unlimited'} students, so new students can join without waiting.` : '';
+    ico = 'students';
+  } else if (rec) {
+    title = `What ${recName} adds to your ${nameOf(paidKey())} plan`;
+    text = (A.next_plan?.key === rec ? A.next_plan.adds : []).slice(0, 4).join(' · ') || planOf(rec)?.tagline || '';
+  } else {
+    title = `You are on ${nameOf(paidKey())}, our biggest plan`;
+    text = 'Need more? WhatsApp ENLIXO and we make a CUSTOM plan with you.';
+  }
+  const price = rec && planOf(rec) && rec !== 'pro' ? planOf(rec) : null;
+  return h('div', { class: 'up-why mb-4' },
+    h('span', { class: 'up-why-ico' }, icon(ico, { size: 28 })),
+    h('div', { class: 'min-w-0 flex-grow-1' },
+      h('div', { class: 'up-why-tag' }, `Your plan: ${nameOf(paidKey())}`),
+      h('h2', {}, title),
+      h('p', {}, text)),
+    price ? h('div', { class: 'up-why-cta' },
+      h('div', { class: 'up-why-price' }, h('b', {}, lkr(price.monthly)), h('span', {}, '/ month')),
+      h('button', { type: 'button', class: 'custom-btn px-4', onclick: () => openConfirm(rec) }, `Upgrade to ${nameOf(rec)}`),
+      canPreview ? h('button', { type: 'button', class: 'up-try', onclick: () => startPreview(rec) }, icon('magic', { size: 16 }), 'Try it free for 7 days') : null) : null);
+}
+
+function previewNote() {
+  const left = Math.max(0, Math.round((new Date(`${A.preview.until}T00:00:00`) - new Date(new Date().toDateString())) / 86400000));
+  return h('div', { class: 'up-note mb-4', role: 'status' }, icon('magic', { size: 20 }),
+    h('span', {}, h('b', {}, `You are trying ${nameOf(A.preview.plan)} free: ${left > 0 ? `${plural(left, 'day')} left` : 'last day today'} (until ${day(A.preview.until)}).`),
+      ` Upgrade to keep everything you set up with it. When the week ends you go back to ${nameOf(paidKey())} and nothing is deleted.`));
+}
+
+// ---------- 2. what you use ----------
+// limit key => { plan => limit (null = unlimited) }, from the API (FeatureCatalog::limits())
+let LIMITS = {};
+const withPlans = (l) => ({ ...l, limitsByPlan: l.plans ?? {} });
+
+function usageCard(rec) {
+  const rows = [
+    { key: 'students', name: 'Students', unit: 'students', period: 'total', used: A.students.count, limit: A.students.limit, help: 'Active students in your classes.', next: planOf(rec)?.limit ?? null },
+    ...A.limits.map((l) => ({ ...l, next: rec ? (LIMITS[l.key]?.[rec] ?? null) : undefined })),
+  ];
+  const meterRow = (r) => {
+    const pct = r.limit ? Math.min(100, Math.round((r.used / r.limit) * 100)) : 0;
+    const tone = r.limit === null ? 'is-free' : pct >= 100 ? 'is-full' : pct >= 80 ? 'is-near' : '';
+    return h('div', { class: `up-use ${tone}` },
+      h('div', { class: 'd-flex justify-content-between gap-2' },
+        h('span', { class: 'up-use-name' }, r.name, r.period === 'month' ? h('small', {}, ' this month') : null),
+        h('span', { class: 'up-use-num' }, r.limit === null ? `${r.used} · Unlimited` : `${r.used} of ${r.limit}`)),
+      h('span', { class: 'up-meter', role: 'progressbar', 'aria-label': r.name, 'aria-valuenow': r.used, 'aria-valuemin': 0, 'aria-valuemax': r.limit ?? r.used }, h('span', { style: { width: `${r.limit === null ? 100 : pct}%` } })),
+      rec && r.limit !== null && r.next !== undefined ? h('small', { class: 'up-use-next' }, icon('arrow-right', { size: 12 }), `${nameOf(rec)}: ${r.next === null ? 'unlimited' : `${r.next} ${r.unit}`}`) : null);
+  };
+  return h('div', { class: 'component-theme p-4 mb-4' },
+    h('div', { class: 'd-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap' },
+      h('div', { class: 'sub-topic main-text' }, 'What you use now'),
+      h('span', { class: 'text-13 sub-text' }, 'Monthly limits start again on the 1st')),
+    h('div', { class: 'up-use-grid' }, rows.map(meterRow)));
+}
+
+// ---------- 3. the plans ----------
+function plansCard(rec, canPreview) {
+  const mine = paidKey();
+  const plans = S.plans.filter((p) => ORDER.includes(p.key));
+  const toggle = h('div', { class: 'up-cycle', role: 'group', 'aria-label': 'Billing' },
+    ['monthly', 'yearly'].map((c) => h('button', { type: 'button', class: cycle === c ? 'is-on' : '', 'aria-pressed': String(cycle === c), onclick: () => { cycle = c; draw(); } },
+      c === 'monthly' ? 'Monthly' : 'Yearly', c === 'yearly' ? h('span', { class: 'up-save' }, 'Save') : null)));
+  const card = (p) => {
+    const isMine = p.key === mine;
+    const higher = rank(p.key) > rank(mine);
+    const isRec = p.key === rec;
+    const custom = p.key === 'pro';
+    const adds = A.features.filter((f) => f.plans.includes(p.key) && !f.plans.includes(ORDER[rank(p.key) - 1] ?? '')).map((f) => f.name);
+    const limitLines = Object.entries(LIMITS).map(([k, v]) => {
+      const l = A.limits.find((x) => x.key === k);
+      return l ? `${v[p.key] === null || v[p.key] === undefined ? 'Unlimited' : v[p.key]} ${l.unit}${l.period === 'month' && v[p.key] !== null ? ' a month' : ''}` : null;
+    }).filter(Boolean);
+    const yearly = cycle === 'yearly' && p.monthly > 0;
+    return h('div', { class: `up-plan${isRec ? ' is-rec' : ''}${isMine ? ' is-mine' : ''}` },
+      isRec ? h('span', { class: 'up-plan-badge' }, 'Best next step') : isMine ? h('span', { class: 'up-plan-badge is-mine' }, 'Your plan') : null,
+      h('div', { class: 'up-plan-name' }, p.name),
+      h('div', { class: 'up-plan-tag' }, p.tagline || ''),
+      custom ? h('div', { class: 'up-plan-price' }, h('b', {}, "Let's talk"))
+        : h('div', { class: 'up-plan-price' }, h('b', {}, lkr(monthlyPrice(p))), h('span', {}, p.monthly ? '/ month' : 'forever')),
+      yearly ? h('div', { class: 'up-plan-sub' }, `${lkr(monthlyPrice(p) * 12)} a year · you save ${lkr(p.yearly_discount * 12)}`) : h('div', { class: 'up-plan-sub' }, p.limit ? `Up to ${p.limit} students` : 'Any number of students'),
+      h('ul', { class: 'up-plan-list' },
+        rank(p.key) > 0 ? h('li', { class: 'is-all' }, icon('check', { size: 14 }), `Everything in ${plans[rank(p.key) - 1]?.name ?? ''}`) : null,
+        adds.slice(0, rank(p.key) > 0 ? 5 : 6).map((n) => h('li', {}, icon('check', { size: 14 }), n)),
+        p.key !== 'pro' ? h('li', { class: 'is-limits' }, icon('sliders', { size: 14 }), limitLines.join(' · ')) : null),
+      h('div', { class: 'up-plan-cta' },
+        isMine ? h('span', { class: 'up-plan-mine' }, icon('check', { size: 16 }), 'You are on this plan')
+          : custom ? h('a', { class: 'custom-btn w-100 text-decoration-none', href: waLink(`I would like a CUSTOM plan for my classes.`), target: '_blank', rel: 'noopener' }, icon('whatsapp', { size: 18 }), 'Talk to ENLIXO')
+            : higher ? h('button', { type: 'button', class: 'custom-btn w-100', onclick: () => openConfirm(p.key) }, `Upgrade to ${p.name}`)
+              : h('a', { class: 'up-down', href: 'subscription?tab=plans' }, `Move to ${p.name}`),
+        higher && !custom && canPreview ? h('button', { type: 'button', class: 'up-try w-100 justify-content-center', onclick: () => startPreview(p.key) }, icon('magic', { size: 16 }), 'Try free for 7 days') : null));
+  };
+  return h('div', { class: 'component-theme p-4 mb-4', id: 'up-plans' },
+    h('div', { class: 'd-flex justify-content-between align-items-center gap-3 flex-wrap mb-4' },
+      h('div', {}, h('div', { class: 'sub-topic main-text' }, 'Choose your plan'), h('div', { class: 'text-13 sub-text' }, 'Prices in LKR. Your classes, students and records stay when you change plan.')),
+      toggle),
+    confirming ? confirmPanel(confirming) : null,
+    h('div', { class: 'up-plans' }, plans.map(card)));
+}
+
+function openConfirm(key) {
+  confirming = key;
+  draw();
+}
+
+/** Inline confirm (no pop-up): the price, what happens today and what happens if it is not paid. */
+function confirmPanel(key) {
+  const p = planOf(key);
+  const t = S.tutor;
+  const fromFree = paidKey() === 'free';
+  const paying = !fromFree && t.period_end && ['active', 'due'].includes(t.status);
+  const amount = cycle === 'yearly' ? monthlyPrice(p) * 12 : p.monthly;
+  const steps = fromFree
+    ? [`${p.name} works for you straight away.`, `Your first invoice of ${lkr(amount)} (${cycle}) is made today and is due in 7 days.`, 'Pay by bank transfer and upload the slip. Not paid in 7 days? You go back to FREE and nothing is lost.']
+    : paying
+      ? [`${p.name} works for you straight away.`, `You pay only the difference for the days left until ${day(t.period_end)}.`, `From then on, ${lkr(p.monthly)} a month${cycle === 'yearly' ? ' (yearly price applies at renewal)' : ''}.`]
+      : [`${p.name} becomes your plan now.`, 'The open invoice is made again with the new price.', 'Pay it on the invoice page to keep everything on.'];
+  const box = h('div', { class: 'up-confirm mb-4', id: 'up-confirm' });
+  const go = h('button', { type: 'button', class: 'custom-btn px-5', onclick: async () => {
+    go.disabled = true;
+    try {
+      const { data } = await api.post('/tutor/subscription/change', { plan: key, cycle });
+      Toast.success(data.message);
+      // an invoice was made (upgrade from FREE / difference): go and pay it
+      const { data: sub } = await api.get('/tutor/subscription');
+      const open = [...sub.invoices].reverse().find((i) => ['open', 'part', 'overdue'].includes(i.status));
+      setTimeout(() => { location.href = open ? `invoice?invoice-id=${open.id}` : 'subscription'; }, 900);
+    } catch (e) {
+      go.disabled = false;
+      Toast.error(e.message);
+    }
+  } }, `Confirm: Upgrade to ${p.name}`);
+  fill(box,
+    h('div', { class: 'd-flex align-items-center gap-3 mb-3' }, h('span', { class: 'up-confirm-ico' }, icon('crown', { size: 22 })),
+      h('div', {}, h('div', { class: 'text-18 main-text fw-semibold' }, `Upgrade to ${p.name}`), h('div', { class: 'text-13 sub-text' }, `${lkr(monthlyPrice(p))} a month · ${cycle}`))),
+    h('ol', { class: 'up-confirm-steps' }, steps.map((s) => h('li', {}, s))),
+    h('div', { class: 'd-flex justify-content-end gap-2 flex-wrap' }, h('button', { type: 'button', class: 'custom-btn px-4', onclick: () => { confirming = null; draw(); } }, 'Not now'), go));
+  return box;
+}
+
+async function startPreview(key) {
+  try {
+    const { data } = await api.post('/tutor/subscription/preview', { plan: key });
+    Toast.success(data.message);
+    setTimeout(() => location.reload(), 900);
+  } catch (e) {
+    Toast.error(e.message);
+  }
+}
+
+// ---------- 4. every feature, and the usual worries ----------
+function compareCard() {
+  const cats = [...new Set(A.features.map((f) => f.category))];
+  const plans = ['free', 'start', 'grow'];
+  const mark = (on) => h('span', { class: on ? 'up-yes' : 'up-no', 'aria-label': on ? 'Included' : 'Not included' }, on ? icon('check', { size: 16 }) : '–');
+  const head = h('tr', {}, h('th', { scope: 'col' }, 'Feature'), plans.map((k) => h('th', { scope: 'col', class: `text-center${k === paidKey() ? ' is-mine' : ''}` }, nameOf(k))));
+  const rows = [];
+  rows.push(h('tr', { class: 'up-cat' }, h('th', { colspan: 4 }, 'Limits')));
+  rows.push(h('tr', {}, h('td', {}, 'Students'), plans.map((k) => h('td', { class: 'text-center' }, String(planOf(k)?.limit ?? 'Any')))));
+  for (const [k, v] of Object.entries(LIMITS)) {
+    const l = A.limits.find((x) => x.key === k);
+    if (!l) continue;
+    rows.push(h('tr', {}, h('td', {}, l.name, l.period === 'month' ? h('small', { class: 'sub-text' }, ' a month') : null), plans.map((p) => h('td', { class: 'text-center' }, v[p] === null ? 'Unlimited' : String(v[p])))));
+  }
+  for (const c of cats) {
+    const fs = A.features.filter((f) => f.category === c && f.plans.some((p) => plans.includes(p)));
+    if (!fs.length) continue;
+    rows.push(h('tr', { class: 'up-cat' }, h('th', { colspan: 4 }, c)));
+    fs.forEach((f) => rows.push(h('tr', { class: q.get('feature') === f.key ? 'is-hl' : '' }, h('td', {}, h('span', { title: f.description }, f.name)), plans.map((p) => h('td', { class: 'text-center' }, mark(f.plans.includes(p)))))));
+  }
+  return h('div', { class: 'component-theme p-4 mb-4', id: 'up-compare' },
+    h('div', { class: 'sub-topic main-text mb-3' }, 'Every feature, plan by plan'),
+    h('div', { class: 'table-responsive-wrapper' }, h('div', { class: 'table-responsive' }, h('table', { class: 'table ex-v3-table align-middle m-0 up-table' }, h('thead', {}, head), h('tbody', {}, rows)))));
+}
+
+function faqCard() {
+  const qa = [
+    ['What happens to my students and records?', 'Nothing is deleted when you change plan, try a plan or go back. Your classes, students, fees and recordings stay exactly as they are.'],
+    ['How do I pay?', 'Pay the invoice by bank transfer or deposit into an ENLIXO account and upload the slip on the invoice page. ENLIXO checks it within one working day.'],
+    ['What if I do not pay after upgrading from FREE?', 'After 7 days you simply go back to FREE. Your class portal stays open for students.'],
+    ['What does "Try free for 7 days" do?', 'You get every feature of that plan for a week, once, with no invoice. When the week ends, you are back on your own plan unless you upgrade.'],
+    ['Can I go back to a smaller plan?', 'Yes, from My Subscription. A paid month runs to its end first, and your students must fit the smaller plan.'],
+  ];
+  return h('div', { class: 'component-theme p-4 mb-4' },
+    h('div', { class: 'sub-topic main-text mb-3' }, 'Questions tutors ask'),
+    h('div', { class: 'up-faq' }, qa.map(([qq, a]) => h('details', {}, h('summary', {}, qq), h('p', {}, a)))),
+    h('div', { class: 'd-flex flex-wrap gap-2 mt-3' },
+      h('a', { class: 'custom-btn px-4 text-decoration-none d-inline-flex align-items-center gap-2', href: waLink('I have a question about upgrading my plan.'), target: '_blank', rel: 'noopener' }, icon('whatsapp', { size: 18 }), 'Ask ENLIXO on WhatsApp'),
+      h('a', { class: 'custom-btn px-4 text-decoration-none d-inline-flex align-items-center gap-2', href: `tel:${ENLIXO_PHONE}` }, icon('phone', { size: 18 }), `Call ${ENLIXO_PHONE}`)));
+}
+
+function waLink(text) {
+  const t = S.tutor;
+  return `https://wa.me/94${ENLIXO_PHONE.replace(/^0/, '')}?text=${encodeURIComponent(`Hi ENLIXO, I am ${t.name} (Tutor ID T-${t.id}). ${text}`)}`;
+}

@@ -262,11 +262,37 @@ function performance(d) {
   return box;
 }
 
+/**
+ * "Your plan" card (docs/PLANS.md): what the tutor uses against the plan, and the one next step that would help
+ * them most (the fullest limit first, else what the next plan adds). Not shown on CUSTOM or when nothing is close.
+ */
+function planCard(a) {
+  if (!a || !a.next_plan) return null;
+  const rows = [{ name: 'Students', used: a.students.count, limit: a.students.limit, unit: 'students' },
+    ...a.limits.filter((l) => l.limit !== null).map((l) => ({ name: l.name, used: l.used, limit: l.limit, unit: l.unit, month: l.period === 'month', key: l.key }))];
+  const pct = (r) => (r.limit ? Math.min(100, Math.round((r.used / r.limit) * 100)) : 0);
+  const hot = rows.filter((r) => r.limit).sort((x, y) => pct(y) - pct(x))[0];
+  const next = a.next_plan;
+  const paid = a.paid_plan ?? a.plan;
+  const pitch = hot && pct(hot) >= 80
+    ? `You are at ${hot.used} of ${hot.limit} ${hot.unit}${hot.month ? ' this month' : ''}. ${next.name} gives you more room${next.adds?.length ? `, plus ${next.adds.slice(0, 2).join(' and ')}` : ''}.`
+    : next.adds?.length ? `${next.name} adds ${next.adds.slice(0, 3).join(', ')}.` : `${next.name} gives you room to grow.`;
+  return h('div', { class: 'component-theme p-4 mb-4 ex-dash-plan' },
+    h('div', { class: 'ex-dash-plan-head' },
+      h('div', {}, h('div', { class: 'sub-topic main-text' }, `Your ${paid.name} plan`), h('div', { class: 'text-13 sub-text' }, a.preview ? `Trying ${a.plan.name} until ${a.preview.until}` : 'What you use, and what is next')),
+      h('a', { class: 'custom-btn px-4 text-decoration-none d-inline-flex align-items-center gap-2', href: hot && pct(hot) >= 80 && hot.key ? `upgrade?limit=${encodeURIComponent(hot.key)}` : 'upgrade' }, icon('crown', { size: 18 }), `See ${next.name}`)),
+    h('div', { class: 'ex-dash-plan-use' }, rows.map((r) => h('div', { class: `ex-dash-use${pct(r) >= 100 ? ' is-full' : pct(r) >= 80 ? ' is-near' : ''}` },
+      h('div', { class: 'd-flex justify-content-between gap-2' }, h('span', {}, r.name, r.month ? h('small', {}, ' / month') : null), h('b', {}, `${r.used} of ${r.limit}`)),
+      h('span', { class: 'ex-dash-meter' }, h('span', { style: { width: `${pct(r)}%` } }))))),
+    h('div', { class: 'ex-dash-plan-pitch' }, icon('magic', { size: 18 }), h('span', {}, pitch),
+      !a.preview_used && !a.preview && next.key !== 'pro' ? h('a', { href: `upgrade?plan=${next.key}`, class: 'ex-dash-try' }, `Try ${next.name} free for 7 days`) : null));
+}
+
 async function load() {
   fill(root, DashboardKit.skeleton());
   try {
-    const d = (await api.get('/tutor/dashboard')).data;
-    fill(root, root.dataset.welcome === '1' ? DashboardKit.welcome(root.dataset.fullName || root.dataset.name, 'Welcome back! Your classes, students, fees and attendance are all here. Check what needs you today below.') : null, today(d), stats(d), ...charts(d), ...lists(d), performance(d));
+    const [d, access] = await Promise.all([api.get('/tutor/dashboard').then((r) => r.data), api.get('/me/access').then((r) => r.data).catch(() => null)]);
+    fill(root, root.dataset.welcome === '1' ? DashboardKit.welcome(root.dataset.fullName || root.dataset.name, 'Welcome back! Your classes, students, fees and attendance are all here. Check what needs you today below.') : null, today(d), stats(d), planCard(access), ...charts(d), ...lists(d), performance(d));
     drawCharts(d);
   } catch (e) {
     fill(root, h('div', { class: 'component-theme p-4' }, EmptyState.error(e.message, load)));

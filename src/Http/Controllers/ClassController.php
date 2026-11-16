@@ -121,7 +121,15 @@ final class ClassController
         if (!$ids) {
             throw HttpException::validation(['ids' => 'Choose at least one class.']);
         }
-        $n = (new ClassListRepository($this->app->db()))->setStatus($auth->tenantId(), $ids, filter_var($r->body['active'] ?? false, FILTER_VALIDATE_BOOL));
+        $active = filter_var($r->body['active'] ?? false, FILTER_VALIDATE_BOOL);
+        if ($active) { // switching classes on again counts against the plan's classes
+            $off = (int) $this->app->db()->value(
+                'SELECT COUNT(*) FROM classes WHERE tutor_id = :t AND status_status_id <> 1 AND class_id IN (' . implode(',', $ids) . ')',
+                ['t' => $auth->tenantId()],
+            );
+            $this->app->entitlements()->requireWithin($auth->tenantId(), 'classes', $off);
+        }
+        $n = (new ClassListRepository($this->app->db()))->setStatus($auth->tenantId(), $ids, $active);
         return JsonResponse::ok(['updated' => $n]);
     }
 
@@ -231,6 +239,7 @@ final class ClassController
         $auth = $r->auth();
         $this->app->permissions()->require($auth, 'classes.manage');
         $this->app->entitlements()->require($auth->tenantId(), 'classes.setup');
+        $this->app->entitlements()->requireWithin($auth->tenantId(), 'classes'); // FREE: 3 active classes
         $data = $r->body['data'] ?? null;
         $in = is_string($data) ? json_decode($data, true) : $r->body;
         if (!is_array($in)) {

@@ -7,7 +7,7 @@ import { Tabs } from '../components/Tabs.js';
 import { QuickGuide } from '../components/QuickGuide.js';
 import {
   api, h, fill, icon, lkr, plural, cell, person, panel, simpleTable, BsModal, Toast, EmptyState, previewNote,
-  METHODS, statusChip, stateChip, scanCard, beep, ampm, longDay, dm, today,
+  METHODS, statusChip, stateChip, scanCard, beep, ampm, longDay, dm, today, has,
 } from './attendance-common.js';
 
 QuickGuide.attachAll();
@@ -224,7 +224,13 @@ async function session() {
   const card = h('div', { class: 'component-theme p-4 h-100', id: 'mark-tabs' });
   const on = Object.keys(METHODS).filter((k) => S.settings.methods[k]);
   const order = [S.settings.default_method, ...on.filter((k) => k !== S.settings.default_method)].filter((k) => on.includes(k));
-  const render = { qr: qrTab, barcode: barcodeTab, manual: manualTab };
+  // QR and barcode scanning are STARTER and up (attendance.qr): on FREE the tab shows what it does and how to unlock it
+  const scan = (fn) => (has('attendance.qr') ? fn : (p) => p.append(h('div', { class: 'text-center py-5 px-3' },
+    h('div', { class: 'ex-lock-orb mx-auto mb-3' }, icon('lock', { size: 22 })),
+    h('div', { class: 'text-18 main-text fw-semibold mb-1' }, 'Scan student cards in seconds'),
+    h('p', { class: 'text-14 sub-text mx-auto', style: { maxWidth: '420px' } }, 'Each student shows their QR or barcode at the door and is marked present or late by itself. QR attendance comes with STARTER; on FREE you mark attendance by hand in the Manual tab.'),
+    h('a', { class: 'custom-btn px-4 text-decoration-none d-inline-flex align-items-center gap-2', href: 'upgrade?feature=attendance.qr' }, icon('crown', { size: 18 }), 'See STARTER'))));
+  const render = { qr: scan(qrTab), barcode: scan(barcodeTab), manual: manualTab };
   if (S.state !== 'live' && on.includes('manual') && !params.get('tab')) params.set('tab', 'manual'), history.replaceState(null, '', `?${params}`);
   tabsObj = new Tabs({ tabs: order.map((k) => ({ id: k, label: METHODS[k].label, render: render[k] })) });
   tabsObj.mount(card);
