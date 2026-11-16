@@ -55,6 +55,24 @@ final class App
         return $this->once('gemini', fn () => new GeminiImageClient(new CurlHttpClient(90), (string) ($c['gemini_api_key'] ?? ''), (string) ($c['gemini_image_model'] ?? 'gemini-2.5-flash-image')));
     }
 
+    /** Message Center: e-mail and WhatsApp to students and parents (src/Messaging). */
+    public function messages(): \Enlixo\Messaging\MessageService
+    {
+        return $this->once('messages', function () {
+            $m = $this->config['messaging'] ?? [];
+            $root = dirname(__DIR__);
+            $log = $root . '/storage/messages.log';
+            return new \Enlixo\Messaging\MessageService(
+                $this->db(),
+                $this->entitlements(),
+                new \Enlixo\Messaging\Mailer($m['mail'] ?? [], (string) ($m['mail_driver'] ?? 'smtp'), $log),
+                new \Enlixo\Messaging\WhatsAppCloud((string) ($m['whatsapp_driver'] ?? 'cloud'), $log, (string) ($m['whatsapp']['graph_version'] ?? 'v22.0')),
+                new \Enlixo\Messaging\SecretBox((string) ($this->config['app']['key'] ?? ''), $root . '/secure/messaging.key'),
+                $m,
+            );
+        });
+    }
+
     public function entitlements(): EntitlementService
     {
         return $this->once('ent', fn () => new EntitlementService(new PdoEntitlementRepository($this->db())));

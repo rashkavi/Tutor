@@ -64,6 +64,7 @@ class load_side_menu
                 ['Attendance', null, 'attendance-settings', '', ['Attendance Settings']],
                 ['Recording Types', null, 'recording-types', '', ['Recording Types']],
                 ['Plans & Billing', null, 'subscription?tab=plans', '', ['Pricing']],
+                ['WhatsApp', null, 'whatsapp-settings', '', ['WhatsApp', 'WhatsApp Settings']],
                 ['Integrations', null, 'intergrations', 'intergrations', ['Intergrations']],
             ]],
         ];

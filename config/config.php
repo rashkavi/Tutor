@@ -29,6 +29,30 @@ $config = [
         'webhook_secret' => getenv('ZOOM_WEBHOOK_SECRET') ?: '',
         'schedule_weeks_ahead' => 2,
     ],
+    // Message Center (src/Messaging). Secrets come from the environment (or config.local.php), never from the code.
+    'messaging' => [
+        // 'smtp' sends for real; 'log' writes every e-mail / WhatsApp to storage/messages.log (tests, local copies)
+        'mail_driver' => getenv('MAIL_DRIVER') ?: 'smtp',
+        'whatsapp_driver' => getenv('WHATSAPP_DRIVER') ?: 'cloud',
+        'mail' => [
+            'host' => getenv('MAIL_HOST') ?: '', 'port' => (int) (getenv('MAIL_PORT') ?: 465),
+            'username' => getenv('MAIL_USERNAME') ?: '', 'password' => getenv('MAIL_PASSWORD') ?: '',
+            'from' => getenv('MAIL_FROM_ADDRESS') ?: '', 'from_name' => getenv('MAIL_FROM_NAME') ?: 'ENLIXO Tutor',
+        ],
+        'whatsapp' => [
+            // ENLIXO's own WhatsApp Cloud API number (the "ENLIXO number" way of sending)
+            'token' => getenv('WHATSAPP_TOKEN') ?: '',
+            'phone_number_id' => getenv('WHATSAPP_PHONE_ID') ?: '470586202805184',
+            'notice_template' => getenv('WHATSAPP_NOTICE_TEMPLATE') ?: 'enlixo_class_notice',
+            'notice_lang' => getenv('WHATSAPP_NOTICE_LANG') ?: 'en',
+            'graph_version' => 'v22.0',
+            // Meta Embedded Signup ("Connect with Facebook" for a tutor's own number). Empty = only the manual form.
+            'meta_app_id' => getenv('META_APP_ID') ?: '',
+            'meta_app_secret' => getenv('META_APP_SECRET') ?: '',
+            'embedded_config_id' => getenv('META_ES_CONFIG_ID') ?: '',
+        ],
+        'batch' => 25, // recipients sent per request
+    ],
     'ai' => [
         // Google AI Studio key for "Generate thumbnail" on the class form. Empty = the button makes a simple cover in the browser instead.
         'gemini_api_key' => getenv('GEMINI_API_KEY') ?: '',

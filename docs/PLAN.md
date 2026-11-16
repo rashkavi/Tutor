@@ -284,3 +284,15 @@ opened the pop-up opens the page.
 - Parent Time Table / Class Time Table use the student component (`portal/includes/time-table-page.php` with `$ttFrame`, `$ttDetails`, `$ttIntro`), data from `parent/api/getTimeTableData` (own children only).
 - Fees sample data (`FeesMock`) keeps its changes for the browser tab (sessionStorage), so a payment saved on one page is there on the next.
 - Tests: tutor 56, student 62, parent 69 cases (`TC-60`..`TC-65`, `ST-32`, `PA-34`..`PA-36` check that pages open, not pop-ups).
+
+## Message Center: e-mail and WhatsApp (2026-11-16)
+
+Run `database/migrations/016_messaging.sql` (additive: `tutor_messages`, `tutor_message_recipients`, `tutor_whatsapp`).
+
+- **One class:** `src/Messaging/MessageService.php` (API `/api/v1/tutor/messages*`, `/api/v1/tutor/whatsapp/*`, permission `messages.send`). Pages: `tutor/message-center.php` (write + Sent Messages), `tutor/message.php?id=` (sends batch by batch with a progress bar, or one "Open WhatsApp" button per person), `tutor/whatsapp-settings.php` (Settings › WhatsApp). The old `tutor/api/sendMessages.php` only saved a row and is retired (410).
+- **E-mail** (plan feature `comms.email`, every plan): PHPMailer with `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`; without them the mailbox of `includes/phpmailer/mail-process.php` is used. Reply-To = the tutor's e-mail, From name = "<institute> via ENLIXO".
+- **WhatsApp, three ways** (research: Meta Cloud API, Embedded Signup, WhatsApp Business app coexistence; unofficial WhatsApp Web bots are against WhatsApp's terms and get numbers banned):
+  1. *From my phone* (every plan, free): `https://wa.me/<number>?text=` per person; opening it marks the person sent.
+  2. *My WhatsApp Business number* (`comms.whatsapp`, GROW): Cloud API from the tutor's own number with an approved template that has one variable (`MessageService::OWN_TEMPLATE_TEXT`). Connected with Facebook (Embedded Signup v3/v4 with `featureType: whatsapp_business_app_onboarding`, so the WhatsApp Business app keeps working) when `META_APP_ID`, `META_APP_SECRET` and `META_ES_CONFIG_ID` are set (ENLIXO must be a Meta Tech Provider), otherwise with Phone number ID + System User token + template name. The token is encrypted (`SecretBox`, `APP_KEY` or `secure/messaging.key`; back the key up with the database) and never sent to a browser.
+  3. *ENLIXO WhatsApp number* (`comms.enviiz_whatsapp` add-on): ENLIXO's Cloud API number (`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`) with the approved template `WHATSAPP_NOTICE_TEMPLATE` (default `enlixo_class_notice`; body with {{1}} = tutor / institute, {{2}} = the message).
+- **Testing / local copies:** `MAIL_DRIVER=log` and `WHATSAPP_DRIVER=log` write every message to `storage/messages.log` instead of sending (the e2e tests need the dev server started with both). Tutor e2e: `TC-70`..`TC-74`; unit tests: `tests/MessagingTest.php`.
