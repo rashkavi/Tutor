@@ -6,7 +6,6 @@ import { h, fill, toCsv, download } from '../core/dom.js';
 import { ApiClient } from '../core/ApiClient.js';
 import { QuickGuide } from '../components/QuickGuide.js';
 import { StatCard } from '../components/StatCard.js';
-import { BsModal } from '../components/BsModal.js';
 import { Toast } from '../components/Toast.js';
 import { icon } from '../core/icons.js';
 
@@ -225,54 +224,9 @@ function refreshPicker() {
   }
 }
 
-/** One parcel: address, step, courier, tracking. Opened from Edit, from "No address", and from Send (step preset). */
+/** One parcel: its own page (tutor/tute-parcel.php), opened from Edit, from "No address", and from Send (step preset). */
 function edit(d, presetStep = null) {
-  const f = (key, labelText, value, attrs = {}) => {
-    const input = h('input', { class: 'form-control custom-input', value: value ?? '', ...attrs });
-    return { key, input, el: h('div', { class: attrs.col ?? 'col-12 col-md-6' }, h('label', { class: 'text-14 main-text mb-2' }, labelText), input, h('div', { class: 'text-12 text-dark-red mt-1', 'data-err': key })) };
-  };
-  const step = h('select', { class: 'form-select custom-select' }, Object.entries(state.data.steps).map(([k, v]) => h('option', { value: k, selected: (presetStep ?? d.status) === k ? true : null }, v)));
-  const courier = h('select', { class: 'form-select custom-select' }, h('option', { value: '' }, '- None -'),
-    [...new Set([...state.data.couriers, d.courier_name].filter(Boolean))].map((c) => h('option', { value: c, selected: (d.courier_name || state.data.tute.courier_name) === c ? true : null }, c)));
-  const fields = [
-    f('recipient_name', 'Name on the parcel', d.name, { maxlength: '150' }),
-    f('phone', 'Phone', d.phone, { maxlength: '20' }),
-    f('address_line_1', 'Address line 1', d.address_line_1, { maxlength: '100', col: 'col-12' }),
-    f('address_line_2', 'Address line 2', d.address_line_2, { maxlength: '100', col: 'col-12' }),
-    f('city', 'Town', d.city, { maxlength: '45' }),
-    f('postal_code', 'Postal code', d.postal_code, { maxlength: '10' }),
-    f('tracking_no', 'Tracking number', d.tracking_no, { maxlength: '40', placeholder: 'e.g. BA123456789LK' }),
-    f('note', 'Note (only you see it)', d.note, { maxlength: '255' }),
-  ];
-  const byKey = Object.fromEntries(fields.map((x) => [x.key, x]));
-  const body = h('div', {},
-    h('div', { class: 'row gx-3 gy-3' },
-      h('div', { class: 'col-12 col-md-6' }, h('label', { class: 'text-14 main-text mb-2' }, 'Step'), step),
-      h('div', { class: 'col-12 col-md-6' }, h('label', { class: 'text-14 main-text mb-2' }, 'Courier'), courier),
-      byKey.tracking_no.el, byKey.note.el),
-    h('div', { class: 'sub-topic mt-4 mb-3' }, 'Address'),
-    h('div', { class: 'row gx-3 gy-3' }, ['recipient_name', 'phone', 'address_line_1', 'address_line_2', 'city', 'postal_code'].map((k) => byKey[k].el)),
-    h('div', { class: 'text-12 sub-text mt-3' }, 'This changes the address on this parcel only. The student can update their own address in My Profile.'));
-  const save = BsModal.button('Save', { primary: true, onclick: async () => {
-    body.querySelectorAll('[data-err]').forEach((el) => { el.textContent = ''; });
-    const payload = { status: step.value, courier_name: courier.value };
-    fields.forEach((x) => { payload[x.key] = x.input.value; });
-    save.disabled = true;
-    try {
-      state.data = (await api.post(`/tutor/tutes/${state.tuteId}/deliveries`, { ids: [d.id], ...payload })).data;
-      m.close();
-      Toast.success('Parcel saved.');
-      refreshPicker();
-      draw();
-    } catch (e) {
-      Object.entries(e.details ?? {}).forEach(([k, msg]) => { const el = body.querySelector(`[data-err="${k}"]`); if (el) el.textContent = msg; });
-      Toast.error(e.message);
-      save.disabled = false;
-    }
-  } });
-  const m = BsModal.open({ title: d.name, subtitle: presetStep === 'dispatched' ? 'Add the courier and tracking number, then save' : 'Parcel details', icon: 'location', size: 'lg', body,
-    footerEnd: [BsModal.button('Cancel', { onclick: () => m.close() }), save] });
-  if (presetStep === 'dispatched') setTimeout(() => byKey.tracking_no.input.focus(), 300);
+  location.href = `tute-parcel?class-id=${classId}&tute-id=${state.tuteId}&delivery-id=${d.id}${presetStep ? `&step=${presetStep}` : ''}`;
 }
 
 function exportCsv() {

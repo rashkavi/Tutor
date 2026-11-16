@@ -1,8 +1,9 @@
 <?php
 /**
  * Page frame of the student Time Table and Recordings pages (head, side menu, header, skeleton, .ac-page start).
+ * The parent portal uses the same frame with its own menu and header ('side', 'header' = file paths).
  * Set $lf before including it at the top level of the page (the header reads $sessionUserObject):
- *   $lf = ['title' => 'Class Recordings', 'menu' => 'Class Recordings', 'js' => ['js/recordings.js'], 'icons' => ['play']];
+ *   $lf = ['title' => 'Class Recordings', 'menu' => 'Class Recordings', 'js' => ['js/recordings.js'], 'css' => [...], 'icons' => ['play']];
  *   include __DIR__ . '/includes/learning-frame-top.php';   ...page body...   include __DIR__ . '/includes/learning-frame-bottom.php';
  */
 require_once __DIR__ . '/../../includes/enlixo/student-learning.php';
@@ -21,6 +22,9 @@ $lf += ['title' => '', 'menu' => '', 'js' => [], 'icons' => []];
     <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
     <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
     <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/portal-learning.css?v=<?= Project::getVersion() ?>">
+    <?php foreach ($lf['css'] ?? [] as $href) { ?>
+        <link rel="stylesheet" href="<?= sl_e($href) ?>?v=<?= Project::getVersion() ?>">
+    <?php } ?>
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <script src="<?= Project::getAssetsPath() ?>/js/init.js?v=<?= Project::getVersion() ?>"></script>
 </head>
@@ -31,7 +35,7 @@ $lf += ['title' => '', 'menu' => '', 'js' => [], 'icons' => []];
         <div id="appContainer" class="row p-0">
             <div id="sideMenu" class="d-none d-xl-block d-flex flex-column sideMenuArea p-0 vh-100">
                 <?php
-                include __DIR__ . "/side-menu.php";
+                include $lf['side'] ?? __DIR__ . "/side-menu.php";
                 load_side_menu::load($lf['menu']);
                 ?>
             </div>
@@ -39,7 +43,7 @@ $lf += ['title' => '', 'menu' => '', 'js' => [], 'icons' => []];
                 <div class="row p-0 m-0 g-0">
                     <div class="col-12 p-0 m-0 g-0">
                         <?php
-                        include __DIR__ . "/header.php";
+                        include $lf['header'] ?? __DIR__ . "/header.php";
                         selectItem::setSelected($lf['menu']);
                         ?>
                     </div>

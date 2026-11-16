@@ -8,8 +8,8 @@ if (SessionUser::ifUserIsStudent()) {
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-        $payment_id = isset($_POST['payment_id']) ? $_POST['payment_id'] : 0;
-        $method = isset($_POST['method']) ? $_POST['method'] : 0;
+        $payment_id = (int) ($_POST['payment_id'] ?? 0);
+        $method = (int) ($_POST['method'] ?? 0);
         $payment_slip;
 
         if (empty($payment_id) || $payment_id == 0) {
@@ -27,6 +27,7 @@ if (SessionUser::ifUserIsStudent()) {
                                                                                                       
             WHERE `shi`.`students_student_id`='" . $sessionUserObject['student_id'] . "'
             AND `cpp`.`student_has_payment_id`='" . $payment_id . "'
+            AND `cpp`.`payment_status_payment_status_id` IN (1, 4)
             ";
 
             $isValidPaymentId = Database::search($query);

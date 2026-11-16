@@ -251,7 +251,7 @@ const signIn = (btn, mobile) => {
             } else if (response.error) {
                 showToast("error", response.error);
             } else {
-                showToast("error", response.mobile);
+                showToast("error", response.mobile || response.otp || response.password || "Please check the code and try again.");
                 if (response.hasOwnProperty('otp')) {
                     $("#otp-feedback").html(response.otp);
                 } else {

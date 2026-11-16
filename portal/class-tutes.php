@@ -10,7 +10,7 @@ if (!SessionUser::ifUserIsStudent()) {
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['class-id']) && !empty($_GET['class-id']))) {
         header("Location: ./classes");
     } else {
-        $class_id = $_GET['class-id'];
+        $class_id = (int) $_GET['class-id'];
         $isClassValid = Database::search("SELECT * FROM `students_has_classes`
         INNER JOIN `classes` ON `classes_class_id`=`class_id`
         WHERE `students_student_id`='" . $sessionUserObject['student_id'] . "' AND `classes_class_id`='" . $class_id . "'");

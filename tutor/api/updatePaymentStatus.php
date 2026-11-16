@@ -12,8 +12,8 @@ if (SessionUser::hasValidSession()) {
             $decoded = json_decode($content, true);
             if (json_last_error() == JSON_ERROR_NONE) {
 
-                $paymentId = isset($decoded['paymentId']) ? $decoded['paymentId'] : 0;
-                $paymentStatus = isset($decoded['paymentStatus']) ? $decoded['paymentStatus'] : 0;
+                $paymentId = (int) ($decoded['paymentId'] ?? 0);
+                $paymentStatus = in_array((int) ($decoded['paymentStatus'] ?? 0), [3, 4], true) ? (int) $decoded['paymentStatus'] : 0; // approve (3) or reject (4) only
                 $note = isset($decoded['note']) ? $decoded['note'] : '';
 
                 if ($paymentId == 0) {

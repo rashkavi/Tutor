@@ -2499,3 +2499,7 @@ a.ex-hd-stat:hover .ex-hd-go { opacity: 1; }
 .ex-lines { width: 100%; }
 .ex-lines .ex-line { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; font-size: 14px; box-shadow: inset 0 -1px 0 var(--line-color, #E9EAF0); }
 .ex-lines .ex-line-total { font-weight: 700; box-shadow: none; color: var(--dark-color, #1D2026); }
+
+/* Calendar: the classes of a day in a panel under the calendar (no pop-up) */
+.ex-day-panel { border-top: 3px solid var(--dark-theme); animation: ex-day-in .2s ease; }
+@keyframes ex-day-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }

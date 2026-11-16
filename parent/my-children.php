@@ -205,7 +205,7 @@ if (!SessionUser::ifUserIsParent()) {
 
                                                         <div class="card-footer-premium">
                                                             <button class="btn-watch-premium bg-dark-theme"
-                                                                onclick="window.location = 'student-details?student-id=<?= $data['student_id']; ?>'">
+                                                                onclick="window.location = 'child-progress?child-id=<?= (int) $data['student_id']; ?>'">
                                                                 <iconify-icon icon="solar:eye-broken" width="18"></iconify-icon>
                                                                 <span>View</span>
                                                             </button>

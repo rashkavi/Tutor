@@ -10,9 +10,9 @@ if (!SessionUser::ifUserIsParent()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Parent');
 
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['class-id']) && !empty($_GET['class-id']))) {
-        header("Location: ./class");
+        header("Location: ./classes");
     } else {
-        $class_id = $_GET["class-id"];
+        $class_id = (int) $_GET["class-id"]; require_once __DIR__ . '/../includes/enlixo/parent-scope.php'; if (!(ps_class_children((int) (SessionUser::getCurrentUserObject('Parent')['user_id'] ?? 0), $class_id))) { header('Location: ./classes'); exit; } // only the parent's own children
 
         $query = " SELECT 
                                                     classes.*,
@@ -152,7 +152,6 @@ if (!SessionUser::ifUserIsParent()) {
                 <script src="<?= Project::getAssetsPath() ?>/plugins/bootstrap/js/bootstrap.bundle.min.js?v=<?= Project::getVersion() ?>"></script>
                 <script src="<?= Project::getAssetsPath() ?>/plugins/jquery/jquery-3.7.1.min.js"></script>
                 <script src="<?= Project::getAssetsPath() ?>/js/script.js?v=<?= Project::getVersion() ?>"></script>
-                <script src="js/script.js?v=<?= Project::getVersion() ?>"></script>
                 <script src="js/functions.js?v=<?= Project::getVersion() ?>"></script>
 
             </body>

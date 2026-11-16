@@ -10,7 +10,7 @@ if (!SessionUser::ifUserIsStudent()) {
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['payment-id']) && !empty($_GET['payment-id']))) {
         header("Location: ./payments");
     } else {
-        $payment_id = $_GET["payment-id"];
+        $payment_id = (int) $_GET["payment-id"];
 
         $query = "
         SELECT 
@@ -64,7 +64,8 @@ if (!SessionUser::ifUserIsStudent()) {
             ON penalty.student_has_payments_student_has_payment_id = cpp.student_has_payment_id
        WHERE `shi`.`students_student_id`='" . $sessionUserObject['student_id'] . "'
         AND `cpp`.`student_has_payment_id`='" . $payment_id . "'
-        AND `cpp`.`payment_status_payment_status_id` = 1
+        AND `cpp`.`payment_status_payment_status_id` IN (1, 4)
+                GROUP BY `cpp`.`student_has_payment_id`
         ";
 
         $payment = Database::search($query);

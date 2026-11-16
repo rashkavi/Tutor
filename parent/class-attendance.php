@@ -8,15 +8,15 @@ if (!SessionUser::ifUserIsParent()) {
 } else {
     $sessionUserObject = SessionUser::getCurrentUserObject('Parent');
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['class-id']) && !empty($_GET['class-id']))) {
-        header("Location: ./level-details");
+        header("Location: ./classes");
     } else {
-        $class_id = $_GET['class-id'];
+        $class_id = (int) $_GET['class-id']; require_once __DIR__ . '/../includes/enlixo/parent-scope.php'; if (!(ps_class_children((int) (SessionUser::getCurrentUserObject('Parent')['user_id'] ?? 0), $class_id))) { header('Location: ./classes'); exit; } // only the parent's own children
         $isClassValid = Database::search("SELECT * FROM `parents_has_students`
         INNER JOIN `students_has_classes` ON `parents_has_students`.`students_student_id`=`students_has_classes`.`students_student_id`
         INNER JOIN `classes` ON `classes_class_id`=`class_id`
         WHERE `classes_class_id`='" . $class_id . "'");
         if (!($isClassValid->num_rows > 0)) {
-            header("Location: ./course-overview");
+            header("Location: ./classes");
         } else {
             $class = $isClassValid->fetch_assoc();
 

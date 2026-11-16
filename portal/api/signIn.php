@@ -2,6 +2,7 @@
 $status = new stdClass();
 require_once('../../includes/UserClass.php');
 require_once('../../includes/connection.php');
+require_once('../../includes/WhatsAppOtp.php');
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($_SERVER['CONTENT_TYPE'] == 'application/json') {
         $content = trim(file_get_contents('php://input'));
@@ -24,12 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (!property_exists($status, 'mobile') && !property_exists($status, 'otp')) {
                 $user = Database::search("SELECT * FROM `students` 
                 INNER JOIN `login_details` ON `login_details`.`login_details_id` = `students`.`login_details_login_details_id` 
-                WHERE (`whatsapp`='" . $normalizedWhatsapp . "' OR `whatsapp`='" . $mobile . "')");
+                WHERE (`whatsapp`='" . Database::escape((string) $normalizedWhatsapp) . "' OR `whatsapp`='" . Database::escape((string) $mobile) . "')");
                 if ($user->num_rows > 0) {
                     $data = $user->fetch_assoc();
-                    if ($data["reset_time"] > strtotime("-5 minutes")) {
+                    if (otp_still_valid($data["reset_time"]) && (string) $data["verification"] !== "") {
                         if ($data["status_status_id"] == 1) {
-                            if ($otp == $data["verification"]) {
+                            if (hash_equals((string) $data["verification"], (string) $otp)) {
                                 $dateTime = new DateTime("now", new DateTimeZone("Asia/Colombo"));
 
                                 $course = Database::search("SELECT * FROM `students_has_classes` WHERE `students_student_id`='" . $data["student_id"] . "' 

@@ -12,9 +12,16 @@ class Harness {
     this.host = new URL(this.base).host;
   }
 
-  async start() {
+  async start(viewport = { width: 1440, height: 900 }) {
     this.browser = await chromium.launch();
-    this.ctx = await this.browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-US' });
+    await this.useViewport(viewport);
+  }
+
+  /** a fresh browser context (no cookies) at this screen size, e.g. a phone { width: 390, height: 844 } */
+  async useViewport(viewport) {
+    if (this.ctx) await this.ctx.close();
+    this.viewport = viewport;
+    this.ctx = await this.browser.newContext({ viewport, locale: 'en-US', ...(viewport.width < 600 ? { isMobile: true, hasTouch: true } : {}) });
     this.page = await this.ctx.newPage();
     this.reset();
     this.page.on('pageerror', (e) => this.jsErrors.push(e.message));

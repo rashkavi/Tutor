@@ -8,9 +8,9 @@ if (!SessionUser::ifUserIsParent()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Parent');
 
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['payment-id']) && !empty($_GET['payment-id']))) {
-        header("Location: ./faculties");
+        header("Location: ./payments");
     } else {
-        $id = $_GET['payment-id'];
+        $id = (int) $_GET['payment-id']; require_once __DIR__ . '/../includes/enlixo/parent-scope.php'; if (!(ps_fee_child((int) (SessionUser::getCurrentUserObject('Parent')['user_id'] ?? 0), $id))) { header('Location: ./payments'); exit; } // only the parent's own children
 
         $query = "
         SELECT 
@@ -67,7 +67,7 @@ if (!SessionUser::ifUserIsParent()) {
         $payment = Database::search($query);
 
         if ($payment->num_rows == 0) {
-            header("Location: ./students");
+            header("Location: ./payments");
         } else {
             $payment = $payment->fetch_assoc();
 

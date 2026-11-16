@@ -1402,8 +1402,8 @@ const updatePaymentStatus = (btn, paymentId) => {
             toggleLoader(false);
             const response = JSON.parse(data);
             if (response.hasOwnProperty('done')) {
-                $("#updatePaymentStatus").modal("hide");
-                setTimeout(() => { showToast("success", response.done); }, 1000);
+                // the status is chosen on the page itself (no pop-up any more)
+                setTimeout(() => { showToast("success", response.done); }, 300);
                 setTimeout(() => { window.location.reload(); }, 4000);
             } else if (response.hasOwnProperty('error')) {
                 setTimeout(() => { showToast("error", response.error); }, 1000);

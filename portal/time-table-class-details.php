@@ -8,9 +8,9 @@ if (!SessionUser::ifUserIsStudent()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Student');
 
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['time-table-id']) && !empty($_GET['time-table-id']))) {
-        header("Location: ./news");
+        header("Location: ./time-table");
     } else {
-        $id = $_GET["time-table-id"];
+        $id = (int) $_GET["time-table-id"];
         $dateTime = new DateTime('now', new DateTimeZone('Asia/Colombo'));
         $lecture = Database::search("
                                                         SELECT 
@@ -43,11 +43,13 @@ if (!SessionUser::ifUserIsStudent()) {
                                                             ON `class`.`subjects_subject_id` = `s`.`subject_id`
                                                         INNER JOIN `time_table_status` AS `tts` 
                                                             ON `tt`.`time_table_status_time_table_status_id` = `tts`.`time_table_status_id`
-                                                        AND `tt`.`time_table_id` = '" . $id . "' 
+                                                        AND `tt`.`time_table_id` = '" . $id . "'
+                                                        AND `shc`.`students_student_id` = '" . (int) $sessionUserObject['student_id'] . "'
+                                                        AND `shc`.`status_status_id` = 1 
                                                         
                                                     ");
         if ($lecture->num_rows == 0) {
-            header("Location: ./class-schedule");
+            header("Location: ./time-table");
         } else {
             $lectureData = $lecture->fetch_assoc();
 

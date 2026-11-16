@@ -8,7 +8,7 @@ require_once('../../includes/Project.php');
 if (SessionUser::ifUserIsParent()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Parent');
     if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['classId'])) {
-        $classId = $_GET["classId"];
+        $classId = (int) $_GET["classId"];
 
         $date = new DateTime("now", new DateTimeZone("Asia/Colombo"));
 

@@ -43,7 +43,32 @@ const err = (message, details = {}, status = 400) => Object.assign(new Error(mes
 
 export class FeesMock {
   /** One sample world per page, so Attendance (AttendanceMock) and the fee dialogs see the same students and fees. */
-  static shared() { return (FeesMock.instance ??= new FeesMock()); }
+  static shared() {
+    if (!FeesMock.instance) {
+      FeesMock.instance = new FeesMock();
+      FeesMock.instance.#replay();
+    }
+    return FeesMock.instance;
+  }
+
+  // Changes (approve, reject, record payment ...) are kept for this browser tab and replayed on the next page, so a
+  // payment saved on Record Payment is there on the Receipt page. Sample data only; nothing reaches the server.
+  static KEY = 'enlixo-fees-mock-ops';
+  #replay() {
+    let ops = [];
+    try { ops = JSON.parse(sessionStorage.getItem(FeesMock.KEY) || '[]'); } catch { ops = []; }
+    for (const o of ops) {
+      try { this.#route(o.method, o.route, o.q ?? {}, o.body ?? {}); } catch { /* a step that no longer applies */ }
+    }
+  }
+  #remember(method, route, q, body) {
+    if (method === 'GET') return;
+    try {
+      const ops = JSON.parse(sessionStorage.getItem(FeesMock.KEY) || '[]');
+      ops.push({ method, route, q, body });
+      sessionStorage.setItem(FeesMock.KEY, JSON.stringify(ops.slice(-200)));
+    } catch { /* storage blocked: the change lives on this page only */ }
+  }
 
   constructor() {
     const r = rng(19);
@@ -139,7 +164,9 @@ export class FeesMock {
     const [route, query] = path.split('?');
     const q = Object.fromEntries(new URLSearchParams(query ?? ''));
     try {
-      return { status: 200, payload: { ok: true, ...this.#route(method, route, q, body ?? {}) } };
+      const out = this.#route(method, route, q, body ?? {});
+      this.#remember(method, route, q, body ?? {});
+      return { status: 200, payload: { ok: true, ...out } };
     } catch (e) {
       return { status: e.status ?? 400, payload: { ok: false, error: { code: e.code ?? 'validation', message: e.message, details: e.details ?? {} } } };
     }

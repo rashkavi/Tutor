@@ -190,7 +190,6 @@ if (!SessionUser::ifUserIsParent()) {
         <script src="<?= Project::getAssetsPath() ?>/plugins/jquery/jquery-3.7.1.min.js"></script>
         <script src="<?= Project::getAssetsPath() ?>/js/script.js?v=<?= Project::getVersion() ?>"></script>
         <script src="<?= Project::getAssetsPath() ?>/js/functions.js?v=<?= Project::getVersion() ?>"></script>
-        <script src="js/script.js?v=<?= Project::getVersion() ?>"></script>
     </body>
 
     </html>

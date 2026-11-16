@@ -328,176 +328,33 @@ function showLectureModal(date, dayLectures) {
         </div>`;
     }
 
-    // Show the modal
-    const modal = new bootstrap.Modal(document.getElementById('eventModal'));
-    modal.show();
+    showDayInline();
+}
+// The classes of a day are shown in a panel under the calendar (not a pop-up), using the same title and list.
+function showDayInline() {
+    const modal = document.getElementById('eventModal');
+    const title = document.getElementById('eventModalLabel');
+    const list = document.getElementById('eventDetails');
+    if (!modal || !list) return;
+    let panel = document.getElementById('eventDayPanel');
+    if (!panel) {
+        panel = document.createElement('section');
+        panel.id = 'eventDayPanel';
+        panel.className = 'component-theme p-4 mt-4 ex-day-panel';
+        panel.setAttribute('aria-live', 'polite');
+        modal.parentNode.insertBefore(panel, modal);
+    }
+    panel.innerHTML = `<div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+        <h2 class="text-18 main-text fw-semibold m-0">${title ? title.textContent : 'Classes'}</h2>
+        <button type="button" class="custom-outline-btn px-3" onclick="document.getElementById('eventDayPanel').remove()">Close</button>
+    </div>` + list.innerHTML;
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+
+/** A lecture opens its own page (no pop-up). */
 function showLectureDetails(lectureId) {
-    const allLecturesArray = Object.values(lectures).flat();
-    const lecture = allLecturesArray.find(l => l.lectureId == lectureId);
-
-    if (!lecture) {
-        return;
-    }
-
-    const modal = new bootstrap.Modal(document.getElementById('lectureDetailsModal'));
-    const modalTitle = document.getElementById('lectureDetailsTitle');
-    const modalBody = document.getElementById('lectureDetailsBody');
-    const modalFooter = document.getElementById('lectureDetailsFooter');
-
-    modalTitle.textContent = `${lecture.subject} - ${lecture.title}`;
-
-    modalBody.innerHTML = `
-    <div class="col-lg-12">
-        <div class="lecture-card border-0 shadow-none">
-            <div class="lecture-body px-4">
-                <div class="info-row justify-content-center">
-                  
-                    <img src="${lecture.subjectImage}" alt="${lecture.subject}" class="w-50 h-auto"
-                         onerror="this.src='../assets/imgs/common/empty-thumbnail.webp'">
-                  
-                    
-                </div>
-
-                <div class="info-row">
-                    <div class="info-label">Subject:</div>
-                    <div class="info-value">${lecture.subject || 'N/A'}</div>
-                </div>
-
-                <div class="info-row">
-                    <div class="info-label">Exam Type:</div>
-                    <div class="info-value">${lecture.exam_type || 'N/A'}</div>
-                </div>
-
-                <div class="info-row">
-                    <div class="info-label">Year:</div>
-                    <div class="info-value">${lecture.year || 'N/A'}</div>
-                </div>
-              
-
-                <div class="info-row">
-                    <div class="info-label">Lecturer:</div>
-                    <div class="info-value">${lecture.lecturerName || 'N/A'}</div>
-                </div>
-
-                <div class="info-row">
-                    <div class="info-label">Date & Time:</div>
-                    <div class="info-value">
-                        ${lecture.date || 'N/A'}, ${lecture.startTime || 'N/A'} - ${lecture.endTime || 'N/A'}
-                    </div>
-                </div>
-
-                <div class="info-row">
-                    <div class="info-label">Conduct Status:</div>
-                    <div class="info-value">
-                        <span class="status-badge status-${(lecture.status || '').toLowerCase()}">
-                            ${lecture.status || 'N/A'}
-                        </span>
-                    </div>
-                </div>
-                 <div class="info-row">
-                    <div class="info-label">Class Type:</div>
-                    <div class="info-value">
-                        <span class="status-badge status-${(lecture.lectureType || '').toLowerCase()}">
-                            ${lecture.lectureType || 'N/A'}
-                        </span>
-                    </div>
-                </div>
-              
-            </div>
-        </div>
-    </div>
-`;
-
-    modalFooter.innerHTML = `
-                <div class="action-buttons justify-content-end">
-                        ${lecture.status === 'Ongoing' && lecture.lectureType === 'Online' ? `
-                            <button class="custom-success-btn px-5"
-                                    onclick="window.open('${lecture.joinLink}', '_blank')">
-                                Join Now
-                            </button>
-                        ` : ''}
-
-                         ${lecture.hasPermissionEditPermission || lecture.hasPermissionConfirmLecturerPayment || lecture.hasPermissionUploadRecording || lecture.hasPermissionMarkAttendance
-            ? `
-           
-                            <div class="btn-group">
-                            <button type="button" class="custom-btn btn-action px-5 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                Actions
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                ${lecture.status === 'Ongoing' && (lecture.hasPermissionEditPermission || lecture.hasPermissionMarkAttendance) ? `
-                                    ${lecture.hasPermissionEditPermission ? `
-                                        <li>
-                                            <a class="dropdown-item" 
-                                                href="edit-lecture?time-table-id=${lecture.lectureId}${isSubjectLectureSchedule ? '&class-id=' + subject : ''}">
-                                                <i class="fas fa-edit me-2 text-warning"></i>Edit
-                                            </a>
-                                        </li>
-                                    ` : ''}
-
-                                    ${lecture.hasPermissionMarkAttendance ? `
-                                        <li>
-                                            <a class="dropdown-item" 
-                                                href="time-table-attendance?time-table-id=${lecture.lectureId}${isSubjectLectureSchedule ? '&class-id=' + subject : ''}">
-                                                <i class="fas fa-user-check me-2 text-success"></i>Attendance
-                                            </a>
-                                        </li>
-                                    ` : ''}
-                                ` : ''}
-
-                              ${lecture.status === 'Completed' ? `
-
-                                ${lecture.hasPermissionEditPermission ? `
-                                    <li>
-                                        <a class="dropdown-item" 
-                                            href="edit-lecture?time-table-id=${lecture.lectureId}${isSubjectLectureSchedule ? '&class-id=' + subject : ''}">
-                                            <i class="fas fa-edit me-2 text-warning"></i>Edit
-                                        </a>
-                                    </li>
-                                ` : ''}
-
-                                ${lecture.hasPermissionMarkAttendance ? `
-                                    <li>
-                                        <a class="dropdown-item" 
-                                            href="time-table-attendance?time-table-id=${lecture.lectureId}${isSubjectLectureSchedule ? '&class-id=' + subject : ''}">
-                                            <i class="fas fa-user-check me-2 text-success"></i>Attendance
-                                        </a>
-                                    </li>
-                                ` : ''}
-                               
-                                ${lecture.hasPermissionUploadRecording ? `
-                                    <li>
-                                        <a class="dropdown-item" 
-                                            href="class-recordings?class-id=${lecture.classId}&time-table-id=${lecture.lectureId}${isSubjectLectureSchedule ? '&class-id=' + subject : ''}">
-                                            <i class="fas fa-video me-2 text-secondary"></i>Recording
-                                        </a>
-                                    </li>
-                                ` : ''}
-
-                            ` : ''}
-
-
-                                ${(lecture.status === 'Postponed' || lecture.status === 'Upcoming' || lecture.status === 'Cancelled' || lecture.status === 'Study Leave') ? `
-                                    ${lecture.hasPermissionEditPermission ? `
-                                    <li>
-                                        <a class="dropdown-item" 
-                                            href="edit-lecture?time-table-id=${lecture.lectureId}${isSubjectLectureSchedule ? '&class-id=' + subject : ''}">
-                                            <i class="fas fa-edit me-2 text-warning"></i>Edit
-                                        </a>
-                                    </li>
-                                    ` : ''}
-
-                                ` : ''}
-                            </ul>
-                        </div>
-                          
-            ` : ''}
-                    </div>
-`;
-
-    modal.show();
+    location.href = `time-table-attendance?time-table-id=${encodeURIComponent(lectureId)}`;
 }
 
 function initLecturePopovers() {

@@ -318,36 +318,7 @@ if (!SessionUser::ifUserIsTutor()) {
 
                                 </div>
 
-                                <!-- Update Status Modal (Optional) -->
-                                <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content border-0 rounded-4 shadow">
-                                            <div class="modal-header border-0 px-4 pt-4">
-                                                <h5 class="modal-title fw-bold">Update Delivery Status</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body px-4 pb-4">
-                                                <label class="form-label text-muted small">Status</label>
-                                                <select class="form-select rounded-3">
-                                                    <option>Pending Shipment</option>
-                                                    <option>Dispatched</option>
-                                                    <option>Arrived at Hub</option>
-                                                    <option>In Delivery</option>
-                                                    <option>Delivered</option>
-                                                    <option>Cancelled</option>
-                                                </select>
-
-                                                <label class="form-label text-muted small mt-3">Note (optional)</label>
-                                                <textarea class="form-control rounded-3" rows="3" placeholder="Add update note..."></textarea>
-
-                                                <div class="d-flex justify-content-end gap-2 mt-4">
-                                                    <button class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                                                    <button class="btn btn-primary rounded-pill px-4">Save Update</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <!-- (the unused Update Delivery Status pop-up was removed) -->
 
 
                             </div>

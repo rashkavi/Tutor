@@ -55,7 +55,33 @@
 .fe-receipt-brand { font-size: 18px; font-weight: 700; color: var(--dark-theme); }
 .fe-receipt-no { font-size: 20px; font-weight: 700; color: var(--dark-color); }
 @media print {
-  body.fe-printing > *:not(.modal) { display: none !important; }
-  body.fe-printing .modal { position: static; }
-  body.fe-printing .fin-dlg-head, body.fe-printing .fin-dlg-foot { display: none !important; }
+  /* only the receipt is printed (it is on its own page now, not in a pop-up) */
+  body.fe-printing * { visibility: hidden !important; }
+  body.fe-printing .fe-receipt, body.fe-printing .fe-receipt * { visibility: visible !important; }
+  body.fe-printing .fe-receipt { position: fixed; left: 0; top: 0; width: 100%; background: #fff !important; color: #000; }
 }
+
+/* ---------- Record Payment / Free Card pages, receipt page, inline Reject panel (pages instead of pop-ups) */
+.fe-page-form { max-width: 1180px; }
+.fe-form-ico, .fe-reject-ico { flex: none; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: var(--light-theme); color: var(--dark-theme); }
+.fe-reject-ico { width: 34px; height: 34px; background: var(--light-red); color: var(--dark-red); }
+.fe-reject { background: var(--custom-white); border: 1px solid var(--dark-red); border-left-width: 4px; padding: 20px; animation: fe-in .2s ease; }
+.fe-reject-btn { color: var(--dark-red) !important; border-color: var(--dark-red) !important; }
+.fe-receipt-page { max-width: 760px; margin: 0 auto; }
+.fe-receipt-page .fe-receipt { background: var(--custom-white); padding: 32px; box-shadow: 0 1px 3px rgba(15, 23, 42, .08); }
+@keyframes fe-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@media (max-width: 575.98px) { .fe-receipt-page .fe-receipt { padding: 18px; } }
+@media print {
+  body.fe-printing .fe-receipt-page .fe-receipt { box-shadow: none; }
+}
+
+/* ---------- tutor/student-payment.php: Approve / Reject on the page */
+.sp-decide { border-top: 3px solid var(--dark-theme); }
+.sp-decide-ico { flex: none; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: var(--light-theme); color: var(--dark-theme); }
+.sp-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.sp-choice { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--line-color); background: var(--custom-white); color: var(--sub-text); text-align: left; }
+.sp-choice strong { display: block; font-size: 15px; color: var(--main-text-color, var(--dark-color)); }
+.sp-choice small { display: block; font-size: 12px; }
+.sp-choice.is-good.is-on { border-color: var(--dark-green-blue); background: var(--light-green); color: var(--dark-green-blue); }
+.sp-choice.is-bad.is-on { border-color: var(--dark-red); background: var(--light-red); color: var(--dark-red); }
+@media (max-width: 575.98px) { .sp-choices { grid-template-columns: minmax(0, 1fr); } }
