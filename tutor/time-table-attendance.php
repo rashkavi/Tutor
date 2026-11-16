@@ -49,7 +49,7 @@ if (!SessionUser::ifUserIsTutor()) {
         $lecture = Database::search($query);
 
         if ($lecture->num_rows == 0) {
-            header("Location: ./lecture-schedule");
+            header("Location: ./time-table");
         } else {
             $lectureData = $lecture->fetch_assoc();
             $dateTime = new DateTime("now", new DateTimeZone("Asia/Colombo"));
@@ -63,7 +63,7 @@ if (!SessionUser::ifUserIsTutor()) {
             }
 
             if (!$isValidLecture) {
-                header("Location: ./lecture-schedule");
+                header("Location: ./time-table");
             } else {
 
                 UserPermissions::setUserPermissions($sessionUserObject['user_permissions']);

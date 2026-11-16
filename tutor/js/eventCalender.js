@@ -252,45 +252,12 @@ function showLectureModal(date, dayLectures) {
                     <button class="table-btn table-btn-dark-theme dropdown-toggle br-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Action
                     </button>
-                   ${isSubjectLectureSchedule ? `
                     <ul class="dropdown-menu z-3">
-                        <li>
-                            <a class="dropdown-item" href="lecture-details?lecture-id=${lecture.lectureId}&class-id=${subject}">
-                                Lecture Details
-                            </a>
-                        </li>
-
-                        ${lecture.status === 'Ongoing'
-                    ? `<li><a class="dropdown-item" href="time-table-attendance?time-table-id=${lecture.lectureId}&class-id=${subject}">Attendance</a></li>`
-                    : ''}
-
-                        ${lecture.status === 'Completed'
-                    ? `
-                                <li><a class="dropdown-item" href="time-table-attendance?time-table-id=${lecture.lectureId}&class-id=${subject}">Attendance</a></li>
-                                <li><a class="dropdown-item" href="class-recordings?class-id=${lecture.classId}&time-table-id=${lecture.lectureId}&class-id=${subject}"Recording</a></li>
-                            `
-                    : ''}
-                    </ul>
-                ` : `
-                 <ul class="dropdown-menu z-3">
-                        <li>
-                            <a class="dropdown-item" href="lecture-details?lecture-id=${lecture.lectureId}">
-                                Lecture Details
-                            </a>
-                        </li>
-
-                        ${lecture.status === 'Ongoing'
-                ? `<li><a class="dropdown-item" href="time-table-attendance?time-table-id=${lecture.lectureId}">Attendance</a></li>`
-                : ''}
-
-                        ${lecture.status === 'Completed'
-                ? `
-                                <li><a class="dropdown-item" href="time-table-attendance?time-table-id=${lecture.lectureId}">Attendance</a></li>
-                                <li><a class="dropdown-item" href="class-recordings?class-id=${lecture.classId}&time-table-id=${lecture.lectureId}">Recording</a></li>
-                            `
-                : ''}
-                    </ul>
-                `}
+                        <li><a class="dropdown-item" href="lecture-details?time-table-id=${lecture.lectureId}">Lecture Details</a></li>
+                        <li><a class="dropdown-item" href="mark-attendance?session=${lecture.lectureId}">Mark Attendance</a></li>
+                        <li><a class="dropdown-item" href="time-table-attendance?time-table-id=${lecture.lectureId}&class-id=${lecture.classId}">Attendance List</a></li>
+                        <li><a class="dropdown-item" href="add-recording?time-table-id=${lecture.lectureId}&class-id=${lecture.classId}">Add Recording</a></li>
+                        <li><a class="dropdown-item" href="edit-lecture?time-table-id=${lecture.lectureId}&class-id=${lecture.classId}">Edit Lecture</a></li>
                     </ul>
                 </div>
             </div>
@@ -354,7 +321,7 @@ function showDayInline() {
 
 /** A lecture opens its own page (no pop-up). */
 function showLectureDetails(lectureId) {
-    location.href = `time-table-attendance?time-table-id=${encodeURIComponent(lectureId)}`;
+    location.href = `lecture-details?time-table-id=${encodeURIComponent(lectureId)}`;
 }
 
 function initLecturePopovers() {

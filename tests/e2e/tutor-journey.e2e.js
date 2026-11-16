@@ -237,6 +237,22 @@ const stamp = Date.now().toString().slice(-6);
     t.expect(await p.isVisible('#eventDayPanel'), 'No day panel');
     await noModal();
   });
+  await t.tc('TC-66', 'Time Table', 'A lecture in the Time Table opens Lecture Details', ['Open Time Table', 'Click a lecture'], 'Lecture Details page: date and time, online link, attachments, attendance, recordings and the Mark Attendance / Attendance List / Add Recording / Edit Lecture actions', async () => {
+    t.expect(ids.tutor_day, 'No lecture of the QA tutor');
+    await t.open('tutor/time-table', 3000);
+    const ev = p.locator(`.ex-cal-ev[data-lecture-id="${ids.tutor_day}"], .ex-cal-ev`).first();
+    if (await ev.count()) { await ev.click(); await p.waitForURL(/lecture-details/, { timeout: 10000 }); } else { await t.open(`tutor/lecture-details?time-table-id=${ids.tutor_day}`, 2000); }
+    await p.waitForTimeout(1500);
+    const body = await text();
+    for (const s of ['Details', 'Attachments', 'Attendance', 'Recordings', 'Mark Attendance', 'Attendance List', 'Add Recording', 'Edit Lecture']) t.expect(body.includes(s), `Missing "${s}"`);
+    t.expect(await p.locator('.ld-file').count() > 0, 'The attachment is not listed');
+    t.expect(await p.locator('a[href^="mark-attendance?session="]').count() > 0, 'No Mark Attendance link');
+    t.expect(!(await p.locator('.modal.show').count()), 'A pop-up opened');
+  });
+  await t.tc('TC-67', 'Time Table', "Another tutor's lecture does not open", ['Open lecture-details of a lecture of another tutor'], '"Lecture not found", nothing of it shown', async () => {
+    await t.open('tutor/lecture-details?time-table-id=1', 2000);
+    t.expect(/Lecture not found/.test(await text()), 'Another tutor\'s lecture opened');
+  });
   await t.tc('TC-55', 'Language', 'Switching to Sinhala translates the menu, English brings it back', ['Choose සිංහල in the language menu', 'Then English'], 'Menu reads උපකරණ පුවරුව, then Dashboard', async () => {
     await t.open('tutor/dashboard', 2000);
     await p.evaluate(() => { localStorage.setItem('lang', 'si'); return window.EnlixoI18n?.apply('si'); });
