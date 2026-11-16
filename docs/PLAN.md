@@ -306,3 +306,10 @@ Run `database/migrations/016_messaging.sql` (additive: `tutor_messages`, `tutor_
 - **Security fixes found while testing:** the admin password is no longer stored in a cookie, the admin sign-in e-mail is escaped, the set-password token is sanitised.
 - **Tests:** `tests/e2e/billing-journey.e2e.js` (14 cases: plan link → sign-up → approve → set password → trial → invoice page → suspend → students / parents locked out → tutor on Renew on a phone → reactivate). Start the server with `bin/dev-up.sh` (log mail drivers).
 - **Still pop-ups (legacy admin):** create / edit class on `admin/classes.php`, Share Registration Link on Users.
+
+## Sinhala and Tamil layout (2026-11-16)
+
+- **Fonts:** `assets/fonts/noto-sans-sinhala.woff2` / `noto-sans-tamil.woff2` (Sinhala / Tamil letters only, OFL, see `NOTO-LICENSE.txt`). `assets/js/i18n-auto.js` `fonts()` adds them to the `'Inter'` family with `unicode-range`, so every page that asks for Inter (and Bootstrap's system-ui stack on body / buttons / inputs) shows the same letters on every phone. Before, buttons fell back to whatever system font the phone had (tiny Tamil, text running out of buttons).
+- **Rules while the language is si / ta** (same place): no negative letter-spacing (it breaks joined letters), taller heading lines, button words may wrap inside the button, stat card titles take a second line instead of "...". The landing / sign-up page has the same rules in `assets/landing/landing.css` (smaller big headings, sign-up side panel scrolls instead of covering the logo, footer links wrap).
+- **Phone layout fixes found on the way (every language):** page header buttons wrap (`.ex-header-actions`), Time Table month arrows only on a phone, Monthly / Yearly switch on My Subscription fits.
+- Still English in si / ta: some texts drawn by the newer pages (for example "Schedule a Class", "Child Progress", "Billing period") are not in `assets/i18n/phrases.*.json` yet; add them with `bin/i18n-phrases.py`.

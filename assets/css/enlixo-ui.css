@@ -2540,3 +2540,22 @@ a.ex-hd-stat:hover .ex-hd-go { opacity: 1; }
 .ex-bill-text strong { color: var(--main-text-color, var(--dark-color)); }
 .ex-bill-btn { height: 40px !important; padding: 0 22px; text-decoration: none; }
 @media (max-width: 575.98px) { .ex-bill-btn { width: 100%; } }
+
+/* Page header buttons wrap to a second line on a phone instead of running past the edge (longer in Sinhala / Tamil) */
+.ex-header-actions { flex-wrap: wrap; }
+.ex-header-actions > * { min-width: 0; max-width: 100%; }
+@media (max-width: 575.98px) {
+  .ex-header-actions > :is(a, button):not(.ex-gear):not(.ex-info-btn) { flex: 1 1 auto; }
+}
+/* Time Table month nav on a phone: arrows only (the words are long in Sinhala / Tamil and pushed the title off) */
+@media (max-width: 767.98px) {
+  .ex-cal-nav :is(.previous-button, .next-button) span { display: none; }
+  .ex-cal-nav :is(.previous-button, .next-button) { flex: none; min-width: 48px; }
+  .ex-cal-title { min-width: 0; text-align: center; }
+  .ex-cal-title h2 { font-size: 18px; }
+}
+/* Monthly / Yearly switch on My Subscription: fits a phone in every language */
+@media (max-width: 575.98px) {
+  .ex-plan-cycle { display: flex; flex-wrap: wrap; max-width: 100%; }
+  .ex-plan-cycle-btn { flex: 1 1 auto; justify-content: center; padding: 0 12px; }
+}
