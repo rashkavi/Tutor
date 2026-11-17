@@ -997,7 +997,7 @@ const initializeScheduleLecture = () => {
             $("#lecture-link-area").toggleClass("d-none", !needsLink);
         });
     });
-    // FREE plan: one class notes file per class day
+    // class notes per class day follow the plan (FREE none, STARTER 2, GROW 10; the API checks again)
     if ($("#attachment-hint").data("max-files") === 1) {
         $("#file-selector-input").removeAttr("multiple");
     }

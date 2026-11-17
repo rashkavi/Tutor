@@ -3,6 +3,7 @@ require_once '../includes/UserClass.php';
 require_once '../includes/UserPermissionsClass.php';
 require_once "../includes/connection.php";
 require_once "../includes/Project.php";
+require_once "../includes/enlixo/plan-guard.php";
 require_once "../tutor/includes/security-helpers.php";
 if (!SessionUser::hasValidSession()) {
     header("Location: ./index");
@@ -37,6 +38,7 @@ if (!SessionUser::hasValidSession()) {
             header("Location: ./time-table");
         } else {
             $lectureData = $lecture->fetch_assoc();
+            $lectureTutorId = (int) $lectureData['tutor_id']; // plan rules (class notes per class day) follow the class's tutor
 
             UserPermissions::setUserPermissions($sessionUserObject['user_permissions']);
 
@@ -57,6 +59,7 @@ if (!SessionUser::hasValidSession()) {
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/style.css?v=<?= Project::getVersion() ?>">
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/skeleton.css?v=<?= Project::getVersion() ?>">
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
+                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
 
                 <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
                 <script src="<?= Project::getAssetsPath() ?>/js/init.js?v=<?= Project::getVersion() ?>"></script>
@@ -212,7 +215,7 @@ if (!SessionUser::hasValidSession()) {
                                                                     ?>
                                                                 </div>
                                                             </div>
-                                                            <div class="p-5 d-flex flex-column bl-solid align-items-center justify-content-center w-100 h-auto cursor-pointer mt-2" id="drop-section">
+                                                            <div class="p-5 d-flex flex-column bl-solid align-items-center justify-content-center w-100 h-auto cursor-pointer mt-2<?= enlixo_lecture_file_limit((int) $lectureTutorId) === 0 ? ' d-none' : '' ?>" id="drop-section">
                                                                 <img src="../assets/imgs/icons/cloud.png" alt="cloud">
                                                                 <span>Drag & Drop your files here</span>
                                                                 <span>OR</span>
@@ -223,6 +226,7 @@ if (!SessionUser::hasValidSession()) {
                                                                     </div>
                                                                 </div>
                                                             </div>
+                                                            <?= enlixo_lecture_files_hint((int) $lectureTutorId) ?>
                                                             <span id="attachment-feedback" class="text-dark-red text-12"></span>
                                                             <!-- File upload input field for PDF, Word, and PowerPoint files -->
                                                         </div>

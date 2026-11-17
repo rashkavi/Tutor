@@ -56,8 +56,8 @@ if (SessionUser::ifUserIsTutor()) {
                 exit;
             }
             $fileCount = isset($_FILES['tutes']['name']) ? count(array_filter((array) $_FILES['tutes']['name'], fn ($n) => $n !== '')) : 0;
-            if ($fileCount > 1 && !enlixo_tutor_has($planTutor, 'timetable.attachments')) {
-                $status->tute[] = 'On the FREE plan you can attach one file (up to 10 MB) to a class day. Upgrade to STARTER to attach more.';
+            if ($fileMsg = enlixo_lecture_file_error($planTutor, $fileCount)) { // FREE 0, STARTER 2, GROW 10 (FeatureCatalog::LECTURE_FILES)
+                $status->tute[] = $fileMsg;
             }
 
             if ($one_time && empty($lecture_date)) {

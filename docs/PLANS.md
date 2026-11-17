@@ -8,8 +8,8 @@ writes it to `features` / `payment_plan_features`. Code asks for a feature or a 
 | Price | LKR 0 | LKR 3,000 / month | LKR 7,500 / month | agreed with ENLIXO |
 | Students | 50 | 150 (+ packs of 50) | 500 (+ packs) | any |
 | Classes | 3 | unlimited | unlimited | unlimited |
-| Tutes a month | 4 | unlimited | unlimited | unlimited |
-| Recordings a month | 8 | unlimited | unlimited | unlimited |
+| Tutes a month | 3 | unlimited | unlimited | unlimited |
+| Recordings a month | 15 (every class day of 3 weekly classes) | unlimited | unlimited | unlimited |
 | Notifications a month (e-mail + WhatsApp, one per person) | 100 | 1,000 | unlimited | unlimited |
 | Parent login | no | yes | yes | yes |
 | Zoom | paste the link per class day | integration + auto-scheduling | yes | yes |
@@ -18,7 +18,7 @@ writes it to `features` / `payment_plan_features`. Code asks for a feature or a 
 | MCQ exams | no | yes | yes | yes |
 | Class cover generator (`classes.cover_generator`) | no (upload a picture) | yes | yes | yes |
 | Recurring class days (`timetable.recurring`) | no (one day at a time) | yes | yes | yes |
-| Class notes per class day (`timetable.attachments`) | 1 file, up to 10 MB | several, 10 MB each | yes | yes |
+| Class notes per class day (`timetable.attachments`, `FeatureCatalog::LECTURE_FILES`) | none (share notes as tutes) | 2 files, 10 MB each | 10 files, 10 MB each | 10 files |
 | Pre-recorded classes (`recordings.pre_recorded`) | no | no | yes | yes |
 | Card payments, WhatsApp / SMS API, arrears, parent payments, controlled / expiring recordings, analytics, ID cards, staff roles | no | no | yes | yes |
 

@@ -275,7 +275,7 @@ if (!SessionUser::hasValidSession()) {
                                                 </div>
                                                 <div class="col-12 d-flex flex-column">
                                                     <label class="text-16 main-text" for="">Lecture Attachment</label>
-                                                    <div class="p-5 d-flex flex-column bl-solid align-items-center justify-content-center w-100 h-auto cursor-pointer mt-2" id="drop-section">
+                                                    <div class="p-5 d-flex flex-column bl-solid align-items-center justify-content-center w-100 h-auto cursor-pointer mt-2<?= enlixo_lecture_file_limit((int) $sessionUserObject['user_id']) === 0 ? ' d-none' : '' ?>" id="drop-section">
                                                         <img src="../assets/imgs/icons/cloud.png" alt="cloud">
                                                         <span>Drag & Drop your files here</span>
                                                         <span>OR</span>
@@ -286,9 +286,7 @@ if (!SessionUser::hasValidSession()) {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <?php $oneFile = !enlixo_tutor_has((int) $sessionUserObject['user_id'], 'timetable.attachments'); ?>
-                                                    <span class="text-12 sub-text mt-1" id="attachment-hint" data-max-files="<?= $oneFile ? 1 : 0 ?>">PDF, Word or PowerPoint, up to 10 MB each<?= $oneFile ? '. On the FREE plan you can attach one file.' : '.' ?></span>
-                                                    <?php if ($oneFile) { ?><span class="d-inline-flex align-items-center gap-2 mt-1 text-12 sub-text">More files per class day <?= enlixo_lock_badge((int) $sessionUserObject['user_id'], 'timetable.attachments') ?></span><?php } ?>
+                                                    <?= enlixo_lecture_files_hint((int) $sessionUserObject['user_id']) ?>
                                                     <span id="attachment-feedback" class="text-dark-red text-12"></span>
                                                     <!-- File upload input field for PDF, Word, and PowerPoint files -->
                                                 </div>

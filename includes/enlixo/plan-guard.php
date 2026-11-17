@@ -100,3 +100,48 @@ if (!function_exists('enlixo_lock_badge')) {
             . '<a class="custom-btn ex-lock-tip-btn d-inline-flex align-items-center justify-content-center text-decoration-none" href="' . $e($url) . '">Upgrade to ' . $e($plan) . '</a></span></span>';
     }
 }
+
+
+if (!function_exists('enlixo_lecture_file_limit')) {
+    /** How many class notes files one class day may have on the tutor's plan (FeatureCatalog::LECTURE_FILES; FREE 0). */
+    function enlixo_lecture_file_limit(int $tutorId): int
+    {
+        require_once dirname(__DIR__, 2) . '/src/Legacy/Bridge.php';
+        $app = \Enlixo\Legacy\Bridge::app();
+        if ($app === null || $tutorId <= 0) {
+            return 10;
+        }
+        try {
+            return \Enlixo\Catalog\FeatureCatalog::lectureFilesFor($app->entitlements()->for($tutorId)->planKey);
+        } catch (\Throwable $e) {
+            return 10;
+        }
+    }
+
+    /** The message when a class day would get more files than the plan allows, or null. */
+    function enlixo_lecture_file_error(int $tutorId, int $files): ?string
+    {
+        $max = enlixo_lecture_file_limit($tutorId);
+        if ($files <= $max) {
+            return null;
+        }
+        return $max === 0
+            ? 'Class notes on a class day come with the STARTER plan. On FREE, share your notes as a tute.'
+            : "A class day can have {$max} files on your plan. Remove one first, or upgrade to GROW for up to 10.";
+    }
+}
+
+
+if (!function_exists('enlixo_lecture_files_hint')) {
+    /** The line under a class day's file box: how many files the plan allows, with the lock card when it allows none. */
+    function enlixo_lecture_files_hint(int $tutorId): string
+    {
+        $max = enlixo_lecture_file_limit($tutorId);
+        if ($max === 0) {
+            return '<div class="d-flex flex-wrap align-items-center gap-2 mt-2 text-14 sub-text" id="attachment-hint" data-max-files="0">'
+                . 'Class notes on a class day come with STARTER. On FREE, share your notes as a tute. ' . enlixo_lock_badge($tutorId, 'timetable.attachments') . '</div>';
+        }
+        return '<span class="text-12 sub-text mt-1" id="attachment-hint" data-max-files="' . $max . '">PDF files up to '
+            . \Enlixo\Catalog\FeatureCatalog::LECTURE_FILE_MB . ' MB each, up to ' . $max . ($max === 1 ? ' file' : ' files') . ' per class day on your plan.</span>';
+    }
+}
