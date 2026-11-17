@@ -7,7 +7,7 @@ export const statusChip = (st) => (st === 'pending' ? chip('waiting', 'Pending')
 export const when = (d) => (d ? new Date(String(d).replace(' ', 'T')).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '');
 export const detailsUrl = (id) => `requested-user-details?id=${id}`;
 
-function textDialog({ title, subtitle, icon, tone = '', label, placeholder, help, button, danger = false, required = true, send }) {
+export function textDialog({ title, subtitle, icon, tone = '', label, placeholder, help, button, danger = false, required = true, send }) {
   const box = h('textarea', { class: 'form-control custom-input', rows: 3, maxlength: 500, placeholder, id: 'rq-text' });
   const err = h('div', { class: 'text-12 text-dark-red mt-1 d-none' });
   const m = BsModal.open({

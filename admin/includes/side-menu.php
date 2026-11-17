@@ -18,6 +18,7 @@ class load_side_menu
             ['Tutors', 'tutors', null, '', [], [
                 ['All Tutors', null, 'tutors', '', ['Tutors', 'Users', 'Tutor Details']],
                 ['Requested Tutors', null, 'requested-users', '', ['Requested Tutors']],
+                ['Trial Requests', null, 'trial-requests', '', ['Trial Requests']],
                 ['Add Tutor', null, 'add-tutor', '', ['Add Tutor']],
             ]],
             ['Finance', 'finance', null, '', [], [

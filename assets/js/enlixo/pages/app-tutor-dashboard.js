@@ -287,7 +287,7 @@ function planCard(a, status) {
       h('div', { class: 'd-flex justify-content-between gap-2' }, h('span', {}, r.name, r.month ? h('small', {}, ' / month') : null), h('b', {}, `${r.used} of ${r.limit}`)),
       h('span', { class: 'ex-dash-meter' }, h('span', { style: { width: `${pct(r)}%` } }))))),
     h('div', { class: 'ex-dash-plan-pitch' }, icon('magic', { size: 18 }), h('span', {}, pitch),
-      !a.preview_used && !a.preview && next.key !== 'pro' ? h('a', { href: `upgrade?plan=${next.key}`, class: 'ex-dash-try' }, `Try ${next.name} free for 7 days`) : null));
+      !a.preview_used && !a.preview && next.key !== 'pro' ? h('a', { href: `upgrade?plan=${next.key}`, class: 'ex-dash-try' }, `Ask to try ${next.name} free for 7 days`) : null));
 }
 
 async function load() {

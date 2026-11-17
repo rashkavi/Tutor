@@ -1,6 +1,6 @@
 // End-to-end QA of the FREE / STARTER / GROW plans and the upgrade path (docs/PLANS.md):
 //   FREE limits and locks -> upgrade nudges (menu card, dashboard card, upgrade page, limit card) -> parents locked out
-//   on FREE -> "Try free for 7 days" (once) -> upgrade from FREE makes an invoice -> unpaid: back to FREE (reverse trial).
+//   on FREE -> "Ask for a 7-day free trial" (admin approves, once) -> upgrade from FREE makes an invoice -> unpaid: back to FREE (reverse trial).
 //   bin/dev-up.sh  then  node tests/e2e/plans-journey.e2e.js [http://127.0.0.1:8082]   Results: results/plans-journey.json
 const path = require('path');
 const fs = require('fs');
@@ -77,15 +77,20 @@ const state = () => JSON.parse(php('qa-tick.php', 'status'));
     const r = await call('POST', 'api/signIn.php', { mobile: qb.parent_whatsapp, otp: qb.parent_otp });
     t.expect(/not part of your tutor/.test(r.body) && !/"done"/.test(r.body), `Answer: ${r.body.slice(0, 160)}`);
   });
-  await t.tc('PL-06', 'Preview', 'Try STARTER free for 7 days, once', ['Upgrade page › Try it free for 7 days', 'Try again'], 'STARTER features on for 7 days (menu says "Trying STARTER"); a second try is refused', async () => {
+  await t.tc('PL-06', 'Preview', 'Ask to try STARTER free for 7 days; it starts only after the ENLIXO admin approves', ['Upgrade page › Ask for a 7-day free trial', 'Admin approves', 'Ask again'], 'Request waits (no features yet), approval turns STARTER on for 7 days; a second request is refused', async () => {
     await t.open('tutor/upgrade', 3000);
     await p().locator('.up-why .up-try').click();
-    await p().waitForTimeout(3500);
+    await p().waitForTimeout(2000);
+    t.expect(/with the ENLIXO team/.test(await text('.up-note')), `Note: ${await text('.up-note')}`);
+    let a = JSON.parse((await call('GET', '/api/v1/me/access')).body).data;
+    t.expect(a.plan.key === 'free' && !a.preview, 'The trial started before the admin approved it');
+    php('qa-tick.php', 'approve-trial');
+    await t.open('tutor/upgrade', 3000);
     t.expect(/Trying STARTER/.test(await text('.ex-plan-card')), `Menu: ${await text('.ex-plan-card')}`);
-    const a = JSON.parse((await call('GET', '/api/v1/me/access')).body).data;
+    a = JSON.parse((await call('GET', '/api/v1/me/access')).body).data;
     t.expect(a.plan.key === 'start' && a.paid_plan.key === 'free' && a.preview_used, 'Preview not running');
     const again = await call('POST', '/api/v1/tutor/subscription/preview', { plan: 'grow' });
-    t.expect(again.status === 409, `Second preview: ${again.status}`);
+    t.expect(again.status === 409, `Second request: ${again.status}`);
   });
   await t.tc('PL-07', 'Preview', 'While trying STARTER, parents can sign in', ['The parent signs in again'], 'Signed in', async () => {
     const qb2 = JSON.parse(php('setup-qa-billing.php'));

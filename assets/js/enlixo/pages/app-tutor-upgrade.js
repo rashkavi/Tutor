@@ -1,7 +1,7 @@
 // Tutor → Upgrade Plan (tutor/upgrade.php). One page, no pop-ups, built to move a tutor one plan up when it pays off:
 //   1. why now: the feature or limit they hit (?feature= / ?limit=), else what the next plan adds
 //   2. what they use: students and every monthly limit, with what the next plan gives
-//   3. the plans side by side (monthly / yearly), the recommended one marked; "Try free for 7 days" once, "Upgrade"
+//   3. the plans side by side (monthly / yearly), the recommended one marked; "Ask for a 7-day free trial" (the ENLIXO admin approves it), "Upgrade"
 //      opens an inline confirm with the price and what happens next
 //   4. every feature per plan, then answers to the usual worries (data kept, how to pay, going back)
 // Data: GET /me/access (plan, limits, usage, features per plan, preview) + GET /tutor/subscription (prices, status).
@@ -18,13 +18,15 @@ let A = null; // access
 let S = null; // subscription
 let cycle = 'monthly';
 let confirming = null; // plan key with the confirm panel open
+let TR = { pending: null, last: null }; // trial request (the ENLIXO admin approves it before the trial starts)
 
 fill(root, h('div', { class: 'component-theme p-5 text-center sub-text' }, 'Loading…'));
 load();
 
 async function load() {
   try {
-    [A, S] = await Promise.all([api.get('/me/access').then((r) => r.data), api.get('/tutor/subscription').then((r) => r.data)]);
+    [A, S, TR] = await Promise.all([api.get('/me/access').then((r) => r.data), api.get('/tutor/subscription').then((r) => r.data),
+      api.get('/tutor/subscription/trial-request').then((r) => r.data).catch(() => ({ pending: null, last: null }))]);
   } catch (e) {
     fill(root, h('div', { class: 'component-theme p-4 text-dark-red' }, e.message));
     return;
@@ -63,7 +65,7 @@ function draw() {
   const mine = paidKey();
   const rec = recommended();
   const t = S.tutor;
-  const canPreview = !A.preview_used && !A.preview && t.status !== 'trial' && !['suspended', 'cancelled'].includes(t.status);
+  const canPreview = !A.preview_used && !A.preview && !TR.pending && t.status !== 'trial' && !['suspended', 'cancelled'].includes(t.status);
 
   fill(actions,
     h('a', { class: 'custom-btn ex-btn-lg px-4 text-decoration-none d-inline-flex align-items-center gap-2', href: '#up-compare' }, icon('checklist', { size: 18 }), 'Compare Plans'),
@@ -73,6 +75,7 @@ function draw() {
   fill(root,
     whyCard(rec, canPreview),
     A.preview ? previewNote() : null,
+    !A.preview ? trialRequestNote() : null,
     usageCard(rec),
     plansCard(rec, canPreview),
     compareCard(),
@@ -117,7 +120,34 @@ function whyCard(rec, canPreview) {
     price ? h('div', { class: 'up-why-cta' },
       h('div', { class: 'up-why-price' }, h('b', {}, lkr(price.monthly)), h('span', {}, '/ month')),
       h('button', { type: 'button', class: 'custom-btn px-4', onclick: () => openConfirm(rec) }, `Upgrade to ${nameOf(rec)}`),
-      canPreview ? h('button', { type: 'button', class: 'up-try', onclick: () => startPreview(rec) }, icon('magic', { size: 16 }), 'Try it free for 7 days') : null) : null);
+      canPreview ? h('button', { type: 'button', class: 'up-try', onclick: () => startPreview(rec) }, icon('magic', { size: 16 }), 'Ask for a 7-day free trial') : null) : null);
+}
+
+/** The trial request waiting for the ENLIXO team, or the answer to the last one. */
+function trialRequestNote() {
+  if (TR.pending) {
+    return h('div', { class: 'up-note mb-4', role: 'status' }, icon('hourglass', { size: 20 }),
+      h('span', { class: 'flex-grow-1' }, h('b', {}, `Your request to try ${nameOf(TR.pending.plan)} free is with the ENLIXO team.`),
+        ' The 7-day trial starts as soon as they approve it, and this page shows their answer.'),
+      h('button', { type: 'button', class: 'custom-outline-btn px-3', onclick: withdrawRequest }, 'Withdraw'));
+  }
+  if (TR.last?.status === 'rejected' && !A.preview_used) {
+    return h('div', { class: 'up-note is-warn mb-4', role: 'status' }, icon('info', { size: 20 }),
+      h('span', {}, h('b', {}, `Your request to try ${nameOf(TR.last.plan)} was not approved.`), TR.last.note ? ` ${TR.last.note}` : '',
+        ' You can ask again, upgrade, or WhatsApp us on ', h('a', { href: `https://wa.me/94${ENLIXO_PHONE.slice(1)}`, target: '_blank', rel: 'noopener' }, ENLIXO_PHONE), '.'));
+  }
+  return null;
+}
+
+async function withdrawRequest() {
+  try {
+    const { data } = await api.delete('/tutor/subscription/trial-request');
+    Toast.success(data.message);
+    TR.pending = null;
+    draw();
+  } catch (e) {
+    Toast.error(e.message);
+  }
 }
 
 function previewNote() {
@@ -188,7 +218,7 @@ function plansCard(rec, canPreview) {
           : custom ? h('a', { class: 'custom-btn w-100 text-decoration-none', href: waLink(`I would like a CUSTOM plan for my classes.`), target: '_blank', rel: 'noopener' }, icon('whatsapp', { size: 18 }), 'Talk to ENLIXO')
             : higher ? h('button', { type: 'button', class: 'custom-btn w-100', onclick: () => openConfirm(p.key) }, `Upgrade to ${p.name}`)
               : h('a', { class: 'up-down', href: 'subscription?tab=plans' }, `Move to ${p.name}`),
-        higher && !custom && canPreview ? h('button', { type: 'button', class: 'up-try w-100 justify-content-center', onclick: () => startPreview(p.key) }, icon('magic', { size: 16 }), 'Try free for 7 days') : null));
+        higher && !custom && canPreview ? h('button', { type: 'button', class: 'up-try w-100 justify-content-center', onclick: () => startPreview(p.key) }, icon('magic', { size: 16 }), 'Ask for a 7-day free trial') : null));
   };
   return h('div', { class: 'component-theme p-4 mb-4', id: 'up-plans' },
     h('div', { class: 'd-flex justify-content-between align-items-center gap-3 flex-wrap mb-4' },
@@ -242,7 +272,9 @@ async function startPreview(key) {
   try {
     const { data } = await api.post('/tutor/subscription/preview', { plan: key });
     Toast.success(data.message);
-    setTimeout(() => location.reload(), 900);
+    TR.pending = data.request;
+    draw();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (e) {
     Toast.error(e.message);
   }
@@ -278,7 +310,7 @@ function faqCard() {
     ['What happens to my students and records?', 'Nothing is deleted when you change plan, try a plan or go back. Your classes, students, fees and recordings stay exactly as they are.'],
     ['How do I pay?', 'Pay the invoice by bank transfer or deposit into an ENLIXO account and upload the slip on the invoice page. ENLIXO checks it within one working day.'],
     ['What if I do not pay after upgrading from FREE?', 'After 7 days you simply go back to FREE. Your class portal stays open for students.'],
-    ['What does "Try free for 7 days" do?', 'You get every feature of that plan for a week, once, with no invoice. When the week ends, you are back on your own plan unless you upgrade.'],
+    ['How does the 7-day free trial work?', 'Ask for it here. Once the ENLIXO team approves your request you get every feature of that plan for a week, once, with no invoice. When the week ends, you are back on your own plan unless you upgrade.'],
     ['Can I go back to a smaller plan?', 'Yes, from My Subscription. A paid month runs to its end first, and your students must fit the smaller plan.'],
   ];
   return h('div', { class: 'component-theme p-4 mb-4' },

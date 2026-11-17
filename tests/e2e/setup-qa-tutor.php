@@ -52,6 +52,9 @@ if ($sub) {
         ['s' => $sub, 'k' => $key],
     );
     $db->execute("UPDATE platform_invoices SET status = 'void', void_reason = 'QA reset' WHERE users_has_payment_plan_id = :s AND status IN ('open', 'part')", ['s' => $sub]);
+    if ($db->value("SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tutor_trial_requests'")) {
+        $db->execute('DELETE FROM tutor_trial_requests WHERE tutor_id = :u', ['u' => $id]); // trial requests start over (migration 020)
+    }
 }
 $status = $app->platformBilling()->accessStatus($id);
 

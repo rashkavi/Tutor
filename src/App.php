@@ -139,6 +139,11 @@ final class App
         return $this->once('pbill', fn () => new PlatformBilling($this->db(), $this->platformCatalog(), $this->platformSettings(), dirname(__DIR__) . '/assets/uploads/users-payment-slips', $this->today()));
     }
 
+    public function trialRequests(): \Enlixo\Platform\TrialRequests
+    {
+        return $this->once('trialreq', fn () => new \Enlixo\Platform\TrialRequests($this->db(), $this->platformCatalog(), $this->platformBilling()));
+    }
+
     public function tutorRequests(): \Enlixo\Platform\TutorRequests
     {
         return $this->once('treq', fn () => new \Enlixo\Platform\TutorRequests($this->db(), $this->platformCatalog(), $this->platformSettings()));
