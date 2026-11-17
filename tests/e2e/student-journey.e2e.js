@@ -204,7 +204,7 @@ const slipPng = () => {
   }
   await t.tc('ST-30', 'Recordings', 'A recording opens in the player', ['Open Class Recordings', 'Open a recording'], 'The video player, or the reason it is closed, is shown', async () => {
     await t.open(`portal/watch-recording?recording-id=${qa.recording}`, 2500);
-    const ok = await p().locator('iframe, video, .rc-player-msg, [data-player]').count();
+    const ok = await p().locator('iframe, video, .rc-player-msg, [data-player], .ex-player-lock').count();
     t.expect(ok > 0, 'No player and no message');
   });
   await t.tc('ST-31', 'Phone', 'The phone menu opens every section', ['On a phone, press the menu button'], 'The side menu slides in with Payments and Class Recordings', async () => {
