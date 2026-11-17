@@ -1,604 +1,303 @@
 <?php
+// Class day details (student), laid out like the ENLIXO V3 student portal "Lecture Details" page: a summary card
+// (status, type, class, tutor, date tile, time, countdown, Join Now / Watch Recording / Add to Calendar), then
+// Class Day Details, Tutor and Class Notes on the left, My Attendance, the other classes that day and what is next in
+// this class on the right. Opened from the time table, the dashboard, class details and the recording page.
+// Join Now goes through api/joinLecture.php (the window is checked there; the page never shows the raw link).
 require_once '../includes/UserClass.php';
 require_once "../includes/connection.php";
+require_once "../includes/UserPermissionsClass.php";
 require_once "../includes/Project.php";
+require_once "../includes/enlixo/student-recordings.php";
 if (!SessionUser::ifUserIsStudent()) {
     header("Location: ./index");
+    exit;
+}
+$sessionUserObject = SessionUser::getCurrentUserObject('Student');
+$studentId = (int) $sessionUserObject['student_id'];
+$id = (int) ($_GET['time-table-id'] ?? 0);
+
+$res = Database::search("SELECT tt.`time_table_id`, tt.`date`, tt.`start_time`, tt.`end_time`, tt.`lecture`, tt.`lecture_title`,
+        tt.`lecture_type_lecture_type_id` AS lt, tt.`time_table_status_time_table_status_id` AS st,
+        c.`class_id`, c.`class_name`, c.`location`, c.`delivery_mode`, s.`subject`, y.`year`, e.`exam_type`, m.`medium`,
+        u.`user_fname`, u.`user_lname`, u.`profile_img`, ti.`title`
+    FROM `time_table` tt
+    INNER JOIN `classes` c ON c.`class_id` = tt.`classes_class_id`
+    INNER JOIN `students_has_classes` shc ON shc.`classes_class_id` = c.`class_id` AND shc.`students_student_id` = '" . $studentId . "' AND shc.`status_status_id` = 1
+    LEFT JOIN `subjects` s ON s.`subject_id` = c.`subjects_subject_id`
+    LEFT JOIN `year` y ON y.`year_id` = c.`year_year_id`
+    LEFT JOIN `exam_type` e ON e.`exam_type_id` = c.`exam_type_exam_type_id`
+    LEFT JOIN `medium` m ON m.`medium_id` = c.`medium_medium_id`
+    LEFT JOIN `users` u ON u.`user_id` = c.`tutor_id`
+    LEFT JOIN `title` ti ON ti.`title_id` = u.`title_title_id`
+    WHERE tt.`time_table_id` = '" . $id . "' LIMIT 1");
+$l = $res ? $res->fetch_assoc() : null;
+if (!$l) {
+    header("Location: ./time-table");
+    exit;
+}
+
+$tz = new DateTimeZone('Asia/Colombo');
+$now = new DateTime('now', $tz);
+$start = new DateTime($l['date'] . ' ' . $l['start_time'], $tz);
+$end = new DateTime($l['date'] . ' ' . $l['end_time'], $tz);
+$joinFrom = (clone $start)->modify('-1 hour');
+$statusId = (int) $l['st'];
+$typeId = (int) $l['lt'];
+$classId = (int) $l['class_id'];
+$isActive = $statusId === 1;
+$isLive = $isActive && $now >= $start && $now <= $end;
+$isOver = $now > $end;
+
+// status: Upcoming / Live now / Completed (held) / Cancelled / Postponed / Study leave
+if ($statusId === 2) {
+    [$statusLabel, $statusKey] = ['Cancelled', 'cancelled'];
+} elseif ($statusId === 3) {
+    [$statusLabel, $statusKey] = ['Postponed', 'postponed'];
+} elseif ($statusId === 4) {
+    [$statusLabel, $statusKey] = ['Study leave', 'postponed'];
+} elseif ($isLive) {
+    [$statusLabel, $statusKey] = ['Live now', 'live'];
+} elseif ($isOver) {
+    [$statusLabel, $statusKey] = ['Completed', 'completed'];
 } else {
-    $sessionUserObject = SessionUser::getCurrentUserObject('Student');
+    [$statusLabel, $statusKey] = ['Upcoming', 'upcoming'];
+}
+[$typeLabel, $typeIcon] = [1 => ['In the hall', 'physical'], 2 => ['Online', 'online'], 3 => ['Recording', 'recordings']][$typeId] ?? ['Class', 'classes'];
+$minutes = max(0, (int) round(($end->getTimestamp() - $start->getTimestamp()) / 60));
+$duration = ($minutes >= 60 ? intdiv($minutes, 60) . ' hr ' : '') . ($minutes % 60 ? ($minutes % 60) . ' min' : '');
+$duration = trim($duration) ?: '-';
+$timeText = $start->format('g:i A') . ' - ' . $end->format('g:i A');
+$tutor = trim(($l['title'] ? $l['title'] . ' ' : '') . $l['user_fname'] . ' ' . $l['user_lname']);
+$initials = strtoupper(substr((string) $l['user_fname'], 0, 1) . substr((string) $l['user_lname'], 0, 1));
 
-    if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['time-table-id']) && !empty($_GET['time-table-id']))) {
-        header("Location: ./time-table");
+$whenText = '';
+if ($isActive && !$isOver) {
+    if ($isLive) {
+        $left = (int) ceil(($end->getTimestamp() - $now->getTimestamp()) / 60);
+        $whenText = 'Ends in ' . ($left >= 60 ? intdiv($left, 60) . ' hr ' : '') . ($left % 60) . ' min';
     } else {
-        $id = (int) $_GET["time-table-id"];
-        $dateTime = new DateTime('now', new DateTimeZone('Asia/Colombo'));
-        $lecture = Database::search("
-                                                        SELECT 
-                                                            `tt`.`time_table_id`,
-                                                            `s`.`subject`,
-                                                            `t`.`title`,
-                                                            `u`.`user_fname`,
-                                                            `u`.`user_lname`,
-                                                            `s`.`subject`,
-                                                            `tt`.`date`,
-                                                            `tt`.`start_time`,
-                                                            `tt`.`end_time`,
-                                                            `tt`.`lecture`,
-                                                            `tt`.`lecture_type_lecture_type_id` AS `lecture_type`,
-                                                            `tt`.`time_table_status_time_table_status_id` AS `time_table_status`,
-                                                            `u`.`profile_img`,
-                                                            `tts`.`time_table_status`,
-                                                            `tts`.`time_table_status_id`
-                                                            
-                                                        FROM `time_table` AS `tt`
-                                                        INNER JOIN `classes` AS `class` 
-                                                            ON `tt`.`classes_class_id` = `class`.`class_id`
-                                                        INNER JOIN `users` AS `u` 
-                                                            ON `class`.`tutor_id` = `u`.`user_id`
-                                                        INNER JOIN `title` AS `t` 
-                                                            ON `u`.`title_title_id` = `t`.`title_id`
-                                                        INNER JOIN `students_has_classes` AS `shc` 
-                                                            ON `class`.`class_id` = `shc`.`classes_class_id`
-                                                        INNER JOIN `subjects` AS `s` 
-                                                            ON `class`.`subjects_subject_id` = `s`.`subject_id`
-                                                        INNER JOIN `time_table_status` AS `tts` 
-                                                            ON `tt`.`time_table_status_time_table_status_id` = `tts`.`time_table_status_id`
-                                                        AND `tt`.`time_table_id` = '" . $id . "'
-                                                        AND `shc`.`students_student_id` = '" . (int) $sessionUserObject['student_id'] . "'
-                                                        AND `shc`.`status_status_id` = 1 
-                                                        
-                                                    ");
-        if ($lecture->num_rows == 0) {
-            header("Location: ./time-table");
-        } else {
-            $lectureData = $lecture->fetch_assoc();
-
-            function formatDuration($minutes)
-            {
-                $hours = floor($minutes / 60);
-                $mins = $minutes % 60;
-
-                if ($hours > 0 && $mins > 0) {
-                    return "{$hours}h {$mins}min";
-                } elseif ($hours > 0) {
-                    return "{$hours}h";
-                } else {
-                    return "{$mins}min";
-                }
-            }
-            function timeAgo($datetime)
-            {
-                $timestamp = strtotime($datetime);
-                $difference = time() - $timestamp;
-
-                if ($difference < 60) {
-                    return $difference . " seconds ago";
-                } elseif ($difference < 3600) {
-                    return floor($difference / 60) . " minutes ago";
-                } elseif ($difference < 86400) {
-                    return floor($difference / 3600) . " hours ago";
-                } else {
-                    return floor($difference / 86400) . " days ago";
-                }
-            }
-?>
-            <!DOCTYPE html>
-            <html lang="en">
-
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <meta name="robots" content="noindex, nofollow">
-                <title>Class Time Table - <?= Project::getPortalBasePath() ?></title>
-                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/style.css?v=<?= Project::getVersion() ?>">
-                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/skeleton.css?v=<?= Project::getVersion() ?>">
-                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/lecture-card.css?v=<?= Project::getVersion() ?>">
-                <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css">
-                <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
-                <script src="<?= Project::getAssetsPath() ?>/js/init.js?v=<?= Project::getVersion() ?>"></script>
-
-                <style>
-                    .lecture-card {
-                        border-radius: 0px !important;
-                        border: none !important;
-                    }
-
-                    .lecturer-img {
-                        width: 80px;
-                        height: 80px;
-                        border-radius: 50%;
-                        object-fit: cover;
-                    }
-
-                    .detail-icon {
-                        width: 24px;
-                        height: 24px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        border-radius: 6px;
-                        background: rgba(13, 110, 253, 0.1);
-                        color: #0d6efd;
-                    }
-
-                    .status-badge {
-                        padding: 6px 12px;
-                        border-radius: 20px;
-                        font-size: 12px;
-                        font-weight: 500;
-                    }
-
-                    .lecture-type {
-                        padding: 6px 12px;
-                        border-radius: 6px;
-                        font-size: 12px;
-                        font-weight: 500;
-                        background: #f8f9fa;
-                    }
-
-                    .time-badge {
-                        background: var(--body-color);
-                        border-radius: 6px;
-                        padding: 8px 12px;
-                        font-size: 14px;
-                    }
-
-                    .lecture-content {
-                        border-left: 3px solid #0d6efd;
-                        background: #f8fafc;
-                        border-radius: 0 8px 8px 0;
-                    }
-
-                    .back-btn {
-                        transition: all 0.2s ease;
-                    }
-
-                    .back-btn:hover {
-                        transform: translateX(-3px);
-                    }
-                </style>
-            </head>
-
-            <body class="overflow-hidden">
-                <!-- Loader Section -->
-
-                <!-- Main Content Section (Initially Hidden) -->
-                <div class="col-12 vh-100 container-fluid overflow-hidden content-container">
-                    <div id="appContainer" class="row p-0">
-                        <div id="sideMenu" class="d-none d-xl-block d-flex flex-column sideMenuArea p-0 vh-100">
-                            <?php
-                            include "includes/side-menu.php";
-                            load_side_menu::load("Time Table");
-                            ?>
-                        </div>
-                        <div id="app-wrapper" class="app-wrapper p-0 m-0">
-                            <div class="row p-0 m-0 g-0">
-                                <div class="col-12 p-0 m-0 g-0">
-                                    <?php
-                                    include "./includes/header.php";
-                                    selectItem::setSelected("Time Table");
-                                    ?>
-                                </div>
-                                <div class="container p-4 m-0" id="skeleton-list">
-                                    <?php
-                                    include Project::getIncludesPath() . '/components/skeleton-header.php';
-                                    include Project::getIncludesPath() . '/components/skeleton-class-card.php'; ?>
-                                </div>
-                                <div class="col-12 d-flex flex-column p-0 m-0 g-0 contentBodyArea vh-100 d-none" id="real-list">
-                                    <div class="row p-4 m-0 g-0">
-                                        <div class="col-12 py-4 px-4 pe-4 component-theme mb-4">
-                                            <div class="row p-0 m-0 g-0 align-items-center">
-
-                                                <div class="col">
-                                                    <span class="main-topic lh-lg">Lecture Details</span>
-                                                    <span class="text-14 sub-text-color lh-base mt-1 d-block">View all details about this scheduled lecture</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Main Content -->
-                                        <div class="col-12 p-0 m-0 g-0">
-                                            <div class="row p-0 m-0 g-0">
-                                                <div class="col-lg-8 p-0 pe-lg-3 mb-4 mb-lg-0">
-                                                    <div class="card lecture-card">
-                                                        <div class="card-body p-4">
-                                                            <div class="d-flex align-items-start mb-4">
-                                                                <?php if (!empty($lectureData["profile_img"]) && file_exists(Project::getAssetsPath() . "/users/" . $lectureData['profile_img'])): ?>
-                                                                    <img src="<?= Project::getAssetsPath() . "/users/" . $lectureData['profile_img'] ?>"
-                                                                        class="lecturer-img me-3"
-                                                                        alt="<?= $lectureData["user_fname"] ?>">
-                                                                <?php else: ?>
-                                                                    <div class="d-flex align-items-center justify-content-center lecturer-img me-3 bg-light-theme text-24 fw-semibold dark-theme">
-                                                                        <?= strtoupper(substr($lectureData["user_fname"], 0, 1)) . strtoupper(substr($lectureData["user_lname"], 0, 1)) ?>
-                                                                    </div>
-                                                                <?php endif; ?>
-                                                                <div class="flex-grow-1">
-                                                                    <h4 class="mb-1"><?= htmlspecialchars($lectureData['title'] . '.' . $lectureData['user_fname'] . ' ' . $lectureData['user_lname']) ?></h4>
-
-                                                                    <div class="d-flex align-items-center flex-wrap gap-2 mt-3">
-                                                                        <span class="table-btn table-btn-primary"><?= htmlspecialchars($lectureData['subject']) ?></span>
-
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="row mt-4">
-                                                                <div class="col-md-6 mb-3">
-                                                                    <div class="d-flex align-items-center">
-                                                                        <div class="d-flex align-items-center justify-content-center hwr-40 bg-light-theme me-3">
-                                                                            <iconify-icon icon="uil:calender" class="dark-theme"></iconify-icon>
-                                                                        </div>
-                                                                        <div>
-                                                                            <small class="text-muted d-block">Date</small>
-                                                                            <strong><?= date('F j, Y', strtotime($lectureData['date'])) ?></strong>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="col-md-6 mb-3">
-                                                                    <div class="d-flex align-items-center">
-                                                                        <div class="d-flex align-items-center justify-content-center hwr-40 bg-light-theme me-3">
-                                                                            <iconify-icon icon="mingcute:time-fill" class="dark-theme"></iconify-icon>
-                                                                        </div>
-                                                                        <div>
-                                                                            <small class="text-muted d-block">Time</small>
-                                                                            <strong><?= date('h:i A', strtotime($lectureData['start_time'])) ?> - <?= date('h:i A', strtotime($lectureData['end_time'])) ?></strong>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="col-md-6 mb-3">
-                                                                    <div class="d-flex align-items-center">
-                                                                        <?php
-                                                                        if ($lectureData['lecture_type'] == 1) {
-                                                                        ?>
-                                                                            <div class="d-flex align-items-center justify-content-center hwr-40 bg-light-green me-3">
-                                                                                <iconify-icon icon="material-symbols:home-work" class="text-dark-green"></iconify-icon>
-                                                                            </div>
-                                                                            <div>
-                                                                                <small class="text-muted d-block">Lecture Type</small>
-                                                                                <strong class="text-dark-green">Physical</strong>
-                                                                            </div>
-                                                                        <?php
-                                                                        } else {
-                                                                        ?>
-                                                                            <div class="d-flex align-items-center justify-content-center hwr-40 bg-light-purple me-3">
-                                                                                <iconify-icon icon="heroicons-solid:status-online" class="text-dark-purple"></iconify-icon>
-                                                                            </div>
-                                                                            <div>
-                                                                                <small class="text-muted d-block">Lecture Type</small>
-                                                                                <strong class="text-dark-purple">Online</strong>
-                                                                            </div>
-                                                                        <?php
-                                                                        }
-                                                                        ?>
-
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="col-md-6 mb-3">
-                                                                    <div class="d-flex align-items-center">
-                                                                        <?php
-                                                                        switch ($lectureData["time_table_status_id"]):
-                                                                            case 1: ?>
-                                                                                <div class="d-flex align-items-center justify-content-center hwr-40 bg-light-green me-3">
-                                                                                    <iconify-icon icon="flowbite:bell-active-outline" class="text-dark-green"></iconify-icon>
-                                                                                </div>
-                                                                                <div>
-                                                                                    <small class="text-muted d-block">Lecture Status</small>
-                                                                                    <strong class="text-dark-green">Active</strong>
-                                                                                </div>
-                                                                                <?php break; ?>
-                                                                            <?php
-                                                                            case 2: ?>
-                                                                                <div class="d-flex align-items-center justify-content-center hwr-40 bg-light-red me-3">
-                                                                                    <iconify-icon icon="proicons:filter-cancel" class="text-dark-red"></iconify-icon>
-                                                                                </div>
-                                                                                <div>
-                                                                                    <small class="text-muted d-block">Lecture Status</small>
-                                                                                    <strong class="text-dark-red">Cancelled</strong>
-                                                                                </div>
-                                                                                <?php break; ?>
-                                                                            <?php
-                                                                            case 3: ?>
-                                                                                <div class="d-flex align-items-center justify-content-center hwr-40 bg-light-pink me-3">
-                                                                                    <iconify-icon icon="icon-park-solid:leaves-one" class="text-dark-pink"></iconify-icon>
-                                                                                </div>
-                                                                                <div>
-                                                                                    <small class="text-muted d-block">Lecture Status</small>
-                                                                                    <strong class="text-dark-pink">Postpond</strong>
-                                                                                </div>
-                                                                                <?php break; ?>
-                                                                            <?php
-                                                                            case 4: ?>
-                                                                                <div class="d-flex align-items-center justify-content-center hwr-40 bg-light-purple me-3">
-                                                                                    <iconify-icon icon="hugeicons:study-lamp" class="text-dark-purple"></iconify-icon>
-                                                                                </div>
-                                                                                <div>
-                                                                                    <small class="text-muted d-block">Lecture Status</small>
-                                                                                    <strong class="text-dark-purple">Study Leave</strong>
-                                                                                </div>
-                                                                                <?php break; ?>
-                                                                        <?php endswitch;
-                                                                        ?>
-                                                                    </div>
-                                                                </div>
-
-                                                                <?php
-
-                                                                if ($lectureData['lecture_type'] == 2 && $lectureData['date'] == $dateTime->format('Y-m-d') && $lectureData['start_time'] <= $dateTime->format('H:i:s') && $lectureData['end_time'] >= $dateTime->format('H:i:s')) {
-                                                                ?>
-                                                                    <div class="col-12 col-lg-6">
-                                                                        <div class="d-flex py-3">
-                                                                            <button class="table-btn bg-dark-theme text-white px-5"
-                                                                                onclick="joinLecture('<?= $lectureData['lecture'] ?>',<?= $lectureData['time_table_id'] ?>)">Join Now</button>
-                                                                        </div>
-                                                                    </div>
-                                                                <?php
-                                                                }
-
-                                                                $attachment = Database::search("SELECT * FROM `attachments` WHERE `time_table_time_table_id` = '" . $lectureData['time_table_id'] . "'");
-                                                                if ($attachment->num_rows > 0) {
-                                                                ?>
-                                                                    <div class="col-12">
-                                                                        <div class="d-flex">
-                                                                            <div class="flex-grow-1">
-                                                                                <small class="text-muted d-block">Lecture Content</small>
-                                                                                <div class="col-12 px-1 mt-2">
-                                                                                    <div class="row">
-                                                                                        <?php
-                                                                                        while ($attachmentData = $attachment->fetch_assoc()) {
-                                                                                            if (!empty($attachmentData["attachment"]) && file_exists(Project::getAssetsPath() . "/uploads/lectures-attachments/" . $attachmentData["attachment"])) {
-                                                                                                $ext = strtolower(pathinfo($attachmentData["attachment"], PATHINFO_EXTENSION));
-                                                                                        ?>
-                                                                                                <div class="col-12 my-3 file-item cursor-pointer" onclick="viewLectureAttachment('<?php echo $attachmentData['attachment'] ?>', '<?php echo $attachmentData['attachment_name'] ?>')">
-                                                                                                    <div class="p-3 bl-solid">
-                                                                                                        <div class="d-flex">
-                                                                                                            <img src="../assets/imgs/icons/<?= $ext ?>.png" alt="Lecture Attachment" class="h-48 w-auto">
-                                                                                                            <div class="d-flex flex-column px-4">
-                                                                                                                <span class="name"><?php echo $attachmentData["attachment_name"] ?></span>
-                                                                                                                <span class="text-muted text-12">Click to view</span>
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                        <?php
-                                                                                            }
-                                                                                        }
-                                                                                        ?>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                <?php
-                                                                }
-
-
-                                                                ?>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <?php
-
-                                                    $query = "
-                                                               SELECT 
-                                                                   `lr`.`lecture_recording_id`,
-                                                                   `lr`.`added_at`,
-                                                                   `lr`.`recording_title`,
-                                                                   `lr`.`recording_cover`,
-                                                                   `lr`.`expire_date`,
-                                                                   `tt`.`date`,
-                                                                   `tt`.`start_time`,
-                                                                   `tt`.`end_time`,
-                                                                   `u`.`user_fname`,
-                                                                   `u`.`user_lname`,
-                                                                   `u`.`profile_img`,
-                                                                   `t`.`title`,
-                                                                   `lt`.`lecture_type`,
-                                                                   `tt`.`duration`,
-                                                                   `tt`.`time_table_status_time_table_status_id`,
-                                                                   `tt`.`lecture_title`,
-                                                                   `tt`.`date`,
-                                                                   `tt`.`start_time`,
-                                                                   `tt`.`end_time`,
-                                                                   `tt`.`time_table_id`
-                                                                  
-                                                                   
-                                                               FROM `lecture_recording` AS `lr`
-                                                               INNER JOIN `time_table` AS `tt`
-                                                                   ON `lr`.`time_table_time_table_id` = `tt`.`time_table_id`
-                                                            INNER JOIN `classes` AS `class`
-                                                                ON `tt`.`classes_class_id` = `class`.`class_id`
-                                                              
-                                                               INNER JOIN `users` AS `u`
-                                                                   ON `class`.`tutor_id` = `u`.`user_id`
-                                                               INNER JOIN `title` AS `t`
-                                                                   ON `u`.`title_title_id` = `t`.`title_id`
-                                                               INNER JOIN `lecture_type` AS `lt`
-                                                                   ON `tt`.`lecture_type_lecture_type_id` = `lt`.`lecture_type_id`
-                                                                                                                           
-                                                               AND `tt`.`time_table_id` = '" . $lectureData["time_table_id"] . "'
-                                                                                                                             
-                                                           ";
-
-                                                    $recordings = Database::search($query);
-                                                    if ($recordings->num_rows > 0) {
-                                                    ?>
-                                                        <div class="col-12 mt-4">
-                                                            <div class="row g-3">
-                                                                <small class="sub-topic">Lecture Recordings</small>
-                                                                <?php
-                                                                $partsEnabled = $recordings->num_rows > 1 ? true : false;
-                                                                for ($i = 0; $i < $recordings->num_rows; $i++) {
-                                                                    $recording = $recordings->fetch_assoc();
-
-                                                                    $lectureDate = $recording["date"] . " | " .
-                                                                        (new DateTime($recording["start_time"]))->format('h:i A') . " - " .
-                                                                        (new DateTime($recording["end_time"]))->format('h:i A');
-
-                                                                    $attendStatus = "Absent (Live Lecture)";
-                                                                    $attendStatusId = '2';
-
-                                                                    $isAttendLecture = Database::search("SELECT * FROM `attendance` WHERE `time_table_time_table_id`='" . $recording['time_table_id'] . "' AND `students_student_id`='" . $sessionUserObject["student_id"] . "'");
-                                                                    if ($isAttendLecture->num_rows > 0) {
-                                                                        $data = $isAttendLecture->fetch_assoc();
-                                                                        if ($data['attendance_status_attendance_status_id'] == 2) {
-                                                                            $attendStatus = "Present (Live Lecture)";
-                                                                            $attendStatusId = '1';
-                                                                        } else if ($data['attendance_status_attendance_status_id'] == 4) {
-                                                                            $attendStatus = "Recording Watched";
-                                                                            $attendStatusId = '3';
-                                                                        }
-                                                                    }
-
-                                                                ?>
-                                                                    <div class="col-12 col-lg-6">
-                                                                        <div class="student-details-card position-relative px-4 py-3 component-theme">
-                                                                            <div class="student-details-ribbon 
-        <?php
-                                                                    echo match ($attendStatusId) {
-                                                                        '1' => 'ribbon-active',
-                                                                        '2' => 'ribbon-deactive',
-                                                                        '3' => 'ribbon-watched',
-                                                                        default => 'ribbon-default'
-                                                                    };
-        ?>"> <?= htmlspecialchars($attendStatus ?? 'Unknown') ?>
-                                                                            </div>
-                                                                            <div class="row p-0 m-0 g-0 align-content-center">
-                                                                                <div class="col-12 d-flex flex-column align-items-center p-0 m-0 g-0">
-                                                                                    <div class="lecture-thumbnail">
-                                                                                        <?php
-                                                                                        if (empty($recording['recording_cover']) || !file_exists(Project::getAssetsPath() . '/imgs/recording-thumbnail/' . $recording["recording_cover"])) {
-                                                                                        ?>
-                                                                                            <img src="../assets/imgs/common/empty-thumbnail.webp" alt="Lecture Thumbnail" class="thumbnail-img">
-                                                                                        <?php
-                                                                                        } else {
-                                                                                        ?>
-                                                                                            <img src="<?= Project::getAssetsPath() . '/imgs/recording-thumbnail/' . $recording["recording_cover"] ?>" alt="Lecture Thumbnail" class="thumbnail-img">
-                                                                                        <?php
-                                                                                        }
-                                                                                        ?>
-                                                                                        <div class="recording-pulse"></div>
-                                                                                        <div class="play-icon">
-                                                                                            <iconify-icon icon="line-md:play-filled" width="60" height="60" class="dark-theme"></iconify-icon>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div class="col-12 d-flex flex-column px-0 mt-3 gap-3 align-content-center justify-content-center">
-                                                                                    <h6 class="text-18 text-dark-color fw-semibold m-0"><?= $recording["lecture_title"]; ?></h6>
-
-                                                                                    <div class="d-flex flex-column gap-3 mt-3">
-                                                                                        <div class="student-details-item d-flex align-items-center gap-2">
-                                                                                            <iconify-icon icon="hugeicons:user-ai" width="20" height="20" class="dark-theme"></iconify-icon>
-                                                                                            <span class="student-details-intake text-13 sub-text">Lecturer : <?= $recording['title'] . " " . $recording['user_fname'] . " " . $recording['user_lname'] ?>
-                                                                                            </span>
-                                                                                        </div>
-
-                                                                                        <div class="student-details-item d-flex align-items-center gap-2">
-                                                                                            <iconify-icon icon="hugeicons:date-time" width="20" height="20" class="dark-theme"></iconify-icon>
-                                                                                            <span class="student-details-intake text-13 sub-text">
-                                                                                                Conducted Date: <?= date('Y-m-d', strtotime($recording['date'])) ?><?= date('h:i A', strtotime($recording['start_time'])) ?>-<?= date('h:i A', strtotime($recording['end_time'])) ?>
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div class="card-footer d-flex justify-content-end align-items-center p-0">
-
-                                                                                        <button class="table-btn table-btn-dark-theme mt-2"
-                                                                                            onclick='window.location.href = "watch-recording?recording-id=<?= $recording["lecture_recording_id"] ?>";'>
-                                                                                            View
-                                                                                        </button>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                <?php
-                                                                }
-                                                                ?>
-
-                                                            </div>
-                                                        </div>
-                                                    <?php
-                                                    }
-
-                                                    ?>
-                                                </div>
-
-                                                <div class="col-lg-4 p-0">
-                                                    <div class="card lecture-card">
-                                                        <div class="card-body p-4">
-                                                            <h5 class="card-title mb-3">Upcoming Lectures</h5>
-                                                            <div class="list-group list-group-flush">
-                                                                <?php
-                                                                $upcominglectures = Database::search("SELECT * FROM `time_table` 
-                                                                    INNER JOIN classes ON `time_table`.`classes_class_id` = `classes`.`class_id`
-                                                                    INNER JOIN students_has_classes ON `classes`.`class_id` = `students_has_classes`.`classes_class_id`
-                                                                    INNER JOIN subjects ON `classes`.`subjects_subject_id` = `subjects`.`subject_id` 
-                                                                    WHERE  CONCAT(`date`, ' ', `start_time`) >= '" . $dateTime->format("Y-m-d H:i:s") . "' ORDER BY `date` ASC, `start_time` ASC LIMIT 3");
-
-                                                                if ($upcominglectures->num_rows > 0) {
-
-                                                                    while ($upcominglecturesData = $upcominglectures->fetch_assoc()) {
-                                                                        $upcominglecturesData["start_time"] = date("h:i A", strtotime($upcominglecturesData["start_time"]));
-                                                                        $upcominglecturesData["end_time"] = date("h:i A", strtotime($upcominglecturesData["end_time"]));
-                                                                        $upcominglecturesData["date"] = date("Y-m-d", strtotime($upcominglecturesData["date"]));
-
-                                                                ?>
-                                                                        <!-- Example upcoming lecture - you would replace with dynamic content -->
-                                                                        <a href="lecture-details?lecture-id=<?= $upcominglecturesData["time_table_id"] ?>" class="list-group-item list-group-item-action border-0 p-3">
-                                                                            <div class="d-flex align-items-center">
-                                                                                <div class="time-badge me-3">
-                                                                                    <small class="d-block text-center"><?= date('F', strtotime($upcominglecturesData["date"])) ?></small>
-                                                                                    <strong class="d-block text-center"><?= date("d", strtotime($upcominglecturesData["date"])) ?></strong>
-                                                                                </div>
-                                                                                <div>
-                                                                                    <small class="d-block text-muted"><?= $upcominglecturesData['class_name'] ?></small>
-                                                                                    <small><?= $upcominglecturesData['start_time'] . ' - ' . $upcominglecturesData['end_time'] ?></small>
-                                                                                </div>
-                                                                            </div>
-                                                                        </a>
-                                                                    <?php
-                                                                    }
-                                                                } else {
-                                                                    ?>
-                                                                    <div class="col-12">
-                                                                        <div class="row justify-content-center">
-                                                                            <div class="col-6">
-                                                                                <img src="./assets/imgs/lecture.png" class="w-100 h-auto" alt="Result Not Found" class="empty-icon" />
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                <?php
-                                                                }
-                                                                ?>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1"></div>
-                                    <footer>
-                                        <?php include './includes/footer.php' ?>
-                                    </footer>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <script src="<?= Project::getAssetsPath() ?>/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-                <script src="<?= Project::getAssetsPath() ?>/plugins/jquery/jquery-3.7.1.min.js"></script>
-                <script src="<?= Project::getAssetsPath() ?>/js/script.js?v=<?= Project::getVersion() ?>"></script>
-                <script src="<?= Project::getAssetsPath() ?>/js/functions.js?v=<?= Project::getVersion() ?>"></script>
-            </body>
-
-            </html>
-<?php
-        }
+        $days = (int) (new DateTime($now->format('Y-m-d'), $tz))->diff(new DateTime($start->format('Y-m-d'), $tz))->format('%a');
+        $mins = (int) ceil(($start->getTimestamp() - $now->getTimestamp()) / 60);
+        $whenText = $days === 0 ? 'Starts in ' . ($mins >= 60 ? intdiv($mins, 60) . ' hr ' : '') . ($mins % 60) . ' min' : ($days === 1 ? 'Tomorrow' : 'In ' . $days . ' days');
     }
 }
+
+// my attendance
+$attRes = Database::search("SELECT MAX(`attendance_status_attendance_status_id`) s FROM `attendance` WHERE `time_table_time_table_id` = '" . $id . "' AND `students_student_id` = '" . $studentId . "'");
+$att = (int) (($attRes ? $attRes->fetch_assoc() : null)['s'] ?? 0);
+if (!$isActive) {
+    $attendance = ['No attendance', 'This class day did not go ahead.', 'x', 'is-muted'];
+} elseif ($att === 2) {
+    $attendance = ['Present', 'You attended this class.', 'user-check', 'is-good'];
+} elseif ($att === 4) {
+    $attendance = ['Watched', 'You watched the recording of this class.', 'play', 'is-good'];
+} elseif ($att === 1) {
+    $attendance = ['Joined online', 'You joined online. Your tutor confirms it as Present.', 'hourglass', 'is-warn'];
+} elseif ($att === 3) {
+    $attendance = ['Absent', 'You were marked absent. Watch the recording to catch up.', 'user-cross', 'is-bad'];
+} elseif ($now < $start) {
+    $attendance = ['Not started', 'Attendance is marked once the class starts.', 'clock', 'is-muted'];
+} elseif ($isLive) {
+    $attendance = ['In progress', $typeId === 2 ? 'Join the class to be marked as joined.' : 'Your tutor marks attendance in the hall.', 'clock', 'is-warn'];
+} else {
+    $attendance = ['Not marked', 'No attendance was recorded for you yet.', 'question', 'is-muted'];
+}
+
+// the recording of this day (unless it has expired), class notes, the other classes that day, what is next in this class
+$recording = null;
+foreach (sr_lecture_recordings($studentId, $classId) as $r) {
+    if ($r['time_table_id'] === $id && $r['lock']['state'] !== 'expired') {
+        $recording = $r;
+        break;
+    }
+}
+$files = [];
+$fr = Database::search("SELECT `attachment`, `attachment_name`, `date_added` FROM `attachments` WHERE `time_table_time_table_id` = '" . $id . "' ORDER BY `attachments_order`, `attachment_id`");
+while ($fr && ($f = $fr->fetch_assoc())) {
+    if (!empty($f['attachment']) && file_exists(Project::getAssetsPath() . '/uploads/lectures-attachments/' . basename($f['attachment']))) {
+        $files[] = $f;
+    }
+}
+$listSql = fn (string $where, int $limit) => Database::search("SELECT tt.`time_table_id`, tt.`date`, tt.`start_time`, tt.`end_time`, tt.`lecture_type_lecture_type_id` lt,
+        tt.`time_table_status_time_table_status_id` st, c.`class_name`
+    FROM `time_table` tt INNER JOIN `classes` c ON c.`class_id` = tt.`classes_class_id`
+    INNER JOIN `students_has_classes` shc ON shc.`classes_class_id` = c.`class_id` AND shc.`students_student_id` = '" . $studentId . "' AND shc.`status_status_id` = 1
+    WHERE tt.`time_table_id` <> '" . $id . "' AND $where ORDER BY tt.`date`, tt.`start_time` LIMIT " . $limit);
+$rows = fn ($rs) => $rs ? $rs->fetch_all(MYSQLI_ASSOC) : [];
+$sameDay = $rows($listSql("tt.`date` = '" . $start->format('Y-m-d') . "'", 6));
+$next = $rows($listSql("c.`class_id` = '" . $classId . "' AND tt.`time_table_status_time_table_status_id` = 1 AND CONCAT(tt.`date`, ' ', tt.`end_time`) >= '" . $now->format('Y-m-d H:i:s') . "'", 3));
+
+$fileKind = function (string $file): string {
+    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    return ['pdf' => 'PDF', 'doc' => 'Word', 'docx' => 'Word', 'ppt' => 'Slides', 'pptx' => 'Slides', 'xls' => 'Sheet', 'xlsx' => 'Sheet', 'csv' => 'Sheet',
+        'png' => 'Image', 'jpg' => 'Image', 'jpeg' => 'Image', 'webp' => 'Image', 'zip' => 'Archive'][$ext] ?? (strtoupper($ext) ?: 'File');
+};
+$miniStatus = fn (array $r) => [2 => 'Cancelled', 3 => 'Postponed', 4 => 'Study leave'][(int) $r['st']] ?? '';
+$joinMsg = trim((string) ($_GET['join'] ?? ''));
+$e = 'sl_e';
+
+$lf = ['title' => ($l['lecture_title'] ?: $l['class_name']) . ' - Class Day', 'menu' => 'Time Table', 'js' => []];
+include __DIR__ . '/includes/learning-frame-top.php';
+sl_page_title('Class Day Details', [['Time Table', './time-table'], [$l['class_name'], './class-details?class-id=' . $classId], [$start->format('j M Y'), null]]);
 ?>
+                            <?php if ($joinMsg !== '') { ?>
+                                <div class="ld-note is-info" role="status"><?= enlixo_icon('info', 18) ?><span><?= $e($joinMsg) ?></span></div>
+                            <?php } ?>
+                            <section class="ld-hero status-<?= $e($statusKey) ?>">
+                                <div class="ld-hero-main">
+                                    <div class="ld-pills">
+                                        <span class="ld-pill ld-status"><?php if ($isLive) { ?><span class="ld-pulse"></span><?php } ?><?= $e($statusLabel) ?></span>
+                                        <span class="ld-pill"><?= enlixo_icon($typeIcon, 14) ?><?= $e($typeLabel) ?></span>
+                                        <?php if ($l['exam_type'] || $l['year']) { ?><span class="ld-pill"><?= enlixo_icon('academic', 14) ?><?= $e(trim($l['year'] . ' ' . $l['exam_type'])) ?></span><?php } ?>
+                                    </div>
+                                    <h1 class="ld-title"><?= $e($l['class_name']) ?></h1>
+                                    <?php if (trim((string) $l['lecture_title']) !== '') { ?><p class="ld-subtitle"><?= $e($l['lecture_title']) ?></p><?php } ?>
+                                    <div class="ld-inline"><?= enlixo_icon('teacher', 18) ?><span><?= $e($tutor) ?></span></div>
+                                </div>
+                                <div class="ld-when">
+                                    <div class="ld-date">
+                                        <span class="ld-date-month"><?= $start->format('M') ?></span>
+                                        <span class="ld-date-day"><?= $start->format('j') ?></span>
+                                        <span class="ld-date-dow"><?= $start->format('D') ?></span>
+                                    </div>
+                                    <div class="ld-when-body">
+                                        <span class="ld-time"><?= $e($timeText) ?></span>
+                                        <span class="ld-duration"><?= $e($duration) ?> · <?= $start->format('l, j F Y') ?></span>
+                                        <?php if ($whenText !== '') { ?><span class="ld-countdown"><?= $e($whenText) ?></span><?php } ?>
+                                    </div>
+                                </div>
+                                <?php ob_start();
+                                if ($isActive && $typeId === 2 && !$isOver) {
+                                    if ($now >= $joinFrom) { ?>
+                                        <a class="custom-btn ld-btn" href="./api/joinLecture?id=<?= $id ?>" target="_blank" rel="noopener"><?= enlixo_icon('online', 18) ?>Join Now</a>
+                                    <?php } else { ?>
+                                        <button type="button" class="custom-btn ld-btn" disabled><?= enlixo_icon('online', 18) ?>Join opens at <?= $joinFrom->format('g:i A') ?><?= $joinFrom->format('Y-m-d') !== $now->format('Y-m-d') ? ' on ' . $joinFrom->format('j M') : '' ?></button>
+                                    <?php }
+                                } elseif ($isActive && $typeId === 1 && !$isOver) { ?>
+                                    <span class="ld-hint"><?= enlixo_icon('location', 16) ?><?= $e($l['location'] ? 'In the hall: ' . $l['location'] : 'This class is in the hall.') ?></span>
+                                <?php }
+                                if ($recording && $recording['lock']['watchable']) { ?>
+                                    <a class="custom-outline-btn ld-btn" href="./watch-recording?recording-id=<?= (int) $recording['id'] ?>"><?= enlixo_icon('play', 18) ?>Watch Recording</a>
+                                <?php } elseif ($recording) { ?>
+                                    <span class="ld-hint"><?= enlixo_icon('lock', 16) ?>Recording opens <?= $e($recording['lock']['unlock_text']) ?></span>
+                                <?php }
+                                if ($isActive && !$isOver) { ?>
+                                    <button type="button" class="custom-outline-btn ld-btn" id="ld-add-cal"><?= enlixo_icon('calendar-add', 18) ?>Add to Calendar</button>
+                                <?php }
+                                $actions = trim(ob_get_clean());
+                                if ($actions !== '') { ?>
+                                    <div class="ld-actions"><?= $actions ?></div>
+                                <?php } ?>
+                            </section>
+
+                            <div class="ld-grid">
+                                <div class="ac-stack">
+                                    <div class="ac-card">
+                                        <div class="ac-card-head"><h2 class="ac-card-title">Class Day Details</h2></div>
+                                        <div class="ld-facts">
+                                            <?php foreach ([
+                                                ['calendar', 'Date', $start->format('l, j F Y')],
+                                                ['clock', 'Time', $timeText],
+                                                ['hourglass', 'Duration', $duration],
+                                                [$typeIcon, 'How it runs', $typeLabel],
+                                                ['subject', 'Subject', trim($l['subject'] . ($l['medium'] ? ' (' . $l['medium'] . ')' : ''))],
+                                                ['location', 'Hall / location', $typeId === 2 ? 'Online' : ((string) $l['location'] ?: 'Ask your tutor')],
+                                            ] as [$icon, $label, $value]) { ?>
+                                                <div class="ld-fact">
+                                                    <span class="ld-fact-icon"><?= enlixo_icon($icon, 20) ?></span>
+                                                    <div><span class="ld-fact-label"><?= $e($label) ?></span><span class="ld-fact-value"><?= $e($value) ?></span></div>
+                                                </div>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+
+                                    <div class="ac-card">
+                                        <div class="ac-card-head"><h2 class="ac-card-title">Tutor</h2></div>
+                                        <div class="ld-person">
+                                            <span class="ld-avatar"><span><?= $e($initials) ?></span><?php if (!empty($l['profile_img'])) { ?><img src="<?= $e(Project::getAssetsPath() . '/imgs/users/' . $l['profile_img']) ?>" alt="" onerror="this.remove()"><?php } ?></span>
+                                            <div><span class="ld-person-name"><?= $e($tutor) ?></span><span class="ld-person-role"><?= $e($l['subject'] ?: $l['class_name']) ?></span></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="ac-card">
+                                        <div class="ac-card-head"><h2 class="ac-card-title">Class Notes</h2><?php if ($files) { ?><span class="sub-text text-12"><?= count($files) ?> <?= count($files) === 1 ? 'file' : 'files' ?></span><?php } ?></div>
+                                        <?php if (!$files) { ?>
+                                            <div class="empty-state"><div class="empty-state-icon"><?= enlixo_icon('inbox', 28) ?></div><div class="empty-state-title">No class notes yet</div><div class="empty-state-text">Notes and files your tutor shares for this class day appear here.</div></div>
+                                        <?php } else { ?>
+                                            <div class="sr-files">
+                                                <?php foreach ($files as $f) { ?>
+                                                    <a class="sr-file" href="<?= $e(Project::getAssetsPath() . '/uploads/lectures-attachments/' . basename($f['attachment'])) ?>" target="_blank" rel="noopener">
+                                                        <span class="sl-ico"><?= enlixo_icon('content', 20) ?></span>
+                                                        <span class="sr-file-name"><?= $e($f['attachment_name'] ?: $f['attachment']) ?></span>
+                                                        <span class="sr-file-meta"><?= $e($fileKind($f['attachment'])) ?><?= !empty($f['date_added']) ? ' · Added ' . date('j M Y', strtotime($f['date_added'])) : '' ?></span>
+                                                    </a>
+                                                <?php } ?>
+                                            </div>
+                                        <?php } ?>
+                                    </div>
+                                </div>
+
+                                <div class="ac-stack">
+                                    <div class="ac-card">
+                                        <div class="ac-card-head"><h2 class="ac-card-title">My Attendance</h2></div>
+                                        <div class="ld-attendance <?= $attendance[3] ?>">
+                                            <span class="ld-attendance-icon"><?= enlixo_icon($attendance[2], 24) ?></span>
+                                            <div><span class="ld-attendance-label"><?= $e($attendance[0]) ?></span><span class="ld-attendance-text"><?= $e($attendance[1]) ?></span></div>
+                                        </div>
+                                        <a class="ld-link-row" href="./class-attendance?class-id=<?= $classId ?>">See my attendance in this class<?= enlixo_icon('chevron-right', 16) ?></a>
+                                    </div>
+
+                                    <div class="ac-card">
+                                        <div class="ac-card-head"><h2 class="ac-card-title">Also on <?= $start->format('D, j M') ?></h2></div>
+                                        <?php if (!$sameDay) { ?>
+                                            <div class="empty-state"><div class="empty-state-icon"><?= enlixo_icon('inbox', 28) ?></div><div class="empty-state-title">No other classes</div><div class="empty-state-text">This is your only class that day.</div></div>
+                                        <?php } else { ?>
+                                            <div class="ld-mini-list">
+                                                <?php foreach ($sameDay as $r) { $note = $miniStatus($r); ?>
+                                                    <a class="ld-mini" href="./time-table-class-details?time-table-id=<?= (int) $r['time_table_id'] ?>">
+                                                        <span class="ld-mini-time"><?= date('g:i A', strtotime($r['start_time'])) ?></span>
+                                                        <span class="ld-mini-body"><span class="ld-mini-title"><?= $e($r['class_name']) ?></span><span class="ld-mini-sub"><?= $e($note !== '' ? $note : ((int) $r['lt'] === 2 ? 'Online' : 'In the hall')) ?></span></span>
+                                                    </a>
+                                                <?php } ?>
+                                            </div>
+                                        <?php } ?>
+                                    </div>
+
+                                    <div class="ac-card">
+                                        <div class="ac-card-head"><h2 class="ac-card-title">Next in this class</h2><a class="sr-link" href="./class-time-table?class-id=<?= $classId ?>">Time table</a></div>
+                                        <?php if (!$next) { ?>
+                                            <div class="empty-state"><div class="empty-state-icon"><?= enlixo_icon('inbox', 28) ?></div><div class="empty-state-title">Nothing scheduled yet</div><div class="empty-state-text">Your tutor's next class days appear here once they are on the time table.</div></div>
+                                        <?php } else { ?>
+                                            <div class="ld-mini-list">
+                                                <?php foreach ($next as $r) { $d = strtotime($r['date']); ?>
+                                                    <a class="ld-mini" href="./time-table-class-details?time-table-id=<?= (int) $r['time_table_id'] ?>">
+                                                        <span class="ld-mini-date"><span><?= date('M', $d) ?></span><strong><?= date('j', $d) ?></strong></span>
+                                                        <span class="ld-mini-body"><span class="ld-mini-title"><?= date('l', $d) ?></span><span class="ld-mini-sub"><?= date('g:i A', strtotime($r['start_time'])) ?> - <?= date('g:i A', strtotime($r['end_time'])) ?> · <?= (int) $r['lt'] === 2 ? 'Online' : 'In the hall' ?></span></span>
+                                                    </a>
+                                                <?php } ?>
+                                            </div>
+                                        <?php } ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <script>
+                                // Add to Calendar: an .ics file with this class day (works with Google, Apple and Outlook calendars)
+                                document.getElementById('ld-add-cal')?.addEventListener('click', () => {
+                                    const ev = <?= json_encode([
+                                        'title' => $l['class_name'], 'start' => $start->setTimezone(new DateTimeZone('UTC'))->format('Ymd\THis\Z'),
+                                        'end' => $end->setTimezone(new DateTimeZone('UTC'))->format('Ymd\THis\Z'), 'where' => $typeId === 2 ? 'Online' : (string) $l['location'],
+                                        'uid' => 'class-day-' . $id . '@enlixo',
+                                    ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+                                    const esc = (s) => String(s || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+                                    const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//ENLIXO//Class Day//EN', 'BEGIN:VEVENT', 'UID:' + ev.uid,
+                                        'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z', 'DTSTART:' + ev.start, 'DTEND:' + ev.end,
+                                        'SUMMARY:' + esc(ev.title), 'LOCATION:' + esc(ev.where), 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+                                    const a = document.createElement('a');
+                                    a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+                                    a.download = 'class-day.ics';
+                                    a.click();
+                                    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+                                });
+                            </script>
+<?php include __DIR__ . '/includes/learning-frame-bottom.php'; ?>

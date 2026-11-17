@@ -18,6 +18,11 @@ class load_side_menu
             ["Payments", "f7:wallet", "payments", "payments"],
             ["My Profile", "hugeicons:profile-02", "my-profile", "my-profile"],
         ];
+        // Pre-recorded classes come with the GROW / CUSTOM plan of the tutor: no menu item when no tutor of the student has them
+        require_once __DIR__ . '/../../includes/enlixo/student-recordings.php';
+        if (!sr_pre_allowed((int) ($sessionUser['student_id'] ?? 0))) {
+            $menuItems = array_values(array_filter($menuItems, fn ($i) => $i[2] !== 'pre-recorded-classes'));
+        }
 ?>
         <nav class="d-flex flex-column container-fluid p-0 m-0 vh-100 gap-1 component-theme">
             <div class="row container-fluid overflow-hidden justify-content-center component-theme py-4 p-3 m-0">

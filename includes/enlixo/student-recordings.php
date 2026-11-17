@@ -7,6 +7,7 @@ require_once __DIR__ . '/student-learning.php';
  *
  *   sr_lecture_recordings($studentId, $classId)   recordings of the class days of the student's active classes
  *   sr_pre_recordings($studentId, $classId)       pre-recorded classes of the student's active classes
+ *   sr_pre_allowed($studentId, $classId)          true when a tutor of those classes has pre-recorded classes on their plan
  *   sr_grid($items, 'lecture' | 'pre', $tabs, $classes, $classId)   toolbar + cards (portal/js/recordings.js filters them)
  *   sr_facts(), sr_files(), sr_more()             the side panels of the watch pages
  *
@@ -121,6 +122,25 @@ if (!function_exists('sr_lecture_recordings')) {
             ];
         }
         return $out;
+    }
+
+    /**
+     * Pre-recorded classes are a GROW / CUSTOM feature (`recordings.pre_recorded`): the menu item, the class card / class
+     * page links and the page itself only exist for a student who has at least one class of such a tutor.
+     */
+    function sr_pre_allowed(int $studentId, int $classId = 0): bool
+    {
+        require_once __DIR__ . '/plan-guard.php';
+        $res = Database::search("SELECT DISTINCT c.`tutor_id` FROM `students_has_classes` shc
+            INNER JOIN `classes` c ON c.`class_id` = shc.`classes_class_id`
+            WHERE shc.`students_student_id` = '" . $studentId . "' AND shc.`status_status_id` = 1"
+            . ($classId > 0 ? " AND c.`class_id` = '" . $classId . "'" : ''));
+        while ($res && ($r = $res->fetch_assoc())) {
+            if (enlixo_tutor_has((int) $r['tutor_id'], 'recordings.pre_recorded')) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function sr_pre_recordings(int $studentId, int $classId = 0): array

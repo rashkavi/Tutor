@@ -1067,6 +1067,12 @@ button.ex-hd-cal-cell:hover, button.ex-hd-cal-cell:focus-visible { background: v
     white-space: nowrap;
 }
 
+.dropdown-menu:not(.user-dropdown):not(.plain-menu) .dropdown-item>.ex-ico {
+    flex-shrink: 0;
+    margin: 0 1rem 0 0;
+    color: var(--sub-text);
+}
+
 .dropdown-menu:not(.user-dropdown):not(.plain-menu) .dropdown-item>iconify-icon {
     font-size: 20px;
     width: 20px;
@@ -2254,7 +2260,6 @@ a.ex-hd-stat:hover .ex-hd-go { opacity: 1; }
 .ex-pcard-menu .dropdown-item .ex-ico { color: var(--sub-text, #8C94A3); }
 .ex-pcard-menu .dropdown-item:hover { background: var(--light-color, #f9fafb); color: var(--dark-theme, #0061D2); }
 .ex-pcard-menu .dropdown-item:hover .ex-ico { color: var(--dark-theme, #0061D2); }
-.ex-pcard-menu li + li .dropdown-item { border-top: 1px solid var(--line-color, #E9EAF0); }
 /* keep "View Class" on one line when four cards fit in a row */
 .ex-pcard-view { flex: 0 1 auto; min-width: 0; padding: 0 16px; white-space: nowrap; }
 .ex-pcard-tools { gap: 8px; flex: none; }

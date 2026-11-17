@@ -354,7 +354,7 @@ function showLectureModal(date, dayLectures) {
                    ${isSubjectLectureSchedule ? `
                     <ul class="dropdown-menu z-3">
                         <li>
-                            <a class="dropdown-item" href="lecture-details?lecture-id=${lecture.lectureId}&class-id=${subject}">
+                            <a class="dropdown-item" href="time-table-class-details?time-table-id=${lecture.lectureId}">
                                 Lecture Details
                             </a>
                         </li>
@@ -373,7 +373,7 @@ function showLectureModal(date, dayLectures) {
                 ` : `
                  <ul class="dropdown-menu z-3">
                         <li>
-                            <a class="dropdown-item" href="lecture-details?lecture-id=${lecture.lectureId}">
+                            <a class="dropdown-item" href="time-table-class-details?time-table-id=${lecture.lectureId}">
                                 Lecture Details
                             </a>
                         </li>

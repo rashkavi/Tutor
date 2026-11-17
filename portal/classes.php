@@ -3,6 +3,7 @@ require_once '../includes/UserClass.php';
 require_once "../includes/connection.php";
 require_once "../includes/Project.php";
 require_once "../includes/enlixo/class-card.php";
+require_once "../includes/enlixo/plan-guard.php";
 if (!SessionUser::ifUserIsStudent()) {
     header("Location: ./index");
 } else {
@@ -95,14 +96,14 @@ if (!SessionUser::ifUserIsStudent()) {
                                             while ($class = $classes->fetch_assoc()) {
                                                                                         ?>
                                                 <div class="col-12 col-md-6 col-xl-4 col-xxl-3">
-                                                    <?php enlixo_class_card($class, 'class-details?class-id=' . (int) $class['class_id'], $class['student_count'] . ((int) $class['student_count'] === 1 ? ' Student' : ' Students'), [
+                                                    <?php enlixo_class_card($class, 'class-details?class-id=' . (int) $class['class_id'], $class['student_count'] . ((int) $class['student_count'] === 1 ? ' Student' : ' Students'), array_filter([
                                                         ['Class Time Table', 'class-time-table?class-id=' . (int) $class['class_id'], 'timetable'],
                                                         ['Recordings', 'recordings?class=' . (int) $class['class_id'], 'recordings'],
-                                                        ['Pre-Recorded Classes', 'pre-recorded-classes?class=' . (int) $class['class_id'], 'pre-recorded'],
+                                                        enlixo_tutor_has((int) $class['tutor_id'], 'recordings.pre_recorded') ? ['Pre-Recorded Classes', 'pre-recorded-classes?class=' . (int) $class['class_id'], 'pre-recorded'] : null,
                                                         ['Tutes', 'class-tutes?class-id=' . (int) $class['class_id'], 'tutes'],
                                                         ['Attendance', 'class-attendance?class-id=' . (int) $class['class_id'], 'attendance'],
                                                         ['Payments', 'class-payments?class-id=' . (int) $class['class_id'], 'payments'],
-                                                    ]); ?>
+                                                    ])); ?>
                                                 </div>
 
 
