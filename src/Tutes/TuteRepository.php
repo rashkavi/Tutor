@@ -209,6 +209,7 @@ final class TuteRepository
     {
         return array_map(static fn (array $r) => [
             'id' => (int) $r['tute_delivery_id'],
+            'tute_id' => (int) $r['class_tutes_class_tute_id'],
             'tute' => (string) $r['tute_title'],
             'class' => (string) $r['class_name'],
             'status' => (string) $r['status'],

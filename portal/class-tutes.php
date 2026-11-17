@@ -98,8 +98,9 @@ if (!SessionUser::ifUserIsStudent()) {
                                                  `tute_types`.`tute_type`,
                                                  COUNT(`class_tutes_has_attachments`.`class_tutes_class_tute_id`) AS attachments FROM `class_tutes`
                                                 INNER JOIN `tute_types` ON `class_tutes`.`tute_types_tute_type_id` = `tute_types`.`tute_type_id` 
-                                                INNER JOIN `class_tutes_has_attachments` ON `class_tutes`.`class_tute_id` = `class_tutes_has_attachments`.`class_tutes_class_tute_id` 
-                                                WHERE `classes_class_id`='" . $class_id . "'");
+                                                LEFT JOIN `class_tutes_has_attachments` ON `class_tutes`.`class_tute_id` = `class_tutes_has_attachments`.`class_tutes_class_tute_id` 
+                                                WHERE `classes_class_id`='" . (int) $class_id . "'
+                                                GROUP BY `class_tutes`.`class_tute_id` ORDER BY `class_tutes`.`date_added` DESC"); // every tute, also one sent by post with no file
                                                 if ($tutes->num_rows > 0) {
                                                     while ($tute = $tutes->fetch_assoc()) {
                                                         $tuteType = $tute['tute_types_tute_type_id'] == 1 ? "online" : "couried";
@@ -148,7 +149,7 @@ if (!SessionUser::ifUserIsStudent()) {
                                                                     ?>
 
                                                                     <div class="card-footer-premium">
-                                                                        <button class="btn-watch-premium bg-dark-theme">
+                                                                        <button class="btn-watch-premium bg-dark-theme" onclick="window.location = 'downloadable-tute?class-id=<?= (int) $tute['classes_class_id'] ?>&tute-id=<?= (int) $tute['class_tute_id'] ?>'">
                                                                             <iconify-icon icon="solar:eye-broken" width="18"></iconify-icon>
                                                                             <span>View Tute</span>
                                                                         </button>

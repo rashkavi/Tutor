@@ -8,8 +8,12 @@
  */
 require_once __DIR__ . '/../../includes/enlixo/student-learning.php';
 $ttClass = $ttClass ?? null;
-$ttTitle = $ttClass ? $ttClass['class_name'] . ' Time Table' : 'Time Table';
-$lf = ['title' => $ttTitle, 'menu' => $ttClass ? 'Classes' : 'Time Table', 'js' => ['js/time-table.js'],
+// Attendance (portal/attendance.php, portal/class-attendance.php) uses the same calendar: $ttAttendance = true, every
+// class day coloured Present / Absent / Watched / Not marked, data from api/getAttendance.php, stat tiles on top.
+$ttAttendance = $ttAttendance ?? false;
+$ttWord = $ttAttendance ? 'Attendance' : 'Time Table';
+$ttTitle = $ttClass ? $ttClass['class_name'] . ' ' . $ttWord : $ttWord;
+$lf = ['title' => $ttTitle, 'menu' => $ttClass ? 'Classes' : $ttWord, 'js' => ['js/time-table.js'],
     'icons' => ['physical', 'online', 'teacher', 'chevron-right', 'calendar', 'calendar-empty']];
 $lf = ($ttFrame ?? []) + $lf;
 include __DIR__ . '/learning-frame-top.php';
@@ -19,14 +23,19 @@ include __DIR__ . '/learning-frame-top.php';
                                 sl_page_title($ttTitle, [
                                     ['Classes', './classes'],
                                     [$ttClass['class_name'], './class-details?class-id=' . (int) $ttClass['class_id']],
-                                    ['Time Table', null],
-                                ], '', '<a class="custom-btn" href="./time-table">' . enlixo_icon('timetable', 18) . 'All Classes</a>');
+                                    [$ttWord, null],
+                                ], '', '<a class="custom-btn" href="./' . ($ttAttendance ? 'attendance' : 'time-table') . '">' . enlixo_icon($ttAttendance ? 'check' : 'timetable', 18) . 'All Classes</a>');
                             } else {
-                                sl_page_title('Time Table', [], $ttIntro ?? 'See every class you are in by week or month. Tap a class to open its details.');
+                                sl_page_title($ttWord, [], $ttIntro ?? ($ttAttendance
+                                    ? 'Every class day you were marked for: present, absent or watched the recording. Tap a day to open it.'
+                                    : 'See every class you are in by week or month. Tap a class to open its details.'));
+                            }
+                            if (!empty($ttTiles)) {
+                                echo '<div class="ac-tiles">' . $ttTiles . '</div>';
                             }
                             ?>
 
-                            <div class="ac-card p-3 p-lg-4" id="timeTable" data-class-id="<?= $ttClass ? (int) $ttClass['class_id'] : '' ?>" data-details="<?= sl_e($ttDetails ?? 'time-table-class-details?time-table-id=') ?>">
+                            <div class="ac-card p-3 p-lg-4" id="timeTable" data-mode="<?= $ttAttendance ? 'attendance' : 'timetable' ?>" data-class-id="<?= $ttClass ? (int) $ttClass['class_id'] : '' ?>" data-details="<?= sl_e($ttDetails ?? 'time-table-class-details?time-table-id=') ?>">
                                 <!-- Phones and tablets: month grid, tap a day to see its classes below -->
                                 <div class="d-lg-none">
                                     <div class="m-cal">
@@ -40,10 +49,17 @@ include __DIR__ . '/learning-frame-top.php';
                                         </div>
                                         <div class="m-cal-grid" id="ttMobileGrid"></div>
                                         <div class="m-cal-legend">
-                                            <span><i class="m-cal-key is-today"></i>Today</span>
-                                            <span><i class="m-cal-key has-class"></i>Class day</span>
-                                            <span><i class="m-cal-key is-cancelled"></i>Cancelled</span>
-                                            <span><i class="m-cal-key is-selected"></i>Selected</span>
+                                            <?php if ($ttAttendance) { ?>
+                                                <span><i class="m-cal-key is-today"></i>Today</span>
+                                                <span><i class="m-cal-key is-present"></i>Present</span>
+                                                <span><i class="m-cal-key is-absent"></i>Absent</span>
+                                                <span><i class="m-cal-key is-watched"></i>Watched</span>
+                                            <?php } else { ?>
+                                                <span><i class="m-cal-key is-today"></i>Today</span>
+                                                <span><i class="m-cal-key has-class"></i>Class day</span>
+                                                <span><i class="m-cal-key is-cancelled"></i>Cancelled</span>
+                                                <span><i class="m-cal-key is-selected"></i>Selected</span>
+                                            <?php } ?>
                                         </div>
                                     </div>
                                     <div class="m-day">
@@ -69,6 +85,12 @@ include __DIR__ . '/learning-frame-top.php';
                                             <button type="button" class="w-nav-btn" data-tt="next" aria-label="Next"><?= enlixo_icon('chevron-right', 18) ?></button>
                                         </div>
                                     </div>
+                                    <?php if ($ttAttendance) { ?>
+                                        <div class="att-legend" aria-label="Colours">
+                                            <span><i class="att-key is-present"></i>Present</span><span><i class="att-key is-absent"></i>Absent</span>
+                                            <span><i class="att-key is-watched"></i>Watched the recording</span><span><i class="att-key is-pending"></i>Joined online, being checked</span>
+                                        </div>
+                                    <?php } ?>
                                     <div id="ttWeek"></div>
                                     <div id="ttMonth" class="d-none"></div>
                                 </div>

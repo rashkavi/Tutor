@@ -70,10 +70,18 @@ class DashCalendar {
             this.day.append(el('span', '', 'No classes. Days with a dot have classes.'));
             return;
         }
-        const ul = el('ul');
+        // one small card per class: name, time, online / physical; opens that class day when a link is given
+        const ul = el('ul', 'ex-hd-cal-list');
         for (const s of list) {
+            const card = el(s.u ? 'a' : 'div', `ex-hd-cal-item${s.o ? ' is-online' : ''}`);
+            if (s.u) card.href = s.u;
+            const text = el('span', 'ex-hd-cal-item-text');
+            const meta = el('span', 'ex-hd-cal-item-meta');
+            meta.append(el('span', 'ex-hd-cal-item-time', s.t), el('span', 'ex-hd-cal-item-mode', s.o ? 'Online' : 'Physical'));
+            text.append(el('span', 'ex-hd-cal-item-name', s.c), meta);
+            card.append(text);
             const li = el('li');
-            li.append(el('span', 'text-truncate', s.c), el('span', 'text-nowrap', s.t));
+            li.append(card);
             ul.append(li);
         }
         this.day.append(ul);
