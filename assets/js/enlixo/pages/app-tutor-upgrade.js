@@ -188,9 +188,12 @@ function usageCard(rec) {
 function plansCard(rec, canPreview) {
   const mine = paidKey();
   const plans = S.plans.filter((p) => ORDER.includes(p.key));
-  const toggle = h('div', { class: 'up-cycle', role: 'group', 'aria-label': 'Billing' },
-    ['monthly', 'yearly'].map((c) => h('button', { type: 'button', class: cycle === c ? 'is-on' : '', 'aria-pressed': String(cycle === c), onclick: () => { cycle = c; draw(); } },
-      c === 'monthly' ? 'Monthly' : 'Yearly', c === 'yearly' ? h('span', { class: 'up-save' }, 'Save') : null)));
+  const best = Math.max(0, ...plans.filter((p) => p.monthly > 0).map((p) => Math.round((p.yearly_discount / p.monthly) * 100)));
+  // Monthly / Yearly switch and pricing cards: the same design as My Subscription → Plans (.ex-plan in enlixo-ui.css)
+  const toggle = h('div', { class: 'ex-plan-cycle', role: 'group', 'aria-label': 'Pay monthly or yearly' },
+    ['monthly', 'yearly'].map((c) => h('button', { type: 'button', class: `ex-plan-cycle-btn${cycle === c ? ' active' : ''}`, 'aria-pressed': String(cycle === c), onclick: () => { cycle = c; draw(); } },
+      c === 'monthly' ? 'Monthly' : 'Yearly', c === 'yearly' && best ? h('span', { class: 'ex-plan-save' }, `Save ${best}%`) : null)));
+  const tick = (text, strong = false) => h('li', { class: strong ? 'fw-semibold main-text' : '' }, h('span', { class: 'ex-plan-tick' }, icon('check', { size: 16 })), h('span', {}, text));
   const card = (p) => {
     const isMine = p.key === mine;
     const higher = rank(p.key) > rank(mine);
@@ -201,31 +204,36 @@ function plansCard(rec, canPreview) {
       const l = A.limits.find((x) => x.key === k);
       return l ? `${v[p.key] === null || v[p.key] === undefined ? 'Unlimited' : v[p.key]} ${l.unit}${l.period === 'month' && v[p.key] !== null ? ' a month' : ''}` : null;
     }).filter(Boolean);
-    const yearly = cycle === 'yearly' && p.monthly > 0;
-    return h('div', { class: `up-plan${isRec ? ' is-rec' : ''}${isMine ? ' is-mine' : ''}` },
-      isRec ? h('span', { class: 'up-plan-badge' }, 'Best next step') : isMine ? h('span', { class: 'up-plan-badge is-mine' }, 'Your plan') : null,
-      h('div', { class: 'up-plan-name' }, p.name),
-      h('div', { class: 'up-plan-tag' }, p.tagline || ''),
-      custom ? h('div', { class: 'up-plan-price' }, h('b', {}, "Let's talk"))
-        : h('div', { class: 'up-plan-price' }, h('b', {}, lkr(monthlyPrice(p))), h('span', {}, p.monthly ? '/ month' : 'forever')),
-      yearly ? h('div', { class: 'up-plan-sub' }, `${lkr(monthlyPrice(p) * 12)} a year · you save ${lkr(p.yearly_discount * 12)}`) : h('div', { class: 'up-plan-sub' }, p.limit ? `Up to ${p.limit} students` : 'Any number of students'),
-      h('ul', { class: 'up-plan-list' },
-        rank(p.key) > 0 ? h('li', { class: 'is-all' }, icon('check', { size: 14 }), `Everything in ${plans[rank(p.key) - 1]?.name ?? ''}`) : null,
-        adds.slice(0, rank(p.key) > 0 ? 5 : 6).map((n) => h('li', {}, icon('check', { size: 14 }), n)),
-        p.key !== 'pro' ? h('li', { class: 'is-limits' }, icon('sliders', { size: 14 }), limitLines.join(' · ')) : null),
-      h('div', { class: 'up-plan-cta' },
-        isMine ? h('span', { class: 'up-plan-mine' }, icon('check', { size: 16 }), 'You are on this plan')
-          : custom ? h('a', { class: 'custom-btn w-100 text-decoration-none', href: waLink(`I would like a CUSTOM plan for my classes.`), target: '_blank', rel: 'noopener' }, icon('whatsapp', { size: 18 }), 'Talk to ENLIXO')
-            : higher ? h('button', { type: 'button', class: 'custom-btn w-100', onclick: () => openConfirm(p.key) }, `Upgrade to ${p.name}`)
-              : h('a', { class: 'up-down', href: 'subscription?tab=plans' }, `Move to ${p.name}`),
-        higher && !custom && canPreview ? h('button', { type: 'button', class: 'up-try w-100 justify-content-center', onclick: () => startPreview(p.key) }, icon('magic', { size: 16 }), 'Ask for a 7-day free trial') : null));
+    const tone = { start: 'blue', grow: 'green', pro: 'purple' }[p.key] ?? 'blue';
+    const yearlyMonthly = Math.max(0, p.monthly - p.yearly_discount);
+    const action = isMine ? h('div', { class: 'ex-plan-current mt-auto' }, icon('check', { size: 18 }), 'This is your plan')
+      : custom ? h('a', { class: 'custom-btn w-100 mt-auto text-decoration-none d-inline-flex align-items-center justify-content-center gap-2', href: waLink('I would like a CUSTOM plan for my classes.'), target: '_blank', rel: 'noopener' }, icon('whatsapp', { size: 18 }), 'Talk to ENLIXO')
+        : higher ? h('button', { type: 'button', class: 'custom-btn w-100 mt-auto', onclick: () => openConfirm(p.key) }, `Upgrade to ${p.name}`)
+          : h('a', { class: 'custom-outline-btn w-100 mt-auto text-decoration-none d-inline-flex justify-content-center', href: 'subscription?tab=plans' }, `Move to ${p.name}`);
+    return h('div', { class: 'col-12 col-md-6 col-xl-3' }, h('div', { class: `ex-plan tone-${tone}${isMine ? ' is-mine' : ''}${isRec ? ' is-rec' : ''}` },
+      isMine ? h('div', { class: 'ex-plan-ribbon' }, 'Your plan') : isRec ? h('div', { class: 'ex-plan-ribbon' }, 'Best next step') : null,
+      h('div', { class: 'ex-plan-head' },
+        h('span', { class: 'ex-plan-ico' }, icon(p.key === 'pro' ? 'crown' : p.key === 'grow' ? 'growth' : 'classes', { size: 22 })),
+        h('div', { class: 'min-w-0' }, h('div', { class: 'ex-plan-name' }, p.name), h('div', { class: 'ex-plan-tagline' }, p.tagline || ''))),
+      custom ? h('div', { class: 'ex-plan-price' }, h('span', { class: 'ex-plan-amount' }, "Let's talk"))
+        : h('div', { class: 'ex-plan-price' }, h('span', { class: 'ex-plan-cur' }, 'LKR'), h('span', { class: 'ex-plan-amount' }, lkr(monthlyPrice(p)).replace(/^LKR\s*/, '')), h('span', { class: 'ex-plan-per' }, p.monthly ? '/ month' : 'forever')),
+      h('div', { class: 'ex-plan-note' }, custom || !p.yearly_discount ? '\u00a0'
+        : cycle === 'yearly' ? [`${lkr(yearlyMonthly * 12)} a year, `, h('b', {}, `you save ${lkr(p.yearly_discount * 12)}`)]
+          : ['or ', h('b', {}, `${lkr(yearlyMonthly)} a month`), ' when you pay yearly']),
+      h('ul', { class: 'ex-plan-list' },
+        tick(p.limit ? `Up to ${p.limit} students` : 'Any number of students', true),
+        rank(p.key) > 0 ? tick(`Everything in ${plans[rank(p.key) - 1]?.name ?? ''}`, true) : null,
+        adds.slice(0, rank(p.key) > 0 ? 5 : 6).map((n) => tick(n)),
+        !custom && limitLines.length ? tick(limitLines.join(' · ')) : null),
+      action,
+      higher && !custom && canPreview ? h('button', { type: 'button', class: 'up-try w-100 justify-content-center mt-2', onclick: () => startPreview(p.key) }, icon('magic', { size: 16 }), 'Ask for a 7-day free trial') : null));
   };
   return h('div', { class: 'component-theme p-4 mb-4', id: 'up-plans' },
-    h('div', { class: 'd-flex justify-content-between align-items-center gap-3 flex-wrap mb-4' },
-      h('div', {}, h('div', { class: 'sub-topic main-text' }, 'Choose your plan'), h('div', { class: 'text-13 sub-text' }, 'Prices in LKR. Your classes, students and records stay when you change plan.')),
+    h('div', { class: 'ex-plan-top' },
+      h('div', { class: 'ex-plan-info' }, icon('info', { size: 18 }), h('span', {}, 'Prices in LKR. Your classes, students and records stay when you change plan.')),
       toggle),
     confirming ? confirmPanel(confirming) : null,
-    h('div', { class: 'up-plans' }, plans.map(card)));
+    h('div', { class: 'row g-4 align-items-stretch' }, plans.map(card)));
 }
 
 function openConfirm(key) {

@@ -69,7 +69,7 @@ const state = () => JSON.parse(php('qa-tick.php', 'status'));
     await p().waitForTimeout(3000);
     t.expect(/upgrade\?feature=zoom/.test(p().url()), `Went to ${p().url()}`);
     t.expect(/Unlock Zoom Integration/.test(await text('.up-why')), 'Reason missing');
-    t.expect(/best next step/i.test(await text('.up-plan.is-rec')) && /STARTER/.test(await text('.up-plan.is-rec')), 'STARTER not recommended');
+    t.expect(/best next step/i.test(await text('.ex-plan.is-rec')) && /STARTER/.test(await text('.ex-plan.is-rec')), 'STARTER not recommended');
     await noModal();
   });
   await t.tc('PL-05', 'FREE', 'Parents of a FREE tutor cannot sign in, with a clear reason', ['A parent of the QA tutor\'s student signs in'], 'Refused: "Parent login is not part of your tutor\'s ENLIXO plan"', async () => {
@@ -101,7 +101,7 @@ const state = () => JSON.parse(php('qa-tick.php', 'status'));
   await t.tc('PL-08', 'Upgrade', 'Upgrade from FREE to STARTER on the page', ['Sign in as the tutor', 'Upgrade page › Upgrade to STARTER', 'Read the confirm panel', 'Confirm'], 'The confirm is on the page (no pop-up); STARTER is on, an invoice is made and the invoice page opens', async () => {
     await tutorIn();
     await t.open('tutor/upgrade', 3000);
-    await p().locator('.up-plan', { hasText: 'STARTER' }).locator('button', { hasText: 'Upgrade to STARTER' }).click();
+    await p().locator('.ex-plan', { hasText: 'STARTER' }).filter({ has: p().locator('.ex-plan-name', { hasText: /^STARTER/ }) }).locator('button', { hasText: 'Upgrade to STARTER' }).click();
     await p().waitForTimeout(800);
     t.expect(/due in 7 days/.test(await text('#up-confirm')), `Confirm: ${await text('#up-confirm')}`);
     await noModal();

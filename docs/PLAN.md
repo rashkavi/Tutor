@@ -333,3 +333,13 @@ Run `database/migrations/019_scholarship_subjects.sql` (adds "Grade 5 Scholarshi
 - Class day details (`portal/time-table-class-details.php`) follows the V3 student portal Lecture Details: summary card (status, how it runs, exam, tutor, date tile, time, countdown), Join Now / Watch Recording / Add to Calendar (.ics), Class Day Details, Tutor, Class Notes, My Attendance, Also on that day, Next in this class. Styles `ld-*` in `assets/css/portal-learning.css`.
 - Join Now goes through `portal/api/joinLecture.php`: student in the class, day on, from 1 hour before the start to the end; marks attendance 1 (joined online, the tutor confirms Present) when nothing is marked, then redirects to the link. The old page called a `joinLecture()` that did not exist, and the calendar linked to a missing `lecture-details` page.
 - `bin/dev-up.sh` starts the dev server with `ENLIXO_DEMO_OTP=1` (demo numbers sign in with 123456; dev only).
+
+## Trial requests, class day rules, Add Recording page, one plan card design (2026-11-17)
+
+Run `database/migrations/020_trial_requests.sql` and `021_lecture_type_both.sql`, then `php bin/seed.php`.
+
+- **Free trial = request:** see docs/PLANS.md (Admin > Tutors > Trial Requests, `TrialRequests`).
+- **Schedule a class day** (`tutor/schedule-class.php`, `tutor/api/scheduleLectureToClass.php`): Physical / Online / Both (lecture type 4 "Both" = hall and online at the same time, needs the online link; joins, calendars and the class day page treat it like online). Recurring class days are STARTER and up (`timetable.recurring`: the box is locked with a hover card on FREE, the API refuses). FREE attaches one class notes file of up to 10 MB (`timetable.attachments`). Typed titles are escaped; a Zoom failure answers JSON instead of printing.
+- **Lock badges on legacy PHP pages:** `enlixo_lock_badge($tutorId, $feature)` (`includes/enlixo/plan-guard.php`) draws the badge and the same hover card (plan, what it does, Upgrade) as `FeatureGate.badge()`; the page needs `enlixo-ui.css`.
+- **Add / Edit Recording is a page:** `tutor/add-recording.php` (`?class=`, `?time-table-id=`, `?id=` to edit; `edit-recording?recording-id=` forwards) with `recording-form.js` + `app-tutor-recording-form.js`. Class Recordings opens it instead of the old pop-up.
+- **One plan card design:** the Upgrade page plans use the My Subscription → Plans card (`.ex-plan`, Monthly / Yearly switch `.ex-plan-cycle`), with "Best next step" / "Your plan" ribbons.

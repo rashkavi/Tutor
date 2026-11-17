@@ -2610,3 +2610,11 @@ a.ex-hd-cal-item:hover { transform: translateY(-1px); color: inherit; }
 /* a lock badge on a full-width button (Generate thumbnail on FREE) sits on its top-right corner */
 .ex-image-panel > button { position: relative; overflow: visible; }
 .ex-image-panel > button > .ex-lock-badge { position: absolute; top: -10px; right: -6px; }
+/* the same card on legacy PHP pages (enlixo_lock_badge() in includes/enlixo/plan-guard.php): opens on hover / focus */
+.ex-lock-wrap { position: relative; display: inline-flex; vertical-align: middle; }
+.ex-lock-wrap > .ex-lock-tip { position: absolute; top: calc(100% + 8px); left: 0; }
+.ex-lock-wrap:hover > .ex-lock-tip, .ex-lock-wrap:focus-within > .ex-lock-tip { opacity: 1; visibility: visible; transform: none; }
+.ex-lock-wrap > .ex-lock-tip::before { content: ''; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+/* the plan the Upgrade page recommends (same card as My Subscription → Plans) */
+.ex-plan.is-rec { box-shadow: 0 0 0 2px var(--tone), 0 18px 40px rgba(16, 24, 40, .12); }
+.ex-plan-per { white-space: nowrap; }

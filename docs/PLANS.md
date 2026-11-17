@@ -17,6 +17,8 @@ writes it to `features` / `payment_plan_features`. Code asks for a feature or a 
 | Tutes by post (courier) | no | yes | yes | yes |
 | MCQ exams | no | yes | yes | yes |
 | Class cover generator (`classes.cover_generator`) | no (upload a picture) | yes | yes | yes |
+| Recurring class days (`timetable.recurring`) | no (one day at a time) | yes | yes | yes |
+| Class notes per class day (`timetable.attachments`) | 1 file, up to 10 MB | several, 10 MB each | yes | yes |
 | Pre-recorded classes (`recordings.pre_recorded`) | no | no | yes | yes |
 | Card payments, WhatsApp / SMS API, arrears, parent payments, controlled / expiring recordings, analytics, ID cards, staff roles | no | no | yes | yes |
 

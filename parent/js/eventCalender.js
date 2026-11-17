@@ -345,7 +345,7 @@ function showLectureModal(date, dayLectures) {
                     </div>
                 </div>
                <div class="d-flex justify-content-between align-items-center mb-3 px-3">
-               ${lecture.status === 'Ongoing' && lecture.lectureType === 'Online'
+               ${lecture.status === 'Ongoing' && (lecture.lectureType === 'Online' || lecture.lectureType === 'Both')
                 ? `
                     <button class="table-btn table-btn-success active" onclick="window.open('${lecture.joinLink}', '_blank')">
                         Join Now

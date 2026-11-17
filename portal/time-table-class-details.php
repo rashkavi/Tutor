@@ -63,7 +63,8 @@ if ($statusId === 2) {
 } else {
     [$statusLabel, $statusKey] = ['Upcoming', 'upcoming'];
 }
-[$typeLabel, $typeIcon] = [1 => ['In the hall', 'physical'], 2 => ['Online', 'online'], 3 => ['Recording', 'recordings']][$typeId] ?? ['Class', 'classes'];
+[$typeLabel, $typeIcon] = [1 => ['In the hall', 'physical'], 2 => ['Online', 'online'], 3 => ['Recording', 'recordings'], 4 => ['Hall and online', 'online']][$typeId] ?? ['Class', 'classes'];
+$isOnline = in_array($typeId, [2, 4], true); // Both (4) has the online link too
 $minutes = max(0, (int) round(($end->getTimestamp() - $start->getTimestamp()) / 60));
 $duration = ($minutes >= 60 ? intdiv($minutes, 60) . ' hr ' : '') . ($minutes % 60 ? ($minutes % 60) . ' min' : '');
 $duration = trim($duration) ?: '-';
@@ -99,7 +100,7 @@ if (!$isActive) {
 } elseif ($now < $start) {
     $attendance = ['Not started', 'Attendance is marked once the class starts.', 'clock', 'is-muted'];
 } elseif ($isLive) {
-    $attendance = ['In progress', $typeId === 2 ? 'Join the class to be marked as joined.' : 'Your tutor marks attendance in the hall.', 'clock', 'is-warn'];
+    $attendance = ['In progress', $isOnline ? 'Join the class to be marked as joined.' : 'Your tutor marks attendance in the hall.', 'clock', 'is-warn'];
 } else {
     $attendance = ['Not marked', 'No attendance was recorded for you yet.', 'question', 'is-muted'];
 }
@@ -168,7 +169,7 @@ sl_page_title('Class Day Details', [['Time Table', './time-table'], [$l['class_n
                                     </div>
                                 </div>
                                 <?php ob_start();
-                                if ($isActive && $typeId === 2 && !$isOver) {
+                                if ($isActive && $isOnline && !$isOver) {
                                     if ($now >= $joinFrom) { ?>
                                         <a class="custom-btn ld-btn" href="./api/joinLecture?id=<?= $id ?>" target="_blank" rel="noopener"><?= enlixo_icon('online', 18) ?>Join Now</a>
                                     <?php } else { ?>
@@ -202,7 +203,7 @@ sl_page_title('Class Day Details', [['Time Table', './time-table'], [$l['class_n
                                                 ['hourglass', 'Duration', $duration],
                                                 [$typeIcon, 'How it runs', $typeLabel],
                                                 ['subject', 'Subject', trim($l['subject'] . ($l['medium'] ? ' (' . $l['medium'] . ')' : ''))],
-                                                ['location', 'Hall / location', $typeId === 2 ? 'Online' : ((string) $l['location'] ?: 'Ask your tutor')],
+                                                ['location', 'Hall / location', $typeId === 2 ? 'Online' : ((string) $l['location'] ?: 'Ask your tutor') . ($typeId === 4 ? ' and online' : '')],
                                             ] as [$icon, $label, $value]) { ?>
                                                 <div class="ld-fact">
                                                     <span class="ld-fact-icon"><?= enlixo_icon($icon, 20) ?></span>
@@ -257,7 +258,7 @@ sl_page_title('Class Day Details', [['Time Table', './time-table'], [$l['class_n
                                                 <?php foreach ($sameDay as $r) { $note = $miniStatus($r); ?>
                                                     <a class="ld-mini" href="./time-table-class-details?time-table-id=<?= (int) $r['time_table_id'] ?>">
                                                         <span class="ld-mini-time"><?= date('g:i A', strtotime($r['start_time'])) ?></span>
-                                                        <span class="ld-mini-body"><span class="ld-mini-title"><?= $e($r['class_name']) ?></span><span class="ld-mini-sub"><?= $e($note !== '' ? $note : ((int) $r['lt'] === 2 ? 'Online' : 'In the hall')) ?></span></span>
+                                                        <span class="ld-mini-body"><span class="ld-mini-title"><?= $e($r['class_name']) ?></span><span class="ld-mini-sub"><?= $e($note !== '' ? $note : ([2 => 'Online', 4 => 'Hall and online'][(int) $r['lt']] ?? 'In the hall')) ?></span></span>
                                                     </a>
                                                 <?php } ?>
                                             </div>
@@ -273,7 +274,7 @@ sl_page_title('Class Day Details', [['Time Table', './time-table'], [$l['class_n
                                                 <?php foreach ($next as $r) { $d = strtotime($r['date']); ?>
                                                     <a class="ld-mini" href="./time-table-class-details?time-table-id=<?= (int) $r['time_table_id'] ?>">
                                                         <span class="ld-mini-date"><span><?= date('M', $d) ?></span><strong><?= date('j', $d) ?></strong></span>
-                                                        <span class="ld-mini-body"><span class="ld-mini-title"><?= date('l', $d) ?></span><span class="ld-mini-sub"><?= date('g:i A', strtotime($r['start_time'])) ?> - <?= date('g:i A', strtotime($r['end_time'])) ?> · <?= (int) $r['lt'] === 2 ? 'Online' : 'In the hall' ?></span></span>
+                                                        <span class="ld-mini-body"><span class="ld-mini-title"><?= date('l', $d) ?></span><span class="ld-mini-sub"><?= date('g:i A', strtotime($r['start_time'])) ?> - <?= date('g:i A', strtotime($r['end_time'])) ?> · <?= [2 => 'Online', 4 => 'Hall and online'][(int) $r['lt']] ?? 'In the hall' ?></span></span>
                                                     </a>
                                                 <?php } ?>
                                             </div>

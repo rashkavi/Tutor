@@ -1,5 +1,5 @@
 // Tutor → Academic → Class Recordings (tutor/recordings.php). V3 order: header card (gear → Recording Types, Add
-// Recording) → stat cards → one table card with tabs (Recordings, Activity Log). ?class=<id> opens one class.
+// Recording, which opens tutor/add-recording.php) → stat cards → one table card with tabs (Recordings, Activity Log). ?class=<id> opens one class.
 // Data: GET /tutor/recordings (list), /tutor/recordings/overview (cards, classes, types, log), /tutor/recordings/days.
 import { DataView } from '../components/DataView.js';
 import { StatCard } from '../components/StatCard.js';
@@ -170,118 +170,11 @@ async function remove(r) {
   try { await api.delete(`/tutor/recordings/${r.id}`); Toast.success('Recording deleted.'); refresh(); } catch (e) { Toast.error(e.message); }
 }
 
-// ------------------------------------------------------------------ add / edit
+// ------------------------------------------------------------------ add / edit: its own page (tutor/add-recording.php)
 function edit(rec) {
-  const isNew = !rec;
-  const types = O.types.filter((t) => t.active || t.id === rec?.type.id);
-  if (!types.length && !(rec?.type.key === 'upload')) {
-    Toast.error('Switch on at least one recording type in Settings → Recording Types first.');
-    return;
-  }
-  const v = {
-    class: rec?.class.id ?? (currentClass() || view?.state.filters.class || ''), day: rec?.day.id ?? '', title: rec?.title ?? '', description: rec?.description ?? '',
-    type: rec?.type.id ?? types[0]?.id ?? '', link: rec?.url ?? '', passcode: rec?.passcode ?? '', duration: rec?.duration ?? '', unlock_at: rec?.unlock_at ?? '', expire_date: rec?.expire_date ?? '',
-  };
-  if (rec?.type.old && rec.type.key === 'youtube') v.type = types.find((t) => t.platform_key === 'youtube')?.id ?? v.type;
-  const keepUpload = rec?.type.key === 'upload';
-  const canExpire = O.can_expire;
-
-  const inp = (key, attrs = {}) => h('input', { class: 'form-control custom-input', 'data-key': key, value: v[key], ...attrs });
-  const cls = h('select', { class: 'form-select custom-select', 'data-key': 'class' }, h('option', { value: '', disabled: true, selected: !v.class }, '- Select -'),
-    O.classes.map((c) => h('option', { value: c.id, selected: String(c.id) === String(v.class) }, c.active ? c.name : `${c.name} (inactive)`)));
-  const day = h('select', { class: 'form-select custom-select', 'data-key': 'day', disabled: true }, h('option', { value: '' }, '- Select -'));
-  const dayHint = h('div', { class: 'text-12 sub-text mt-n2 mb-3' });
-  let days = [];
-  const title = inp('title', { placeholder: 'Enter a title, for example Week 4: Integration', 'data-limit': '100', maxlength: 100 });
-  const desc = h('textarea', { class: 'form-control custom-input', 'data-key': 'description', rows: 3, placeholder: 'Enter what the class covered (optional), for example the lessons and page numbers', 'data-limit': '1000', maxlength: 1000 }, v.description);
-  const duration = inp('duration', { type: 'number', min: 1, max: 900, placeholder: 'Enter the length in minutes, for example 120' });
-  const unlock = inp('unlock_at', { type: 'datetime-local', placeholder: 'Choose the day and time students can start watching' });
-  const expire = inp('expire_date', { type: 'date', placeholder: 'Choose the last day students can watch', disabled: !canExpire && !v.expire_date, min: new Date().toISOString().slice(0, 10) });
-
-  // class days of the chosen class
-  const drawDays = async (keep) => {
-    day.disabled = true;
-    fill(dayHint);
-    if (!cls.value) { fill(day, h('option', { value: '' }, 'Choose a class first')); return; }
-    fill(day, h('option', { value: '' }, 'Loading class days…'));
-    try { ({ data: days } = await api.get('/tutor/recordings/days', { class: cls.value })); } catch (e) { days = []; Toast.error(e.message); }
-    if (!days.length) {
-      fill(day, h('option', { value: '' }, 'No class days yet'));
-      fill(dayHint, 'This class has no class day that has started. Add class days on the Time Table first.');
-      return;
-    }
-    fill(day, h('option', { value: '', disabled: true, selected: !keep }, '- Select -'),
-      days.map((d) => h('option', { value: d.id, selected: String(d.id) === String(keep) },
-        `${dayText(d.date)} · ${ampm(d.start)}${d.title ? ` · ${d.title}` : ''}${d.recordings && String(d.id) !== String(rec?.day.id) ? ` (has ${plural(d.recordings, 'recording')})` : ''}`)));
-    day.disabled = false;
-    drawDayHint();
-  };
-  const drawDayHint = () => {
-    const d = days.find((x) => String(x.id) === day.value);
-    fill(dayHint, d ? `${d.title || 'Class day'} · ${ampm(d.start)} - ${ampm(d.end)}` : '');
-    if (d && !title.value.trim() && d.title) title.value = d.title;
-  };
-  cls.addEventListener('change', () => drawDays(''));
-  day.addEventListener('change', drawDayHint);
-
-  // where the video is (shared with the pre-recorded class form)
-  const picker = linkPicker(types, v, {
-    onVideo: (info) => {
-      if (!title.value.trim() && info.title) title.value = info.title;
-      if (!String(duration.value).trim() && info.minutes) duration.value = info.minutes;
-    },
-  });
-
-  const sec = (text, info) => h('div', { class: 'sub-topic mt-2 mb-3 d-flex align-items-center gap-2' }, text, info ? infoTip(info, text) : null);
-  const where = keepUpload
-    ? h('div', { class: 'ad-soft p-3 d-flex gap-3 align-items-start mb-3' }, platformTile('upload'), h('div', {},
-      h('div', { class: 'text-14 main-text fw-semibold' }, 'Uploaded video'),
-      h('div', { class: 'text-12 sub-text' }, 'This video was uploaded before and stays as it is. You can change the details below.')))
-    : picker.el;
-
-  const body = h('div', {},
-    sec('Class day', 'The class and the day this recording is from. Students of that class see it in the app.'),
-    h('div', { class: 'row gx-3' },
-      h('div', { class: 'col-md-6' }, field('Class', cls, { required: true })),
-      h('div', { class: 'col-md-6' }, field('Class day', day, { required: true, info: 'Days of this class that have already started, newest first. Add class days on the Time Table.' }), dayHint)),
-    sec('Recording', null),
-    field('Title', title, { required: true, info: 'What students see in the list, for example "Week 4: Integration". Up to 100 characters.' }),
-    where,
-    h('div', { class: 'row gx-3' },
-      h('div', { class: 'col-md-6' }, field('Length (minutes)', duration, { required: true, info: 'How long the video is, in minutes. For example 120 for a two-hour class. Watch-time limits are counted from this.' }))),
-    field('Description', desc, { info: 'Anything that helps students, for example the lessons covered or the tute pages. Up to 1000 characters.' }),
-    sec('When students can watch', 'Leave both empty to show the recording at once, with no end date.'),
-    h('div', { class: 'row gx-3' },
-      h('div', { class: 'col-md-6' }, field('Opens on', unlock, { info: 'Students see the recording from this day and time, for example the day after the class. Empty = at once.' })),
-      h('div', { class: 'col-md-6' }, h('div', { class: 'position-relative' }, field('Available until', expire, { info: canExpire ? 'The last day students can watch. After it the recording closes for them. Empty = no end date.' : 'Closing a recording on a date is on the GROW plan.' }),
-        canExpire ? null : h('span', { class: 'position-absolute top-0 end-0' }, lockBadge('recordings.expiry'))))));
-
-  clearOnEdit(body);
-  drawDays(v.day);
-  const m = BsModal.open({
-    title: isNew ? 'Add a Recording' : 'Edit Recording', subtitle: isNew ? 'Share a class day with your students' : [rec.class.name, dayText(rec.day.date)],
-    icon: isNew ? 'add' : 'edit', size: 'lg', body,
-    footerEnd: [BsModal.button('Cancel', { onclick: () => m.close() }), BsModal.button(isNew ? 'Add Recording' : 'Save Changes', {
-      primary: true,
-      onclick: async (e) => {
-        const btn = e.currentTarget; btn.disabled = true;
-        const payload = {
-          class: Number(cls.value) || 0, day: Number(day.value) || 0, title: title.value, description: desc.value, duration: duration.value,
-          ...picker.values(), unlock_at: unlock.value, expire_date: expire.value,
-        };
-        try {
-          await (isNew ? api.post('/tutor/recordings', payload) : api.put(`/tutor/recordings/${rec.id}`, payload));
-          m.close();
-          Toast.success(isNew ? 'Recording added. Students of the class can see it.' : 'Saved.');
-          refresh();
-        } catch (err) {
-          const map = { ...(err.details ?? {}) };
-          showFieldErrors(body, map);
-          if (!Object.keys(map).length) Toast.error(err.message);
-        } finally { btn.disabled = false; }
-      },
-    })],
-  });
+  if (rec) { location.href = `add-recording?id=${encodeURIComponent(rec.id)}`; return; }
+  const c = currentClass() || view?.state.filters.class || '';
+  location.href = `add-recording${DAY ? `?time-table-id=${encodeURIComponent(DAY)}` : c ? `?class=${encodeURIComponent(c)}` : ''}`;
 }
 
 /** Opened from one class day (Time Table → Recording): say so, with a way back to every recording. */
@@ -307,7 +200,7 @@ async function start() {
   tabs.mount(card);
   fill(root, statsEl, card);
   const q = new URLSearchParams(location.search);
-  if (q.get('add') === '1' && O.can_manage) edit(null);
-  if (q.get('edit') && O.can_manage) api.get(`/tutor/recordings/${q.get('edit')}`).then(({ data }) => edit(data)).catch((e) => Toast.error(e.message));
+  if (q.get('add') === '1' && O.can_manage) edit(null); // older links: the form is a page now
+  if (q.get('edit') && O.can_manage) edit({ id: q.get('edit') });
 }
 start();
