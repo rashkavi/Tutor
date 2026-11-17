@@ -84,3 +84,4 @@
 .sp-choice.is-good.is-on { border-color: var(--dark-green-blue); background: var(--light-green); color: var(--dark-green-blue); }
 .sp-choice.is-bad.is-on { border-color: var(--dark-red); background: var(--light-red); color: var(--dark-red); }
 @media (max-width: 575.98px) { .sp-choices { grid-template-columns: minmax(0, 1fr); } }
+.fe-slip-img { display: block; max-width: 100%; max-height: 520px; margin: 0 auto; border-radius: 8px; border: 1px solid var(--table-header-color, #e9eaf0); object-fit: contain; background: #fff; }

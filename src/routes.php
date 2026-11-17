@@ -11,6 +11,8 @@ use Enlixo\Http\Controllers\EntitlementController;
 use Enlixo\Http\Controllers\PlatformController;
 use Enlixo\Http\Controllers\RecordingController;
 use Enlixo\Http\Controllers\RoleController;
+use Enlixo\Http\Controllers\FeeController;
+use Enlixo\Http\Controllers\StaffController;
 use Enlixo\Http\Controllers\StudentBulkController;
 use Enlixo\Http\Controllers\StudentController;
 use Enlixo\Http\Controllers\TuteController;
@@ -103,6 +105,33 @@ return static function (Router $router, App $app): void {
     $router->post('/api/v1/tutor/roles', $roles->store(...));
     $router->put('/api/v1/tutor/roles/{id}', $roles->update(...));
     $router->delete('/api/v1/tutor/roles/{id}', $roles->destroy(...));
+
+    // Finance -> Student Fees (tutor/fees.php and its pages; fixed paths before /{id})
+    $fees = new FeeController($app);
+    $router->get('/api/v1/tutor/fees/overview', $fees->overview(...));
+    $router->get('/api/v1/tutor/fees/slips', $fees->slips(...));
+    $router->get('/api/v1/tutor/fees/unpaid', $fees->unpaid(...));
+    $router->get('/api/v1/tutor/fees/receipts', $fees->receipts(...));
+    $router->get('/api/v1/tutor/fees/receipts/{id}', $fees->receipt(...));
+    $router->get('/api/v1/tutor/fees/students', $fees->students(...));
+    $router->get('/api/v1/tutor/fees/students/{id}/open', $fees->open(...));
+    $router->post('/api/v1/tutor/fees/payments', $fees->record(...));
+    $router->post('/api/v1/tutor/fees/concessions', $fees->concede(...));
+    $router->post('/api/v1/tutor/fees/reminders', $fees->remind(...));
+    $router->get('/api/v1/tutor/fees', $fees->index(...));
+    $router->get('/api/v1/tutor/fees/{id}', $fees->show(...));
+    $router->post('/api/v1/tutor/fees/{id}/approve', $fees->approve(...));
+    $router->post('/api/v1/tutor/fees/{id}/reject', $fees->reject(...));
+    $router->get('/api/v1/tutor/students/{id}/fees', $fees->card(...));
+    $router->get('/api/v1/tutor/fee-settings', $fees->settings(...));
+    $router->put('/api/v1/tutor/fee-settings', $fees->saveSettings(...));
+
+    // Settings -> Staff & Roles (tutor/staff.php)
+    $staff = new StaffController($app);
+    $router->get('/api/v1/tutor/staff', $staff->index(...));
+    $router->post('/api/v1/tutor/staff', $staff->store(...));
+    $router->put('/api/v1/tutor/staff/{id}', $staff->update(...));
+    $router->post('/api/v1/tutor/staff/{id}/resend', $staff->resend(...));
 
     // Settings -> Recording Types and Academic -> Class Recordings (fixed paths before /{id})
     $recs = new ClassRecordingController($app);

@@ -20,11 +20,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $user = Database::search("SELECT * FROM `users`
                 INNER JOIN `user_roles` ON `users`.`user_roles_user_role_id` = `user_roles`.`user_role_id`
                 
-                WHERE `user_email`='" . Database::escape($email) . "' AND `user_roles`.`user_role_id` = 2");
+                WHERE `user_email`='" . Database::escape($email) . "' AND `user_roles`.`user_role_id` IN (2, 3)");
                 if ($user->num_rows > 0) {
                     $data = $user->fetch_assoc();
                     if (password_verify($password, $data["user_password"])) {
-                        if ($data["status_status_id"] == 1) {
+                        // A staff member (role 3) works inside the account of the tutor who invited them
+                        // (Settings -> Staff & Roles): the session is the tutor's, with their own id beside it.
+                        $employer = null;
+                        if ((int) $data["user_roles_user_role_id"] === 3 && $data["status_status_id"] == 1) {
+                            require_once "../../includes/enlixo/staff-access.php";
+                            $employer = enlixo_staff_employer((int) $data["user_id"]);
+                        }
+                        if ((int) $data["user_roles_user_role_id"] === 3 && $employer === null) {
+                            $status->email = "";
+                            $status->password = "Your staff access is switched off. Ask the tutor who invited you.";
+                        } elseif ($data["status_status_id"] == 1) {
                             include_once "../../includes/UserClass.php";
                             $data["user_password"] = null;
 
@@ -37,8 +47,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 "user_roles_user_role_id" => $data["user_roles_user_role_id"],
                                 "user_permissions" => []
                             ];
+                            if ($employer !== null) {
+                                $userData["user_id"] = $employer["tutor_id"];
+                                $userData["staff_user_id"] = (int) $data["user_id"];
+                                $userData["staff_role_id"] = $employer["role_id"];
+                                $userData["employer_name"] = $employer["tutor_name"];
+                                $userData["user_roles_user_role_id"] = 2;
+                            }
 
-                            SessionUser::startSession($data['user_role'], $userData);
+                            SessionUser::startSession('Tutor', $userData);
                             setcookie("enviiz_lms_user_login", "login", time() + 3600, "/");
                             // Remember me keeps only the e-mail address; a password is never stored in a cookie
                             if ($rememberMe) {
@@ -61,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                             $deviceCheck = Database::search("
                                         SELECT * FROM users_devices 
-                                        WHERE users_user_id = '" . $data["user_id"] . "'
+                                        WHERE users_user_id = '" . (int) $data["user_id"] . "'
                                         AND device_name = '" . $deviceName . "'
                                         AND device_type = '" . $deviceType . "'
                                         AND browser = '" . $browser . "'

@@ -117,3 +117,7 @@ details[open] > summary > .ex-chev { transform: rotate(180deg); }
 @media (prefers-reduced-motion: reduce) { .ex-bill-banner.is-hit { animation: none; } }
 .flex-column > .ex-bill-banner { flex: 0 0 auto; }
 .ex-bill-banner.is-ok { border-left-color: var(--dark-green, #23BD33); }
+
+/* staff home on the dashboard (app-tutor-dashboard.js staffHome) */
+.ex-staff-link { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--table-header-color, #e9eaf0); text-decoration: none; color: inherit; }
+.ex-staff-link:hover { border-color: #0061d2; }

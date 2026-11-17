@@ -185,11 +185,17 @@ const stamp = Date.now().toString().slice(-6);
   // ------------------------------------------------------------------ main actions open PAGES, not pop-ups
   const ids = JSON.parse(require('child_process').execFileSync('php', [path.join(__dirname, 'qa-lookup.php')]).toString());
   const noModal = async () => t.expect(!(await p.locator('.modal.show').count()), 'A pop-up opened');
-  const mockFee = (status) => p.evaluate(async (st) => { const { FeesMock } = await import('/assets/js/enlixo/mock/FeesMock.js'); const m = FeesMock.shared(); const f = m.fees.find((x) => x.status === st && x.net > 0); return f ? { id: f.id, student: f.student } : null; }, status);
+  // a real fee of the QA tutor (GET /api/v1/tutor/fees/slips for a slip to check, /unpaid for a student who owes)
+  const mockFee = (status) => p.evaluate(async (st) => {
+    const get = async (u) => (await (await fetch(`/api/v1${u}`, { headers: { Accept: 'application/json', 'X-Requested-With': 'enlixo' } })).json()).data ?? [];
+    if (st === 'waiting') { const f = (await get('/tutor/fees/slips?per_page=1'))[0]; return f ? { id: f.id, student: f.student.id } : null; }
+    const r = (await get('/tutor/fees/unpaid?per_page=1'))[0];
+    return r ? { id: r.months[0].id, student: r.student.id } : null;
+  }, status);
   await t.tc('TC-60', 'No pop-ups', 'Rejecting a slip happens on the fee page', ['Open a fee with a slip to check', 'Press Reject'], 'The reason form opens inside the page, no pop-up', async () => {
     await t.open('tutor/fees', 2500);
     const f = await mockFee('waiting');
-    t.expect(f, 'No slip to check in the sample data');
+    t.expect(f, 'No slip to check in the QA data');
     await t.open(`tutor/fee-details?fee-id=${f.id}`, 2500);
     await p.click('.fe-reject-btn');
     await p.waitForTimeout(800);

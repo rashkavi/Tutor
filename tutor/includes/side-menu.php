@@ -2,11 +2,29 @@
 require_once "../includes/nav-item.php";
 require_once __DIR__ . "/../../includes/enlixo/icons.php";
 
+// Staff members (Settings -> Staff & Roles, includes/enlixo/staff-access.php) work in their tutor's account: their
+// access is checked again on every page (switched off = signed out) and pages their role does not cover send them
+// to the dashboard. The tutor's subscription pages are never theirs.
+$enlixoStaff = isset($sessionUserObject['staff_user_id']) && (int) $sessionUserObject['staff_user_id'] > 0;
+if ($enlixoStaff) {
+    require_once __DIR__ . "/../../includes/enlixo/staff-access.php";
+    $enlixoPage = basename((string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH), '.php');
+    $enlixoEmp = enlixo_staff_employer((int) $sessionUserObject['staff_user_id']);
+    if ($enlixoEmp === null || $enlixoEmp['tutor_id'] !== (int) $sessionUserObject['user_id']) {
+        echo '<script>location.replace("api/signOut.php");</script></body></html>';
+        exit;
+    }
+    if (!enlixo_staff_page_allowed($sessionUserObject, $enlixoPage)) {
+        echo '<script>location.replace("dashboard?no-access=' . rawurlencode($enlixoPage) . '");</script></body></html>';
+        exit;
+    }
+}
+
 // Admin side billing (migration 007): while the subscription is suspended or cancelled the tutor can only open
 // Renew (tutor/renew.php: what happened and how to pay), the invoice page, My Subscription and My Profile; every
 // other page sends them to Renew. Their students and parents cannot sign in meanwhile (includes/TutorAccess.php).
 // The API refuses the same calls (api/v1/index.php).
-if (isset($sessionUserObject['user_id']) && class_exists('SessionUser') && SessionUser::ifUserIsTutor()
+if (isset($sessionUserObject['user_id']) && class_exists('SessionUser') && SessionUser::ifUserIsTutor() && !$enlixoStaff
     && !in_array(basename((string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH), '.php'), ['subscription', 'renew', 'invoice', 'my-profile', 'payment-pending', 'subscription-payment-details'], true)) {
     try {
         $enlixoSub = Database::search("SELECT `status` FROM `users_has_payment_plans` WHERE `users_user_id` = '" . (int) $sessionUserObject['user_id'] . "' ORDER BY `users_has_payment_plan_id` DESC LIMIT 1");
@@ -84,9 +102,31 @@ class load_side_menu
                 ['Recording Types', null, 'recording-types', '', ['Recording Types']],
                 ['Plans & Billing', null, 'subscription?tab=plans', '', ['Pricing']],
                 ['WhatsApp', null, 'whatsapp-settings', '', ['WhatsApp', 'WhatsApp Settings']],
+                ['Staff & Roles', null, 'staff', '', ['Staff', 'Staff & Roles']],
                 ['Integrations', null, 'intergrations', 'intergrations', ['Intergrations']],
             ]],
         ];
+    }
+
+    /** @var array|null the staff session (null for the tutor) */
+    private static ?array $staff = null;
+
+    /** Can the signed-in person open this item (or one of its children)? Always true for the tutor. */
+    private static function visible(array $item): bool
+    {
+        if (self::$staff === null) {
+            return true;
+        }
+        if (!empty($item[5])) {
+            foreach ($item[5] as $c) {
+                if (self::visible($c)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        $page = (string) strtok((string) ($item[2] ?? ''), '?');
+        return $page === '' || enlixo_staff_page_allowed(self::$staff, $page);
     }
 
     private static function e(?string $s): string
@@ -119,6 +159,9 @@ class load_side_menu
         foreach ($children as $child) {
             if (self::$hideUpgrade && ($child[2] ?? '') === 'upgrade') {
                 continue; // GROW / CUSTOM: no "Upgrade Plan" item
+            }
+            if (!self::visible($child)) {
+                continue; // a staff member only sees the pages of their role
             }
             $active = self::isActive($child, $selected, $page);
             if (!empty($child[5])) {
@@ -201,7 +244,8 @@ class load_side_menu
         $sessionUser = SessionUser::getCurrentUserObject('Tutor');
         $page = basename((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '.php');
         $selected = (string) $selectedItem;
-        $plan = self::plan((int) ($sessionUser['user_id'] ?? 0));
+        self::$staff = !empty($sessionUser['staff_user_id']) ? $sessionUser : null;
+        $plan = self::$staff === null ? self::plan((int) ($sessionUser['user_id'] ?? 0)) : null; // staff never see the tutor's plan / billing
         self::$hideUpgrade = $plan !== null && !$plan['push'];
         $name = trim(($sessionUser['user_fname'] ?? '') . ' ' . ($sessionUser['user_lname'] ?? ''));
         $initials = strtoupper(substr((string) ($sessionUser['user_fname'] ?? ''), 0, 1) . substr((string) ($sessionUser['user_lname'] ?? ''), 0, 1));
@@ -220,6 +264,9 @@ class load_side_menu
 
             <div class="flex-grow-1 overflow-auto ex-sidenav-scroll">
                 <?php foreach (self::menu() as $item) {
+                    if (!self::visible($item)) {
+                        continue;
+                    }
                     $active = self::isActive($item, $selected, $page);
                     if (empty($item[5])) { ?>
                         <a class="ex-nav-group<?= $active ? ' ex-in' : '' ?>" href="<?= self::e($item[2]) ?>"<?= $active ? ' aria-current="page"' : '' ?>><?= self::groupHead($item, $active, true) ?></a>
@@ -326,10 +373,17 @@ class load_side_menu
                 <?php } else { ?>
                     <span class="ex-user-avatar" aria-hidden="true"><?= self::e($initials) ?></span>
                 <?php } ?>
+                <?php if (self::$staff !== null) { ?>
+                    <span class="ex-user-meta">
+                        <span class="ex-user-name"><?= self::e($name ?: 'Staff') ?></span>
+                        <span class="ex-user-role">Staff · <?= self::e($sessionUser['employer_name'] ?? '') ?></span>
+                    </span>
+                <?php } else { ?>
                 <a href="my-profile" class="ex-user-meta">
                     <span class="ex-user-name"><?= self::e($name ?: 'Tutor') ?></span>
                     <span class="ex-user-role">Tutor · My profile</span>
                 </a>
+                <?php } ?>
                 <button type="button" class="ex-user-out" onclick="signOut();" aria-label="Log out" title="Log out"><?= enlixo_icon('logout', 20) ?></button>
             </div>
         </nav>

@@ -29,6 +29,9 @@ final class LegacySessionAuthenticator implements Authenticator
         }
         if (\SessionUser::ifUserIsTutor()) {
             $u = \SessionUser::getCurrentUserObject('Tutor');
+            if (!empty($u['staff_user_id'])) { // a staff member inside their tutor's account: only what their role allows
+                return new AuthContext((int) $u['staff_user_id'], 'staff', (int) $u['user_id']);
+            }
             return new AuthContext((int) $u['user_id'], 'tutor', (int) $u['user_id']);
         }
         if (\SessionUser::ifUserIsStudent()) {

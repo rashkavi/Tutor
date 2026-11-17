@@ -59,7 +59,16 @@ Dialogs: **Check Payment Slip** (fee breakdown, the slip, "amount matches" check
 
 Locked items stay visible with the plan badge and open the upgrade dialog; the API refuses them too.
 
-## 5. Data (additive migration `008_student_fees.sql`; 006 = dashboard, 007 = platform billing)
+## 5. Data
+
+**What is built (step B):** the existing tables only. A fee = a `student_has_payments` row; status 1 unpaid / overdue, 2 slip to check,
+3 paid, 4 rejected, nothing to pay = free card. Free card / discount = `discount_type` 3 (percent) or 2 (fixed) + `discount_note` on the
+fees from the chosen month (paid or waiting fees are never changed). Every step writes `student_has_payment_logs` (who, what, note).
+Settings, the settings log and the last reminder per enrolment are one JSON row in `tutor_fee_settings`.
+Permissions: payments.view (read), payments.approve (check slips, record payments), fees.manage (+ PRO `fees.advanced`) for free cards,
+messages.send for reminders (WhatsApp sending needs `comms.whatsapp`).
+
+The first design below (migration 008) is kept for later: separate receipt tables, concession table and the daily job.
 
 * `student_has_payments` + `receipt_no`, `checked_by`, `checked_at`, `reject_reason`, `recorded_by`, `concession_id` (nothing renamed).
 * `payment_method` + Cash, Bank deposit (found by name, never by id).
@@ -78,8 +87,8 @@ Locked items stay visible with the plan badge and open the upgrade dialog; the A
 | # | Step | Status |
 |---|---|---|
 | A | This plan + preview pages on sample data (`FeesMock`, `?plan=start` / `grow` shows the locks) | ✅ for review |
-| B | Migration 008, `src/Fees`, API; pages on real data; receipts; old fee pages redirect | |
-| C | Daily job (fees with concessions, late fees, WhatsApp reminders), lock recordings of unpaid months | |
+| B | `src/Fees/TutorFees.php` + `FeeController`: every page on real data (no new table except `tutor_fee_settings`, made on demand). Receipts = the fees paid together, numbered `RC-<first fee id>` through the log line "Receipt RC-…" on each fee. Slip pictures from `assets/uploads/payment-slips/`. Tests `tests/e2e/fees-journey.e2e.js` (`setup-qa-fees.php`) | ✅ November 2026 |
+| C | Daily job (fees with concessions, late fees, WhatsApp reminders); recordings of unpaid months are locked (`RecordingRepository::monthPaid`, done) | part |
 | D | Card payments (gateway), parent payment dashboard (PRO), income reports | |
 
 ## 7. Questions for Rashmi

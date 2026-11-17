@@ -141,3 +141,18 @@
   #pp-actions { display: flex; flex-wrap: wrap; gap: .75rem; width: 100%; }
   #pp-actions > * { flex: 1 1 100%; justify-content: center; display: inline-flex; align-items: center; gap: 6px; }
 }
+
+/* ---------- Settings → Staff & Roles (tutor/staff.php) ---------- */
+.st-invite, .st-link, .st-delete, .st-note { border: 1px solid var(--table-header-color, #e9eaf0); border-radius: 12px; padding: 16px; background: var(--custom-white, #fff); }
+.st-link { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; border-color: #b9d4f5; }
+.st-url { display: block; margin-top: 6px; font-size: 12px; word-break: break-all; color: var(--main-text-color, #1d2026); background: transparent; }
+.st-role { min-width: 150px; }
+.st-roles { display: flex; flex-direction: column; gap: 8px; }
+.st-role-item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--table-header-color, #e9eaf0); background: var(--custom-white, #fff); }
+.st-role-item.is-on { border-color: #0061d2; box-shadow: inset 3px 0 0 #0061d2; }
+.st-role-name { font-size: 14px; font-weight: 600; color: var(--main-text-color, #1d2026); display: flex; align-items: center; }
+.st-perm-group { border-top: 1px solid var(--table-header-color, #e9eaf0); padding: 12px 0; }
+.st-perm { display: flex; align-items: center; gap: 10px; padding: 6px 0; cursor: pointer; }
+.st-perm.is-locked { opacity: .6; cursor: not-allowed; }
+.st-delete { border-color: #f3b4b4; }
+.st-note { font-size: 13px; }
