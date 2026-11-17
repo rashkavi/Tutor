@@ -128,7 +128,7 @@ if (!function_exists('sr_lecture_recordings')) {
         $where = "shc.`students_student_id` = '" . $studentId . "' AND shc.`status_status_id` = 1"
             . ($classId > 0 ? " AND c.`class_id` = '" . $classId . "'" : '');
         $select = "SELECT pr.`pre_recording_id`, pr.`title`, pr.`recording_cover`, pr.`duration`, pr.`added_at`, pr.`unlock_at`,
-                rt.`name` AS type_name, c.`class_id`, c.`class_name`, c.`class_cover`, u.`user_fname`, u.`user_lname`";
+                rt.`name` AS type_name, c.`class_id`, c.`class_name`, c.`class_cover`, c.`tutor_id`, u.`user_fname`, u.`user_lname`";
         $from = " FROM `pre_recordings` pr
             INNER JOIN `classes` c ON c.`class_id` = pr.`classes_class_id`
             INNER JOIN `students_has_classes` shc ON shc.`classes_class_id` = c.`class_id`
@@ -142,7 +142,11 @@ if (!function_exists('sr_lecture_recordings')) {
         $res = sr_query($select . $watch . $from, $select . ', 0 AS seconds, NULL AS last_watched' . $from);
 
         $out = [];
+        require_once __DIR__ . '/plan-guard.php';
         while ($res && ($r = $res->fetch_assoc())) {
+            if (!enlixo_tutor_has((int) $r['tutor_id'], 'recordings.pre_recorded')) {
+                continue; // pre-recorded classes are a GROW / CUSTOM feature of the tutor's plan
+            }
             $minutes = (int) $r['duration'];
             $seconds = (int) $r['seconds'];
             $progress = $minutes > 0 ? min(100, (int) floor($seconds / ($minutes * 60) * 100)) : ($seconds > 0 ? 100 : 0);

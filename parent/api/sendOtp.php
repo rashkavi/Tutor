@@ -25,8 +25,8 @@ if ($mobile === '') {
         $status->mobile = "This WhatsApp number is not registered as a parent. Ask the tutor to add it.";
     } else {
         $parentId = (int) $parent->fetch_assoc()['parent_id'];
-        $otp = random_int(100000, 999999);
-        if (!whatsapp_send_otp($normalized, $otp)) {
+        $otp = whatsapp_otp_for($normalized);
+        if ($otp === null) {
             $status->error = "The code could not be sent to WhatsApp. Please try again in a minute.";
         } else {
             $date = (new DateTime('now', new DateTimeZone('Asia/Colombo')))->format('Y-m-d H:i:s');

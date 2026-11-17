@@ -10,6 +10,10 @@ if (!SessionUser::ifUserIsTutor()) {
 
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
 
+    require_once "../includes/enlixo/plan-guard.php";
+
+    enlixo_plan_page((int) $sessionUserObject['user_id'], 'recordings.pre_recorded'); // GROW / CUSTOM only: others see the Upgrade page
+
     if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['recording-id']) && !empty($_GET['recording-id'])) {
 
         $recording_id = $_GET["recording-id"];

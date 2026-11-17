@@ -8,6 +8,10 @@ if (!SessionUser::ifUserIsTutor()) {
 } else {
 
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
+
+    require_once "../includes/enlixo/plan-guard.php";
+
+    enlixo_plan_page((int) $sessionUserObject['user_id'], 'recordings.pre_recorded'); // GROW / CUSTOM only: others see the Upgrade page
     UserPermissions::setUserPermissions($sessionUserObject['user_permissions']);
 
     if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['recording-id']) && !empty($_GET['recording-id'])) {

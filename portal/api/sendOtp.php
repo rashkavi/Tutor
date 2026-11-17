@@ -23,57 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if ($user->num_rows > 0) {
                     $data = $user->fetch_assoc();
                     if ($data['status_status_id'] == 1) {
-                        $otp = random_int(100000, 999999);
-                        $curl = curl_init();
-                        curl_setopt_array($curl, array(
-                            CURLOPT_URL => 'https://graph.facebook.com/v22.0/470586202805184/messages',
-                            CURLOPT_RETURNTRANSFER => true,
-                            CURLOPT_POST => true,
-                            CURLOPT_HTTPHEADER => array(
-                                "Authorization: Bearer EAAGrCyhRGJ8BQZCo1i0polWgFjEUboynGwLlavuwj4vFJYtZBL6kdqXItxIT3fBZCOkElPIlGE7A2oLnXVASJDOQKjKItJ3G43MSrc3GHPdrruQgzam7scrzXi8hf6dRzqCmu83kA0Nvn0YLfoqdTmVHuqrvoZB97c1DdEr2Rm7jr3R80yxyDUxIul3d3ZBcMnwZDZD",
-                                "Content-Type: application/json"
-                            ),
-                            CURLOPT_POSTFIELDS => json_encode([
-                                "messaging_product" => "whatsapp",
-                                "recipient_type" => "individual",
-                                "to" => $normalizedWhatsapp,
-                                "type" => "template",
-                                "template" => [
-                                    "name" => "send_otp",
-                                    "language" => [
-                                        "code" => "en_US"
-                                    ],
-                                    "components" => [
-                                        [
-                                            "type" => "body",
-                                            "parameters" => [
-                                                [
-                                                    "type" => "text",
-                                                    "text" => $otp
-                                                ]
-                                            ]
-                                        ],
-                                        [
-                                            "type" => "button",
-                                            "sub_type" => "url",
-                                            "index" => "0",
-                                            "parameters" => [
-                                                [
-                                                    "type" => "text",
-                                                    "text" => $otp
-                                                ]
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ])
-                        ));
-                        $response = curl_exec($curl);
-                        curl_close($curl);
-
-                        $curlData = json_decode($response, true);
-
-                        if (isset($curlData['error'])) {
+                        // sent on WhatsApp by includes/WhatsAppOtp.php (token from WHATSAPP_TOKEN, not from this file)
+                        require_once("../../includes/WhatsAppOtp.php");
+                        $otp = whatsapp_otp_for((string) $normalizedWhatsapp);
+                        if ($otp === null) {
                             $status->error = "OTP could not be sent. Please try again.";
                         } else {
                             date_default_timezone_set("Asia/Colombo");
