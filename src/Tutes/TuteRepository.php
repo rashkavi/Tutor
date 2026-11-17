@@ -210,6 +210,7 @@ final class TuteRepository
         return array_map(static fn (array $r) => [
             'id' => (int) $r['tute_delivery_id'],
             'tute_id' => (int) $r['class_tutes_class_tute_id'],
+            'class_id' => (int) $r['classes_class_id'],
             'tute' => (string) $r['tute_title'],
             'class' => (string) $r['class_name'],
             'status' => (string) $r['status'],
@@ -223,7 +224,7 @@ final class TuteRepository
             'note' => (string) ($r['student_note'] ?? ''),
             'address' => trim(implode(', ', array_filter([$r['address_line_1'], $r['address_line_2'], $r['city']]))),
         ], $this->db->all(
-            'SELECT d.*, ct.tute_title, ct.courier_name AS tute_courier, ct.dispatch_on, ct.student_note, c.class_name
+            'SELECT d.*, ct.tute_title, ct.classes_class_id, ct.courier_name AS tute_courier, ct.dispatch_on, ct.student_note, c.class_name
                FROM tute_deliveries d
                JOIN class_tutes ct ON ct.class_tute_id = d.class_tutes_class_tute_id
                JOIN classes c ON c.class_id = ct.classes_class_id
