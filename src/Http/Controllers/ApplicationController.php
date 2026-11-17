@@ -45,6 +45,7 @@ final class ApplicationController
         $settings = $this->forms()->settings($tutor);
         return JsonResponse::ok([
             'sections' => StudentFormSchema::sections(),
+            'groups' => StudentFormSchema::GROUPS,
             'fields' => $r->input('all') === '1' ? StudentFormSchema::allForTutor($settings) : StudentFormSchema::forTutor($settings),
             'lookups' => $this->forms()->lookups($tutor),
             'settings' => $settings,
@@ -113,6 +114,7 @@ final class ApplicationController
         return JsonResponse::ok([
             'application' => $app,
             'sections' => StudentFormSchema::sections(),
+            'groups' => StudentFormSchema::GROUPS,
             'fields' => $fields,
             'lookups' => $this->forms()->lookups($tutor),
             'history' => $this->apps()->history((int) $app['application_id']),
@@ -173,6 +175,7 @@ final class ApplicationController
             'open' => $link['is_open'],
             'tutor' => ['name' => trim(($tutor['first_name'] ?? '') . ' ' . ($tutor['last_name'] ?? ''))],
             'sections' => StudentFormSchema::sections(),
+            'groups' => StudentFormSchema::GROUPS,
             'fields' => array_map(static fn ($f) => array_diff_key($f, array_flip(['default_label', 'canHide', 'canRequire', 'enabled', 'typeName'])), $this->service()->fields($link['tutor_id'])),
             'lookups' => $lookups,
         ]);

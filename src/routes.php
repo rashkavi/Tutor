@@ -167,6 +167,9 @@ return static function (Router $router, App $app): void {
     $router->get('/api/v1/admin/dashboard', $pf->dashboard(...));
     $router->get('/api/v1/admin/lookups', $pf->lookups(...));
     $router->get('/api/v1/admin/tutors', $pf->tutors(...));
+    $router->get('/api/v1/admin/trial-requests', $pf->adminTrialRequests(...));
+    $router->post('/api/v1/admin/trial-requests/{id}/approve', $pf->decideTrialRequest(...));
+    $router->post('/api/v1/admin/trial-requests/{id}/reject', $pf->decideTrialRequest(...));
     $router->post('/api/v1/admin/tutors', $pf->addTutor(...));
     $router->get('/api/v1/admin/tutors/{id}', $pf->tutor(...));
     $router->post('/api/v1/admin/tutors/{id}/{action}', $pf->tutorAction(...));
@@ -193,5 +196,7 @@ return static function (Router $router, App $app): void {
     $router->post('/api/v1/tutor/subscription/change', $pf->changeMyPlan(...));
     $router->post('/api/v1/tutor/subscription/pay-now', $pf->payNow(...));
     $router->post('/api/v1/tutor/subscription/preview', $pf->startPreview(...));
+    $router->get('/api/v1/tutor/subscription/trial-request', $pf->myTrialRequest(...));
+    $router->delete('/api/v1/tutor/subscription/trial-request', $pf->cancelTrialRequest(...));
     $router->get('/api/v1/tutor/subscription/payments/{id}/slip', $pf->mySlip(...));
 };

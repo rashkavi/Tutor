@@ -6,11 +6,14 @@ require_once("../../includes/UserPermissionsClass.php");
 if (SessionUser::hasValidSession()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $id = isset($_POST['id']) ? trim($_POST['id']) : '';
+        $id = isset($_POST['id']) ? (int) $_POST['id'] : 0; // a number only (it goes into the queries)
         if (empty($id)) {
             $status->error = "Invalid student Id";
         } else {
-            $isHasId = Database::search("SELECT `student_id`,`profile_img`,`login_details_login_details_id` FROM `students` WHERE `student_id`='" . $id . "'");
+            // only a student of this tutor (added by them or in one of their classes)
+            $tutorId = (int) ($sessionUserObject['user_id'] ?? 0);
+            $isHasId = Database::search("SELECT `student_id`,`profile_img`,`login_details_login_details_id` FROM `students` WHERE `student_id`='" . $id . "'
+                AND (`users_user_id` = '" . $tutorId . "' OR `student_id` IN (SELECT h.`students_student_id` FROM `students_has_classes` h JOIN `classes` c ON c.`class_id` = h.`classes_class_id` WHERE c.`tutor_id` = '" . $tutorId . "'))");
 
             if ($isHasId->num_rows == 0) {
                 $status->error = "Invalid student Id";
@@ -85,35 +88,33 @@ if (SessionUser::hasValidSession()) {
                     $status->whatsapp =  "Please enter a valid whatsapp number";
                 }
 
-                $invalid_chars = '/[\'\";\-]/';
-                if (!empty($address) || !empty($address2) || !$city == 0 || !empty($pcode)) {
-                    if (empty($address)) {
-                        $status->address =  "Please enter user address";
+                // one WhatsApp number = one student (they sign in with it): not the number of another student
+                if (!property_exists($status, 'whatsapp')) {
+                    $wa = Database::escape($whatsapp);
+                    $waN = Database::escape((string) normalizePhoneNumber($whatsapp));
+                    $other = Database::search("SELECT CONCAT(`first_name`, ' ', `last_name`) `name` FROM `login_details`
+                        WHERE (`whatsapp` = '" . $wa . "' OR `whatsapp` = '" . $waN . "') AND `login_details_id` <> '" . (int) $student['login_details_login_details_id'] . "' LIMIT 1");
+                    if ($other && $other->num_rows > 0) {
+                        $status->whatsapp = "This WhatsApp number is already used by " . $other->fetch_assoc()['name'] . ". Each student needs their own WhatsApp number.";
                     }
+                }
 
-                    if (!empty($address)) {
-                        if (!strlen($address) > 100) {
-                            $status->address1 =  "Address should be less than 100 characters";
-                        } else if (preg_match($invalid_chars, $address)) {
-                            $status->address1 =  "Address lines contain invalid characters.";
-                        }
+                // Address is all or nothing: once any part is filled, line 1 and the city are needed.
+                // Any character may be typed (the values are escaped once before the query).
+                if ($address !== '' || $address2 !== '' || (int) $city !== 0 || $pcode !== '') {
+                    if ($address === '') {
+                        $status->address = "Enter the first line of the address.";
+                    } elseif (mb_strlen($address) > 100) {
+                        $status->address = "Address line 1 can be at most 100 characters.";
                     }
-                    if (!empty($address2)) {
-                        if (!strlen($address2) > 100) {
-                            $status->address2 =  "Address should be less than 100 characters";
-                        } else if (preg_match($invalid_chars, $address2)) {
-                            $status->address2 =  "Address lines contain invalid characters.";
-                        }
+                    if (mb_strlen($address2) > 100) {
+                        $status->address2 = "Address line 2 can be at most 100 characters.";
                     }
-
-                    if ($city == 0) {
-                        $status->city =  "Please select user city";
+                    if ((int) $city === 0) {
+                        $status->city = "Choose the city from the list.";
                     }
-                    if (empty($pcode)) {
-                        $status->pcode =  "Please enter user city postal code";
-                    }
-                    if (!empty($pcode) && !strlen($pcode) > 5) {
-                        $status->pcode =  "Postcode should be less than 5 characters";
+                    if ($pcode !== '' && !preg_match('/^[0-9]{5}$/', $pcode)) {
+                        $status->pcode = "Enter the 5-digit postal code, for example 10280.";
                     }
                 }
 
@@ -239,6 +240,11 @@ if (SessionUser::hasValidSession()) {
                     $timestamp = strtotime($dob);
                     $dob = date("Y-m-d", $timestamp);
 
+                    // typed text is escaped once here, before it goes into the queries below
+                    foreach (['fname', 'lname', 'fullname', 'nwi', 'gender', 'dob', 'email', 'mobile', 'whatsapp', 'address', 'address2', 'city', 'pcode',
+                        'gtitle', 'grelationship', 'gfname', 'glname', 'gemail', 'gmobile', 'gwhatsapp'] as $esc) {
+                        $$esc = Database::escape((string) $$esc);
+                    }
                     $login_table_update = "`first_name`='" . $fname . "',`last_name`='" . $lname . "',
                     `whatsapp`='" . $whatsapp . "'";
 
@@ -275,9 +281,7 @@ if (SessionUser::hasValidSession()) {
                         } else {
                             $address_table_update = "`address_line_1`='" . $address . "',`city_city_id`='" . $city . "',`postal_code`='" . $pcode . "'";
 
-                            if (!empty($address2)) {
-                                $address_table_update .= ",`address_line_2`='" . $address2 . "'";
-                            }
+                            $address_table_update .= ",`address_line_2`=" . ($address2 === '' ? "NULL" : "'" . $address2 . "'");
 
                             Database::iud("UPDATE `student_has_address` SET " . $address_table_update . " WHERE `students_student_id` = '" . $student["student_id"] . "'");
                         }
@@ -288,10 +292,14 @@ if (SessionUser::hasValidSession()) {
                         $guardian = Database::search("SELECT * FROM `parents` WHERE (`whatsapp`='" . $gwhatsapp . "' OR `whatsapp`='" . normalizePhoneNumber($gwhatsapp) . "')");
                         if ($guardian->num_rows > 0) {
                             $guardianData = $guardian->fetch_assoc();
-                            Database::iud("INSERT INTO `parents_has_students` (`students_student_id`,`parents_parent_id`,`added_at`) VALUES ('" . $id . "','" . $guardianData['parent_id'] . "','" . $date . "')");
+                            $linked = Database::search("SELECT 1 FROM `parents_has_students` WHERE `students_student_id` = '" . $id . "' AND `parents_parent_id` = '" . (int) $guardianData['parent_id'] . "'");
+                            if ($linked->num_rows === 0) {
+                                Database::iud("INSERT INTO `parents_has_students` (`students_student_id`,`parents_parent_id`,`added_at`) VALUES ('" . $id . "','" . (int) $guardianData['parent_id'] . "','" . $date . "')");
+                            }
                         } else {
-                            $guardian_table_insert_columns = "`guardian_relation_guardian_relation_id`,`parent_fname`,`parent_lname`,`email`,`mobile`,`title_title_id`";
-                            $guardian_table_insert_values = "'" . $grelationship . "','" . $gfname . "','" . $glname . "','" . normalizePhoneNumber($gemail) . "','" . $gmobile . "','" . $gtitle . "'";
+                            $guardian_table_insert_columns = "`guardian_relation_guardian_relation_id`,`parent_fname`,`parent_lname`,`whatsapp`,`email`,`mobile`,`title_title_id`,`registered_at`,`verification`,`reset_time`";
+                            $guardian_table_insert_values = "'" . (int) $grelationship . "','" . $gfname . "','" . $glname . "','" . Database::escape(normalizePhoneNumber($gwhatsapp)) . "',"
+                                . ($gemail === '' ? "NULL" : "'" . $gemail . "'") . ",'" . $gmobile . "','" . (int) $gtitle . "','" . $date . "','',''";
                             Database::iud("INSERT INTO `parents` (" . $guardian_table_insert_columns . ") VALUES (" . $guardian_table_insert_values . ")");
 
                             $perantId = Database::$connection->insert_id;

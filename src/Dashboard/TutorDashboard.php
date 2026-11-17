@@ -480,7 +480,7 @@ final class TutorDashboard
         }
         $noRec = (int) $this->db->value(
             'SELECT COUNT(*) FROM time_table tt JOIN classes c ON c.class_id = tt.classes_class_id
-              WHERE c.tutor_id = :t AND tt.time_table_status_time_table_status_id = 1 AND tt.lecture_type_lecture_type_id = 2
+              WHERE c.tutor_id = :t AND tt.time_table_status_time_table_status_id = 1 AND tt.lecture_type_lecture_type_id IN (2, 4)
                 AND tt.`date` >= :f AND (tt.`date` < :d OR (tt.`date` = :d2 AND tt.end_time <= :n))
                 AND NOT EXISTS (SELECT 1 FROM lecture_recording r WHERE r.time_table_time_table_id = tt.time_table_id)',
             ['t' => $tutorId, 'f' => $this->now->modify('-7 days')->format('Y-m-d'), 'd' => $this->now->format('Y-m-d'), 'd2' => $this->now->format('Y-m-d'), 'n' => $this->now->format('H:i:s')],

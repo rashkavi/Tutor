@@ -3,6 +3,7 @@ require_once '../includes/UserClass.php';
 require_once '../includes/UserPermissionsClass.php';
 require_once "../includes/connection.php";
 require_once "../includes/Project.php";
+require_once "../includes/enlixo/plan-guard.php";
 if (!SessionUser::hasValidSession()) {
     header("Location: ./index");
 } else {
@@ -45,6 +46,7 @@ if (!SessionUser::hasValidSession()) {
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/style.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/skeleton.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
+        <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
         <link href="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.css" rel="stylesheet">
 
         <script src="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.js"></script>
@@ -152,14 +154,16 @@ if (!SessionUser::hasValidSession()) {
                                                             </label>
                                                         </div>
 
+                                                        <?php $recurLock = enlixo_lock_badge((int) $sessionUserObject['user_id'], 'timetable.recurring'); // STARTER and up ?>
                                                         <div class="form-check d-flex align-items-center">
-                                                            <input class="form-check-input text-20 mt-0 mb-0 me-2" type="checkbox" name="lectureType" id="recurringLecture">
+                                                            <input class="form-check-input text-20 mt-0 mb-0 me-2" type="checkbox" name="lectureType" id="recurringLecture" <?= $recurLock !== '' ? 'disabled' : '' ?>>
 
                                                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                                <label class="form-check-label" for="recurringLecture">
+                                                                <label class="form-check-label<?= $recurLock !== '' ? ' sub-text' : '' ?>" for="recurringLecture">
                                                                     Recurring Lecture
                                                                 </label>
                                                                 <span id="add-recurring-lecture-guide-info"></span>
+                                                                <?= $recurLock ?>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -282,6 +286,9 @@ if (!SessionUser::hasValidSession()) {
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    <?php $oneFile = !enlixo_tutor_has((int) $sessionUserObject['user_id'], 'timetable.attachments'); ?>
+                                                    <span class="text-12 sub-text mt-1" id="attachment-hint" data-max-files="<?= $oneFile ? 1 : 0 ?>">PDF, Word or PowerPoint, up to 10 MB each<?= $oneFile ? '. On the FREE plan you can attach one file.' : '.' ?></span>
+                                                    <?php if ($oneFile) { ?><span class="d-inline-flex align-items-center gap-2 mt-1 text-12 sub-text">More files per class day <?= enlixo_lock_badge((int) $sessionUserObject['user_id'], 'timetable.attachments') ?></span><?php } ?>
                                                     <span id="attachment-feedback" class="text-dark-red text-12"></span>
                                                     <!-- File upload input field for PDF, Word, and PowerPoint files -->
                                                 </div>
@@ -296,11 +303,15 @@ if (!SessionUser::hasValidSession()) {
 
                                                         <div class="form-check">
                                                             <input class="form-check-input text-20 mt-0 mb-0 me-2" type="checkbox" name="lectureType" id="physical-check-box" checked>
-                                                            <label class="text-16 sub-text mx-2">Physical</label>
+                                                            <label class="text-16 sub-text mx-2" for="physical-check-box">Physical</label>
                                                         </div>
                                                         <div class="form-check">
                                                             <input class="form-check-input text-20 mt-0 mb-0 me-2" type="checkbox" name="lectureType" id="online-check-box">
-                                                            <label class="text-16 sub-text mx-2">Online</label>
+                                                            <label class="text-16 sub-text mx-2" for="online-check-box">Online</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input text-20 mt-0 mb-0 me-2" type="checkbox" name="lectureType" id="both-check-box">
+                                                            <label class="text-16 sub-text mx-2" for="both-check-box">Both (hall and online)</label>
                                                         </div>
                                                     </div>
                                                 </div>

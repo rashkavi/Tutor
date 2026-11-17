@@ -36,10 +36,13 @@ final class FeatureCatalog
         return [
             // Class & Student Management
             'classes.setup'          => ['name' => 'Subject / Grade / Language Setup', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Create classes by subject, grade and medium.'],
+            'classes.cover_generator'=> ['name' => 'Class Cover Generator', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Make a class cover from the class details with one click (subject, exam year, medium), ready to crop. On FREE you upload your own picture.'],
             'students.registration'  => ['name' => 'Student Registration', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Register students and approve join requests.'],
             'parents.login'          => ['name' => 'Parent Login', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Parents log in to follow their children.'],
             'timetable.manage'       => ['name' => 'Timetable Management', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Plan lessons per class.'],
             'classes.scheduling'     => ['name' => 'Physical & Online Class Scheduling', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Weekly schedules for physical and online classes.'],
+            'timetable.recurring'    => ['name' => 'Recurring Class Days', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Schedule a class for many weeks in one go (days of the week, start and end date, skip Poya days and holidays). On FREE you add each class day yourself.'],
+            'timetable.attachments'  => ['name' => 'Several Class Notes per Class Day', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Attach several files (up to 10 MB each) to a class day. On FREE you attach one file of up to 10 MB.'],
             'tutes.manage'           => ['name' => 'Tute / Material Management', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Share tutes and materials per class.'],
             'tutes.courier'          => ['name' => 'Tute Posting & Courier Tracking', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Post printed tutes to students\' homes: parcels, address labels and tracking numbers.'],
             'exams.mcq'              => ['name' => 'MCQ Exams + Grading', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Online MCQ papers with auto marking.'],

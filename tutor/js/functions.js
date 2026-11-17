@@ -701,10 +701,10 @@ const editStudent = (btn, id) => {
         intake: ["#intake-selector", "#intake-feedback"],
         grelationship: ["#grelationship-selector", "#grelationship-feedback"],
         gtitle: ["#gtitle-selector", "#gtitle-feedback"],
-        gfname: ["#gfname", "#gfname-feedback"],
-        glname: ["#glname", "#glname-feedback"],
-        gemail: ["#gemail", "#gemail-feedback"],
-        gmobile: ["#gmobile", "#gmobile-feedback"],
+        gfname: ["#guardian-fname", "#gfname-feedback"],
+        glname: ["#guardian-lname", "#glname-feedback"],
+        gemail: ["#guardian-email", "#gemail-feedback"],
+        gmobile: ["#guardian-mobile", "#gmobile-feedback"],
         gwhatsapp: ["#guardian-whatsapp", "#gwhatsapp-feedback"],
     };
 
@@ -1116,8 +1116,9 @@ const scheduleLectureToClass = (btn) => {
     form.append("class", $("#class-selector").val());
     form.append("lecture-date", $("#lecture-date").val());
     form.append("title", $("#title").val());
-    form.append("physical", $("#physical-check-box").is(":checked") ? true : false);
-    form.append("online", $("#online-check-box").is(":checked") ? true : false);
+    const both = $("#both-check-box").is(":checked"); // Both = in the hall and online at the same time
+    form.append("physical", $("#physical-check-box").is(":checked") || both ? true : false);
+    form.append("online", $("#online-check-box").is(":checked") || both ? true : false);
     form.append("link", $("#link-input").val());
     form.append("one_time", $("#oneTimeLecture").is(":checked") ? true : false);
     form.append("recurring", $("#recurringLecture").is(":checked") ? true : false);

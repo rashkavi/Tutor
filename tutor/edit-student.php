@@ -13,7 +13,7 @@ if (!SessionUser::hasValidSession()) {
     } else {
         UserPermissions::setUserPermissions($sessionUserObject['user_permissions']);
 
-        $id = $_GET['student-id'];
+        $id = (int) $_GET['student-id']; // a number only (it goes into the query)
         $classId = 0;
 
         $query = "SELECT * FROM `students` 
@@ -170,22 +170,22 @@ if (!SessionUser::hasValidSession()) {
 
                                                                         <div class="col-12 col-md-6 d-flex flex-column">
                                                                             <label class="text-14 main-text required" for="">First Name</label>
-                                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="first-name" maxlength="45" value="<?php echo $sdata['first_name']; ?>">
+                                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="first-name" placeholder="Enter the first name" maxlength="45" value="<?= htmlspecialchars((string) ($sdata['first_name'])) ?>">
                                                                             <span id="fname-feedback" class="text-dark-red text-12"></span>
                                                                         </div>
                                                                         <div class="col-12 col-md-6 d-flex flex-column">
                                                                             <label class="text-14 main-text required" for="">Last Name</label>
-                                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="last-name" maxlength="45" value="<?php echo $sdata['last_name']; ?>">
+                                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="last-name" placeholder="Enter the last name" maxlength="45" value="<?= htmlspecialchars((string) ($sdata['last_name'])) ?>">
                                                                             <span id="lname-feedback" class="text-dark-red text-12"></span>
                                                                         </div>
                                                                         <div class="col-12 col-md-7 d-flex flex-column">
                                                                             <label class="text-14 main-text required" for="">Full Name</label>
-                                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="full-name" maxlength="150" value="<?php echo $sdata['full_name'] ?>">
+                                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="full-name" placeholder="Enter the full name" maxlength="150" value="<?= htmlspecialchars((string) ($sdata['full_name'])) ?>">
                                                                             <span id="fullname-feedback" class="text-dark-red text-12"></span>
                                                                         </div>
                                                                         <div class="col-12 col-md-5 d-flex flex-column">
                                                                             <label class="text-14 main-text not-required" for="">Name With Initials</label>
-                                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="name-with-initials" maxlength="45" value="<?php echo $sdata['name_with_initials']; ?>">
+                                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="name-with-initials" placeholder="Enter the name with initials, e.g. K. L. Perera" maxlength="45" value="<?= htmlspecialchars((string) ($sdata['name_with_initials'])) ?>">
                                                                             <span id="nwi-feedback" class="text-dark-red text-12"></span>
                                                                         </div>
 
@@ -211,7 +211,7 @@ if (!SessionUser::hasValidSession()) {
                                                                         </div>
                                                                         <div class="col-12 col-md-4 d-flex flex-column">
                                                                             <label class="text-14 main-text required" for="">Date of Birth</label>
-                                                                            <input type="date" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="dob" value="<?php echo $sdata['date_of_birth']; ?>">
+                                                                            <input type="date" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="dob" value="<?= htmlspecialchars((string) ($sdata['date_of_birth'])) ?>">
                                                                             <span id="dob-feedback" class="text-dark-red text-12"></span>
                                                                         </div>
                                                                     </div>
@@ -225,27 +225,27 @@ if (!SessionUser::hasValidSession()) {
                                                         <span class="sub-topic">Contact Details</span>
                                                         <div class="col-12 col-md-6 d-flex flex-column">
                                                             <label class="text-14 main-text required" for="">Email</label>
-                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="email" maxlength="100" value="<?php echo $sdata['email']; ?>">
+                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="email" placeholder="Enter the e-mail address" maxlength="100" value="<?= htmlspecialchars((string) ($sdata['email'])) ?>">
                                                             <span id="email-feedback" class="text-dark-red text-12"></span>
                                                         </div>
                                                         <div class="col-12 col-md-3 d-flex flex-column">
                                                             <label class="text-14 main-text required" for="">Mobile</label>
-                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="mobile" maxlength="10" value="<?php echo $sdata['mobile']; ?>" onkeypress="checkDigit(event)">
+                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="mobile" placeholder="Enter the mobile number, e.g. 0771234567" maxlength="10" value="<?= htmlspecialchars((string) ($sdata['mobile'])) ?>" onkeypress="checkDigit(event)">
                                                             <span id="mobile-feedback" class="text-dark-red text-12"></span>
                                                         </div>
                                                         <div class="col-12 col-md-3 d-flex flex-column">
                                                             <label class="text-14 main-text required" for="">Whatsapp</label>
-                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="whatsapp" maxlength="10" value="<?php echo $sdata['whatsapp']; ?>" onkeypress="checkDigit(event)">
+                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="whatsapp" placeholder="Enter the WhatsApp number, e.g. 0771234567" maxlength="10" value="<?= htmlspecialchars((string) ($sdata['whatsapp'])) ?>" onkeypress="checkDigit(event)">
                                                             <span id="whatsapp-feedback" class="text-dark-red text-12"></span>
                                                         </div>
                                                         <div class="col-12 col-md-6 d-flex flex-column">
                                                             <label class="text-14 main-text" for="">Address Line 1</label>
-                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="address" maxlength="100" value="<?php echo $hasAddress ? $sAddressData['address_line_1'] : ''; ?>">
+                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="address" placeholder="Enter address line 1, e.g. No 5, Temple Road" maxlength="100" value="<?= htmlspecialchars((string) ($hasAddress ? $sAddressData['address_line_1'] : '')) ?>">
                                                             <span id="address-feedback" class="text-dark-red text-12"></span>
                                                         </div>
                                                         <div class="col-12 col-md-6 d-flex flex-column">
                                                             <label class="text-14 main-text" for="">Address Line 2</label>
-                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="address2" maxlength="100" value="<?php echo $hasAddress ? $sAddressData['address_line_2'] : ''; ?>">
+                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="address2" placeholder="Enter address line 2" maxlength="100" value="<?= htmlspecialchars((string) ($hasAddress ? $sAddressData['address_line_2'] : '')) ?>">
                                                             <span id="address2-feedback" class="text-dark-red text-12"></span>
                                                         </div>
                                                         <div class="col-12 col-md-6 col-lg-4 d-flex flex-column">
@@ -297,7 +297,8 @@ if (!SessionUser::hasValidSession()) {
                                                         </div>
                                                         <div class="col-12 col-md-4 d-flex flex-column">
                                                             <label class="text-14 main-text" for="">Postal Code</label>
-                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="postal-code" maxlength="5" value="<?php echo $hasAddress ? $sAddressData['postal_code'] : ''; ?>">
+                                                            <input type="text" class="form-control custom-input mt-2" <?= $fieldsDisabled ? "disabled" : "" ?> id="postal-code" placeholder="Enter the postal code, e.g. 10280" maxlength="5" value="<?= htmlspecialchars((string) ($hasAddress ? $sAddressData['postal_code'] : '')) ?>">
+                                                            <span id="postal-code-feedback" class="text-dark-red text-12"></span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -391,7 +392,7 @@ if (!SessionUser::hasValidSession()) {
                                                         </div>
                                                         <div class="col-10 col-md-6 col-lg-3 d-flex flex-column">
                                                             <label class="text-14 main-text" for="">Guardian WhatsApp</label>
-                                                            <input type="text" class="form-control custom-input mt-2" id="guardian-whatsapp" maxlength="15">
+                                                            <input type="text" class="form-control custom-input mt-2" id="guardian-whatsapp" placeholder="Enter the guardian WhatsApp number" maxlength="15">
                                                             <span id="gwhatsapp-feedback" class="text-dark-red text-12"></span>
                                                         </div>
                                                         <div class="col-12 col-md-1 d-flex flex-column justify-content-end">
@@ -438,22 +439,22 @@ if (!SessionUser::hasValidSession()) {
                                                         </div>
                                                         <div class="col-12 col-md-6 col-xxl-3 d-flex flex-column">
                                                             <label class="text-14 main-text" for="">First Name</label>
-                                                            <input type="text" class="form-control custom-input mt-2" id="guardian-fname" maxlength="45">
+                                                            <input type="text" class="form-control custom-input mt-2" id="guardian-fname" placeholder="Enter the guardian first name" maxlength="45">
                                                             <span id="gfname-feedback" class="text-dark-red text-12"></span>
                                                         </div>
                                                         <div class="col-12 col-md-6 col-lg-3 d-flex flex-column">
                                                             <label class="text-14 main-text" for="">Last Name</label>
-                                                            <input type="text" class="form-control custom-input mt-2" id="guardian-lname" maxlength="45">
+                                                            <input type="text" class="form-control custom-input mt-2" id="guardian-lname" placeholder="Enter the guardian last name" maxlength="45">
                                                             <span id="glname-feedback" class="text-dark-red text-12"></span>
                                                         </div>
                                                         <div class="col-12 col-md-6 col-lg-3 d-flex flex-column">
                                                             <label class="text-14 main-text" for="">Email</label>
-                                                            <input type="text" class="form-control custom-input mt-2" id="guardian-email" maxlength="100">
+                                                            <input type="text" class="form-control custom-input mt-2" id="guardian-email" placeholder="Enter the guardian e-mail address" maxlength="100">
                                                             <span id="gemail-feedback" class="text-dark-red text-12"></span>
                                                         </div>
                                                         <div class="col-12 col-md-6 col-lg-3 d-flex flex-column">
                                                             <label class="text-14 main-text" for="">Mobile</label>
-                                                            <input type="text" class="form-control custom-input mt-2" id="guardian-mobile" maxlength="10">
+                                                            <input type="text" class="form-control custom-input mt-2" id="guardian-mobile" placeholder="Enter the guardian mobile number" maxlength="10">
                                                             <span id="gmobile-feedback" class="text-dark-red text-12"></span>
                                                         </div>
                                                     </div>

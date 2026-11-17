@@ -110,3 +110,23 @@ test('Edit class: weekly times keep, end, cancel and add correctly', function ()
     T::eq('2026-11-10', $p['from'], 'new times start today');
     T::eq('2027-01-05', \Enlixo\Classes\ClassFormRepository::planWeeklyTimes([], $slots, '2026-11-10', '2027-01-05')['from'], 'or on a later first class date');
 });
+
+test('Class form: exam years and subjects follow the exam type (Scholarship 3 years, O/L 7, A/L 4)', function () {
+    $l = [
+        'exam_types' => [['value' => '1', 'label' => 'Scholarship'], ['value' => '2', 'label' => 'O/L'], ['value' => '3', 'label' => 'A/L'], ['value' => '9', 'label' => 'Grade 9 Term Test', 'own' => true]],
+        'years' => array_map(fn ($y) => ['value' => (string) ($y - 2025), 'label' => (string) $y], range(2026, 2040)),
+        'subjects' => [['value' => '22', 'label' => 'Physics'], ['value' => '30', 'label' => 'Grade 5 Scholarship'], ['value' => '3', 'label' => 'Mathematics'], ['value' => '99', 'label' => 'Robotics', 'own' => true]],
+        'mediums' => [],
+    ];
+    $a = \Enlixo\Classes\ExamRules::annotate($l, 2026);
+    $years = fn (string $exam) => array_values(array_map(fn ($y) => $y['label'], array_filter($a['years'], fn ($y) => in_array($exam, $y['when']['exam_type'], true))));
+    T::eq(['2026', '2027', '2028'], $years('1'));
+    T::eq(7, count($years('2')));
+    T::eq(['2026', '2027', '2028', '2029'], $years('3'));
+    T::eq(['1'], $a['subjects'][1]['when']['exam_type'], 'Grade 5 Scholarship only for Scholarship');
+    T::eq(['1', '2'], $a['subjects'][2]['when']['exam_type'], 'Mathematics for Scholarship and O/L (A/L has Combined Mathematics)');
+    T::true(!isset($a['subjects'][3]['when']), 'a tutor\'s own subject fits every exam type');
+    T::eq([], \Enlixo\Classes\ExamRules::check($l, '1', '2', '30', 2026));
+    T::eq(['year', 'subject'], array_keys(\Enlixo\Classes\ExamRules::check($l, '1', '5', '22', 2026)));
+    T::eq([], \Enlixo\Classes\ExamRules::check($l, '9', '14', '22', 2026), 'a tutor\'s own exam type is never limited');
+});

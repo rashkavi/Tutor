@@ -338,7 +338,7 @@ function showLectureModal(date, dayLectures) {
                     </div>
                 </div>
                <div class="d-flex justify-content-between align-items-center mb-3 px-3">
-               ${lecture.status === 'Ongoing' && lecture.lectureType === 'Online'
+               ${lecture.status === 'Ongoing' && (lecture.lectureType === 'Online' || lecture.lectureType === 'Both')
                 ? `
                     <button class="table-btn table-btn-success active" onclick="window.open('${lecture.joinLink}', '_blank')">
                         Join Now
@@ -354,7 +354,7 @@ function showLectureModal(date, dayLectures) {
                    ${isSubjectLectureSchedule ? `
                     <ul class="dropdown-menu z-3">
                         <li>
-                            <a class="dropdown-item" href="lecture-details?lecture-id=${lecture.lectureId}&class-id=${subject}">
+                            <a class="dropdown-item" href="time-table-class-details?time-table-id=${lecture.lectureId}">
                                 Lecture Details
                             </a>
                         </li>
@@ -373,7 +373,7 @@ function showLectureModal(date, dayLectures) {
                 ` : `
                  <ul class="dropdown-menu z-3">
                         <li>
-                            <a class="dropdown-item" href="lecture-details?lecture-id=${lecture.lectureId}">
+                            <a class="dropdown-item" href="time-table-class-details?time-table-id=${lecture.lectureId}">
                                 Lecture Details
                             </a>
                         </li>

@@ -983,26 +983,24 @@ const initializeEditPaymentPlan = () => {
 }
 
 const initializeScheduleLecture = () => {
-    $("#physical-check-box").on("change", function () {
-        if ($(this).is(":checked")) {
-            $("#online-check-box").prop("checked", false);
-        } else {
-            $("#online-check-box").prop("checked", true);
-        }
-        if ($("#lecture-link-area").hasClass("d-none") == false) {
-            $("#lecture-link-area").addClass("d-none");
-        }
+    // How the class day runs: Physical, Online or Both (hall and online). Exactly one is ticked; the link is asked
+    // for Online and Both (unless Zoom is connected, then the page has no link box).
+    const kinds = ["#physical-check-box", "#online-check-box", "#both-check-box"];
+    kinds.forEach((id) => {
+        $(id).on("change", function () {
+            if ($(this).is(":checked")) {
+                kinds.filter((k) => k !== id).forEach((k) => $(k).prop("checked", false));
+            } else {
+                $(this).prop("checked", true);
+            }
+            const needsLink = $("#online-check-box").is(":checked") || $("#both-check-box").is(":checked");
+            $("#lecture-link-area").toggleClass("d-none", !needsLink);
+        });
     });
-
-    $("#online-check-box").on("change", function () {
-        if ($(this).is(":checked")) {
-            $("#physical-check-box").prop("checked", false);
-            $("#lecture-link-area").removeClass("d-none");
-        } else {
-            $("#physical-check-box").prop("checked", true);
-            $("#lecture-link-area").addClass("d-none");
-        }
-    });
+    // FREE plan: one class notes file per class day
+    if ($("#attachment-hint").data("max-files") === 1) {
+        $("#file-selector-input").removeAttr("multiple");
+    }
 
     $("#oneTimeLecture").on("change", function () {
         if ($(this).is(":checked")) {

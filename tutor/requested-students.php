@@ -65,7 +65,7 @@ if (!SessionUser::hasValidSession()) {
                                     ],
                                 ], 'requests-actions'); ?>
                                 <div class="col-12 p-0" id="requests-stats"></div>
-                                <div class="col-12 p-0 component-theme" id="requests-list"></div>
+                                <div class="col-12 p-0" id="requests-list"></div>
                             </div>
                             <div class="flex-grow-1"></div>
                             <footer>

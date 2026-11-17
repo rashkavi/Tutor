@@ -24,7 +24,7 @@ final class ClassCreator
      */
     public function create(int $tutorId, int $userId, array $in, ?array $file, Entitlements $ent, string $now): array
     {
-        $p = $this->prepare($tutorId, $in, $file, $ent, null);
+        $p = $this->prepare($tutorId, $in, $file, $ent, null, false, $now);
         $p['class']['cover'] = $this->storeCover($file, $p['cover']);
         $id = $this->repo->create($tutorId, $userId, $p['class'], $p['slots'], $p['fee'], $p['custom'], $now);
         return ['id' => $id, 'name' => $p['class']['name'], 'slots' => count($p['slots']), 'fee' => $p['fee'] !== null];
@@ -41,7 +41,7 @@ final class ClassCreator
         if ($old === null) {
             throw HttpException::notFound('This class was not found.');
         }
-        $p = $this->prepare($tutorId, $in, $file, $ent, $classId, $old['cover'] !== '');
+        $p = $this->prepare($tutorId, $in, $file, $ent, $classId, $old['cover'] !== '', $now, $old['values']);
         $cover = $old['cover'];
         if ($p['cover'] !== null) {
             $cover = $this->storeCover($file, $p['cover']);
@@ -57,7 +57,7 @@ final class ClassCreator
     }
 
     /** @return array{class:array, slots:list<array>, fee:?array, custom:array<string,string>, cover:?array{ext:string}} */
-    private function prepare(int $tutorId, array $in, ?array $file, Entitlements $ent, ?int $classId, bool $hasCover = false): array
+    private function prepare(int $tutorId, array $in, ?array $file, Entitlements $ent, ?int $classId, bool $hasCover = false, string $now = '', ?array $oldValues = null): array
     {
         $settings = $this->repo->settings($tutorId);
         $fields = [];
@@ -77,6 +77,13 @@ final class ClassCreator
                 $errors[$k] = 'Please choose ' . strtolower($fields[$k]['label']) . '.';
             }
             $ids[$k] = (int) $val;
+        }
+        // the exam year and subject must fit the exam type (checked when they are new or changed, so an older class still saves)
+        $pick = fn (string $k) => (string) ($in[$k] ?? '');
+        $changed = $oldValues === null || array_filter(['exam_type', 'year', 'subject'], fn ($k) => $pick($k) !== (string) ($oldValues[$k] ?? ''));
+        if ($changed && !isset($errors['exam_type'])) {
+            $year = (int) substr($now !== '' ? $now : date('Y-m-d'), 0, 4);
+            $errors += ExamRules::check($lookups, $pick('exam_type'), $pick('year'), $pick('subject'), $year);
         }
 
         $classType = $str('class_type') ?: 'theory';

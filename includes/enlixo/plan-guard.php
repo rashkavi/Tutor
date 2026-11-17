@@ -76,3 +76,27 @@ if (!function_exists('enlixo_plan_block')) {
         }
     }
 }
+
+if (!function_exists('enlixo_lock_badge')) {
+    /**
+     * Lock badge for a legacy PHP page, with the same hover card as FeatureGate.badge() (plan, what it does, Upgrade).
+     * Empty string when the tutor has the feature. Needs assets/css/enlixo-ui.css on the page.
+     */
+    function enlixo_lock_badge(int $tutorId, string $featureKey): string
+    {
+        if (enlixo_tutor_has($tutorId, $featureKey)) {
+            return '';
+        }
+        $f = \Enlixo\Catalog\FeatureCatalog::features()[$featureKey] ?? null;
+        $planKey = $f ? (array_values(array_intersect(['free', 'start', 'grow', 'pro'], $f['plans']))[0] ?? 'grow') : 'grow';
+        $plan = \Enlixo\Catalog\FeatureCatalog::PLANS[$planKey]['name'] ?? 'STARTER';
+        $e = static fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+        $lock = '<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 0 1 6 0v3H9Z"/></svg>';
+        $url = 'upgrade?feature=' . rawurlencode($featureKey);
+        return '<span class="ex-lock-wrap"><span class="ex-lock-badge" tabindex="0" aria-label="' . $e(($f['name'] ?? 'This feature') . ': available on ' . $plan) . '">' . $lock . $e($plan) . '</span>'
+            . '<span class="ex-lock-tip" role="tooltip"><span class="ex-lock-tip-plan">Available on ' . $e($plan) . '</span>'
+            . '<span class="ex-lock-tip-title d-block">' . $e($f['name'] ?? 'Premium feature') . '</span>'
+            . '<span class="ex-lock-tip-text d-block">' . $e($f['description'] ?? '') . '</span>'
+            . '<a class="custom-btn ex-lock-tip-btn d-inline-flex align-items-center justify-content-center text-decoration-none" href="' . $e($url) . '">Upgrade to ' . $e($plan) . '</a></span></span>';
+    }
+}

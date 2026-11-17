@@ -18,6 +18,11 @@ $studentId = (int) $sessionUserObject['student_id'];
 $classes = sl_student_classes($studentId);
 $wanted = (int) ($_GET['class'] ?? 0);
 $classId = isset($classes[$wanted]) ? $wanted : 0;
+if (!sr_pre_allowed($studentId, $classId)) {
+    // pre-recorded classes come with the GROW / CUSTOM plan of the tutor: nothing to show here
+    header('Location: ./recordings' . ($classId ? '?class=' . $classId : ''));
+    exit;
+}
 $items = sr_pre_recordings($studentId, $classId);
 
 $open = array_filter($items, fn ($r) => $r['lock']['watchable']);

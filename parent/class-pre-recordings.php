@@ -20,6 +20,12 @@ if (!SessionUser::ifUserIsParent()) {
             header("Location: ./classes");
         } else {
             $classData = $class->fetch_assoc();
+            require_once __DIR__ . '/../includes/enlixo/plan-guard.php';
+            if (!enlixo_tutor_has((int) $classData['tutor_id'], 'recordings.pre_recorded')) {
+                // pre-recorded classes come with the tutor's GROW / CUSTOM plan
+                header('Location: ./class-details?class-id=' . $class_id);
+                exit;
+            }
 
             function formatDuration(int $minutes): string
             {

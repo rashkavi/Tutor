@@ -114,6 +114,16 @@ textarea.ex-input { height: auto; padding: 10px 12px; }
 /* ---------- Premium lock ---------- */
 .ex-lock-badge { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px 0 6px; border-radius: 999px; background: var(--premium-gradient); color: #3b2503; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; box-shadow: 0 2px 8px rgba(229, 169, 59, .35); white-space: nowrap; }
 .ex-lock-badge svg { width: 11px; height: 11px; }
+.ex-lock-badge[tabindex] { cursor: help; }
+.ex-lock-badge:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/* hover card of a lock badge (FeatureGate LockTip): what the feature does + Upgrade */
+.ex-lock-tip { position: fixed; z-index: 2000; width: 260px; max-width: calc(100vw - 24px); padding: 14px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-lg); opacity: 0; visibility: hidden; transform: translateY(4px); transition: opacity .15s, transform .15s, visibility .15s; text-align: left; white-space: normal; }
+.ex-lock-tip.is-open { opacity: 1; visibility: visible; transform: none; }
+.ex-lock-tip-plan { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; background: var(--premium-gradient); color: #3b2503; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.ex-lock-tip-plan svg { width: 11px; height: 11px; }
+.ex-lock-tip-title { margin-top: 8px; font-size: 14px; font-weight: 600; color: var(--text); }
+.ex-lock-tip-text { margin-top: 4px; font-size: 12px; line-height: 1.45; color: var(--sub-text, #6E7485); }
+.ex-lock-tip-btn { margin-top: 12px; width: 100%; height: 36px; font-size: 13px; border: 0; }
 .ex-gated { position: relative; isolation: isolate; border-radius: var(--radius); }
 .ex-gated > .ex-gated-content { filter: grayscale(.6) blur(1.5px); opacity: .55; pointer-events: none; user-select: none; }
 .ex-gated-overlay { position: absolute; inset: 0; display: grid; place-items: center; z-index: 2; border-radius: inherit; background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 30%, transparent), color-mix(in srgb, var(--surface) 85%, transparent)); }
@@ -1055,6 +1065,12 @@ button.ex-hd-cal-cell:hover, button.ex-hd-cal-cell:focus-visible { background: v
     font-weight: 400 !important;
     color: var(--main-text-color) !important;
     white-space: nowrap;
+}
+
+.dropdown-menu:not(.user-dropdown):not(.plain-menu) .dropdown-item>.ex-ico {
+    flex-shrink: 0;
+    margin: 0 1rem 0 0;
+    color: var(--sub-text);
 }
 
 .dropdown-menu:not(.user-dropdown):not(.plain-menu) .dropdown-item>iconify-icon {
@@ -2244,7 +2260,6 @@ a.ex-hd-stat:hover .ex-hd-go { opacity: 1; }
 .ex-pcard-menu .dropdown-item .ex-ico { color: var(--sub-text, #8C94A3); }
 .ex-pcard-menu .dropdown-item:hover { background: var(--light-color, #f9fafb); color: var(--dark-theme, #0061D2); }
 .ex-pcard-menu .dropdown-item:hover .ex-ico { color: var(--dark-theme, #0061D2); }
-.ex-pcard-menu li + li .dropdown-item { border-top: 1px solid var(--line-color, #E9EAF0); }
 /* keep "View Class" on one line when four cards fit in a row */
 .ex-pcard-view { flex: 0 1 auto; min-width: 0; padding: 0 16px; white-space: nowrap; }
 .ex-pcard-tools { gap: 8px; flex: none; }
@@ -2587,3 +2602,19 @@ a.ex-hd-cal-item:hover { transform: translateY(-1px); color: inherit; }
 .ex-hd-cal-item.is-online .ex-hd-cal-item-mode { color: var(--dark-green-blue, #1A8F4D); }
 [data-custom-theme="dark"] .ex-hd-cal-item { background: color-mix(in srgb, var(--dark-theme) 18%, transparent); }
 [data-custom-theme="dark"] .ex-hd-cal-item.is-online { background: color-mix(in srgb, var(--dark-green) 16%, transparent); }
+
+/* Bootstrap gutters reach only the direct children of .row (".row > *"): give the same gutters to the columns of a
+   display:contents wrapper (the filter row of DataView / FilterBar), so the filters do not touch each other. */
+.row > .d-contents > * { flex-shrink: 0; max-width: 100%; padding-right: calc(var(--bs-gutter-x) * .5); padding-left: calc(var(--bs-gutter-x) * .5); margin-top: var(--bs-gutter-y); }
+.ex-image-panel.ex-square { max-width: 230px; } /* a profile photo box the size of V3's student form */
+/* a lock badge on a full-width button (Generate thumbnail on FREE) sits on its top-right corner */
+.ex-image-panel > button { position: relative; overflow: visible; }
+.ex-image-panel > button > .ex-lock-badge { position: absolute; top: -10px; right: -6px; }
+/* the same card on legacy PHP pages (enlixo_lock_badge() in includes/enlixo/plan-guard.php): opens on hover / focus */
+.ex-lock-wrap { position: relative; display: inline-flex; vertical-align: middle; }
+.ex-lock-wrap > .ex-lock-tip { position: absolute; top: calc(100% + 8px); left: 0; }
+.ex-lock-wrap:hover > .ex-lock-tip, .ex-lock-wrap:focus-within > .ex-lock-tip { opacity: 1; visibility: visible; transform: none; }
+.ex-lock-wrap > .ex-lock-tip::before { content: ''; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+/* the plan the Upgrade page recommends (same card as My Subscription → Plans) */
+.ex-plan.is-rec { box-shadow: 0 0 0 2px var(--tone), 0 18px 40px rgba(16, 24, 40, .12); }
+.ex-plan-per { white-space: nowrap; }

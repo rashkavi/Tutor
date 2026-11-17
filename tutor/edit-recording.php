@@ -1,5 +1,4 @@
 <?php
-// Old edit page. Recordings are edited in the dialog of tutor/recordings.php (?edit=<id> opens it).
-$id = (string) ($_GET['recording-id'] ?? '');
-header('Location: ./recordings' . (ctype_digit($id) ? '?edit=' . $id : ''), true, 302);
-exit;
+// Edit Recording is the same page as Add Recording now: add-recording?id=<recording id>.
+$id = (string) ($_GET['recording-id'] ?? $_GET['id'] ?? '');
+header('Location: ./' . (ctype_digit($id) ? 'add-recording?id=' . $id : 'recordings'), true, 302);

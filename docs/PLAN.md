@@ -317,3 +317,29 @@ Run `database/migrations/016_messaging.sql` (additive: `tutor_messages`, `tutor_
 ## FREE / STARTER / GROW and the upgrade path (2026-11-16)
 
 See `docs/PLANS.md`. FREE is a real plan (migration 018), limits in `FeatureCatalog::limits()`, enforced by `EntitlementService::requireWithin()`; parent login is STARTER; Upgrade page `tutor/upgrade.php`, nudges (menu card, 80 % banners, limit card, dashboard card, locks), "Try free for 7 days" once, upgrade from FREE with a 7-day invoice, reverse trial back to FREE. Tests: `tests/e2e/plans-journey.e2e.js` (10 cases), `tests/EntitlementsTest.php`.
+
+## Class form and student forms (2026-11-17)
+
+Run `database/migrations/019_scholarship_subjects.sql` (adds "Grade 5 Scholarship" and "Environment", spells English correctly), then `php bin/seed.php`.
+
+- **Exam year and subject follow the exam type:** `src/Classes/ExamRules.php` (names, not ids). Years from this year: Scholarship 3, O/L 7, A/L 4 (London O/L / A/L the same). Subjects: Scholarship = Grade 5 Scholarship, Sinhala, Tamil, English, Mathematics, Environment; O/L and A/L their own lists. A tutor's own exam type or subject is never limited. The form gets `when: {exam_type: [...]}` on each option (`ExamRules::annotate()`), `FormBuilder` lists only the matching options and clears a choice that no longer fits; `ClassCreator` checks it again (`ExamRules::check()`), only when exam type / year / subject are new or changed, so older classes still save.
+- **Cover generator STARTER and up** (`classes.cover_generator`), **lock badges with a hover card** (see docs/PLANS.md).
+- **Students:** the public apply link works again, add / edit student with a guardian saves, first + last name fill the full name and the name with initials, guardian and address blocks are all or nothing (stars show once something in the block is typed), one WhatsApp number per student (add, apply, edit), edit student only for the tutor's own students and with any typed character.
+
+## Student portal: class card menu, pre-recorded by plan, class day page (2026-11-17)
+
+- Class card three-dot menu: icon and text spaced like every action menu (`.dropdown-item > .ex-ico` in the global menu rules), one separator line between items.
+- Pre-recorded classes (`recordings.pre_recorded`, GROW / CUSTOM) are hidden for students of FREE / STARTER tutors: `sr_pre_allowed()` (`includes/enlixo/student-recordings.php`) drives the side menu item, the Recordings page button and the page itself (redirects to Recordings); the class card menu and the parent page ask `enlixo_tutor_has()` per class.
+- Class day details (`portal/time-table-class-details.php`) follows the V3 student portal Lecture Details: summary card (status, how it runs, exam, tutor, date tile, time, countdown), Join Now / Watch Recording / Add to Calendar (.ics), Class Day Details, Tutor, Class Notes, My Attendance, Also on that day, Next in this class. Styles `ld-*` in `assets/css/portal-learning.css`.
+- Join Now goes through `portal/api/joinLecture.php`: student in the class, day on, from 1 hour before the start to the end; marks attendance 1 (joined online, the tutor confirms Present) when nothing is marked, then redirects to the link. The old page called a `joinLecture()` that did not exist, and the calendar linked to a missing `lecture-details` page.
+- `bin/dev-up.sh` starts the dev server with `ENLIXO_DEMO_OTP=1` (demo numbers sign in with 123456; dev only).
+
+## Trial requests, class day rules, Add Recording page, one plan card design (2026-11-17)
+
+Run `database/migrations/020_trial_requests.sql` and `021_lecture_type_both.sql`, then `php bin/seed.php`.
+
+- **Free trial = request:** see docs/PLANS.md (Admin > Tutors > Trial Requests, `TrialRequests`).
+- **Schedule a class day** (`tutor/schedule-class.php`, `tutor/api/scheduleLectureToClass.php`): Physical / Online / Both (lecture type 4 "Both" = hall and online at the same time, needs the online link; joins, calendars and the class day page treat it like online). Recurring class days are STARTER and up (`timetable.recurring`: the box is locked with a hover card on FREE, the API refuses). FREE attaches one class notes file of up to 10 MB (`timetable.attachments`). Typed titles are escaped; a Zoom failure answers JSON instead of printing.
+- **Lock badges on legacy PHP pages:** `enlixo_lock_badge($tutorId, $feature)` (`includes/enlixo/plan-guard.php`) draws the badge and the same hover card (plan, what it does, Upgrade) as `FeatureGate.badge()`; the page needs `enlixo-ui.css`.
+- **Add / Edit Recording is a page:** `tutor/add-recording.php` (`?class=`, `?time-table-id=`, `?id=` to edit; `edit-recording?recording-id=` forwards) with `recording-form.js` + `app-tutor-recording-form.js`. Class Recordings opens it instead of the old pop-up.
+- **One plan card design:** the Upgrade page plans use the My Subscription → Plans card (`.ex-plan`, Monthly / Yearly switch `.ex-plan-cycle`), with "Best next step" / "Your plan" ribbons.

@@ -1,7 +1,7 @@
 // Tutor → Upgrade Plan (tutor/upgrade.php). One page, no pop-ups, built to move a tutor one plan up when it pays off:
 //   1. why now: the feature or limit they hit (?feature= / ?limit=), else what the next plan adds
 //   2. what they use: students and every monthly limit, with what the next plan gives
-//   3. the plans side by side (monthly / yearly), the recommended one marked; "Try free for 7 days" once, "Upgrade"
+//   3. the plans side by side (monthly / yearly), the recommended one marked; "Ask for a 7-day free trial" (the ENLIXO admin approves it), "Upgrade"
 //      opens an inline confirm with the price and what happens next
 //   4. every feature per plan, then answers to the usual worries (data kept, how to pay, going back)
 // Data: GET /me/access (plan, limits, usage, features per plan, preview) + GET /tutor/subscription (prices, status).
@@ -18,13 +18,15 @@ let A = null; // access
 let S = null; // subscription
 let cycle = 'monthly';
 let confirming = null; // plan key with the confirm panel open
+let TR = { pending: null, last: null }; // trial request (the ENLIXO admin approves it before the trial starts)
 
 fill(root, h('div', { class: 'component-theme p-5 text-center sub-text' }, 'Loading…'));
 load();
 
 async function load() {
   try {
-    [A, S] = await Promise.all([api.get('/me/access').then((r) => r.data), api.get('/tutor/subscription').then((r) => r.data)]);
+    [A, S, TR] = await Promise.all([api.get('/me/access').then((r) => r.data), api.get('/tutor/subscription').then((r) => r.data),
+      api.get('/tutor/subscription/trial-request').then((r) => r.data).catch(() => ({ pending: null, last: null }))]);
   } catch (e) {
     fill(root, h('div', { class: 'component-theme p-4 text-dark-red' }, e.message));
     return;
@@ -63,7 +65,7 @@ function draw() {
   const mine = paidKey();
   const rec = recommended();
   const t = S.tutor;
-  const canPreview = !A.preview_used && !A.preview && t.status !== 'trial' && !['suspended', 'cancelled'].includes(t.status);
+  const canPreview = !A.preview_used && !A.preview && !TR.pending && t.status !== 'trial' && !['suspended', 'cancelled'].includes(t.status);
 
   fill(actions,
     h('a', { class: 'custom-btn ex-btn-lg px-4 text-decoration-none d-inline-flex align-items-center gap-2', href: '#up-compare' }, icon('checklist', { size: 18 }), 'Compare Plans'),
@@ -73,6 +75,7 @@ function draw() {
   fill(root,
     whyCard(rec, canPreview),
     A.preview ? previewNote() : null,
+    !A.preview ? trialRequestNote() : null,
     usageCard(rec),
     plansCard(rec, canPreview),
     compareCard(),
@@ -117,7 +120,34 @@ function whyCard(rec, canPreview) {
     price ? h('div', { class: 'up-why-cta' },
       h('div', { class: 'up-why-price' }, h('b', {}, lkr(price.monthly)), h('span', {}, '/ month')),
       h('button', { type: 'button', class: 'custom-btn px-4', onclick: () => openConfirm(rec) }, `Upgrade to ${nameOf(rec)}`),
-      canPreview ? h('button', { type: 'button', class: 'up-try', onclick: () => startPreview(rec) }, icon('magic', { size: 16 }), 'Try it free for 7 days') : null) : null);
+      canPreview ? h('button', { type: 'button', class: 'up-try', onclick: () => startPreview(rec) }, icon('magic', { size: 16 }), 'Ask for a 7-day free trial') : null) : null);
+}
+
+/** The trial request waiting for the ENLIXO team, or the answer to the last one. */
+function trialRequestNote() {
+  if (TR.pending) {
+    return h('div', { class: 'up-note mb-4', role: 'status' }, icon('hourglass', { size: 20 }),
+      h('span', { class: 'flex-grow-1' }, h('b', {}, `Your request to try ${nameOf(TR.pending.plan)} free is with the ENLIXO team.`),
+        ' The 7-day trial starts as soon as they approve it, and this page shows their answer.'),
+      h('button', { type: 'button', class: 'custom-outline-btn px-3', onclick: withdrawRequest }, 'Withdraw'));
+  }
+  if (TR.last?.status === 'rejected' && !A.preview_used) {
+    return h('div', { class: 'up-note is-warn mb-4', role: 'status' }, icon('info', { size: 20 }),
+      h('span', {}, h('b', {}, `Your request to try ${nameOf(TR.last.plan)} was not approved.`), TR.last.note ? ` ${TR.last.note}` : '',
+        ' You can ask again, upgrade, or WhatsApp us on ', h('a', { href: `https://wa.me/94${ENLIXO_PHONE.slice(1)}`, target: '_blank', rel: 'noopener' }, ENLIXO_PHONE), '.'));
+  }
+  return null;
+}
+
+async function withdrawRequest() {
+  try {
+    const { data } = await api.delete('/tutor/subscription/trial-request');
+    Toast.success(data.message);
+    TR.pending = null;
+    draw();
+  } catch (e) {
+    Toast.error(e.message);
+  }
 }
 
 function previewNote() {
@@ -158,9 +188,12 @@ function usageCard(rec) {
 function plansCard(rec, canPreview) {
   const mine = paidKey();
   const plans = S.plans.filter((p) => ORDER.includes(p.key));
-  const toggle = h('div', { class: 'up-cycle', role: 'group', 'aria-label': 'Billing' },
-    ['monthly', 'yearly'].map((c) => h('button', { type: 'button', class: cycle === c ? 'is-on' : '', 'aria-pressed': String(cycle === c), onclick: () => { cycle = c; draw(); } },
-      c === 'monthly' ? 'Monthly' : 'Yearly', c === 'yearly' ? h('span', { class: 'up-save' }, 'Save') : null)));
+  const best = Math.max(0, ...plans.filter((p) => p.monthly > 0).map((p) => Math.round((p.yearly_discount / p.monthly) * 100)));
+  // Monthly / Yearly switch and pricing cards: the same design as My Subscription → Plans (.ex-plan in enlixo-ui.css)
+  const toggle = h('div', { class: 'ex-plan-cycle', role: 'group', 'aria-label': 'Pay monthly or yearly' },
+    ['monthly', 'yearly'].map((c) => h('button', { type: 'button', class: `ex-plan-cycle-btn${cycle === c ? ' active' : ''}`, 'aria-pressed': String(cycle === c), onclick: () => { cycle = c; draw(); } },
+      c === 'monthly' ? 'Monthly' : 'Yearly', c === 'yearly' && best ? h('span', { class: 'ex-plan-save' }, `Save ${best}%`) : null)));
+  const tick = (text, strong = false) => h('li', { class: strong ? 'fw-semibold main-text' : '' }, h('span', { class: 'ex-plan-tick' }, icon('check', { size: 16 })), h('span', {}, text));
   const card = (p) => {
     const isMine = p.key === mine;
     const higher = rank(p.key) > rank(mine);
@@ -171,31 +204,36 @@ function plansCard(rec, canPreview) {
       const l = A.limits.find((x) => x.key === k);
       return l ? `${v[p.key] === null || v[p.key] === undefined ? 'Unlimited' : v[p.key]} ${l.unit}${l.period === 'month' && v[p.key] !== null ? ' a month' : ''}` : null;
     }).filter(Boolean);
-    const yearly = cycle === 'yearly' && p.monthly > 0;
-    return h('div', { class: `up-plan${isRec ? ' is-rec' : ''}${isMine ? ' is-mine' : ''}` },
-      isRec ? h('span', { class: 'up-plan-badge' }, 'Best next step') : isMine ? h('span', { class: 'up-plan-badge is-mine' }, 'Your plan') : null,
-      h('div', { class: 'up-plan-name' }, p.name),
-      h('div', { class: 'up-plan-tag' }, p.tagline || ''),
-      custom ? h('div', { class: 'up-plan-price' }, h('b', {}, "Let's talk"))
-        : h('div', { class: 'up-plan-price' }, h('b', {}, lkr(monthlyPrice(p))), h('span', {}, p.monthly ? '/ month' : 'forever')),
-      yearly ? h('div', { class: 'up-plan-sub' }, `${lkr(monthlyPrice(p) * 12)} a year · you save ${lkr(p.yearly_discount * 12)}`) : h('div', { class: 'up-plan-sub' }, p.limit ? `Up to ${p.limit} students` : 'Any number of students'),
-      h('ul', { class: 'up-plan-list' },
-        rank(p.key) > 0 ? h('li', { class: 'is-all' }, icon('check', { size: 14 }), `Everything in ${plans[rank(p.key) - 1]?.name ?? ''}`) : null,
-        adds.slice(0, rank(p.key) > 0 ? 5 : 6).map((n) => h('li', {}, icon('check', { size: 14 }), n)),
-        p.key !== 'pro' ? h('li', { class: 'is-limits' }, icon('sliders', { size: 14 }), limitLines.join(' · ')) : null),
-      h('div', { class: 'up-plan-cta' },
-        isMine ? h('span', { class: 'up-plan-mine' }, icon('check', { size: 16 }), 'You are on this plan')
-          : custom ? h('a', { class: 'custom-btn w-100 text-decoration-none', href: waLink(`I would like a CUSTOM plan for my classes.`), target: '_blank', rel: 'noopener' }, icon('whatsapp', { size: 18 }), 'Talk to ENLIXO')
-            : higher ? h('button', { type: 'button', class: 'custom-btn w-100', onclick: () => openConfirm(p.key) }, `Upgrade to ${p.name}`)
-              : h('a', { class: 'up-down', href: 'subscription?tab=plans' }, `Move to ${p.name}`),
-        higher && !custom && canPreview ? h('button', { type: 'button', class: 'up-try w-100 justify-content-center', onclick: () => startPreview(p.key) }, icon('magic', { size: 16 }), 'Try free for 7 days') : null));
+    const tone = { start: 'blue', grow: 'green', pro: 'purple' }[p.key] ?? 'blue';
+    const yearlyMonthly = Math.max(0, p.monthly - p.yearly_discount);
+    const action = isMine ? h('div', { class: 'ex-plan-current mt-auto' }, icon('check', { size: 18 }), 'This is your plan')
+      : custom ? h('a', { class: 'custom-btn w-100 mt-auto text-decoration-none d-inline-flex align-items-center justify-content-center gap-2', href: waLink('I would like a CUSTOM plan for my classes.'), target: '_blank', rel: 'noopener' }, icon('whatsapp', { size: 18 }), 'Talk to ENLIXO')
+        : higher ? h('button', { type: 'button', class: 'custom-btn w-100 mt-auto', onclick: () => openConfirm(p.key) }, `Upgrade to ${p.name}`)
+          : h('a', { class: 'custom-outline-btn w-100 mt-auto text-decoration-none d-inline-flex justify-content-center', href: 'subscription?tab=plans' }, `Move to ${p.name}`);
+    return h('div', { class: 'col-12 col-md-6 col-xl-3' }, h('div', { class: `ex-plan tone-${tone}${isMine ? ' is-mine' : ''}${isRec ? ' is-rec' : ''}` },
+      isMine ? h('div', { class: 'ex-plan-ribbon' }, 'Your plan') : isRec ? h('div', { class: 'ex-plan-ribbon' }, 'Best next step') : null,
+      h('div', { class: 'ex-plan-head' },
+        h('span', { class: 'ex-plan-ico' }, icon(p.key === 'pro' ? 'crown' : p.key === 'grow' ? 'growth' : 'classes', { size: 22 })),
+        h('div', { class: 'min-w-0' }, h('div', { class: 'ex-plan-name' }, p.name), h('div', { class: 'ex-plan-tagline' }, p.tagline || ''))),
+      custom ? h('div', { class: 'ex-plan-price' }, h('span', { class: 'ex-plan-amount' }, "Let's talk"))
+        : h('div', { class: 'ex-plan-price' }, h('span', { class: 'ex-plan-cur' }, 'LKR'), h('span', { class: 'ex-plan-amount' }, lkr(monthlyPrice(p)).replace(/^LKR\s*/, '')), h('span', { class: 'ex-plan-per' }, p.monthly ? '/ month' : 'forever')),
+      h('div', { class: 'ex-plan-note' }, custom || !p.yearly_discount ? '\u00a0'
+        : cycle === 'yearly' ? [`${lkr(yearlyMonthly * 12)} a year, `, h('b', {}, `you save ${lkr(p.yearly_discount * 12)}`)]
+          : ['or ', h('b', {}, `${lkr(yearlyMonthly)} a month`), ' when you pay yearly']),
+      h('ul', { class: 'ex-plan-list' },
+        tick(p.limit ? `Up to ${p.limit} students` : 'Any number of students', true),
+        rank(p.key) > 0 ? tick(`Everything in ${plans[rank(p.key) - 1]?.name ?? ''}`, true) : null,
+        adds.slice(0, rank(p.key) > 0 ? 5 : 6).map((n) => tick(n)),
+        !custom && limitLines.length ? tick(limitLines.join(' · ')) : null),
+      action,
+      higher && !custom && canPreview ? h('button', { type: 'button', class: 'up-try w-100 justify-content-center mt-2', onclick: () => startPreview(p.key) }, icon('magic', { size: 16 }), 'Ask for a 7-day free trial') : null));
   };
   return h('div', { class: 'component-theme p-4 mb-4', id: 'up-plans' },
-    h('div', { class: 'd-flex justify-content-between align-items-center gap-3 flex-wrap mb-4' },
-      h('div', {}, h('div', { class: 'sub-topic main-text' }, 'Choose your plan'), h('div', { class: 'text-13 sub-text' }, 'Prices in LKR. Your classes, students and records stay when you change plan.')),
+    h('div', { class: 'ex-plan-top' },
+      h('div', { class: 'ex-plan-info' }, icon('info', { size: 18 }), h('span', {}, 'Prices in LKR. Your classes, students and records stay when you change plan.')),
       toggle),
     confirming ? confirmPanel(confirming) : null,
-    h('div', { class: 'up-plans' }, plans.map(card)));
+    h('div', { class: 'row g-4 align-items-stretch' }, plans.map(card)));
 }
 
 function openConfirm(key) {
@@ -242,7 +280,9 @@ async function startPreview(key) {
   try {
     const { data } = await api.post('/tutor/subscription/preview', { plan: key });
     Toast.success(data.message);
-    setTimeout(() => location.reload(), 900);
+    TR.pending = data.request;
+    draw();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (e) {
     Toast.error(e.message);
   }
@@ -278,7 +318,7 @@ function faqCard() {
     ['What happens to my students and records?', 'Nothing is deleted when you change plan, try a plan or go back. Your classes, students, fees and recordings stay exactly as they are.'],
     ['How do I pay?', 'Pay the invoice by bank transfer or deposit into an ENLIXO account and upload the slip on the invoice page. ENLIXO checks it within one working day.'],
     ['What if I do not pay after upgrading from FREE?', 'After 7 days you simply go back to FREE. Your class portal stays open for students.'],
-    ['What does "Try free for 7 days" do?', 'You get every feature of that plan for a week, once, with no invoice. When the week ends, you are back on your own plan unless you upgrade.'],
+    ['How does the 7-day free trial work?', 'Ask for it here. Once the ENLIXO team approves your request you get every feature of that plan for a week, once, with no invoice. When the week ends, you are back on your own plan unless you upgrade.'],
     ['Can I go back to a smaller plan?', 'Yes, from My Subscription. A paid month runs to its end first, and your students must fit the smaller plan.'],
   ];
   return h('div', { class: 'component-theme p-4 mb-4' },

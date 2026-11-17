@@ -267,13 +267,52 @@ final class PlatformController
         return JsonResponse::ok(['message' => $this->app->platformBilling()->action($auth->userId, 'plan', $in, $auth->userId, true)]);
     }
 
-    /** POST /tutor/subscription/preview {plan}: try a bigger plan free for 7 days, once (no invoice, own plan stays). */
+    /**
+     * POST /tutor/subscription/preview {plan, note?}: ASK to try a bigger plan free for 7 days. The ENLIXO admin approves
+     * the request (Admin > Trial Requests) and only then the preview starts (TrialRequests, migration 020).
+     */
     public function startPreview(Request $r): JsonResponse
     {
         $auth = $this->tutorOwner($r);
-        $msg = $this->app->platformBilling()->action($auth->userId, 'preview', ['plan' => (string) $r->input('plan', ''), 'days' => 7], $auth->userId, true);
-        $this->app->entitlements()->forget($auth->userId);
-        return JsonResponse::ok(['message' => $msg, 'access' => $this->app->entitlements()->for($auth->userId)->toArray()]);
+        $res = $this->app->trialRequests()->request($auth->userId, (string) $r->input('plan', ''), (string) $r->input('note', ''), $this->nowText());
+        return JsonResponse::ok(['message' => $res['message'], 'request' => $this->app->trialRequests()->pendingFor($auth->userId)], [], 201);
+    }
+
+    /** GET /tutor/subscription/trial-request: the waiting request and the last decision (Upgrade page). */
+    public function myTrialRequest(Request $r): JsonResponse
+    {
+        $auth = $this->tutorOwner($r);
+        return JsonResponse::ok(['pending' => $this->app->trialRequests()->pendingFor($auth->userId), 'last' => $this->app->trialRequests()->lastDecidedFor($auth->userId)]);
+    }
+
+    /** DELETE /tutor/subscription/trial-request: withdraw the waiting request. */
+    public function cancelTrialRequest(Request $r): JsonResponse
+    {
+        $auth = $this->tutorOwner($r);
+        $this->app->trialRequests()->cancel($auth->userId, $this->nowText());
+        return JsonResponse::ok(['message' => 'Your trial request was withdrawn.']);
+    }
+
+    /** GET /admin/trial-requests */
+    public function adminTrialRequests(Request $r): JsonResponse
+    {
+        $this->admin($r);
+        $l = $this->app->trialRequests()->list();
+        return JsonResponse::ok($l['data'], ['counts' => $l['counts']]);
+    }
+
+    /** POST /admin/trial-requests/{id}/approve {days?, note?} | /reject {note} */
+    public function decideTrialRequest(Request $r): JsonResponse
+    {
+        $auth = $this->admin($r);
+        $approve = str_ends_with(rtrim($r->path, '/'), '/approve');
+        $msg = $this->app->trialRequests()->decide((int) $r->param('id'), $approve, (string) $r->input('note', ''), (int) $r->input('days', 7), $auth->userId, $this->nowText());
+        return JsonResponse::ok(['message' => $msg]);
+    }
+
+    private function nowText(): string
+    {
+        return $this->app->clock()->now()->setTimezone(new \DateTimeZone('Asia/Colombo'))->format('Y-m-d H:i:s');
     }
 
     /** POST /tutor/subscription/pay-now: make the next invoice now, so the tutor can pay before the trial / period ends. */

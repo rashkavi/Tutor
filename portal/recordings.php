@@ -32,7 +32,9 @@ $className = $classId ? $classes[$classId] : '';
 $lf = ['title' => 'Class Recordings', 'menu' => 'Class Recordings', 'js' => ['js/recordings.js']];
 include __DIR__ . '/includes/learning-frame-top.php';
 
-$preLink = '<a class="custom-outline-btn" href="./pre-recorded-classes' . ($classId ? '?class=' . $classId : '') . '">' . enlixo_icon('pre-recorded', 18) . 'Pre Recorded Classes</a>';
+$preLink = sr_pre_allowed($studentId, $classId) // GROW / CUSTOM tutors only
+    ? '<a class="custom-outline-btn" href="./pre-recorded-classes' . ($classId ? '?class=' . $classId : '') . '">' . enlixo_icon('pre-recorded', 18) . 'Pre Recorded Classes</a>'
+    : '';
 if ($classId) {
     sl_page_title('Class Recordings', [['Class Recordings', './recordings'], [$className, './class-details?class-id=' . $classId]], '', $preLink);
 } else {

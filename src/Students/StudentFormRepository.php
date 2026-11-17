@@ -50,6 +50,6 @@ final class StudentFormRepository
     /** Name and photo of the tutor, for the public application page. */
     public function tutor(int $tutorId): ?array
     {
-        return $this->db->one('SELECT user_id id, user_fname first_name, user_lname last_name, user_image image FROM users WHERE user_id = :t', ['t' => $tutorId]);
+        return $this->db->one('SELECT user_id id, user_fname first_name, user_lname last_name, profile_img image FROM users WHERE user_id = :t', ['t' => $tutorId]);
     }
 }

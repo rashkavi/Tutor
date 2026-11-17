@@ -44,8 +44,11 @@ function sectionInfo(title, text) {
  * `bars: true` draws each section as a white card with a blue title bar (the public application form).
  */
 export class FormBuilder {
-  constructor({ sections, fields, lookups = {}, values = {}, file = null, imageUrl = null, onChange = () => {}, lockBadge = () => null, onLocked = () => {}, onAddOption = null, onGenerateImage = null, bars = false }) {
-    this.o = { sections, fields, lookups, onChange, lockBadge, onLocked, onAddOption, onGenerateImage, bars };
+  constructor({ sections, fields, lookups = {}, values = {}, file = null, imageUrl = null, onChange = () => {}, lockBadge = () => null, onLocked = () => {}, onAddOption = null, onGenerateImage = null, generateBadge = null, bars = false, groups = {} }) {
+    // groups: { name: { fields: [...], required: [...] } } — all-or-nothing blocks (guardian, address): once any field of
+    // the block has a value, the `required` ones get their star (StudentFormSchema::GROUPS, checked again on the server)
+    this.o = { sections, fields, lookups, onChange, lockBadge, onLocked, onAddOption, onGenerateImage, generateBadge, bars, groups };
+    this.touched = new Set(); // auto fields (full name, name with initials) the person typed in themselves
     this.v = {};
     for (const f of fields) this.v[f.key] = values[f.key] ?? f.default ?? (f.type === 'schedule' ? [] : f.type === 'switch' ? false : '');
     this.file = file;
@@ -66,8 +69,9 @@ export class FormBuilder {
       let body = grid;
       if (image && image.section === s.key) {
         body = h('div', { class: 'row gx-4 gy-3 m-0 p-0' },
-          h('div', { class: 'col-12 col-md-4 col-xl-3 p-0' }, this.#image(image)),
-          h('div', { class: 'col-12 col-md-8 col-xl-9 ps-md-4 pe-0' }, grid));
+          // a square profile photo is a small box like V3's student form (col-xxl-2); a 16:9 class cover keeps the wider column
+          h('div', { class: image.aspect === 1 ? 'col-8 col-md-3 col-xl-3 col-xxl-2 p-0' : 'col-12 col-md-4 col-xl-3 p-0' }, this.#image(image)),
+          h('div', { class: image.aspect === 1 ? 'col-12 col-md-9 col-xl-9 col-xxl-10 ps-md-4 pe-0' : 'col-12 col-md-8 col-xl-9 ps-md-4 pe-0' }, grid));
       }
       if (this.o.bars) {
         this.el.append(h('section', { class: 'ex-bar-section mb-4', 'aria-label': s.title },
@@ -80,6 +84,10 @@ export class FormBuilder {
     }
     target.append(this.el);
     this.#applyShowIf();
+    this.#applyWhen();
+    this.#applyGroups();
+    if (this.v.full_name) this.touched.add('full_name');
+    if (this.v.name_with_initials) this.touched.add('name_with_initials');
     return this;
   }
 
@@ -92,7 +100,67 @@ export class FormBuilder {
     this.v[key] = value;
     this.#clearError(key);
     this.#applyShowIf();
+    this.#applyWhen(key);
+    if (key === 'full_name' || key === 'name_with_initials') {
+      if (String(value ?? '').trim() === '') this.touched.delete(key); else this.touched.add(key);
+    }
+    if (key === 'first_name' || key === 'last_name') this.#autoNames();
+    this.#applyGroups();
     this.o.onChange(this.values(), key);
+  }
+
+  /** First + last name fill Full Name ("Kavindu Lakshan Perera") and Name with Initials ("K. L. Perera") until the person types in them. */
+  #autoNames() {
+    const first = String(this.v.first_name ?? '').trim();
+    const last = String(this.v.last_name ?? '').trim();
+    const put = (key, val) => {
+      if (this.touched.has(key) || !this.rows[key]) return;
+      this.v[key] = val;
+      const input = this.rows[key].querySelector('input');
+      if (input) input.value = val;
+    };
+    put('full_name', [first, last].filter(Boolean).join(' '));
+    const initials = first.split(/\s+/).filter(Boolean).map((w) => `${w[0].toUpperCase()}.`).join(' ');
+    put('name_with_initials', last ? [initials, last].filter(Boolean).join(' ') : '');
+  }
+
+  /**
+   * Options that depend on another field: an option with `when: {exam_type: ['1', '3']}` is listed only while that
+   * field has one of those values (no `when` = always). Years and subjects follow the exam type this way.
+   * The saved value stays listed so an older class still shows what it was saved with.
+   */
+  #applyWhen(changed = null) {
+    for (const f of this.o.fields) {
+      if (f.type !== 'select' || !this.rows[f.key]) continue;
+      const all = Array.isArray(f.options) ? f.options : this.o.lookups[f.options] ?? [];
+      const deps = [...new Set(all.flatMap((o) => Object.keys(o.when ?? {})))];
+      if (!deps.length || (changed !== null && !deps.includes(changed))) continue;
+      const cur = String(this.v[f.key] ?? '');
+      // a field with nothing chosen, or a value no option names (a tutor's own exam type), does not narrow the list
+      const known = (k) => all.some((o) => (o.when?.[k] ?? []).map(String).includes(String(this.v[k] ?? '')));
+      const keep = (o) => Object.entries(o.when ?? {}).every(([k, vals]) => !known(k) || vals.map(String).includes(String(this.v[k] ?? '')));
+      let shown = all.filter(keep);
+      if (changed !== null && cur !== '' && !shown.some((o) => String(o.value) === cur)) {
+        this.v[f.key] = ''; // the old choice does not fit the new exam type
+      } else if (cur !== '' && !shown.some((o) => String(o.value) === cur)) {
+        shown = [...shown, ...all.filter((o) => String(o.value) === cur)];
+      }
+      const select = this.rows[f.key].querySelector('select');
+      if (!select) continue;
+      const now = String(this.v[f.key] ?? '');
+      select.replaceChildren(h('option', { value: '' }, '- Select -'), ...shown.map((o) => h('option', { value: o.value, selected: String(o.value) === now }, o.label)));
+      select.value = now;
+    }
+  }
+
+  /** all-or-nothing blocks: the stars of a block's required fields show only while something in the block is filled */
+  #applyGroups() {
+    for (const g of Object.values(this.o.groups ?? {})) {
+      const on = g.fields.some((k) => String(this.v[k] ?? '').trim() !== '');
+      for (const k of g.required) {
+        this.rows[k]?.querySelector('label')?.classList.toggle('required', on);
+      }
+    }
   }
 
   showErrors(errors) {
@@ -268,7 +336,7 @@ export class FormBuilder {
       ? h('button', { type: 'button', class: 'custom-outline-btn ex-btn-md w-100 mt-3 d-inline-flex align-items-center justify-content-center gap-2', onclick: async () => {
         const dataUrl = await this.o.onGenerateImage(f);
         if (dataUrl) await crop(dataUrl);
-      } }, h('span', { class: 'ex-btn-ico', 'aria-hidden': 'true', html: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2Zm7 12 .9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14Z"/></svg>' }), 'Generate thumbnail')
+      } }, h('span', { class: 'ex-btn-ico', 'aria-hidden': 'true', html: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2Zm7 12 .9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14Z"/></svg>' }), 'Generate thumbnail', this.o.generateBadge)
       : null;
 
     const col = h('div', { class: 'd-flex flex-column', 'data-key': f.key },

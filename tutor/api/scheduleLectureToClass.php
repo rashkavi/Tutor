@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0); // warnings go to the log, never into the JSON answer
 $status = new stdClass();
 require_once("../../includes/UserClass.php");
 require_once("../../includes/connection.php");
@@ -8,13 +8,14 @@ require_once("../../includes/UserPermissionsClass.php");
 require_once("../../includes/DateTimeClass.php");
 require_once("../../includes/Project.php");
 require_once("../includes/ZoomService.php");
+require_once("../../includes/enlixo/plan-guard.php");
 
 if (SessionUser::ifUserIsTutor()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         UserPermissions::setUserPermissions($sessionUserObject['user_permissions']);
-        $class_id = isset($_POST['class']) ? trim($_POST['class']) : 0;
+        $class_id = (int) ($_POST['class'] ?? 0);
 
         $query = "SELECT * FROM `classes` WHERE `class_id` = '" . $class_id . "'";
         if (SessionUser::ifUserIsTutor()) {
@@ -40,6 +41,24 @@ if (SessionUser::ifUserIsTutor()) {
             $days = isset($_POST['days']) ? trim($_POST['days']) : [];
             $skip_poya_days = isset($_POST['skip_poya_days']) && $_POST['skip_poya_days'] === 'true' ? true : false;
             $skip_holidays = isset($_POST['skip_holidays']) && $_POST['skip_holidays'] === 'true' ? true : false;
+
+            // How the class day runs: in the hall (1), online (2) or both at the same time (4, migration 021)
+            $lectureTypeId = $physical && $online ? 4 : ($online ? 2 : 1);
+            $online = $lectureTypeId !== 1; // Both needs the online link too
+            $lectureLink = $lectureTypeId === 1 ? '' : Database::escape($link);
+
+            // Plan rules (docs/PLANS.md): recurring class days and several class notes per day are STARTER and up
+            $planTutor = (int) ($isValidClassId->fetch_assoc()['tutor_id'] ?? $sessionUserObject['user_id']);
+            if ($recurring && !enlixo_tutor_has($planTutor, 'timetable.recurring')) {
+                $status->error = 'Recurring class days come with the STARTER plan. Add this class day as a one-time class, or upgrade.';
+                $status->feature = 'timetable.recurring';
+                echo json_encode($status);
+                exit;
+            }
+            $fileCount = isset($_FILES['tutes']['name']) ? count(array_filter((array) $_FILES['tutes']['name'], fn ($n) => $n !== '')) : 0;
+            if ($fileCount > 1 && !enlixo_tutor_has($planTutor, 'timetable.attachments')) {
+                $status->tute[] = 'On the FREE plan you can attach one file (up to 10 MB) to a class day. Upgrade to STARTER to attach more.';
+            }
 
             if ($one_time && empty($lecture_date)) {
                 $status->date = 'Please select a lecture date';
@@ -187,26 +206,21 @@ if (SessionUser::ifUserIsTutor()) {
                         );
 
                         $link = $meeting["join_url"];
+                        $lectureLink = Database::escape($link);
                     } catch (Exception $e) {
-                        print_r($e->getMessage());
+                        error_log('Zoom meeting for a class day: ' . $e->getMessage());
+                        $status->error = 'We could not create the Zoom meeting. Check Settings > Integrations, or paste the link yourself.';
+                        echo json_encode($status);
                         exit();
                     }
                 }
 
                 if ($one_time) {
                     $time_table_insert_columns = "`date`,`start_time`,`end_time`,`duration`,`classes_class_id`,`date_added`,`users_user_id`,`time_table_status_time_table_status_id`,`lecture_title`";
-                    $time_table_insert_values = "'" . $lecture_date . "','" . $start_time . "','" . $end_time . "','" . $duration . "','" . $class_id . "','" . $addTime . "','" . $sessionUserObject["user_id"] . "','1','" . $title . "'";
+                    $time_table_insert_values = "'" . $lecture_date . "','" . $start_time . "','" . $end_time . "','" . $duration . "','" . $class_id . "','" . $addTime . "','" . $sessionUserObject["user_id"] . "','1','" . Database::escape($title) . "'";
 
-                    if ($physical) {
-                        $time_table_insert_columns .= ",`lecture_type_lecture_type_id`,`lecture`";
-                        $time_table_insert_values .= ",'1',''";
-                    }
-
-                    if ($online) {
-
-                        $time_table_insert_columns .= ",`lecture_type_lecture_type_id`,`lecture`";
-                        $time_table_insert_values .= ",'2','" . Database::escape($link) . "'";
-                    }
+                    $time_table_insert_columns .= ",`lecture_type_lecture_type_id`,`lecture`";
+                    $time_table_insert_values .= ",'" . $lectureTypeId . "','" . $lectureLink . "'";
 
                     try {
                         Database::iud("INSERT INTO `time_table` (" . $time_table_insert_columns . ") VALUES (" . $time_table_insert_values . ")");
@@ -274,15 +288,8 @@ if (SessionUser::ifUserIsTutor()) {
                             $time_table_insert_columns = "`date`,`start_time`,`end_time`,`duration`,`classes_class_id`,`date_added`,`users_user_id`,`time_table_status_time_table_status_id`,`lecture_title`";
                             $time_table_insert_values = "'" . $lecture_date . "','" . $start_time . "','" . $end_time . "','" . $duration . "','" . $class_id . "','" . $addTime . "','" . $sessionUserObject["user_id"] . "','1','" . Database::escape($lecture_title) . "'";
 
-                            if ($physical) {
-                                $time_table_insert_columns .= ",`lecture_type_lecture_type_id`,`lecture`";
-                                $time_table_insert_values .= ",'1',''";
-                            }
-
-                            if ($online) {
-                                $time_table_insert_columns .= ",`lecture_type_lecture_type_id`,`lecture`";
-                                $time_table_insert_values .= ",'2','" . $link . "'";
-                            }
+                            $time_table_insert_columns .= ",`lecture_type_lecture_type_id`,`lecture`";
+                            $time_table_insert_values .= ",'" . $lectureTypeId . "','" . $lectureLink . "'";
 
                             Database::iud("INSERT INTO `time_table` (" . $time_table_insert_columns . ") VALUES (" . $time_table_insert_values . ")");
                         }

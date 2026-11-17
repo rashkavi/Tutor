@@ -9,6 +9,7 @@ use Enlixo\Classes\ClassFormRepository;
 use Enlixo\Classes\ClassFormSchema;
 use Enlixo\Classes\ClassListRepository;
 use Enlixo\Classes\ClassThumbnailService;
+use Enlixo\Classes\ExamRules;
 use Enlixo\Core\HttpException;
 use Enlixo\Core\JsonResponse;
 use Enlixo\Core\Request;
@@ -52,7 +53,7 @@ final class ClassController
             'class' => $editing,
             'sections' => ClassFormSchema::sections(),
             'fields' => $fields,
-            'lookups' => $this->repo()->lookups($tutor),
+            'lookups' => ExamRules::annotate($this->repo()->lookups($tutor), (int) $this->app->clock()->now()->setTimezone(new \DateTimeZone('Asia/Colombo'))->format('Y')),
             'settings' => $settings,
             'hideable' => ClassFormSchema::hideable(),
             'custom_types' => ClassFormSchema::CUSTOM_TYPES,
@@ -190,6 +191,7 @@ final class ClassController
     {
         $auth = $r->auth();
         $this->app->permissions()->require($auth, 'classes.manage');
+        $this->app->entitlements()->require($auth->tenantId(), 'classes.cover_generator');
         $now = $this->app->clock()->now()->setTimezone(new \DateTimeZone('Asia/Colombo'));
         $service = new ClassThumbnailService($this->repo(), $this->app->geminiImages(), (int) ($this->app->config['ai']['thumbnails_per_day'] ?? 10));
         return JsonResponse::ok($service->generate($auth->tenantId(), $r->body, $now->format('Y-m-d H:i:s'), $now->format('Y-m-d 00:00:00')));
