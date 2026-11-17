@@ -122,9 +122,7 @@ if (!SessionUser::hasValidSession()) {
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/skeleton.css?v=<?= Project::getVersion() ?>">
                 <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-fees.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
-                <link href="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.css" rel="stylesheet">
 
-                <script src="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.js"></script>
                 <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
                 <script src="<?= Project::getAssetsPath() ?>/js/init.js?v=<?= Project::getVersion() ?>"></script>
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">

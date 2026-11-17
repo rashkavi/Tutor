@@ -343,3 +343,8 @@ Run `database/migrations/020_trial_requests.sql` and `021_lecture_type_both.sql`
 - **Lock badges on legacy PHP pages:** `enlixo_lock_badge($tutorId, $feature)` (`includes/enlixo/plan-guard.php`) draws the badge and the same hover card (plan, what it does, Upgrade) as `FeatureGate.badge()`; the page needs `enlixo-ui.css`.
 - **Add / Edit Recording is a page:** `tutor/add-recording.php` (`?class=`, `?time-table-id=`, `?id=` to edit; `edit-recording?recording-id=` forwards) with `recording-form.js` + `app-tutor-recording-form.js`. Class Recordings opens it instead of the old pop-up.
 - **One plan card design:** the Upgrade page plans use the My Subscription → Plans card (`.ex-plan`, Monthly / Yearly switch `.ex-plan-cycle`), with "Best next step" / "Your plan" ribbons.
+
+## Parent My Children and one crop dialog everywhere (2026-11-17)
+
+- **My Children** (`parent/my-children.php`) is on the learning frame like the other parent pages: one card per child (photo or initials, status, classes, attendance of the last 30 days with a bar, fees to pay / overdue, the next class, View Progress / Classes / Fees). Figures come from `ps_children()` / `ps_progress()`, the same as Child Progress. Styles `mc-*` in `assets/css/parent-progress.css`.
+- **One crop dialog:** the global `uploadImage()` (square photo, 600 px) and `uploadCover()` (16:9, 1600 px) in `assets/js/script.js` open `assets/js/enlixo/components/ImageCropper.js`, the dialog of the tutor class form (it loads `enlixo-ui.css` itself on older pages) and put the cropped file back into the `<input type="file">`, so the save code of every page is unchanged. The old `#crop-modal` markup and Cropper.js includes were removed from the student portal, parent, tutor and admin pages; never add them back.

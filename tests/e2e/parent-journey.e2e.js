@@ -204,9 +204,9 @@ const slipPng = () => {
     const menu = await text('#offcanvas');
     t.expect(/Child Progress/.test(menu) && /Payments/.test(menu), `Menu: ${menu.slice(0, 100)}`);
   });
-  await t.tc('PA-33', 'Progress', 'My Children opens the child\'s progress', ['Open My Children', 'Press View on a child'], 'Child Progress of that child opens (not an edit form)', async () => {
+  await t.tc('PA-33', 'Progress', 'My Children opens the child\'s progress', ['Open My Children', 'Press View Progress on a child'], 'Child Progress of that child opens (not an edit form)', async () => {
     await t.open('parent/my-children', 2000);
-    await p().locator('.btn-watch-premium', { hasText: 'View' }).first().click();
+    await p().locator('.mc-card .mc-btn', { hasText: 'View Progress' }).first().click();
     await p().waitForTimeout(2000);
     t.expect(path_().endsWith('/child-progress'), `Opened ${path_()}`);
   });
