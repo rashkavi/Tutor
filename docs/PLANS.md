@@ -16,6 +16,7 @@ writes it to `features` / `payment_plan_features`. Code asks for a feature or a 
 | Attendance | manual | + QR / barcode | + reports export | yes |
 | Tutes by post (courier) | no | yes | yes | yes |
 | MCQ exams | no | yes | yes | yes |
+| Class cover generator (`classes.cover_generator`) | no (upload a picture) | yes | yes | yes |
 | Pre-recorded classes (`recordings.pre_recorded`) | no | no | yes | yes |
 | Card payments, WhatsApp / SMS API, arrears, parent payments, controlled / expiring recordings, analytics, ID cards, staff roles | no | no | yes | yes |
 
@@ -24,6 +25,8 @@ writes it to `features` / `payment_plan_features`. Code asks for a feature or a 
 - **API:** `EntitlementService::require($tutor, $feature)` (402 `feature_locked`) and `requireWithin($tutor, $limit, $adding)` (402 `limit_reached`, `LimitReachedException`): new class (`ClassController::store` / `status`), tute (`TuteController::store`, courier = `tutes.courier`), recording (`ClassRecordingController::save`), Message Center (`MessageService::create`, people reached). The older `tutor/api/addClass|addTute|addRecording|uploadLectureRecording.php` use `includes/enlixo/plan-guard.php`.
 - **Parent login:** `tutor_parent_login_allowed()` in `includes/TutorAccess.php` (sign-in and every parent page through `SessionUser::ifUserIsParent()`): a parent signs in when at least one tutor of their children has `parents.login`. Otherwise the sign-in page says "Parent login is not open for your tutor".
 - **Pre-recorded classes:** the tutor pages and `tutor/api/addPreRecording|editPreRecording.php` open the Upgrade page / refuse (`enlixo_plan_page()`, `enlixo_feature_guard()` in `includes/enlixo/plan-guard.php`); students only see pre-recordings of tutors whose plan has them (`sr_pre_recordings()`).
+- **Class cover generator:** `ClassController::thumbnail` requires `classes.cover_generator`; the class form shows the Generate thumbnail button with a lock badge on FREE and opens the Upgrade page.
+- **Lock badges explain themselves:** hovering (or focusing) any `FeatureGate.badge()` opens one hover card (`LockTip` in `FeatureGate.js`, `.ex-lock-tip` in `enlixo-ui.css`): the plan that has it, the feature name and description from the catalog, and an Upgrade button.
 - **Usage:** `PdoEntitlementRepository::usage()` (classes now; tutes, recordings and messages since the 1st of the month).
 
 ## Getting tutors to the next plan

@@ -36,6 +36,7 @@ final class FeatureCatalog
         return [
             // Class & Student Management
             'classes.setup'          => ['name' => 'Subject / Grade / Language Setup', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Create classes by subject, grade and medium.'],
+            'classes.cover_generator'=> ['name' => 'Class Cover Generator', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Make a class cover from the class details with one click (subject, exam year, medium), ready to crop. On FREE you upload your own picture.'],
             'students.registration'  => ['name' => 'Student Registration', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Register students and approve join requests.'],
             'parents.login'          => ['name' => 'Parent Login', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Parents log in to follow their children.'],
             'timetable.manage'       => ['name' => 'Timetable Management', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Plan lessons per class.'],

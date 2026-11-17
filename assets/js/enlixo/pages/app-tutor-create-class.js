@@ -15,6 +15,7 @@ const api = new ApiClient();
 const root = document.getElementById('class-form-root');
 const TYPE_LABEL = { theory: 'Theory', revision: 'Revision', paper: 'Paper', other: '' };
 const classId = Number(root.dataset.classId || 0) || null; // set on the Edit Class page
+const COVER_FEATURE = 'classes.cover_generator'; // STARTER and up
 const COVERS = new URL('../../../imgs/classes-covers/', import.meta.url).href;
 
 let gate = null;
@@ -72,7 +73,9 @@ function draw() {
     file: form?.coverFile() ?? null,
     imageUrl: form ? form.imageUrl : (schema.class?.cover ? COVERS + encodeURIComponent(schema.class.cover) : null),
     onAddOption: (f) => OptionDialog.open({ api, list: f.options }),
+    generateBadge: gate?.badge(COVER_FEATURE) ?? null,
     onGenerateImage: async () => {
+      if (gate && !gate.has(COVER_FEATURE)) { gate.openUpgrade(COVER_FEATURE); return null; }
       const v = form.values();
       if (!v.subject) {
         form.showErrors({ subject: 'Choose the subject first, so the thumbnail matches your class.' });

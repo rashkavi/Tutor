@@ -317,3 +317,11 @@ Run `database/migrations/016_messaging.sql` (additive: `tutor_messages`, `tutor_
 ## FREE / STARTER / GROW and the upgrade path (2026-11-16)
 
 See `docs/PLANS.md`. FREE is a real plan (migration 018), limits in `FeatureCatalog::limits()`, enforced by `EntitlementService::requireWithin()`; parent login is STARTER; Upgrade page `tutor/upgrade.php`, nudges (menu card, 80 % banners, limit card, dashboard card, locks), "Try free for 7 days" once, upgrade from FREE with a 7-day invoice, reverse trial back to FREE. Tests: `tests/e2e/plans-journey.e2e.js` (10 cases), `tests/EntitlementsTest.php`.
+
+## Class form and student forms (2026-11-17)
+
+Run `database/migrations/019_scholarship_subjects.sql` (adds "Grade 5 Scholarship" and "Environment", spells English correctly), then `php bin/seed.php`.
+
+- **Exam year and subject follow the exam type:** `src/Classes/ExamRules.php` (names, not ids). Years from this year: Scholarship 3, O/L 7, A/L 4 (London O/L / A/L the same). Subjects: Scholarship = Grade 5 Scholarship, Sinhala, Tamil, English, Mathematics, Environment; O/L and A/L their own lists. A tutor's own exam type or subject is never limited. The form gets `when: {exam_type: [...]}` on each option (`ExamRules::annotate()`), `FormBuilder` lists only the matching options and clears a choice that no longer fits; `ClassCreator` checks it again (`ExamRules::check()`), only when exam type / year / subject are new or changed, so older classes still save.
+- **Cover generator STARTER and up** (`classes.cover_generator`), **lock badges with a hover card** (see docs/PLANS.md).
+- **Students:** the public apply link works again, add / edit student with a guardian saves, first + last name fill the full name and the name with initials, guardian and address blocks are all or nothing (stars show once something in the block is typed), one WhatsApp number per student (add, apply, edit), edit student only for the tutor's own students and with any typed character.
