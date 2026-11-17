@@ -328,7 +328,7 @@ const updateProfile = (btn) => {
             toggleBtnLoader(btn, false);
             if (response.done) {
                 showToast("success", response.done);
-                setTimeout(() => { window.location.reload(); }, 3000);
+                setTimeout(() => { window.location.href = 'my-profile'; }, 1500); // back to My Profile (read-only view)
             } else if (response.hasOwnProperty('error')) {
                 showToast("error", response.error);
             } else {

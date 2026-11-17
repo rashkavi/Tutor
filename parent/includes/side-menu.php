@@ -15,6 +15,7 @@ class load_side_menu
             ["Classes", "mingcute:classify-add-line", "classes", "classes"],
             ["Time Table", "eos-icons:storage-class-outlined", "time-table", "time-table"],
             ["Attendance", "gg:check-o", "attendance", "attendance"],
+            ["Tute Parcels", "solar:box-linear", "couriered-tute-details", "couriered-tute-details"],
             ["Payments", "f7:wallet", "payments", "payments"],
         ];
 

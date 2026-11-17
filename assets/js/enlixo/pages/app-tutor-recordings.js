@@ -80,6 +80,7 @@ function availability(r) {
 function rowMenu(r) {
   const items = [
     { label: 'Watch', icon: 'play', onClick: () => watch(r) },
+    { label: 'Who watched', icon: 'users', href: `recording-watch?recording-id=${r.id}` },
     O.can_manage ? { label: 'Edit', icon: 'edit', onClick: () => edit(r) } : null,
     r.url ? { label: 'Copy the link', icon: 'copy', onClick: async () => { try { await navigator.clipboard.writeText(r.url); Toast.success('Link copied.'); } catch { Toast.error('Could not copy the link.'); } } } : null,
     { label: 'Class details', icon: 'view-details', href: `class-details?class-id=${r.class.id}` },
@@ -117,7 +118,7 @@ function table(p) {
           h('span', { class: 'text-12 sub-text' }, `${dayText(r.day.date)}${r.day.start ? ` · ${ampm(r.day.start)}` : ''}`))) },
       { key: 'type', label: 'Type', render: (r) => h('div', { class: 'd-flex align-items-center gap-2' }, platformTile(r.type.key, 16), cell(r.type.name, r.type.embeddable ? 'Plays in the page' : 'Opens in a new tab')) },
       { key: 'state', label: 'Availability', render: availability },
-      { key: 'watched', label: 'Watched', render: (r) => cell(plural(r.watched, 'student'), r.watched ? 'opened it' : 'not opened yet') },
+      { key: 'watched', label: 'Watched', render: (r) => h('a', { class: 'text-decoration-none', href: `recording-watch?recording-id=${r.id}` }, cell(plural(r.watched, 'student'), r.watched ? 'see who watched' : 'not opened yet')) },
       { key: 'actions', label: 'Action', width: '140px', render: rowMenu },
     ],
     empty: {

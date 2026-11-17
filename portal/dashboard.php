@@ -124,7 +124,7 @@ if (!SessionUser::ifUserIsStudent()) {
                                             ]); ?>
                                         </div>
                                         <div class="col-12 col-md-5 col-xl-3 d-flex">
-                                            <?php enlixo_dash_calendar($dash['sessions'], $today, $calFrom, $calTo); ?>
+                                            <?php enlixo_dash_calendar($dash['sessions'], $today, $calFrom, $calTo, 'time-table-class-details?time-table-id='); ?>
                                         </div>
                                     </div>
                                 </div>

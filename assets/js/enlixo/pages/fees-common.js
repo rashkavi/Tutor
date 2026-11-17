@@ -2,16 +2,16 @@
 // Record Payment, the receipt, Free Card / Discount and reminders. Student Fees, the student's Fee Card and Fee Settings
 // all use these, so a fee looks and behaves the same everywhere. Layout helpers come from admin-common.js (same look as billing).
 import { ApiClient } from '../core/ApiClient.js';
-import { FeesMock } from '../mock/FeesMock.js';
 import { FeatureGate } from '../components/FeatureGate.js';
 import {
   h, fill, icon, lkr, short, day, inDays, plural, cell, person, facts, hero, panel, field, showErrors, simpleTable, BsModal, Toast, infoTip, EmptyState,
 } from './admin-common.js';
 
 
-// Step A (preview): sample data in the browser. Step B: drop the transport and the PHP API (src/Fees) answers.
-export const PREVIEW = true;
-export const api = new ApiClient(PREVIEW ? { transport: FeesMock.shared() } : {});
+// Real data: the PHP API (src/Http/Controllers/FeeController.php + src/Fees/TutorFees.php). The pages were first built on
+// sample data (mock/FeesMock.js, kept for the design previews); PREVIEW stays false.
+export const PREVIEW = false;
+export const api = new ApiClient();
 export const gate = await FeatureGate.load(api).catch(() => null);
 export const has = (key) => !gate || gate.has(key);
 export const lockBadge = (key) => gate?.badge(key) ?? null;
@@ -49,6 +49,15 @@ export const reminderText = (r) => `Dear ${r.student.name.split(' ')[0]}, your $
 export function slipView(f) {
   const s = f.slip;
   if (!s) return h('div', { class: 'ad-slip' }, icon('money', { size: 40 }), h('div', { class: 'text-14 main-text fw-medium mt-2' }, `${f.method ?? 'Cash'}, recorded by ${f.checked_by ?? 'you'}`));
+  if (s.missing) return h('div', { class: 'ad-slip' }, icon('warning', { size: 32 }), h('div', { class: 'text-14 main-text fw-medium mt-2' }, 'No slip picture was uploaded'),
+    h('div', { class: 'text-12 sub-text' }, `Marked as paid by the student${s.reference ? ` · reference ${s.reference}` : ''}. Check your bank before you approve.`));
+  if (s.url) { // the picture / PDF the student uploaded
+    const pdf = /\.pdf$/i.test(s.file);
+    return h('div', { class: 'fe-slip' },
+      pdf ? h('a', { class: 'custom-btn-outline px-4 text-decoration-none d-inline-flex', href: s.url, target: '_blank', rel: 'noopener' }, 'Open the slip (PDF)')
+        : h('a', { href: s.url, target: '_blank', rel: 'noopener' }, h('img', { class: 'fe-slip-img', src: s.url, alt: `Slip of ${f.student.name}`, onerror: (e) => { e.target.replaceWith(h('div', { class: 'ad-slip' }, icon('warning', { size: 32 }), h('div', { class: 'text-13 sub-text mt-2' }, 'The slip picture could not be opened.'))); } })),
+      h('div', { class: 'text-12 sub-text mt-2' }, `Reference ${s.reference || '-'} · uploaded ${s.uploaded}`));
+  }
   const match = Math.round(s.amount) === Math.round(f.net);
   return h('div', { class: 'fe-slip' },
     h('div', { class: 'fe-slip-paper' },

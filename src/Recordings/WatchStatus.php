@@ -12,6 +12,7 @@ final class WatchStatus
     public const EXPIRED = 'expired';           // past expiry date
     public const NOT_YET = 'not_yet_available';
     public const NO_ACCESS = 'no_access';       // not enrolled / class inactive
+    public const UNPAID = 'unpaid';             // the fee of the class day's month is not paid
 
     public function __construct(
         public readonly string $state,
@@ -19,6 +20,7 @@ final class WatchStatus
         public readonly ?int $allowedSeconds,
         public readonly ?\DateTimeImmutable $expiresAt,
         public readonly ?\DateTimeImmutable $availableFrom = null,
+        public readonly ?string $month = null, // UNPAID: the month whose fee opens it
     ) {
     }
 

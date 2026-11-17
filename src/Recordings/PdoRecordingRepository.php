@@ -18,7 +18,7 @@ final class PdoRecordingRepository implements RecordingRepository
         // NOTE: the existing `duration` columns are treated as MINUTES. Confirm with the live app.
         $row = $kind === 'lecture'
             ? $this->db->one(
-                'SELECT lr.lecture_recording_id AS id, lr.recording_title AS title, lr.duration, lr.unlock_at, c.class_id, c.tutor_id
+                'SELECT lr.lecture_recording_id AS id, lr.recording_title AS title, lr.duration, lr.unlock_at, c.class_id, c.tutor_id, DATE_FORMAT(tt.date, \'%Y-%m\') AS month
                    FROM lecture_recording lr
                    JOIN time_table tt ON tt.time_table_id = lr.time_table_time_table_id
                    JOIN classes c ON c.class_id = tt.classes_class_id
@@ -33,7 +33,29 @@ final class PdoRecordingRepository implements RecordingRepository
             );
 
         return $row ? new RecordingInfo($kind, (int) $row['id'], (int) $row['class_id'], (int) $row['tutor_id'], $row['title'], (int) $row['duration'] * 60,
-            !empty($row['unlock_at']) ? new \DateTimeImmutable($row['unlock_at']) : null) : null;
+            !empty($row['unlock_at']) ? new \DateTimeImmutable($row['unlock_at']) : null, isset($row['month']) ? (string) $row['month'] : null) : null;
+    }
+
+    public function monthPaid(int $studentId, int $classId, string $month): bool
+    {
+        $class = $this->db->one('SELECT is_free FROM classes WHERE class_id = :c', ['c' => $classId]);
+        if ($class === null || (int) ($class['is_free'] ?? 0) === 1) {
+            return true;
+        }
+        $usesFees = (bool) $this->db->value(
+            'SELECT 1 FROM student_has_payments p JOIN students_has_classes sc ON sc.students_has_class_id = p.students_has_class_students_has_class_id
+              WHERE sc.classes_class_id = :c LIMIT 1',
+            ['c' => $classId],
+        );
+        if (!$usesFees) {
+            return true;
+        }
+        return (bool) $this->db->value(
+            'SELECT 1 FROM student_has_payments p JOIN students_has_classes sc ON sc.students_has_class_id = p.students_has_class_students_has_class_id
+              WHERE sc.classes_class_id = :c AND sc.students_student_id = :s AND p.payment_status_payment_status_id IN (3, 8)
+                AND DATE_FORMAT(p.date_added, \'%Y-%m\') = :m LIMIT 1',
+            ['c' => $classId, 's' => $studentId, 'm' => $month],
+        );
     }
 
     public function studentEnrolled(int $studentId, int $classId): bool

@@ -146,10 +146,12 @@ const slipPng = () => {
   // ------------------------------------------------------------------ what the student does
   await t.tc('ST-20', 'Attendance', 'Attendance counts only this student\'s classes', ['Open Attendance'], `Present + absent = class days held in the student's classes (${qa.held_lectures})`, async () => {
     await t.open('portal/attendance', 2500);
-    const nums = await p().$$eval('.courier-kpi .value', (els) => els.map((e) => e.textContent.trim()));
-    const [present, absent] = nums.map((v) => parseInt(v, 10));
-    t.expect(present + absent === qa.held_lectures, `Present ${present} + absent ${absent} ≠ ${qa.held_lectures}`);
-    return `Present ${present}, absent ${absent}`;
+    // tiles: Present, Absent, Watched Recording, Attendance Rate (the "being checked" ones are named under Watched)
+    const nums = await p().$$eval('.ac-tiles .stats-mini-value', (els) => els.map((e) => e.textContent.trim()));
+    const [present, absent, watched] = nums.map((v) => parseInt(v, 10));
+    const pending = parseInt(((await text('.ac-tiles')).match(/(\d+) online class/) || [0, 0])[1], 10);
+    t.expect(present + absent + watched + pending === qa.held_lectures, `Present ${present} + absent ${absent} + watched ${watched} + checked ${pending} ≠ ${qa.held_lectures}`);
+    return `Present ${present}, absent ${absent}, watched ${watched}`;
   });
   await t.tc('ST-21', 'Payments', 'Payments shows the balance, the next payment and the timeline', ['Open Payments'], 'Balance card with % paid, the payment to make, a row per fee with its state', async () => {
     await t.open('portal/payments', 2500);
@@ -204,7 +206,7 @@ const slipPng = () => {
   }
   await t.tc('ST-30', 'Recordings', 'A recording opens in the player', ['Open Class Recordings', 'Open a recording'], 'The video player, or the reason it is closed, is shown', async () => {
     await t.open(`portal/watch-recording?recording-id=${qa.recording}`, 2500);
-    const ok = await p().locator('iframe, video, .rc-player-msg, [data-player]').count();
+    const ok = await p().locator('iframe, video, .rc-player-msg, [data-player], .ex-player-lock').count();
     t.expect(ok > 0, 'No player and no message');
   });
   await t.tc('ST-31', 'Phone', 'The phone menu opens every section', ['On a phone, press the menu button'], 'The side menu slides in with Payments and Class Recordings', async () => {
@@ -219,7 +221,11 @@ const slipPng = () => {
 
   await t.tc('ST-32', 'No pop-ups', 'A class in the Attendance calendar opens its own page', ['Open Attendance', 'Click a class in the calendar'], 'The class day page opens; no pop-up', async () => {
     await t.open('portal/attendance', 3000);
-    const item = p().locator('.tt-mini, .lecture-item').first();
+    // phone: tap a marked day in the month grid, then its class card; desktop: a class in the month view
+    const day = p().locator('.m-cal-day.has-class:visible').first();
+    if (await day.count()) await day.click();
+    await p().waitForTimeout(400);
+    const item = p().locator('.m-lec:visible, .mv-lec:visible').first();
     t.expect(await item.count(), 'No class in the calendar this month');
     await item.click({ force: true });
     await p().waitForURL(/time-table-class-details/, { timeout: 10000 });

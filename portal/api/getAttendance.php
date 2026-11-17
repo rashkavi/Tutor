@@ -1,6 +1,4 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 $status = new stdClass();
 require_once('../../includes/UserClass.php');
 require_once('../../includes/connection.php');
@@ -8,7 +6,7 @@ require_once('../../includes/Project.php');
 if (SessionUser::ifUserIsStudent()) {
     $sessionStudentObject = SessionUser::getCurrentUserObject('Student');
     if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['class'])) {
-        $classId = $_GET["class"];
+        $classId = (int) $_GET["class"]; // a number only (it goes into the query)
 
         $date = new DateTime("now", new DateTimeZone("Asia/Colombo"));
 
@@ -45,7 +43,7 @@ if (SessionUser::ifUserIsStudent()) {
 
                 LEFT JOIN 
                     attendance AS a ON tt.time_table_id = a.time_table_time_table_id
-                        AND a.students_student_id = '" . $sessionStudentObject["student_id"] . "'
+                        AND a.students_student_id = '" . (int) $sessionStudentObject["student_id"] . "'
 
                 WHERE 
                 shc.students_student_id = '" . $sessionStudentObject["student_id"] . "'
@@ -76,6 +74,7 @@ if (SessionUser::ifUserIsStudent()) {
                 $lectureDateTime = new DateTime($row['date'] . ' ' . $row['start_time'], new DateTimeZone("Asia/Colombo"));
 
 
+                $row['lecture_title'] = htmlspecialchars((string) $row['lecture_title']);
                 if ($row['attendance_status_attendance_status_id'] === '1') {
                     $attendanceStatus = 'Pending';
                 } elseif ($row['attendance_status_attendance_status_id'] === '2') {

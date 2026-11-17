@@ -352,12 +352,14 @@ function enlixo_dash_bars(string $title, string $sub, array $items, string $unit
  * Month calendar with a dot on class days; clicking a day lists its classes underneath.
  * @param list<array> $sessions rows from DashboardRepository::*Sessions() covering $from..$to
  */
-function enlixo_dash_calendar(array $sessions, string $today, string $from, string $to): void
+function enlixo_dash_calendar(array $sessions, string $today, string $from, string $to, string $link = ''): void
 {
+    // $link = the class day page, e.g. 'time-table-class-details?time-table-id=' (student) or 'class-day?time-table-id=' (parent)
     $days = [];
     foreach ($sessions as $s) {
         $key = $s['id']; // a parent with two children in one class gets the class day twice; show it once
-        $days[$s['date']][$key] = ['c' => $s['class'], 't' => enlixo_dash_time($s['start']) . ' - ' . enlixo_dash_time($s['end']), 'o' => $s['online']];
+        $days[$s['date']][$key] = ['c' => $s['class'], 't' => enlixo_dash_time($s['start']) . ' - ' . enlixo_dash_time($s['end']), 'o' => $s['online'],
+            'u' => $link !== '' ? $link . (int) $s['id'] : ''];
     }
     $days = array_map('array_values', $days);
     $data = ['today' => $today, 'from' => substr($from, 0, 7), 'to' => substr($to, 0, 7), 'days' => $days ?: new stdClass()];

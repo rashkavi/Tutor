@@ -69,9 +69,9 @@ if (!SessionUser::ifUserIsAdmin()) {
                                         <div class="col-12 col-lg-4 mt-3 mt-lg-0">
                                             <div class="row align-items-center justify-content-end gx-3 h-100">
                                                 <div class="col-6 mt-3 mt-lg-0 m-md-0 text-end">
-                                                    <button class="bg-transparent border-0 align-middle" data-bs-target="#shareLink" data-bs-toggle="modal">
+                                                    <a class="bg-transparent border-0 align-middle" href="share-registration-link" title="Share Registration Link" aria-label="Share Registration Link">
                                                         <iconify-icon icon="ion:share-social" width="30" height="30" class="dark-theme p-0 m-0"></iconify-icon>
-                                                    </button>
+                                                    </a>
                                                 </div>
                                                 <div class="col-6 mt-3 mt-lg-0 m-md-0">
                                                     <button class="custom-btn w-100" data-i18n="add-new" type="button" onclick="window.location.href='add-user'">
@@ -392,32 +392,7 @@ if (!SessionUser::ifUserIsAdmin()) {
             </div>
         </div>
 
-        <div class="modal fade br-0" id="shareLink" aria-hidden="true" aria-labelledby="shareLinkLabel" tabindex="-1">
-            <div class="modal-dialog modal-lg modal-dialog-centered br-0">
-                <div class="modal-content p-4">
-                    <div class="modal-header p-0 border-0">
-                        <h1 class="modal-title text-16 darkColor" id="shareLinkLabel">Share Registration Link</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-0 mt-4">
-                        <div class="col-12 p-2">
-                            <div class="d-flex p-3 m-0 g-0 align-content-center bg-light-theme">
-                                <iconify-icon icon="mage:attachment" width="24" height="24" class="px-2"></iconify-icon>
-                                <?php
-                                $link = null;
-                                $link = Project::getBaseUrl() . "/tutor-registration-application";
-                                ?>
-                                <span id="generated-link" class="fw-semibold"><?= $link ?></span>
-                            </div>
-                        </div>
-
-                        <div class="col-12 d-flex justify-content-end mt-4">
-                            <button id="copy-button" type="button" class="custom-btn px-5 pe-5">Copy Link</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Share Registration Link is a page now: share-registration-link.php -->
 
         <script src="<?= Project::getAssetsPath() ?>/plugins/bootstrap/js/bootstrap.bundle.min.js?v=<?= Project::getVersion() ?>"></script>
         <script src="<?= Project::getAssetsPath() ?>/plugins/jquery/jquery-3.7.1.min.js"></script>

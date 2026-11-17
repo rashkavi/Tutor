@@ -128,6 +128,10 @@ final class FakeAudit implements AuditLogger
 
 final class FakeRecordingRepo implements RecordingRepository
 {
+    /** @var array<string,bool> "studentId:classId:month" => paid; missing = paid */
+    public array $paidMonths = [];
+    public function monthPaid(int $studentId, int $classId, string $month): bool { return $this->paidMonths["$studentId:$classId:$month"] ?? true; }
+
     public array $recordings = [];
     public array $rules = [];
     public array $overrides = [];

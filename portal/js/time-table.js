@@ -15,6 +15,8 @@
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const MONTH_CELL_CLASSES = 3;
     const classId = root.dataset.classId || '';
+    // Attendance pages use this calendar too: each class day shows Present / Absent / Watched / being checked
+    const ATTENDANCE = root.dataset.mode === 'attendance';
 
     let lectures = {};
     const holidays = {};
@@ -40,6 +42,10 @@
     // API status -> card colour
     const statusClass = (status) => {
         switch ((status || '').toLowerCase()) {
+            case 'present': return 'is-present';
+            case 'absent': return 'is-absent';
+            case 'watched': return 'is-watched';
+            case 'pending': return 'is-pending';
             case 'live':
             case 'ongoing': return 'is-live';
             case 'completed': return 'is-completed';
@@ -48,6 +54,7 @@
             default: return 'is-upcoming';
         }
     };
+    const statusText = (status) => (ATTENDANCE && (status || '').toLowerCase() === 'pending' ? 'Being checked' : (status || ''));
     const typeIcon = (type) => ((type || '').toLowerCase() === 'physical' ? icon('physical') : icon('online'));
     const detailsUrl = (l) => (document.getElementById('timeTable')?.dataset.details || 'time-table-class-details?time-table-id=') + encodeURIComponent(l.lectureId);
 
@@ -58,12 +65,12 @@
                     <div class="m-lec-time"><strong>${l.startTime}</strong><span>${l.endTime}</span></div>
                     <div class="m-lec-body">
                         <div class="m-lec-top">
-                            <span class="m-lec-status">${st === 'is-live' ? '<span class="m-lec-pulse"></span>' : ''}${l.status}</span>
-                            <span class="m-lec-type">${typeIcon(l.lectureType)}${l.lectureType}</span>
+                            <span class="m-lec-status">${st === 'is-live' ? '<span class="m-lec-pulse"></span>' : ''}${statusText(l.status)}</span>
+                            ${l.lectureType ? `<span class="m-lec-type">${typeIcon(l.lectureType)}${l.lectureType}</span>` : ''}
                         </div>
                         <span class="m-lec-class">${l.class}</span>
                         ${l.title ? `<span class="m-lec-title">${l.title}</span>` : `<span class="m-lec-title">${l.subject}</span>`}
-                        <span class="m-lec-tutor">${icon('teacher')}${l.lecturer || l.lecturerName || ''}</span>
+                        ${l.lecturer || l.lecturerName ? `<span class="m-lec-tutor">${icon('teacher')}${l.lecturer || l.lecturerName}</span>` : ''}
                     </div>
                     <span class="m-lec-arrow">${icon('chevron-right')}</span>
                  </a>`;
@@ -93,6 +100,10 @@
             const cls = ['m-cal-day'];
             if (list.length) cls.push('has-class');
             if (list.length && !running.length) cls.push('only-cancelled');
+            if (ATTENDANCE && list.length) { // the day takes the colour of its worst mark
+                const marks = list.map((l) => statusClass(l.status));
+                cls.push(marks.includes('is-absent') ? 'att-absent' : marks.includes('is-pending') ? 'att-pending' : marks.includes('is-watched') ? 'att-watched' : 'att-present');
+            }
             if (key === todayKey) cls.push('is-today');
             if (key === mobileSelected) cls.push('is-selected');
             if (holidays[key]) cls.push('is-holiday');
@@ -117,7 +128,7 @@
         let html = holiday ? `<div class="m-day-holiday">${icon('calendar')}${esc(holiday.name)}</div>` : '';
         html += dayLectures.length
             ? dayLectures.map(cardHtml).join('')
-            : `<div class="m-day-empty"><span class="sl-ico">${icon('calendar-empty')}</span><strong class="main-text">No classes on this day</strong><span>Pick another day in the calendar.</span></div>`;
+            : `<div class="m-day-empty"><span class="sl-ico">${icon('calendar-empty')}</span><strong class="main-text">${ATTENDANCE ? 'Nothing marked on this day' : 'No classes on this day'}</strong><span>Pick another day in the calendar.</span></div>`;
         list.innerHTML = html;
         if (scroll) list.closest('.m-day').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -147,9 +158,9 @@
             if (list.length) {
                 html += '<div class="mv-lectures">';
                 list.slice(0, MONTH_CELL_CLASSES).forEach((l) => {
-                    html += `<a class="mv-lec ${statusClass(l.status)}" href="${detailsUrl(l)}" title="${l.class} · ${l.startTime} - ${l.endTime} · ${l.status}">
+                    html += `<a class="mv-lec ${statusClass(l.status)}" href="${detailsUrl(l)}" title="${l.class} · ${l.startTime} - ${l.endTime} · ${statusText(l.status)}">
                                 <span class="mv-lec-class">${l.class}</span>
-                                <span class="mv-lec-meta"><strong>${l.startTime}</strong> · ${l.lectureType}</span>
+                                <span class="mv-lec-meta"><strong>${l.startTime}</strong> · ${ATTENDANCE ? statusText(l.status) : l.lectureType}</span>
                              </a>`;
                 });
                 if (list.length > MONTH_CELL_CLASSES) html += `<button type="button" class="mv-more" data-week="${key}">+${list.length - MONTH_CELL_CLASSES} more</button>`;
@@ -204,7 +215,7 @@
         if (total === 0) {
             html += `<div class="empty-state">
                         <span class="empty-state-icon">${icon('calendar-empty')}</span>
-                        <span class="empty-state-title">No classes this week</span>
+                        <span class="empty-state-title">${ATTENDANCE ? 'No class days this week' : 'No classes this week'}</span>
                         <span class="empty-state-text">Use the arrows to look at other weeks, or switch to the month view.</span>
                      </div>`;
         }
@@ -216,7 +227,7 @@
 
     function setView(next) {
         view = next === 'month' ? 'month' : 'week';
-        store.set('ttView', view);
+        store.set(ATTENDANCE ? 'attView' : 'ttView', view);
         root.querySelectorAll('.w-view').forEach((b) => {
             const on = b.dataset.view === view;
             b.classList.toggle('is-active', on);
@@ -304,10 +315,11 @@
 
     // ------------------------------------------------------------------ load
     weekStart = startOfWeek(new Date());
-    view = store.get('ttView') === 'month' ? 'month' : 'week';
+    view = ATTENDANCE ? (store.get('attView') === 'week' ? 'week' : 'month') : (store.get('ttView') === 'month' ? 'month' : 'week'); // attendance opens on the month
     setView(view);
     renderMobile();
-    fetch('api/getTimeTableData' + (classId ? '?class=' + encodeURIComponent(classId) : ''))
+    const source = ATTENDANCE ? 'api/getAttendance.php?class=' + encodeURIComponent(classId || '0') : 'api/getTimeTableData' + (classId ? '?class=' + encodeURIComponent(classId) : '');
+    fetch(source)
         .then((r) => r.json())
         .then((data) => {
             if (!data || !data.done) throw new Error(data && data.error ? data.error : 'load');
@@ -316,7 +328,7 @@
             loadHolidays(year);
         })
         .catch(() => {
-            if (typeof showToast === 'function') showToast('error', 'Could not load your time table. Please refresh the page.');
+            if (typeof showToast === 'function') showToast('error', ATTENDANCE ? 'Could not load your attendance. Please refresh the page.' : 'Could not load your time table. Please refresh the page.');
         })
         .finally(() => root.classList.remove('is-loading'));
 })();

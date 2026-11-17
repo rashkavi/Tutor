@@ -190,7 +190,10 @@ async function update(ids, body, btn = null) {
   try {
     state.data = (await api.post(`/tutor/tutes/${state.tuteId}/deliveries`, { ids, ...body })).data;
     state.ticked.clear();
-    Toast.success(ids.length === 1 ? 'Saved.' : `${plural(ids.length, 'parcel')} updated.`);
+    const n = state.data.notified ?? { sent: 0, not_sent: 0 };
+    Toast.success((ids.length === 1 ? 'Saved.' : `${plural(ids.length, 'parcel')} updated.`)
+      + (n.sent ? ` ${plural(n.sent, 'student')} told it is on the way.` : '')
+      + (n.not_sent ? ` ${plural(n.not_sent, 'student')} could not be told automatically (WhatsApp sends from your phone and no e-mail).` : ''));
     refreshPicker();
     draw();
     return true;

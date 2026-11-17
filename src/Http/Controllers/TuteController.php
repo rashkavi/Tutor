@@ -143,8 +143,38 @@ final class TuteController
             throw new HttpException(422, 'validation_failed', reset($errors), $errors);
         }
         $today = $this->now()->format('Y-m-d');
-        $changed = $this->repo()->updateDeliveries((int) $tute['class_tute_id'], $u['ids'], TuteRules::withStepDates($u['set'], $today), $r->auth()->userId, $today);
-        return JsonResponse::ok($this->deliveryPayload($tute) + ['changed' => $changed]);
+        $tuteId = (int) $tute['class_tute_id'];
+        // parcels that become "Sent" now: their students get a notice with the courier and tracking number
+        $newlySent = ($u['set']['status'] ?? null) === 'dispatched'
+            ? array_column(array_filter($this->repo()->deliveries($tuteId), static fn ($d) => in_array($d['id'], $u['ids'], true) && $d['status'] !== 'dispatched'), 'id')
+            : [];
+        $changed = $this->repo()->updateDeliveries($tuteId, $u['ids'], TuteRules::withStepDates($u['set'], $today), $r->auth()->userId, $today);
+        $notified = $newlySent ? $this->notifySent($r->auth()->tenantId(), $tute, $newlySent) : ['sent' => 0, 'not_sent' => 0];
+        return JsonResponse::ok($this->deliveryPayload($tute) + ['changed' => $changed, 'notified' => $notified]);
+    }
+
+    /** "Your tute is on its way": WhatsApp (when it sends by itself) or e-mail to each student whose parcel was just sent. */
+    private function notifySent(int $tutorId, array $tute, array $ids): array
+    {
+        $n = ['sent' => 0, 'not_sent' => 0];
+        $rows = $this->app->db()->all(
+            'SELECT d.tute_delivery_id, d.courier_name, d.tracking_no, ld.first_name, ld.email, ld.whatsapp
+               FROM tute_deliveries d
+               JOIN students s ON s.student_id = d.students_student_id
+               JOIN login_details ld ON ld.login_details_id = s.login_details_login_details_id
+              WHERE d.class_tutes_class_tute_id = :t AND d.tute_delivery_id IN (' . implode(',', array_map('intval', $ids)) . ')',
+            ['t' => (int) $tute['class_tute_id']],
+        );
+        foreach ($rows as $d) {
+            $track = (string) ($d['tracking_no'] ?? '');
+            $url = TuteRules::trackingUrl($d['courier_name']);
+            $text = sprintf('Hi %s, your tute "%s" (%s) was posted today%s.%s%s You can follow it in the app under Tutes > My tute parcels.',
+                $d['first_name'], $tute['tute_title'], $tute['class_name'], $d['courier_name'] ? ' by ' . $d['courier_name'] : '',
+                $track !== '' ? ' Tracking number: ' . $track . '.' : '', $track !== '' && $url ? ' Track it: ' . $url . '.' : '');
+            $r = $this->app->messages()->notify($tutorId, $d['whatsapp'], $d['email'], (string) $d['first_name'], 'Your tute is on its way', $text);
+            $n[$r['ok'] ? 'sent' : 'not_sent']++;
+        }
+        return $n;
     }
 
     public function forStudent(Request $r): JsonResponse

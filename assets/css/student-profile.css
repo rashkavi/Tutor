@@ -1,0 +1,438 @@
+/* Student My Profile (portal/my-profile.php) and Edit Profile: the ENLIXO V3 student portal profile design (enlixo-uni-v3-portal assets/css/profile.css). */
+/* My Profile (my-profile.php) and Edit Profile (edit-profile.php) */
+
+.pf-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 20px;
+    border: none;
+    border-radius: 0;
+    background: var(--dark-theme);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.pf-btn:hover {
+    background: var(--main-button-hover);
+    color: #fff;
+}
+
+.pf-layout {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.pf-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+}
+
+.pf-card {
+    background: var(--custom-white);
+}
+
+/* ------------------------------------------------------------------ profile card */
+.pf-cover {
+    height: 84px;
+    background: linear-gradient(120deg, var(--dark-theme), var(--highlight-theme));
+}
+
+.pf-identity {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 24px 20px;
+}
+
+.pf-photo {
+    width: 112px;
+    height: 112px;
+    margin-top: -56px;
+    object-fit: cover;
+    border: 4px solid var(--custom-white);
+    background: var(--body-color);
+}
+
+.pf-photo-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--dark-theme);
+    background: var(--light-theme);
+}
+
+.pf-name {
+    margin: 12px 0 2px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.pf-sub {
+    font-size: 13px;
+    color: var(--sub-text);
+}
+
+.pf-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.pf-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--light-theme);
+    color: var(--dark-theme);
+}
+
+.pf-chip.is-active {
+    background: var(--light-green);
+    color: var(--dark-green);
+}
+
+.pf-chip.is-inactive {
+    background: var(--light-red);
+    color: var(--dark-red);
+}
+
+.pf-contacts {
+    border-top: 1px solid var(--line-color);
+    padding: 8px 24px 16px;
+}
+
+.pf-contact {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+}
+
+.pf-contact + .pf-contact {
+    border-top: 1px dashed var(--line-color);
+}
+
+.pf-contact-icon {
+    flex: 0 0 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--light-theme);
+    color: var(--dark-theme);
+}
+
+.pf-contact-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pf-contact-text small {
+    font-size: 12px;
+    color: var(--sub-text);
+}
+
+.pf-contact-text span {
+    font-size: 14px;
+    color: var(--dark-color);
+    word-break: break-word;
+}
+
+/* ------------------------------------------------------------------ detail sections */
+.pf-section-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--line-color);
+}
+
+.pf-section-icon {
+    flex: 0 0 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--light-theme);
+    color: var(--dark-theme);
+}
+
+.pf-section-head h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.pf-section-head p {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: var(--sub-text);
+}
+
+.pf-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pf-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 24px;
+    border-bottom: 1px dashed var(--line-color);
+    min-width: 0;
+}
+
+.pf-item.is-wide {
+    grid-column: span 2;
+}
+
+.pf-item.is-full {
+    grid-column: 1 / -1;
+}
+
+.pf-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--sub-text);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.pf-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--dark-color);
+    word-break: break-word;
+}
+
+.pf-value.is-empty {
+    font-weight: 400;
+    color: var(--sub-text);
+    font-style: italic;
+}
+
+.pf-docs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 16px 24px 20px;
+}
+
+.pf-doc {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid var(--line-color);
+}
+
+.pf-doc-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.pf-doc-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--dark-theme);
+    text-decoration: none;
+    word-break: break-all;
+}
+
+.pf-doc-file:hover {
+    text-decoration: underline;
+}
+
+.pf-doc-none {
+    font-size: 13px;
+    font-style: italic;
+    color: var(--sub-text);
+}
+
+/* ------------------------------------------------------------------ edit form */
+.pf-form-body {
+    padding: 20px 24px 24px;
+}
+
+.pf-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.pf-field label {
+    display: flex;
+    align-items: center;
+    min-height: 20px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--main-text-color);
+}
+
+/* the red * must not make a required label taller than an optional one in the same row */
+.pf-field label.required::after {
+    font-size: 16px !important;
+    line-height: 1 !important;
+}
+
+.pf-field .custom-input,
+.pf-field .custom-select {
+    margin-top: 8px;
+}
+
+.pf-hint {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--sub-text);
+}
+
+.pf-feedback {
+    min-height: 0;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--dark-red);
+}
+
+.pf-feedback:empty {
+    display: none;
+}
+
+.pf-photo-edit {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.pf-photo-edit .pf-photo {
+    margin-top: 0;
+    width: 104px;
+    height: 104px;
+    border: 1px solid var(--line-color);
+}
+
+.pf-photo-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pf-form-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 1199.98px) {
+    .pf-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 767.98px) {
+    .pf-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pf-item.is-wide {
+        grid-column: auto;
+    }
+
+    .pf-docs {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pf-section-head,
+    .pf-item,
+    .pf-form-body {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}
+
+.pf-subhead {
+    display: block;
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--line-color);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+/* ------------------------------------------------------------------ My Profile sections as accordions */
+.pf-acc-toggle {
+    width: 100%;
+    text-align: left;
+    border: none !important;
+    background: transparent !important;
+    color: inherit !important;
+    cursor: pointer;
+}
+
+.pf-acc-toggle.collapsed {
+    border-bottom-color: transparent !important;
+}
+
+.pf-acc-toggle:not(.collapsed) {
+    border-bottom: 1px solid var(--line-color) !important;
+}
+
+.pf-acc-toggle:hover h2 {
+    color: var(--dark-theme);
+}
+
+.pf-acc-text {
+    display: block;
+    flex: 1;
+    min-width: 0;
+}
+
+.pf-acc-chevron {
+    flex: 0 0 auto;
+    color: var(--sub-text);
+    transition: transform 0.2s ease;
+}
+
+.pf-acc-toggle:not(.collapsed) .pf-acc-chevron {
+    transform: rotate(180deg);
+    color: var(--dark-theme);
+}
+
+/* ---------- ENLIXO Tutor additions ---------- */
+.pf-progress { padding: 16px 20px; }
+.pf-progress-text { font-size: 14px; color: var(--sub-text); margin-bottom: 8px; }
+.pf-progress-text strong { color: var(--dark-color); }
+.pf-progress-bar { height: 6px; background: var(--body-color); }
+.pf-progress-bar span { display: block; height: 100%; background: var(--dark-theme); }
+.pf-class-link { text-decoration: none; }
+.pf-class-link:hover .pf-value { color: var(--dark-theme); }
+.pf-acc .empty-state { padding: 24px 16px; }
+.pf-section-icon .ex-ico, .pf-contact-icon .ex-ico, .pf-chip .ex-ico { display: inline-flex; }
