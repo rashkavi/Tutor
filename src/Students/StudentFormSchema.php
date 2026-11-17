@@ -66,6 +66,12 @@ final class StudentFormSchema extends FormSchema
     }
 
     /** Guardian fields: all filled or all empty. */
+    public const ADDRESS = ['address_line_1', 'address_line_2', 'city', 'postal_code'];
+    /** all-or-nothing blocks of the form: once one field has a value, these become required (FormBuilder shows the stars) */
+    public const GROUPS = [
+        'guardian' => ['fields' => self::GUARDIAN, 'required' => ['guardian_relation', 'guardian_first_name', 'guardian_whatsapp']],
+        'address' => ['fields' => self::ADDRESS, 'required' => ['address_line_1', 'city']],
+    ];
     public const GUARDIAN = ['guardian_relation', 'guardian_title', 'guardian_first_name', 'guardian_last_name', 'guardian_whatsapp', 'guardian_mobile', 'guardian_email'];
 
     /** Built-in fields with no column in the old tables; saved with the student's own fields. */

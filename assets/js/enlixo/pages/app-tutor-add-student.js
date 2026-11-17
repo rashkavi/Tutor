@@ -40,7 +40,7 @@ async function load() {
       return;
     }
     const host = h('div');
-    form = new FormBuilder({ sections: schema.sections, fields: schema.fields, lookups: schema.lookups, values: preset() }).mount(host);
+    form = new FormBuilder({ sections: schema.sections, fields: schema.fields, lookups: schema.lookups, values: preset(), groups: schema.groups ?? {} }).mount(host);
     fill(root, host);
   } catch (e) {
     fill(root, h('div', { class: 'text-center py-5' },

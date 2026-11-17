@@ -25,7 +25,7 @@ test('Student form: core fields stay, optional ones hide, the same settings code
 
 test('Student form: answers are cleaned (phone, full name, city) and hidden fields dropped', function () use ($lookups, $good) {
     $fields = StudentFormSchema::forTutor(['hidden' => ['school']]);
-    $v = StudentFormValidator::validate($fields, $lookups, $good + ['city' => 'kandy', 'school' => 'Royal', 'evil' => 'x'], '2026-11-10');
+    $v = StudentFormValidator::validate($fields, $lookups, $good + ['address_line_1' => 'No 5, Temple Road', 'city' => 'kandy', 'school' => 'Royal', 'evil' => 'x'], '2026-11-10');
     T::eq('+94771234567', $v['whatsapp']);
     T::eq('Nethmi Perera', $v['full_name'], 'full name filled from first + last');
     T::eq('Kandy', $v['city'], 'city matched to the list');
@@ -37,7 +37,7 @@ test('Student form: wrong answers get one message per field', function () use ($
     $e = T::throws(HttpException::class, fn () => StudentFormValidator::validate($fields, $lookups, array_merge($good, [
         'class_id' => '99', 'whatsapp' => '12345', 'email' => 'nope', 'date_of_birth' => '2030-01-01', 'city' => 'Atlantis', 'guardian_last_name' => 'Perera',
     ]), '2026-11-10'));
-    T::eq(['class_id', 'date_of_birth', 'whatsapp', 'email', 'guardian_relation', 'guardian_first_name', 'guardian_whatsapp', 'city'], array_keys($e?->details['fields'] ?? []));
+    T::eq(['class_id', 'date_of_birth', 'whatsapp', 'email', 'guardian_relation', 'guardian_first_name', 'guardian_whatsapp', 'address_line_1', 'city'], array_keys($e?->details['fields'] ?? []));
 });
 
 test('Applications: approved is final, rejected can only be reopened', function () {

@@ -2587,3 +2587,8 @@ a.ex-hd-cal-item:hover { transform: translateY(-1px); color: inherit; }
 .ex-hd-cal-item.is-online .ex-hd-cal-item-mode { color: var(--dark-green-blue, #1A8F4D); }
 [data-custom-theme="dark"] .ex-hd-cal-item { background: color-mix(in srgb, var(--dark-theme) 18%, transparent); }
 [data-custom-theme="dark"] .ex-hd-cal-item.is-online { background: color-mix(in srgb, var(--dark-green) 16%, transparent); }
+
+/* Bootstrap gutters reach only the direct children of .row (".row > *"): give the same gutters to the columns of a
+   display:contents wrapper (the filter row of DataView / FilterBar), so the filters do not touch each other. */
+.row > .d-contents > * { flex-shrink: 0; max-width: 100%; padding-right: calc(var(--bs-gutter-x) * .5); padding-left: calc(var(--bs-gutter-x) * .5); margin-top: var(--bs-gutter-y); }
+.ex-image-panel.ex-square { max-width: 230px; } /* a profile photo box the size of V3's student form */

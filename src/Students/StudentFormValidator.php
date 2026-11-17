@@ -103,9 +103,15 @@ final class StudentFormValidator
             }
         }
 
-        // Address: the city has to be one we know, and the address line goes with it.
-        if (($out['address_line_1'] ?? '') === '' && (($out['address_line_2'] ?? '') !== '' || ($out['postal_code'] ?? '') !== '') && isset($byKey['address_line_1']) && !isset($errors['address_line_1'])) {
-            $errors['address_line_1'] = 'Enter the first line of the address.';
+        // Address: all or nothing too. Once any part is typed, the first line and the city are needed (the form shows
+        // their stars at that moment, FormBuilder groups); the city has to be one we know.
+        $address = array_values(array_intersect(StudentFormSchema::ADDRESS, array_keys($byKey)));
+        if (array_filter($address, static fn ($k) => ($out[$k] ?? '') !== '')) {
+            foreach (['address_line_1' => 'Enter the first line of the address.', 'city' => 'Choose the city from the list.'] as $k => $msg) {
+                if (isset($byKey[$k]) && ($out[$k] ?? '') === '' && !isset($errors[$k])) {
+                    $errors[$k] = $msg;
+                }
+            }
         }
         if (($out['city'] ?? '') !== '' && !isset($errors['city'])) {
             $match = null;

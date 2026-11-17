@@ -47,7 +47,7 @@ function draw(d) {
   const classes = d.lookups.classes;
   const want = new URLSearchParams(location.search).get('class');
   const pick = classes.find((c) => c.value === want) ?? (classes.length === 1 ? classes[0] : null);
-  form = new FormBuilder({ sections: d.sections, fields: d.fields, lookups: d.lookups, values: pick ? { class_id: pick.value } : {}, bars: true }).mount(host);
+  form = new FormBuilder({ sections: d.sections, fields: d.fields, lookups: d.lookups, values: pick ? { class_id: pick.value } : {}, bars: true, groups: d.groups ?? {} }).mount(host);
 
   const msg = h('textarea', { id: 'a-message', class: 'form-control custom-input mt-2', rows: '3', maxlength: '1000', placeholder: 'Anything you would like the tutor to know, for example the best time to call you' });
   const confirm = h('input', { class: 'form-check-input', type: 'checkbox', id: 'a-confirm' });

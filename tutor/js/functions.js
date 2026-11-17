@@ -701,10 +701,10 @@ const editStudent = (btn, id) => {
         intake: ["#intake-selector", "#intake-feedback"],
         grelationship: ["#grelationship-selector", "#grelationship-feedback"],
         gtitle: ["#gtitle-selector", "#gtitle-feedback"],
-        gfname: ["#gfname", "#gfname-feedback"],
-        glname: ["#glname", "#glname-feedback"],
-        gemail: ["#gemail", "#gemail-feedback"],
-        gmobile: ["#gmobile", "#gmobile-feedback"],
+        gfname: ["#guardian-fname", "#gfname-feedback"],
+        glname: ["#guardian-lname", "#glname-feedback"],
+        gemail: ["#guardian-email", "#gemail-feedback"],
+        gmobile: ["#guardian-mobile", "#gmobile-feedback"],
         gwhatsapp: ["#guardian-whatsapp", "#gwhatsapp-feedback"],
     };
 

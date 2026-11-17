@@ -32,11 +32,19 @@ final class StudentRegistrar
         }
 
         return $this->db->transaction(function () use ($tutorId, $byUserId, $v, $extraKeys, $photo, $now, $classId, $failIfInClass) {
+            // one WhatsApp number = one student (the student signs in with it). The same number and the same name is the same
+            // student joining another class; the same number with another name is refused (both spellings 07… / +947… match).
+            $wa = (string) $v['whatsapp'];
+            $local = preg_match('/^\+94(7\d{8})$/', $wa, $m) ? '0' . $m[1] : $wa;
             $found = $this->db->one(
-                "SELECT s.student_id, CONCAT(ld.first_name, ' ', ld.last_name) name FROM students s JOIN login_details ld ON ld.login_details_id = s.login_details_login_details_id
-                  WHERE ld.whatsapp = :w ORDER BY s.student_id LIMIT 1",
-                ['w' => $v['whatsapp']],
+                "SELECT s.student_id, ld.first_name, ld.last_name, CONCAT(ld.first_name, ' ', ld.last_name) name FROM students s JOIN login_details ld ON ld.login_details_id = s.login_details_login_details_id
+                  WHERE ld.whatsapp IN (:w, :l) ORDER BY s.student_id LIMIT 1",
+                ['w' => $wa, 'l' => $local],
             );
+            $same = static fn ($a, $b) => mb_strtolower(trim((string) $a)) === mb_strtolower(trim((string) $b));
+            if ($found && !($same($found['first_name'], $v['first_name'] ?? '') && $same($found['last_name'], $v['last_name'] ?? ''))) {
+                throw HttpException::validation(['whatsapp' => 'This WhatsApp number is already used by ' . trim((string) $found['name']) . '. Each student needs their own WhatsApp number.']);
+            }
             $existing = $found['student_id'] ?? null;
             if ($existing) {
                 $studentId = (int) $existing;
@@ -121,11 +129,13 @@ final class StudentRegistrar
             $parentId = $this->db->value('SELECT parent_id FROM parents WHERE whatsapp = :w ORDER BY parent_id LIMIT 1', ['w' => $v['guardian_whatsapp']]);
             if (!$parentId) {
                 $parentId = $this->db->insert(
-                    'INSERT INTO parents (guardian_relation_guardian_relation_id, title_title_id, parent_fname, parent_lname, email, mobile, whatsapp)
-                     VALUES (:r, :ti, :f, :l, :e, :m, :w)',
+                    'INSERT INTO parents (guardian_relation_guardian_relation_id, title_title_id, parent_fname, parent_lname, email, mobile, whatsapp, registered_at, verification, reset_time)
+                     VALUES (:r, :ti, :f, :l, :e, :m, :w, :at, \'\', \'\')',
                     [
-                        'r' => ($v['guardian_relation'] ?? '') !== '' ? (int) $v['guardian_relation'] : null,
-                        'ti' => ($v['guardian_title'] ?? '') !== '' ? (int) $v['guardian_title'] : null,
+                        // relationship and title are NOT NULL in parents: the first row of each list when none was chosen
+                        'r' => ($v['guardian_relation'] ?? '') !== '' ? (int) $v['guardian_relation'] : (int) $this->db->value('SELECT MIN(guardian_relation_id) FROM guardian_relation'),
+                        'ti' => ($v['guardian_title'] ?? '') !== '' ? (int) $v['guardian_title'] : (int) $this->db->value('SELECT MIN(title_id) FROM title'),
+                        'at' => $now,
                         'f' => $v['guardian_first_name'], 'l' => $v['guardian_last_name'] ?? '',
                         'e' => ($v['guardian_email'] ?? '') !== '' ? $v['guardian_email'] : null,
                         'm' => ($v['guardian_mobile'] ?? '') !== '' ? $v['guardian_mobile'] : $v['guardian_whatsapp'],
