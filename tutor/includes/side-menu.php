@@ -7,7 +7,7 @@ require_once __DIR__ . "/../../includes/enlixo/icons.php";
 // other page sends them to Renew. Their students and parents cannot sign in meanwhile (includes/TutorAccess.php).
 // The API refuses the same calls (api/v1/index.php).
 if (isset($sessionUserObject['user_id']) && class_exists('SessionUser') && SessionUser::ifUserIsTutor()
-    && !in_array(basename((string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH), '.php'), ['subscription', 'renew', 'invoice', 'my-profile'], true)) {
+    && !in_array(basename((string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH), '.php'), ['subscription', 'renew', 'invoice', 'my-profile', 'payment-pending', 'subscription-payment-details'], true)) {
     try {
         $enlixoSub = Database::search("SELECT `status` FROM `users_has_payment_plans` WHERE `users_user_id` = '" . (int) $sessionUserObject['user_id'] . "' ORDER BY `users_has_payment_plan_id` DESC LIMIT 1");
         $enlixoSub = $enlixoSub ? $enlixoSub->fetch_assoc() : null;
@@ -17,6 +17,20 @@ if (isset($sessionUserObject['user_id']) && class_exists('SessionUser') && Sessi
     if ($enlixoSub && in_array($enlixoSub['status'] ?? '', ['suspended', 'cancelled'], true)) {
         echo '<script>location.replace("renew");</script></body></html>';
         exit;
+    }
+    // Payment due / overdue and the slip is waiting for ENLIXO to check it: the tutor waits on "Payment Being Checked"
+    // (tutor/payment-pending.php: the payment, the steps, ENLIXO's contacts) until it is approved or rejected.
+    if ($enlixoSub && in_array($enlixoSub['status'] ?? '', ['due', 'overdue'], true)) {
+        try {
+            $enlixoWait = Database::search("SELECT 1 FROM `users_has_payment_plans_payments` p JOIN `platform_invoices` i ON i.`platform_invoice_id` = p.`platform_invoice_id`
+                                             WHERE i.`users_user_id` = '" . (int) $sessionUserObject['user_id'] . "' AND i.`status` IN ('open', 'part') AND p.`payment_status_payment_status_id` = 2 LIMIT 1");
+        } catch (\Throwable $e) {
+            $enlixoWait = null;
+        }
+        if ($enlixoWait && $enlixoWait->num_rows > 0) {
+            echo '<script>location.replace("payment-pending");</script></body></html>';
+            exit;
+        }
     }
 }
 
@@ -28,6 +42,8 @@ if (isset($sessionUserObject['user_id']) && class_exists('SessionUser') && Sessi
  */
 class load_side_menu
 {
+    private static bool $hideUpgrade = false;
+
     /** [label, icon, link, i18n key, matches load() names, children] */
     private static function menu(): array
     {
@@ -101,6 +117,9 @@ class load_side_menu
     {
         echo '<ul class="ex-subnav ex-depth-' . $depth . '">';
         foreach ($children as $child) {
+            if (self::$hideUpgrade && ($child[2] ?? '') === 'upgrade') {
+                continue; // GROW / CUSTOM: no "Upgrade Plan" item
+            }
             $active = self::isActive($child, $selected, $page);
             if (!empty($child[5])) {
                 echo '<li><details class="ex-subgroup"' . ($active ? ' open' : '') . '><summary class="ex-subnav-link' . ($active ? ' ex-in' : '') . '">' . self::label($child) . enlixo_icon('chevron-down', 16, 'ex-chev') . '</summary>';
@@ -156,7 +175,12 @@ class load_side_menu
                     'next_name' => $nextKey ? ($plans[$nextKey]['name'] ?? null) : null, 'next_limit' => $nextKey ? ($plans[$nextKey]['student_limit'] ?? null) : null];
             }
             $paid = $ent->paidPlanKey();
-            return ['key' => $ent->planKey, 'name' => $name, 'count' => $ent->studentCount, 'limit' => $ent->studentLimit,
+            // upgrade nudges only for FREE, STARTER and anyone on a trial; GROW / CUSTOM are never pushed
+            $push = in_array($paid, ['free', 'start'], true) || ($sub['status'] ?? '') === 'trial';
+            if (!$push) {
+                $hot = null;
+            }
+            return ['key' => $ent->planKey, 'push' => $push, 'name' => $name, 'count' => $ent->studentCount, 'limit' => $ent->studentLimit,
                 'paid_key' => $paid, 'paid_name' => $plans[$paid]['name'] ?? strtoupper($paid), 'preview_left' => $left($ent->previewUntil), 'hot' => $hot,
                 'status' => (string) ($sub['status'] ?? ''), 'trial_left' => $left($sub['trial_ends_at'] ?? null), 'trial_ends' => $sub['trial_ends_at'] ?? null,
                 'grace_left' => $left($sub['grace_until'] ?? null), 'invoice' => $open ? ['id' => (int) $open['id'], 'amount' => (float) $open['amount'], 'due' => $open['due_on'], 'left' => $left($open['due_on'])] : null];
@@ -178,6 +202,7 @@ class load_side_menu
         $page = basename((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '.php');
         $selected = (string) $selectedItem;
         $plan = self::plan((int) ($sessionUser['user_id'] ?? 0));
+        self::$hideUpgrade = $plan !== null && !$plan['push'];
         $name = trim(($sessionUser['user_fname'] ?? '') . ' ' . ($sessionUser['user_lname'] ?? ''));
         $initials = strtoupper(substr((string) ($sessionUser['user_fname'] ?? ''), 0, 1) . substr((string) ($sessionUser['user_lname'] ?? ''), 0, 1));
 ?>
@@ -210,11 +235,11 @@ class load_side_menu
 
             <?php if ($plan) {
                 $pct = $plan['limit'] ? min(100, (int) round($plan['count'] / max(1, $plan['limit']) * 100)) : 0; ?>
-                <a class="ex-plan-card ex-plan-<?= self::e($plan['paid_key']) ?>" href="<?= $plan['paid_key'] === 'pro' ? 'subscription' : 'upgrade' ?>">
+                <a class="ex-plan-card ex-plan-<?= self::e($plan['paid_key']) ?>" href="<?= $plan['push'] ? ($plan['status'] === 'trial' ? 'subscription?tab=plans' : 'upgrade') : 'subscription' ?>">
                     <span class="d-flex align-items-center gap-2">
                         <?= enlixo_icon('crown', 18, 'ex-plan-crown') ?>
                         <span class="ex-plan-name"><?= self::e($plan['paid_name']) ?> plan</span>
-                        <?php if ($plan['paid_key'] !== 'pro') { ?><span class="ex-plan-up">Upgrade</span><?php } ?>
+                        <?php if ($plan['push']) { ?><span class="ex-plan-up"><?= $plan['status'] === 'trial' ? 'Choose' : 'Upgrade' ?></span><?php } ?>
                     </span>
                     <?php if ($plan['preview_left'] !== null) { ?>
                         <span class="ex-plan-trial is-preview"><?= enlixo_icon('magic', 14) ?>Trying <?= self::e($plan['name']) ?> · <?= $plan['preview_left'] > 0 ? (int) $plan['preview_left'] . ($plan['preview_left'] === 1 ? ' day' : ' days') . ' left' : 'last day' ?></span>

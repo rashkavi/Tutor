@@ -25,7 +25,7 @@ if (!SessionUser::ifUserIsTutor()) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="robots" content="noindex, nofollow">
-        <title>Intergrations - Admin Dashboard | <?= Project::getBaseName() ?></title>
+        <title>Integrations - Tutor | <?= Project::getBaseName() ?></title>
 
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/style.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/skeleton.css?v=<?= Project::getVersion() ?>">
@@ -69,7 +69,7 @@ if (!SessionUser::ifUserIsTutor()) {
                                     <div class="row align-items-center p-0 m-0 g-0">
                                         <div class="col-12 col-lg-8">
                                             <div class="row">
-                                                <span class="main-topic lh-lg" data-i18n="">Intergrations</span>
+                                                <span class="main-topic lh-lg" data-i18n="">Integrations</span>
                                                 <span class="text-14 sub-text lh-base mt-1" data-i18n="classes-desc">Manage and connect payment gateways, communication tools, and external services in one place.</span>
                                             </div>
                                         </div>
@@ -77,13 +77,24 @@ if (!SessionUser::ifUserIsTutor()) {
                                         <div class="col-12 col-md-12 col-lg-4 mt-3 mt-lg-0">
                                             <div class="row gx-3 justify-content-end">
                                                 <div class="col-6 mt-3 m-md-0 d-flex justify-content-end align-items-center">
-                                                    <button class="custom-btn col-12" data-bs-target="#addIntegrationModal" data-bs-toggle="modal" data-i18n="">Add Intergration</button>
+                                                    <button class="custom-btn col-12" data-bs-target="#addIntegrationModal" data-bs-toggle="modal" data-i18n="">Add Integration</button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
+                                <?php
+                                require_once '../includes/enlixo/zoom-oauth.php';
+                                $zoomMsg = enlixo_zoom_message((string) ($_GET['zoom'] ?? ''));
+                                if ($zoomMsg) { ?>
+                                    <div class="col-12 mb-4">
+                                        <div class="ex-bill-banner <?= $zoomMsg[0] === 'ok' ? 'is-ok' : 'is-bad' ?>" role="status">
+                                            <span class="ex-bill-text"><strong><?= $zoomMsg[0] === 'ok' ? 'Done.' : 'Zoom is not connected.' ?></strong> <?= htmlspecialchars($zoomMsg[1], ENT_QUOTES, 'UTF-8') ?></span>
+                                            <?php if (($_GET['zoom'] ?? '') === 'plan') { ?><a class="custom-btn ex-bill-btn" href="upgrade?feature=zoom.tutor_integration">See STARTER</a><?php } ?>
+                                        </div>
+                                    </div>
+                                <?php } ?>
                                 <div class="col-12">
                                     <div class="row g-3">
 
@@ -226,10 +237,22 @@ if (!SessionUser::ifUserIsTutor()) {
                                                 }
                                             }
                                         } else {
+                                            // nothing set up yet: offer Zoom straight away (zoom-connect makes the integration)
                                             ?>
-                                            <div class="col-12 px-4 h-100">
-                                                <div class="row component-theme align-items-center justify-content-center h-100">
-                                                    <img src="<?= Project::getAssetsPath() ?>/imgs/common/no-data.png" class="no-data-icon" alt="No data" />
+                                            <div class="col-12 col-md-6 col-xl-4">
+                                                <div class="component-theme p-4 h-100 d-flex flex-column gap-3">
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <img src="<?= Project::getAssetsPath() ?>/imgs/common/zoom.png" alt="" width="44" height="44">
+                                                        <div>
+                                                            <div class="main-topic">Zoom</div>
+                                                            <div class="text-13 sub-text">Connect your Zoom once: every online class day gets its meeting and link by itself.</div>
+                                                        </div>
+                                                    </div>
+                                                    <?php if ($zoomOnPlan) { ?>
+                                                        <a class="custom-btn text-decoration-none d-inline-flex align-items-center justify-content-center px-4" href="zoom-connect">Connect Zoom</a>
+                                                    <?php } else { ?>
+                                                        <a class="custom-btn text-decoration-none d-inline-flex align-items-center justify-content-center px-4" href="upgrade?feature=zoom.tutor_integration">Unlock with STARTER</a>
+                                                    <?php } ?>
                                                 </div>
                                             </div>
                                         <?php

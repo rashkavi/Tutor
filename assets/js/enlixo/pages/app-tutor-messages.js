@@ -96,6 +96,7 @@ function draw() {
     h('div', { class: 'component-theme p-4 mt-4', id: 'mc-history' }, h('div', { class: 'sub-topic mb-3' }, 'Sent Messages'), h('div', { id: 'mc-history-body' }, h('div', { class: 'sub-text text-14' }, 'Loading…'))));
   preview();
   stats();
+  if (H) drawHistory(); // a redraw (another channel, class ...) keeps the Sent Messages already loaded
 }
 
 let pTimer = null;
@@ -138,11 +139,23 @@ async function go(btn) {
 }
 
 let H = null;
+let hPage = 1;
 async function history(page = 1) {
   try {
-    const r = await api.get(`/tutor/messages?page=${page}&per_page=10`);
-    H = r;
+    H = await api.get(`/tutor/messages?page=${page}&per_page=10`);
+    hPage = page;
     stats();
+    drawHistory();
+  } catch (e) {
+    const box = document.getElementById('mc-history-body');
+    if (box) fill(box, h('p', { class: 'text-14 text-dark-red' }, e.message));
+  }
+}
+
+function drawHistory() {
+  const r = H;
+  const page = hPage;
+  {
     const box = document.getElementById('mc-history-body');
     if (!box) return;
     const when = (d) => new Date(d.replace(' ', 'T')).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -158,9 +171,6 @@ async function history(page = 1) {
       h('button', { type: 'button', class: 'custom-btn table-btn px-3', disabled: page <= 1, onclick: () => history(page - 1) }, 'Previous'),
       h('span', { class: 'text-14 sub-text align-self-center' }, `${page} / ${r.meta.pages}`),
       h('button', { type: 'button', class: 'custom-btn table-btn px-3', disabled: page >= r.meta.pages, onclick: () => history(page + 1) }, 'Next')) : null);
-  } catch (e) {
-    const box = document.getElementById('mc-history-body');
-    if (box) fill(box, h('p', { class: 'text-14 text-dark-red' }, e.message));
   }
 }
 

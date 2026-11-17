@@ -266,8 +266,10 @@ function performance(d) {
  * "Your plan" card (docs/PLANS.md): what the tutor uses against the plan, and the one next step that would help
  * them most (the fullest limit first, else what the next plan adds). Not shown on CUSTOM or when nothing is close.
  */
-function planCard(a) {
-  if (!a || !a.next_plan) return null;
+function planCard(a, status) {
+  // only FREE, STARTER and trials are pushed to the next plan; GROW / CUSTOM never see it
+  const paidKey = (a?.paid_plan ?? a?.plan)?.key;
+  if (!a || !a.next_plan || !(['free', 'start'].includes(paidKey) || status === 'trial')) return null;
   const rows = [{ name: 'Students', used: a.students.count, limit: a.students.limit, unit: 'students' },
     ...a.limits.filter((l) => l.limit !== null).map((l) => ({ name: l.name, used: l.used, limit: l.limit, unit: l.unit, month: l.period === 'month', key: l.key }))];
   const pct = (r) => (r.limit ? Math.min(100, Math.round((r.used / r.limit) * 100)) : 0);
@@ -291,8 +293,9 @@ function planCard(a) {
 async function load() {
   fill(root, DashboardKit.skeleton());
   try {
-    const [d, access] = await Promise.all([api.get('/tutor/dashboard').then((r) => r.data), api.get('/me/access').then((r) => r.data).catch(() => null)]);
-    fill(root, root.dataset.welcome === '1' ? DashboardKit.welcome(root.dataset.fullName || root.dataset.name, 'Welcome back! Your classes, students, fees and attendance are all here. Check what needs you today below.') : null, today(d), stats(d), planCard(access), ...charts(d), ...lists(d), performance(d));
+    const [d, access, sub] = await Promise.all([api.get('/tutor/dashboard').then((r) => r.data), api.get('/me/access').then((r) => r.data).catch(() => null),
+      api.get('/tutor/subscription').then((r) => r.data).catch(() => null)]);
+    fill(root, root.dataset.welcome === '1' ? DashboardKit.welcome(root.dataset.fullName || root.dataset.name, 'Welcome back! Your classes, students, fees and attendance are all here. Check what needs you today below.') : null, today(d), stats(d), planCard(access, sub?.tutor?.status), ...charts(d), ...lists(d), performance(d));
     drawCharts(d);
   } catch (e) {
     fill(root, h('div', { class: 'component-theme p-4' }, EmptyState.error(e.message, load)));

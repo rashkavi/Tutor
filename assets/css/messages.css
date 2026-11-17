@@ -130,3 +130,14 @@
   #rn-actions { display: flex; flex-wrap: wrap; gap: .75rem; width: 100%; }
   #rn-actions > a { flex: 1 1 100%; justify-content: center; display: inline-flex; align-items: center; }
 }
+
+/* Payment Being Checked (tutor/payment-pending.php) */
+.pp-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.pp-row { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; background: var(--table-header-color, #F9FAFB); }
+.pp-row span { font-size: 12px; color: var(--sub-text, #8C94A3); }
+.pp-row strong { font-size: 15px; color: var(--dark-color, #1D2026); font-weight: 600; word-break: break-word; }
+.pp-hours { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--sub-text, #8C94A3); }
+@media (max-width: 575.98px) {
+  #pp-actions { display: flex; flex-wrap: wrap; gap: .75rem; width: 100%; }
+  #pp-actions > * { flex: 1 1 100%; justify-content: center; display: inline-flex; align-items: center; gap: 6px; }
+}

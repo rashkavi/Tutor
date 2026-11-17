@@ -89,3 +89,31 @@ details[open] > summary > .ex-chev { transform: rotate(180deg); }
 [data-custom-theme="dark"] .ex-subnav-link:hover, [data-custom-theme="dark"] .ex-subnav-link.ex-current { color: #fff; }
 [data-custom-theme="dark"] .ex-subnav-link.ex-current::before { background: var(--highlight-theme, #8cb8ff); }
 [data-custom-theme="dark"] .ex-user-avatar { color: #8cb8ff; }
+
+
+/* Billing / upgrade banner at the top of every tutor page and the plan card lines: here (not enlixo-ui.css) because the
+   side menu loads this file on every tutor page, including the older pages that do not load enlixo-ui.css */
+.ex-bill-banner .ex-ico, .ex-plan-trial .ex-ico { display: inline-flex; flex: none; }
+.ex-bill-banner .ex-ico svg, .ex-plan-trial .ex-ico svg { display: block; }
+.ex-bill-banner { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.45; box-sizing: border-box; width: 100%; }
+.ex-bill-btn { display: inline-flex !important; align-items: center; justify-content: center; color: #fff !important; background: var(--dark-theme, #0061D2); border: 0; font-size: 14px; font-weight: 500; white-space: nowrap; }
+.ex-bill-btn:hover { background: var(--main-button-hover, #0b4fa8); color: #fff !important; }
+.ex-plan-trial { flex-wrap: wrap; line-height: 1.35; }
+.ex-plan-trial { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; font-weight: 600; color: #fff; opacity: .95; }
+.ex-plan-trial.is-due { color: #ffd2c7; }
+.ex-bill-banner { flex: 0 0 100%; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 16px; padding: 12px 16px; background: var(--custom-white); border-left: 4px solid #f39c12; }
+.ex-bill-banner.is-bad { border-left-color: var(--dark-red); }
+.ex-bill-banner .ex-bill-ico { color: #f39c12; flex: none; }
+.ex-bill-banner.is-bad .ex-bill-ico { color: var(--dark-red); }
+.ex-bill-text { flex: 1 1 260px; font-size: 14px; color: var(--sub-text); }
+.ex-bill-text strong { color: var(--main-text-color, var(--dark-color)); }
+.ex-bill-btn { height: 40px !important; padding: 0 22px; text-decoration: none; }
+@media (max-width: 575.98px) { .ex-bill-btn { width: 100%; } }
+.ex-plan-trial.is-preview { color: #fff3c4; }
+.ex-bill-banner.is-up { border-left-color: var(--dark-theme, #0061D2); background: linear-gradient(90deg, rgba(0, 97, 210, .08), var(--custom-white) 60%); }
+.ex-bill-banner.is-up .ex-bill-ico { color: var(--dark-theme, #0061D2); }
+.ex-bill-banner.is-hit { animation: ex-hit-in .35s ease-out; }
+@keyframes ex-hit-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .ex-bill-banner.is-hit { animation: none; } }
+.flex-column > .ex-bill-banner { flex: 0 0 auto; }
+.ex-bill-banner.is-ok { border-left-color: var(--dark-green, #23BD33); }

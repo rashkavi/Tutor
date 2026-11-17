@@ -2530,16 +2530,6 @@ a.ex-hd-stat:hover .ex-hd-go { opacity: 1; }
 .ex-pcard-round:hover, .ex-pcard-tools .ex-kebab:hover, .ex-pcard-tools .ex-kebab[aria-expanded="true"] { background: var(--main-button-hover, #0b51b3) !important; }
 
 /* Tutor billing: plan card trial line and the banner on every tutor page (tutor/includes/side-menu.php) */
-.ex-plan-trial { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; font-weight: 600; color: #fff; opacity: .95; }
-.ex-plan-trial.is-due { color: #ffd2c7; }
-.ex-bill-banner { flex: 0 0 100%; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 16px; padding: 12px 16px; background: var(--custom-white); border-left: 4px solid #f39c12; }
-.ex-bill-banner.is-bad { border-left-color: var(--dark-red); }
-.ex-bill-banner .ex-bill-ico { color: #f39c12; flex: none; }
-.ex-bill-banner.is-bad .ex-bill-ico { color: var(--dark-red); }
-.ex-bill-text { flex: 1 1 260px; font-size: 14px; color: var(--sub-text); }
-.ex-bill-text strong { color: var(--main-text-color, var(--dark-color)); }
-.ex-bill-btn { height: 40px !important; padding: 0 22px; text-decoration: none; }
-@media (max-width: 575.98px) { .ex-bill-btn { width: 100%; } }
 
 /* Page header buttons wrap to a second line on a phone instead of running past the edge (longer in Sinhala / Tamil) */
 .ex-header-actions { flex-wrap: wrap; }
@@ -2561,13 +2551,6 @@ a.ex-hd-stat:hover .ex-hd-go { opacity: 1; }
 }
 
 /* Upgrade nudges (docs/PLANS.md): trying a plan, a limit nearly used up, a limit / locked feature hit */
-.ex-plan-trial.is-preview { color: #fff3c4; }
-.ex-bill-banner.is-up { border-left-color: var(--dark-theme, #0061D2); background: linear-gradient(90deg, rgba(0, 97, 210, .08), var(--custom-white) 60%); }
-.ex-bill-banner.is-up .ex-bill-ico { color: var(--dark-theme, #0061D2); }
-.ex-bill-banner.is-hit { animation: ex-hit-in .35s ease-out; }
-@keyframes ex-hit-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .ex-bill-banner.is-hit { animation: none; } }
-.flex-column > .ex-bill-banner { flex: 0 0 auto; }
 /* Dashboard "Your plan" card */
 .ex-dash-plan-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .ex-dash-plan-use { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
