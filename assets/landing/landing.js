@@ -329,8 +329,6 @@
   if (!reduce) {
     const par = $$('[data-parallax]');
     const words = $$('[data-scroll-x]');
-    const strip = $('#lp-strip');
-    const track = $('.lp-strip-track');
     let ticking = false;
     const frame = () => {
       ticking = false;
@@ -346,14 +344,6 @@
         if (r.bottom < -200 || r.top > vh + 200) return;
         el.style.transform = `translateX(${((r.top - vh / 2) * Number(el.dataset.scrollX)).toFixed(1)}px)`;
       });
-      if (strip && track) {
-        const r = strip.getBoundingClientRect();
-        if (r.bottom > -100 && r.top < vh + 100) {
-          const pr = Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height)));
-          const max = Math.max(0, track.scrollWidth - strip.clientWidth);
-          track.style.transform = `translateX(${(-pr * max).toFixed(1)}px)`;
-        }
-      }
     };
     const onScrollMotion = () => { if (!ticking) { ticking = true; requestAnimationFrame(frame); } };
     addEventListener('scroll', onScrollMotion, { passive: true });

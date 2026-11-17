@@ -421,7 +421,7 @@ body.lp { margin: 0; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI',
 .lp-foot-col a:hover { color: #fff; }
 .lp-foot-bottom { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 48px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, .08); font-size: 13px; flex-wrap: wrap; }
 .lp-powered { display: inline-flex; align-items: center; gap: 8px; }
-.lp-powered img { height: 18px; width: auto; }
+.lp-powered img { height: .8em; width: auto; display: block; } /* as tall as the letters of "Powered by" */
 
 /* ---------- responsive ---------- */
 @media (max-width: 1100px) {
@@ -1308,7 +1308,11 @@ body.of { min-height: 100vh; background: radial-gradient(900px 600px at 80% 0%, 
 .lp-words-o { color: transparent; -webkit-text-stroke: 1px #dbe4f3; }
 .lp-strip-sec .lp-wrap { position: relative; }
 .lp-strip { overflow: hidden; }
-.lp-strip-track { display: flex; gap: 20px; padding: 10px 24px 40px; width: max-content; will-change: transform; }
+.lp-strip-track { display: flex; gap: 20px; padding: 10px 0 40px; width: max-content; will-change: transform; animation: lp-strip-run 60s linear infinite; }
+.lp-strip-track .lp-shot:last-child { margin-right: 20px; } /* the gap after the last card, so the loop meets without a jump */
+.lp-strip:hover .lp-strip-track { animation-play-state: paused; }
+@keyframes lp-strip-run { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .lp-strip-track { animation: none; } .lp-strip { overflow-x: auto; } }
 .lp-shot { position: relative; margin: 0; width: 300px; height: 400px; overflow: hidden; border-radius: var(--r); box-shadow: 0 30px 60px -30px rgba(5, 11, 31, .5); flex: none; }
 .lp-shot-low { margin-top: 60px; }
 .lp-shot img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
@@ -1431,3 +1435,8 @@ html:is([lang=si], [lang=ta]) .su-step { font-size: 12px; line-height: 1.4; }
 .lp-foot-col a { max-width: 100%; white-space: normal; }
 .lp-foot-trust span { align-items: flex-start; }
 .lp-foot-in > * { min-width: 0; }
+
+/* "Teaching on [logo] in three steps." (index.php #how): one line per language, the ENLIXO logo instead of the word */
+.lp-h2-brand > span { display: none; }
+html:not([lang="si"]):not([lang="ta"]) .lp-h2-brand .lp-lang-en, html[lang="si"] .lp-h2-brand .lp-lang-si, html[lang="ta"] .lp-h2-brand .lp-lang-ta { display: inline; }
+.lp .lp-h2-brand .lp-h2-logo { display: inline-block; height: .78em; width: auto; vertical-align: -.02em; margin: 0 .04em; }

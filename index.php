@@ -530,8 +530,10 @@ function lp_icon(string $n, int $s = 22): string
             </div>
             <div class="lp-strip" id="lp-strip">
                 <div class="lp-strip-track">
-                    <?php foreach ([['portal-1', 'Hall classes', 'QR attendance at the door'], ['photo-3', 'Paper classes', 'Marks and papers in one place'], ['portal-2', 'Group classes', 'Every batch, every year'], ['photo-1', 'Online on Zoom', 'Recordings for paid students'], ['portal-3', 'Revision', 'Tutes posted or online'], ['photo-2', 'Your team', 'Staff logins for assistants']] as $i => [$pic, $t, $sub]) { ?>
-                        <figure class="lp-shot<?= $i % 2 ? ' lp-shot-low' : '' ?>">
+                    <?php // the cards twice: the strip slides left by itself and starts again without a gap (CSS lp-strip-run)
+                    $shots = [['portal-1', 'Hall classes', 'QR attendance at the door'], ['photo-3', 'Paper classes', 'Marks and papers in one place'], ['portal-2', 'Group classes', 'Every batch, every year'], ['photo-1', 'Online on Zoom', 'Recordings for paid students'], ['portal-3', 'Revision', 'Tutes posted or online'], ['photo-2', 'Your team', 'Staff logins for assistants']];
+                    foreach (array_merge($shots, $shots) as $i => [$pic, $t, $sub]) { ?>
+                        <figure class="lp-shot<?= $i % 2 ? ' lp-shot-low' : '' ?>"<?= $i >= count($shots) ? ' aria-hidden="true"' : '' ?>>
                             <img src="<?= $img . $pic ?>.webp" alt="" loading="lazy">
                             <figcaption><b><?= $e($t) ?></b><small><?= $e($sub) ?></small></figcaption>
                         </figure>
@@ -545,7 +547,12 @@ function lp_icon(string $n, int $s = 22): string
             <div class="lp-wrap">
                 <div class="lp-head" data-reveal>
                     <span class="lp-eyebrow">How it works</span>
-                    <h2 class="lp-h2"><span>Teaching on ENLIXO in</span> <span class="lp-grad">three steps.</span></h2>
+                    <!-- the logo in place of the word: one line per language (the order differs), shown by <html lang> -->
+                    <h2 class="lp-h2 lp-h2-brand" data-no-i18n>
+                        <span class="lp-lang-en">Teaching on <img src="assets/imgs/common/enlixo-dark.webp" alt="ENLIXO" class="lp-h2-logo"> in <span class="lp-grad">three steps.</span></span>
+                        <span class="lp-lang-si"><img src="assets/imgs/common/enlixo-dark.webp" alt="ENLIXO" class="lp-h2-logo"> මත ඉගැන්වීම <span class="lp-grad">පියවර තුනකින්.</span></span>
+                        <span class="lp-lang-ta"><img src="assets/imgs/common/enlixo-dark.webp" alt="ENLIXO" class="lp-h2-logo">-வில் கற்பித்தல் <span class="lp-grad">மூன்று படிகளில்.</span></span>
+                    </h2>
                 </div>
                 <div class="lp-how">
                     <div class="lp-how-photo" data-reveal="left" aria-hidden="true">

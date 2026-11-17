@@ -210,6 +210,8 @@ foreach ($tutors as $ti => $T) {
     for ($k = 0; $k < $T['classes']; $k++) {
         [$pattern, $subjectId, $examId, $yearId, $mediumId, $fee, $weekday, $start, $end, $lt] = $CLASS_PLANS[$k];
         $name = str_replace('{s}', $T['subject'], $pattern);
+        // the subject chip shows the tutor's subject when this database has it (subjects table), else the plan's default
+        $subjectId = (int) ($db->value('SELECT subject_id FROM subjects WHERE subject = :s LIMIT 1', ['s' => $T['subject']]) ?? 0) ?: $subjectId;
         $cid = $db->insert('INSERT INTO classes (class_name, medium_medium_id, year_year_id, exam_type_exam_type_id, subjects_subject_id, class_cover, tutor_id, status_status_id, added_by, added_at, is_free)
             VALUES (:n, :m, :y, :e, :s, \'\', :t, 1, :t2, :at, 0)',
             ['n' => $name, 'm' => $mediumId, 'y' => $yearId, 'e' => $examId, 's' => $subjectId, 't' => $tutorId, 't2' => $tutorId, 'at' => $now->modify('-150 days')->format('Y-m-d H:i:s')]);
