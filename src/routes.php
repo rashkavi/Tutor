@@ -128,6 +128,10 @@ return static function (Router $router, App $app): void {
     $router->post('/api/v1/webhooks/zoom', $zoom->handle(...));
 
     // Admin side (platform owner): tutors, subscriptions, invoices, payments, plans and rules (docs/ADMIN-PLAN.md)
+    $adminClasses = new \Enlixo\Http\Controllers\AdminClassController($app, dirname(__DIR__) . '/assets/imgs/classes-covers');
+    $router->get('/api/v1/admin/classes/form', $adminClasses->form(...));
+    $router->post('/api/v1/admin/classes', $adminClasses->store(...));
+    $router->post('/api/v1/admin/classes/{id}', $adminClasses->update(...));
     $pf = new PlatformController($app);
     $router->get('/api/v1/admin/dashboard', $pf->dashboard(...));
     $router->get('/api/v1/admin/lookups', $pf->lookups(...));

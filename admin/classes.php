@@ -67,7 +67,7 @@ if (!SessionUser::ifUserIsAdmin()) {
                                         <div class="col-12 col-md-12 col-lg-4 mt-3 mt-lg-0">
                                             <div class="row gx-3 justify-content-end">
                                                 <div class="col-6 mt-3 m-md-0 d-flex justify-content-end align-items-center">
-                                                    <button class="custom-btn col-12" data-bs-target="#addSubject" data-bs-toggle="modal" data-i18n="">Create a Class</button>
+                                                    <a class="custom-btn col-12 text-decoration-none d-inline-flex align-items-center justify-content-center" href="class-form" data-i18n="">Create a Class</a>
                                                 </div>
                                             </div>
                                         </div>
@@ -127,7 +127,7 @@ if (!SessionUser::ifUserIsAdmin()) {
                                                 <div class="col-12 col-md-4 col-xl-3">
                                                     <div class="tutor-class-card h-100">
 
-                                                        <div class="card-image-wrapper position-relative cursor-pointer" onclick="window.location.href='class-details?class-id=<?= $class['class_id']; ?>'">
+                                                        <div class="card-image-wrapper position-relative cursor-pointer" onclick="window.location.href='class-form?class-id=<?= $class['class_id']; ?>'">
                                                             <?php if (!empty($class['class_cover']) && file_exists(Project::getAssetsPath() . "/imgs/classes-covers/" . $class['class_cover'])) { ?>
                                                                 <img src="<?= Project::getAssetsPath() ?>/imgs/classes-covers/<?= $class['class_cover'] ?>" class="w-100 h-auto" alt="Class Thumbnail">
                                                             <?php } else { ?>
@@ -148,7 +148,7 @@ if (!SessionUser::ifUserIsAdmin()) {
                                                             <h5 class="class-title js-trim" data-full-title="<?= $class['class_name'] ?>">
                                                                 <?= $class['class_name'] ?>
                                                             </h5>
-                                                            <div class="class-meta d-flex justify-content-between" onclick="window.location.href='class-details?class-id=<?= $class['class_id']; ?>'">
+                                                            <div class="class-meta d-flex justify-content-between" onclick="window.location.href='class-form?class-id=<?= $class['class_id']; ?>'">
                                                                 <div class="meta-item">
                                                                     <iconify-icon icon="fontisto:language"></iconify-icon>
                                                                     <span class="sub-text"><?= $class['medium'] ?></span>
@@ -160,14 +160,14 @@ if (!SessionUser::ifUserIsAdmin()) {
                                                             </div>
                                                             <div class="card-footer-premium mt-0">
                                                                 <button class="btn-watch-premium bg-dark-theme"
-                                                                    onclick="window.location = 'class-details?class-id=<?= $class['class_id']; ?>'">
+                                                                    onclick="window.location = 'class-form?class-id=<?= $class['class_id']; ?>'">
                                                                     <iconify-icon icon="solar:eye-broken" width="18"></iconify-icon>
                                                                     <span>View Class</span>
                                                                 </button>
 
                                                                 <div class="footer-icon-group">
 
-                                                                    <button class="icon-premium" onclick="openEditClassModal(this)"
+                                                                    <button class="icon-premium" onclick="window.location = 'class-form?class-id=<?= (int) $class['class_id']; ?>'"
                                                                         data-tooltip="Edit Class"
                                                                         data-class='<?= json_encode($class, JSON_HEX_APOS | JSON_HEX_QUOT); ?>'>
                                                                         <iconify-icon icon="line-md:edit-twotone" width="20"></iconify-icon>
@@ -249,282 +249,8 @@ if (!SessionUser::ifUserIsAdmin()) {
             </div>
         </div>
 
-        <!-- class Add Model => Start -->
-        <div class="modal fade br-0" id="addSubject" aria-hidden="true" aria-labelledby="addSubjectLabel" tabindex="-1">
-            <div class="modal-dialog modal-xl modal-dialog-centered br-0">
-                <div class="modal-content p-4">
-                    <div class="modal-header p-0 border-0">
-                        <h1 class="modal-title text-16 text-dark-color" id="addclassLabel">Create a Class</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-0 mt-3">
-                        <div class="col-12 p-0">
-                            <div class="row p-0 gy-3 gx-3 align-content-center">
-                                <div class="col-12 d-flex flex-column">
-                                    <label class="text-14 main-text required">Tutor</label>
-                                    <select name="" class="form-select custom-select mt-2" id="tutor">
-                                        <option value="0">- Select -</option>
-                                        <?php
-                                        $tutors = Database::search("SELECT * FROM `users` WHERE `user_roles_user_role_id`='2' AND `status_status_id`='1'");
-                                        while ($tutor = $tutors->fetch_assoc()) {
-                                        ?>
-                                            <option value="<?= $tutor['user_id'] ?>"><?= $tutor['user_fname'] ?> <?= $tutor['user_lname'] ?></option>
-                                        <?php
-                                        }
-                                        ?>
-                                    </select>
-                                    <span class="text-12 text-dark-red" id="medium-feedback"></span>
-                                </div>
-                                <div class="col-12 col-lg-6 d-flex flex-column">
-                                    <label class="text-14 main-text required">Subject</label>
 
-                                    <div class="custom-search-select mt-2" data-input="subject">
-                                        <input type="text"
-                                            class="form-control custom-input search-input"
-                                            placeholder="- Select -"
-                                            autocomplete="off">
-
-                                        <input type="hidden" id="subject" value="">
-
-                                        <div class="search-dropdown">
-                                            <?php
-                                            $subjects = Database::search("SELECT * FROM `subjects`");
-                                            while ($subject = $subjects->fetch_assoc()) {
-                                            ?>
-                                                <div class="search-option"
-                                                    data-value="<?= $subject['subject_id'] ?>">
-                                                    <?= $subject['subject'] ?>
-                                                </div>
-                                            <?php } ?>
-                                        </div>
-                                    </div>
-
-                                    <span class="text-12 text-dark-red" id="subject-feedback"></span>
-                                </div>
-
-                                <div class="col-12 col-lg-6 d-flex flex-column">
-                                    <label for="" class="text-14 main-text required">Medium</label>
-                                    <select name="" class="form-select custom-select mt-2" id="medium">
-                                        <option value="0">- Select -</option>
-                                        <?php
-                                        $mediums = Database::search("SELECT * FROM `medium`");
-                                        while ($medium = $mediums->fetch_assoc()) {
-                                        ?>
-                                            <option value="<?= $medium['medium_id'] ?>"><?= $medium['medium'] ?></option>
-                                        <?php
-                                        }
-                                        ?>
-                                    </select>
-                                    <span class="text-12 text-dark-red" id="medium-feedback"></span>
-                                </div>
-                                <div class="col-12 col-lg-6 d-flex flex-column">
-                                    <label for="" class="text-14 main-text required">Year</label>
-                                    <select name="" class="form-select custom-select mt-2" id="year">
-                                        <option value="0">- Select -</option>
-                                        <?php
-                                        $years = Database::search("SELECT * FROM `year`");
-                                        while ($year = $years->fetch_assoc()) {
-                                        ?>
-                                            <option value="<?= $year['year_id'] ?>"><?= $year['year'] ?></option>
-                                        <?php
-                                        }
-                                        ?>
-                                    </select>
-                                    <span class="text-12 text-dark-red" id="year-feedback"></span>
-                                </div>
-                                <div class="col-12 col-lg-6 d-flex flex-column">
-                                    <label for="" class="text-14 main-text required">Exam Type</label>
-                                    <select name="" class="form-select custom-select mt-2" id="exam-type">
-                                        <option value="0">- Select -</option>
-                                        <?php
-                                        $exam_type = Database::search("SELECT * FROM `exam_type`");
-                                        while ($type = $exam_type->fetch_assoc()) {
-                                        ?>
-                                            <option value="<?= $type['exam_type_id'] ?>"><?= $type['exam_type'] ?></option>
-                                        <?php
-                                        }
-                                        ?>
-                                    </select>
-                                    <span class="text-12 text-dark-red" id="exam-type-feedback"></span>
-                                </div>
-
-                                <div class="col-12 d-flex flex-column">
-                                    <label for="" class="text-14 main-text">Class Name</label>
-                                    <input type="text" class="form-control custom-input mt-2" id="class-name">
-                                    <span class="text-12 text-dark-red" id="class-name-feedback"></span>
-                                </div>
-                                <div class="col-12 d-flex flex-column">
-                                    <label for="" class="text-14 main-text">Class Thumbnail</label>
-                                    <div class="row gx-4 mt-2 d-flex align-items-stretch">
-                                        <div class="col-12 col-lg-3 d-flex flex-column justify-content-end">
-                                            <img src="<?= Project::getAssetsPath() ?>/imgs/common/empty-thumbnail.webp" class="w-100 h-auto" alt="subject cover" id="subject-cover">
-                                        </div>
-                                        <div class="col-12 col-lg-4 d-flex mt-0 mt-lg-0">
-                                            <div class="d-flex flex-column justify-content-end g-0 p-0 m-0 flex-grow-1">
-                                                <div class="col-12">
-                                                    <p class="text-14 sub-text g-0 p-0 m-0">Select class cover here.
-                                                        </br>
-                                                        Important guidelines:
-                                                        </br>
-                                                        Image size must be 2MB or less,
-                                                        </br>
-                                                        with a 16:9 aspect ratio for optimal quality.
-                                                        </br>
-                                                        Accepted formats: JPG, PNG.</p>
-                                                </div>
-                                                <div class="col-12 d-flex justify-content-end mt-1 mt-md-3">
-                                                    <button class="custom-btn d-flex align-items-center justify-content-center w-100" onclick="uploadCover('cover-input','subject-cover');">
-                                                        Select Image
-                                                        <iconify-icon icon="ic:sharp-upload" width="20" height="20" class="mx-3"></iconify-icon>
-                                                    </button>
-                                                    <input type="file" id="cover-input" class="d-none" accept="image/*" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-12 col-lg-5 mt-3 mt-lg-0 d-flex align-items-md-end justify-content-end">
-                                            <button class="col-12 col-lg-8 custom-btn m-0" onclick="addClass(this)">Save Class</button>
-                                        </div>
-                                    </div>
-                                    <span class="text-12 text-dark-red" id="cover-feedback"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- class Add Model => End -->
-
-        <!-- class Edit Model => Start -->
-        <div class="modal fade br-0" id="editClass" aria-hidden="true" aria-labelledby="editClassLabel" tabindex="-1">
-            <div class="modal-dialog modal-xl modal-dialog-centered br-0">
-                <div class="modal-content p-4">
-                    <div class="modal-header p-0 border-0">
-                        <h1 class="modal-title text-16 text-dark-color" id="EditclassLabel">Edit Class</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-0 mt-3">
-                        <div class="col-12 p-0">
-                            <div class="row p-0 gy-3 gx-3 align-content-center">
-                                <div class="col-12 col-lg-6 d-flex flex-column">
-                                    <label class="text-14 main-text required">Subject</label>
-
-                                    <div class="custom-search-select mt-2" data-input="edit-subject">
-                                        <input type="text"
-                                            class="form-control custom-input search-input"
-                                            placeholder="- Select -"
-                                            autocomplete="off">
-
-                                        <input type="hidden" id="edit-subject" value="">
-
-                                        <div class="search-dropdown">
-                                            <?php
-                                            $subjects = Database::search("SELECT * FROM `subjects`");
-                                            while ($subject = $subjects->fetch_assoc()) {
-                                            ?>
-                                                <div class="search-option"
-                                                    data-value="<?= $subject['subject_id'] ?>">
-                                                    <?= $subject['subject'] ?>
-                                                </div>
-                                            <?php } ?>
-                                        </div>
-                                    </div>
-
-                                    <span class="text-12 text-dark-red" id="edit-subject-feedback"></span>
-                                </div>
-                                <div class="col-12 col-lg-6 d-flex flex-column">
-                                    <label for="" class="text-14 main-text required">Medium</label>
-                                    <select name="" class="form-select custom-select mt-2" id="edit-medium">
-                                        <option value="0">- Select -</option>
-                                        <?php
-                                        $mediums = Database::search("SELECT * FROM `medium`");
-                                        while ($medium = $mediums->fetch_assoc()) {
-                                        ?>
-                                            <option value="<?= $medium['medium_id'] ?>"><?= $medium['medium'] ?></option>
-                                        <?php
-                                        }
-                                        ?>
-                                    </select>
-                                    <span class="text-12 text-dark-red" id="edit-medium-feedback"></span>
-                                </div>
-                                <div class="col-12 col-lg-6 d-flex flex-column">
-                                    <label for="" class="text-14 main-text required">Year</label>
-                                    <select name="" class="form-select custom-select mt-2" id="edit-year">
-                                        <option value="0">- Select -</option>
-                                        <?php
-                                        $years = Database::search("SELECT * FROM `year`");
-                                        while ($year = $years->fetch_assoc()) {
-                                        ?>
-                                            <option value="<?= $year['year_id'] ?>"><?= $year['year'] ?></option>
-                                        <?php
-                                        }
-                                        ?>
-                                    </select>
-                                    <span class="text-12 text-dark-red" id="edit-year-feedback"></span>
-                                </div>
-                                <div class="col-12 col-lg-6 d-flex flex-column">
-                                    <label for="" class="text-14 main-text required">Exam Type</label>
-                                    <select name="" class="form-select custom-select mt-2" id="edit-exam-type">
-                                        <option value="0">- Select -</option>
-                                        <?php
-                                        $exam_type = Database::search("SELECT * FROM `exam_type`");
-                                        while ($type = $exam_type->fetch_assoc()) {
-                                        ?>
-                                            <option value="<?= $type['exam_type_id'] ?>"><?= $type['exam_type'] ?></option>
-                                        <?php
-                                        }
-                                        ?>
-                                    </select>
-                                    <span class="text-12 text-dark-red" id="edit-exam-type-feedback"></span>
-                                </div>
-
-                                <div class="col-12 d-flex flex-column">
-                                    <label for="" class="text-14 main-text">Class Name</label>
-                                    <input type="text" class="form-control custom-input mt-2" id="edit-class-name">
-                                    <span class="text-12 text-dark-red" id="edit-class-name-feedback"></span>
-                                </div>
-                                <div class="col-12 d-flex flex-column">
-                                    <label for="" class="text-14 main-text">Class Thumbnail</label>
-                                    <div class="row gx-4 mt-2 d-flex align-items-stretch">
-                                        <div class="col-12 col-lg-3 d-flex flex-column justify-content-end">
-                                            <img src="<?= Project::getAssetsPath() ?>/imgs/common/empty-thumbnail.webp" class="w-100 h-auto" alt="class cover" id="edit-class-cover">
-                                        </div>
-                                        <div class="col-12 col-lg-4 d-flex mt-0 mt-lg-0">
-                                            <div class="d-flex flex-column justify-content-end g-0 p-0 m-0 flex-grow-1">
-                                                <div class="col-12">
-                                                    <p class="text-14 sub-text g-0 p-0 m-0">Select class cover here.
-                                                        </br>
-                                                        Important guidelines:
-                                                        </br>
-                                                        Image size must be 2MB or less,
-                                                        </br>
-                                                        with a 16:9 aspect ratio for optimal quality.
-                                                        </br>
-                                                        Accepted formats: JPG, PNG.</p>
-                                                </div>
-                                                <div class="col-12 d-flex justify-content-end mt-1 mt-md-3">
-                                                    <button class="custom-btn d-flex align-items-center justify-content-center w-100" onclick="uploadCover('edit-cover-input','edit-class-cover');">
-                                                        Select Image
-                                                        <iconify-icon icon="ic:sharp-upload" width="20" height="20" class="mx-3"></iconify-icon>
-                                                    </button>
-                                                    <input type="file" id="edit-cover-input" class="d-none" accept="image/*" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-12 col-lg-5 mt-3 mt-lg-0 d-flex align-items-md-end justify-content-end">
-                                            <button class="col-12 col-lg-8 custom-btn m-0" id="save-edit">Save Class</button>
-                                        </div>
-                                    </div>
-                                    <span class="text-12 text-dark-red" id="edit-cover-feedback"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- class Edit Model => End -->
+        <!-- Create / Edit Class are pages now: class-form.php -->
 
         <!-- cover crop modal => Start -->
         <div id="crop-modal" tabindex="-1" aria-hidden="true" class="modal fade" data-backdrop="static">

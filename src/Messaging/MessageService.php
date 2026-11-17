@@ -182,6 +182,35 @@ final class MessageService
         return ['sent' => true];
     }
 
+    /**
+     * One automatic notice to one person (a parcel was sent, ...): WhatsApp when the tutor's WhatsApp sends by itself
+     * (their Business number or ENLIXO's), else e-mail when the person has an address and e-mail works, else nothing.
+     * Never throws; system notices do not count against the monthly Message Center limit.
+     * @return array{channel:?string, ok:bool, error:?string}
+     */
+    public function notify(int $tutorId, ?string $whatsapp, ?string $email, string $name, string $subject, string $text): array
+    {
+        try {
+            $setup = $this->setup($tutorId);
+            $digits = $whatsapp ? WhatsAppCloud::digits($whatsapp) : null;
+            if ($digits && ($setup['whatsapp']['mode'] ?? 'phone') !== 'phone') {
+                $r = $this->sendWhatsApp($tutorId, (string) $setup['whatsapp']['mode'], $digits, $text);
+                if ($r['ok']) {
+                    return ['channel' => 'whatsapp', 'ok' => true, 'error' => null];
+                }
+            }
+            if ($email && filter_var($email, FILTER_VALIDATE_EMAIL) && !empty($setup['email']['ready'])) {
+                $brand = $this->brand($tutorId);
+                $r = $this->mailer->send($email, $name, $subject, self::emailHtml($subject, $text, $brand), $text . "\n\n— " . $brand, null, $brand . ' via ENLIXO');
+                return ['channel' => 'email', 'ok' => (bool) $r['ok'], 'error' => $r['ok'] ? null : (string) $r['error']];
+            }
+            return ['channel' => null, 'ok' => false, 'error' => 'No automatic channel (WhatsApp sends from the phone and no e-mail address)'];
+        } catch (\Throwable $e) {
+            error_log('Notice not sent: ' . $e->getMessage());
+            return ['channel' => null, 'ok' => false, 'error' => $e->getMessage()];
+        }
+    }
+
     // ------------------------------------------------------------------ audience and messages
 
     /** Who would get it, before sending: counts and the first names. */

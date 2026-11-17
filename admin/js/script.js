@@ -1,5 +1,6 @@
 const initializeUsers = () => {
-    document.getElementById("copy-button").addEventListener("click", function () {
+    // Share Registration Link is a page now (share-registration-link.php); old pages may still have the button
+    document.getElementById("copy-button")?.addEventListener("click", function () {
         const linkText = document.getElementById("generated-link").innerText;
 
         navigator.clipboard.writeText(linkText).then(() => {
