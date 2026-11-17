@@ -112,6 +112,55 @@ final class ClassRecordingRepository
         return $r ? $this->shape($r, self::now()) : null;
     }
 
+    /**
+     * Who watched one recording: every active student of the class with the time watched (all sessions), how many
+     * times they opened it, when last, and extra time the tutor gave. Students who never opened it are listed too.
+     */
+    public function watchReport(int $tutor, int $id): ?array
+    {
+        $rec = $this->find($tutor, $id);
+        if ($rec === null) {
+            return null;
+        }
+        $rows = $this->db->all(
+            "SELECT s.student_id, ld.first_name, ld.last_name, ld.whatsapp, sc.students_has_class_id,
+                    COALESCE(w.secs, 0) AS secs, COALESCE(w.sessions, 0) AS sessions, w.last_at, o.extra_minutes, o.reason
+               FROM students_has_classes sc
+               JOIN students s ON s.student_id = sc.students_student_id
+               JOIN login_details ld ON ld.login_details_id = s.login_details_login_details_id
+               LEFT JOIN (SELECT students_student_id, SUM(watched_seconds) secs, COUNT(*) sessions, MAX(last_heartbeat_at) last_at
+                            FROM recording_watch_sessions WHERE recording_kind = 'lecture' AND recording_id = :r1 GROUP BY students_student_id) w
+                      ON w.students_student_id = s.student_id
+               LEFT JOIN recording_student_overrides o ON o.students_student_id = s.student_id AND o.recording_kind = 'lecture' AND o.recording_id = :r2
+              WHERE sc.classes_class_id = :c AND sc.status_status_id = 1
+              ORDER BY secs DESC, ld.first_name, ld.last_name",
+            ['r1' => $id, 'r2' => $id, 'c' => $rec['class']['id']],
+        );
+        $dur = max(1, (int) $rec['duration'] * 60);
+        return ['recording' => $rec, 'students' => array_map(static fn ($x) => [
+            'id' => (int) $x['student_id'], 'name' => trim($x['first_name'] . ' ' . $x['last_name']), 'whatsapp' => (string) ($x['whatsapp'] ?? ''),
+            'watched_minutes' => (int) round((int) $x['secs'] / 60), 'percent' => min(999, (int) round((int) $x['secs'] / $dur * 100)),
+            'sessions' => (int) $x['sessions'], 'last_at' => $x['last_at'], 'extra_minutes' => (int) ($x['extra_minutes'] ?? 0), 'extra_reason' => $x['reason'],
+        ], $rows)];
+    }
+
+    /** Extra watch minutes for one student on one recording (replaces what was given before; 0 takes it away). */
+    public function giveExtra(int $tutor, int $id, int $studentId, int $minutes, string $reason, int $by): void
+    {
+        $rec = $this->find($tutor, $id);
+        if ($rec === null || !$this->db->value('SELECT 1 FROM students_has_classes WHERE classes_class_id = :c AND students_student_id = :s', ['c' => $rec['class']['id'], 's' => $studentId])) {
+            throw \Enlixo\Core\HttpException::notFound('This student or recording was not found.');
+        }
+        $this->db->execute("DELETE FROM recording_student_overrides WHERE students_student_id = :s AND recording_kind = 'lecture' AND recording_id = :r", ['s' => $studentId, 'r' => $id]);
+        if ($minutes > 0) {
+            $this->db->execute(
+                "INSERT INTO recording_student_overrides (students_student_id, recording_kind, recording_id, extra_minutes, reason, granted_by, granted_at)
+                 VALUES (:s, 'lecture', :r, :m, :why, :by, NOW())",
+                ['s' => $studentId, 'r' => $id, 'm' => $minutes, 'why' => mb_substr($reason, 0, 200) ?: null, 'by' => $by],
+            );
+        }
+    }
+
     private function shape(array $r, \DateTimeImmutable $now): array
     {
         $url = (string) ($r['recording_url'] ?? '');

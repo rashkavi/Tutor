@@ -43,6 +43,10 @@ final class RecordingAccessService
         if (!$this->repo->studentEnrolled($studentId, $rec->classId)) {
             return new WatchStatus(WatchStatus::NO_ACCESS, $used, null, null);
         }
+        // a class day's recording opens once that month's fee is paid (classes that take fees in the app)
+        if ($rec->month !== null && !$this->repo->monthPaid($studentId, $rec->classId, $rec->month)) {
+            return new WatchStatus(WatchStatus::UNPAID, $used, null, null, null, $rec->month);
+        }
 
         $ent = $this->entitlements->for($rec->tutorId);
         $rule = $this->repo->rule($rec->kind, $rec->id) ?? AccessRule::default($this->defaultMultiplier);
@@ -127,6 +131,7 @@ final class RecordingAccessService
                 ? 'This recording opens on ' . $s->availableFrom->format('D, j M Y') . ' at ' . $s->availableFrom->format('g:i A') . '.'
                 : 'This recording is not available yet.',
             WatchStatus::NO_ACCESS => 'You are not enrolled in this class.',
+            WatchStatus::UNPAID => 'Pay the class fee for ' . ($s->month ? (new \DateTimeImmutable($s->month . '-01'))->format('F Y') : 'this month') . ' to watch this recording. It opens as soon as your tutor approves the payment.',
             default => 'This recording is locked.',
         };
     }

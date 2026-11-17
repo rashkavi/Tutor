@@ -99,3 +99,15 @@ test('"Opens on" of the recording locks it until then, on every plan', function 
     $clock->advance(32 * 3600);
     T::eq(WatchStatus::AVAILABLE, $svc->status(99, 'lecture', 1)->state);
 });
+
+test('a class day recording opens only when that month\'s fee is paid', function () {
+    [$repo, , $svc] = recFixture('start');
+    $repo->recordings['lecture:2'] = new RecordingInfo('lecture', 2, 3, 1, 'Lesson 2', 600, null, '2026-10');
+    $repo->paidMonths['99:3:2026-10'] = false;
+    $s = $svc->status(99, 'lecture', 2);
+    T::eq(WatchStatus::UNPAID, $s->state);
+    T::eq(false, $s->canPlay());
+    T::true(str_contains($svc->lockedMessage($s), 'October 2026'), 'message names the month');
+    $repo->paidMonths['99:3:2026-10'] = true;
+    T::true($svc->status(99, 'lecture', 2)->canPlay(), 'paid: it opens');
+});

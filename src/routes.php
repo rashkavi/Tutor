@@ -117,6 +117,8 @@ return static function (Router $router, App $app): void {
     $router->post('/api/v1/tutor/recordings', $recs->save(...));
     $router->get('/api/v1/tutor/recordings/overview', $recs->overview(...));
     $router->get('/api/v1/tutor/recordings/days', $recs->days(...));
+    $router->get('/api/v1/tutor/recordings/{id}/watch', $recs->watch(...));
+    $router->post('/api/v1/tutor/recordings/{id}/extra', $recs->extra(...));
     $router->get('/api/v1/tutor/recordings/{id}', $recs->show(...));
     $router->put('/api/v1/tutor/recordings/{id}', $recs->save(...));
     $router->delete('/api/v1/tutor/recordings/{id}', $recs->destroy(...));

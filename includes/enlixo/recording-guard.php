@@ -32,6 +32,7 @@ if (!$status->canPlay()) {
         'expired' => 'Recording expired',
         'not_yet_available' => 'Not available yet',
         'no_access' => 'Not enrolled',
+        'unpaid' => 'Pay this month\'s fee',
         default => 'Watch time used up',
     };
     $guardResult['lock_html'] = '<div class="ex-root ex-player-wrap"><div class="ex-player-lock"><div class="ex-gated-cta">'

@@ -13,6 +13,7 @@ final class RecordingInfo
         public readonly string $title,
         public readonly int $durationSeconds,
         public readonly ?\DateTimeImmutable $unlockAt = null, // "Opens on" set by the tutor (every plan)
+        public readonly ?string $month = null, // 'Y-m' of the class day (lecture recordings): its fee must be paid
     ) {
     }
 }

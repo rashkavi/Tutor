@@ -178,6 +178,30 @@ final class ClassRecordingController
         return JsonResponse::ok($this->recordings()->find($auth->tenantId(), (int) $r->param('id')) ?? throw HttpException::notFound('This recording was not found.'));
     }
 
+    /** GET /api/v1/tutor/recordings/{id}/watch: who watched it and for how long (tutor/recording-watch.php). */
+    public function watch(Request $r): JsonResponse
+    {
+        $auth = $r->auth();
+        $this->app->permissions()->require($auth, 'recordings.view');
+        $tutor = $auth->tenantId();
+        $report = $this->recordings()->watchReport($tutor, (int) $r->param('id')) ?? throw HttpException::notFound('This recording was not found.');
+        return JsonResponse::ok($report + ['can_give_time' => $this->app->entitlements()->for($tutor)->has('recordings.controlled_access')]);
+    }
+
+    /** POST /api/v1/tutor/recordings/{id}/extra {student, minutes, reason}: more watch time for one student (GROW). */
+    public function extra(Request $r): JsonResponse
+    {
+        $auth = $this->manage($r);
+        $tutor = $auth->tenantId();
+        $this->app->entitlements()->require($tutor, 'recordings.controlled_access');
+        $minutes = (int) $r->input('minutes', 0);
+        if ($minutes < 0 || $minutes > 600) {
+            throw HttpException::validation(['minutes' => 'Give 0 to 600 minutes.']);
+        }
+        $this->recordings()->giveExtra($tutor, (int) $r->param('id'), (int) $r->input('student', 0), $minutes, trim((string) $r->input('reason', '')), $auth->userId);
+        return JsonResponse::ok(['message' => $minutes > 0 ? "$minutes extra minutes given." : 'Extra time taken away.']);
+    }
+
     /** POST /api/v1/tutor/recordings  and  PUT /api/v1/tutor/recordings/{id} */
     public function save(Request $r): JsonResponse
     {

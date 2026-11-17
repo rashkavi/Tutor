@@ -2568,3 +2568,7 @@ a.ex-hd-stat:hover .ex-hd-go { opacity: 1; }
 [data-custom-theme="dark"] .ex-dash-try { color: #8cb8ff; }
 .ex-tf-choice.is-locked { opacity: .85; border-style: dashed; cursor: pointer; }
 .ex-tf-choice.is-locked:hover { opacity: 1; }
+/* Who Watched (tutor/recording-watch.php) */
+.rw-bar { display: block; height: 6px; background: var(--table-header-color, #F1F3F6); overflow: hidden; }
+.rw-bar > span { display: block; height: 100%; background: var(--dark-theme, #0061D2); }
+.rw-extra { padding: 16px; border: 2px solid var(--dark-theme, #0061D2); background: var(--custom-white); }
