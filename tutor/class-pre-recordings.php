@@ -7,10 +7,12 @@ if (!SessionUser::ifUserIsTutor()) {
     header("Location: ./index");
 } else {
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
+    require_once "../includes/enlixo/plan-guard.php";
+    enlixo_plan_page((int) $sessionUserObject['user_id'], 'recordings.pre_recorded'); // GROW / CUSTOM only: others see the Upgrade page
     if (!($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['class-id']) && !empty($_GET['class-id']))) {
         header("Location: ./classes");
     } else {
-        $class_id = $_GET["class-id"];
+        $class_id = (int) $_GET["class-id"];
 
         $query = "SELECT * FROM `classes` WHERE `class_id` = '" . $class_id . "'";
         if (SessionUser::ifUserIsTutor()) {

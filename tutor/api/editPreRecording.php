@@ -10,6 +10,8 @@ require_once("../../includes/Project.php");
 require_once("../../includes/enlixo/pre-recording-link.php");
 if (SessionUser::ifUserIsTutor()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
+    require_once "../../includes/enlixo/plan-guard.php";
+    enlixo_feature_guard($status, (int) $sessionUserObject['user_id'], 'recordings.pre_recorded'); // GROW / CUSTOM only
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         UserPermissions::setUserPermissions($sessionUserObject['user_permissions']);
         $recording_id = isset($_POST['recording_id']) ? trim($_POST['recording_id']) : 0;

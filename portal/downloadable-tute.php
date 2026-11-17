@@ -26,6 +26,14 @@ if (!$tute) {
     exit;
 }
 $posted = (int) $tute['tute_types_tute_type_id'] !== 1;
+// a tute of a month opens once that month's fee is paid (same rule as the Tutes list, includes/enlixo/student-tutes.php)
+require_once __DIR__ . '/../includes/enlixo/student-tutes.php';
+$isOpen = true;
+foreach (st_tutes($sid, $classId) as $t) {
+    if ($t['id'] === $tuteId) {
+        $isOpen = $t['open'];
+    }
+}
 
 $files = [];
 $res = Database::search("SELECT attachment, attachment_name FROM class_tutes_has_attachments WHERE class_tutes_class_tute_id = '" . $tuteId . "'");
@@ -70,9 +78,16 @@ sl_page_title((string) $tute['tute_title'], [
                                     <div class="ac-card">
                                         <div class="ac-card-head">
                                             <h2 class="ac-card-title">Files</h2>
-                                            <span class="ac-badge"><?= count($files) ?> <?= count($files) === 1 ? 'file' : 'files' ?></span>
+                                            <span class="ac-badge <?= $isOpen ? '' : 'is-warn' ?>"><?= $isOpen ? count($files) . (count($files) === 1 ? ' file' : ' files') : 'Locked' ?></span>
                                         </div>
-                                        <?php if ($files) { ?>
+                                        <?php if (!$isOpen) { ?>
+                                            <div class="empty-state">
+                                                <div class="empty-state-icon"><?= enlixo_icon('lock', 28) ?></div>
+                                                <div class="empty-state-title">Pay the <?= sl_e($month ?? 'month') ?> fee to open this tute</div>
+                                                <div class="empty-state-text">This tute is for students who paid that month. Once your payment is approved, the files open here.</div>
+                                                <a class="custom-btn mt-3 d-inline-flex align-items-center gap-2 text-decoration-none" href="./class-payments?class-id=<?= $classId ?>"><?= enlixo_icon('wallet', 18) ?>Go to Payments</a>
+                                            </div>
+                                        <?php } elseif ($files) { ?>
                                             <div class="tu-files">
                                                 <?php foreach ($files as $f) { ?>
                                                     <a class="tu-file" href="<?= sl_e($f['url']) ?>" target="_blank" rel="noopener" <?= $f['ext'] === 'PDF' ? '' : 'download="' . sl_e($f['name']) . '"' ?>>

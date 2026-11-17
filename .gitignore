@@ -5,3 +5,6 @@
 
 # slips uploaded while using / testing the app (files already in git stay tracked)
 assets/uploads/payment-slips/*
+
+# demo tute files made by bin/seed-demo.php
+assets/uploads/tutes-attachments/demo-*.pdf
