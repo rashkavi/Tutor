@@ -47,6 +47,10 @@ final class TutorRequests
             'modes' => self::MODES,
             'heard' => self::HEARD,
             'promos' => array_map(static fn ($p) => ['plan' => $p['plan'], 'percent' => $p['percent'], 'title' => $p['title']], Promotions::CODES),
+            // the accounts the first payment of STARTER / GROW goes to (Admin > Plans & Billing > bank accounts)
+            'banks' => array_values(array_map(static fn ($b) => ['bank' => (string) $b['bank'], 'branch' => (string) ($b['branch'] ?? ''), 'name' => (string) $b['name'], 'number' => (string) $b['number']],
+                array_filter($this->settings->banks(), static fn ($b) => !empty($b['on'])))),
+            'slip' => ['max_mb' => self::SLIP_MAX_MB, 'types' => 'JPG, PNG, WebP or PDF'],
             'trial' => ['days' => (int) $rules['trial_days'], 'plan' => strtoupper((string) ($this->catalog->planByKey((string) $rules['trial_plan'])['payment_plan'] ?? $rules['trial_plan'])), 'students' => (int) $rules['trial_student_cap']],
         ];
     }
@@ -150,7 +154,14 @@ final class TutorRequests
     // ================================================================ public form
 
     /** @return array{ref:string} */
-    public function submit(array $in, ?string $ip, string $now): array
+    public const SLIP_MAX_MB = 5;
+    public const SLIP_DIR = 'assets/uploads/tutor-request-slips';
+
+    /**
+     * The public sign-up: name, e-mail, mobile, the plan, and for STARTER / GROW the bank slip of the first payment
+     * (`$slip` = one entry of $_FILES). Title, subject and how they teach are no longer asked (the team asks on the call).
+     */
+    public function submit(array $in, ?string $ip, string $now, ?array $slip = null): array
     {
         if (trim((string) ($in['website'] ?? '')) !== '') { // filled only by bots
             return ['ref' => 'TR-' . substr(md5((string) microtime(true)), 0, 6)];
@@ -162,6 +173,12 @@ final class TutorRequests
             throw new HttpException(429, 'too_many', 'Too many requests from this connection. Please try again in an hour, or call us.');
         }
 
+        // one "Your name" box: the last word is the last name ("Ruwan Kumara Perera" -> "Ruwan Kumara" + "Perera")
+        if (trim((string) ($in['name'] ?? '')) !== '' && trim((string) ($in['first_name'] ?? '')) === '') {
+            $parts = preg_split('/\s+/u', trim((string) $in['name'])) ?: [];
+            $in['last_name'] = count($parts) > 1 ? (string) array_pop($parts) : '';
+            $in['first_name'] = implode(' ', $parts);
+        }
         $e = [];
         $str = static function (string $k, int $max, bool $req, string $msg) use ($in, &$e): string {
             $v = trim(preg_replace('/\s+/u', ' ', (string) ($in[$k] ?? '')) ?? '');
@@ -174,10 +191,14 @@ final class TutorRequests
         };
         $title = (int) ($in['title'] ?? 0);
         if (!$this->db->value('SELECT 1 FROM title WHERE title_id = :t', ['t' => $title])) {
-            $e['title'] = 'Choose a title.';
+            $title = (int) $this->db->value('SELECT MIN(title_id) FROM title'); // not asked any more; the team fixes it on the call
         }
-        $first = $str('first_name', 45, true, 'Enter your first name.');
-        $last = $str('last_name', 45, true, 'Enter your last name.');
+        $first = $str('first_name', 45, true, 'Enter your name.');
+        if (isset($e['first_name']) && array_key_exists('name', $in)) {
+            $e['name'] = $e['first_name'];
+            unset($e['first_name']);
+        }
+        $last = $str('last_name', 45, false, '');
         $email = strtolower($str('email', 100, true, 'Enter your e-mail address.'));
         if ($email !== '' && !isset($e['email'])) {
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -206,10 +227,10 @@ final class TutorRequests
         }
 
         $institute = $str('institute', 100, false, '');
-        $subject = $str('subject', 60, true, 'Enter the main subject you teach.');
+        $subject = $str('subject', 60, false, '');
         $grades = $str('grades', 100, false, '');
         $mode = (string) ($in['mode'] ?? '');
-        if (!isset(self::MODES[$mode])) {
+        if ($mode !== '' && !isset(self::MODES[$mode])) {
             $e['mode'] = 'Choose how you teach.';
         }
         $district = $str('district', 45, false, '');
@@ -232,11 +253,41 @@ final class TutorRequests
         $addons = array_values(array_intersect(array_map('strval', (array) ($in['addons'] ?? [])), $offered));
         $promo = Promotions::find((string) ($in['promo'] ?? ''));
         if (empty($in['agree'])) {
-            $e['agree'] = 'Please agree so that our team can contact you.';
+            $e['agree'] = 'Please accept the Terms and Conditions to send your request.';
+        }
+        // STARTER / GROW: the slip of the first payment (FREE pays nothing, CUSTOM is agreed on a call)
+        $planRow = null;
+        foreach ($this->plans() as $pl) {
+            if ($pl['key'] === $plan) {
+                $planRow = $pl;
+            }
+        }
+        $paid = $planRow !== null && empty($planRow['free']) && empty($planRow['custom']);
+        $amount = null;
+        $slipExt = null;
+        if ($paid) {
+            $monthly = $cycle === 'yearly' ? max(0.0, (float) $planRow['monthly'] - (float) $planRow['yearly_discount']) : (float) $planRow['monthly'];
+            if ($promo !== null && ($promo['plan'] ?? '') === $plan) {
+                $monthly = round($monthly * (100 - (int) $promo['percent']) / 1000) * 10;
+            }
+            $amount = $cycle === 'yearly' ? $monthly * 12 : $monthly;
+            $slipExt = $this->checkSlip($slip, $e);
         }
         if ($e) {
             throw new HttpException(422, 'validation_failed', 'Please check the highlighted fields.', $e);
         }
+        $slipName = null;
+        if ($paid && $slipExt !== null) {
+            $dir = dirname(__DIR__, 2) . '/' . self::SLIP_DIR;
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0775, true);
+            }
+            $slipName = 'tr-' . bin2hex(random_bytes(10)) . '.' . $slipExt;
+            if (!@move_uploaded_file((string) $slip['tmp_name'], $dir . '/' . $slipName) && !@rename((string) $slip['tmp_name'], $dir . '/' . $slipName)) {
+                throw new HttpException(500, 'upload_failed', 'We could not save your slip. Please try again.');
+            }
+        }
+        $this->ensureSlipColumns();
 
         $id = $this->db->insert(
             'INSERT INTO requested_users (user_fname, user_lname, email, mobile, whatsapp, nic, title_title_id, requested_date_time, request_status_request_status_id,
@@ -246,7 +297,58 @@ final class TutorRequests
                 'p' => $plan, 'c' => $cycle, 'a' => $addons ? json_encode($addons) : null, 'ins' => $institute ?: null, 'sub' => $subject, 'g' => $grades ?: null, 'mode' => $mode,
                 'd' => $district ?: null, 'n' => $students === '' ? null : (int) $students, 'h' => $heard ?: null, 'msg' => $message ?: null, 'ip' => $ip, 'promo' => $promo['code'] ?? null],
         );
+        $this->db->execute('UPDATE requested_users SET payment_slip = :s, payment_amount = :a, terms_accepted_at = :t WHERE requested_user_id = :id',
+            ['s' => $slipName, 'a' => $amount, 't' => $now, 'id' => $id]);
         return ['ref' => self::ref($id), 'id' => $id];
+    }
+
+    /** The slip must be a picture or a PDF of up to SLIP_MAX_MB; returns the file extension to save with, or null. */
+    private function checkSlip(?array $slip, array &$e): ?string
+    {
+        if ($slip === null || ($slip['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            $e['slip'] = 'Upload the slip of your payment (a photo or PDF).';
+            return null;
+        }
+        if (($slip['error'] ?? 1) !== UPLOAD_ERR_OK || !is_file((string) ($slip['tmp_name'] ?? ''))) {
+            $e['slip'] = 'The slip did not upload. Please choose it again.';
+            return null;
+        }
+        if ((int) $slip['size'] > self::SLIP_MAX_MB * 1024 * 1024) {
+            $e['slip'] = 'The slip is larger than ' . self::SLIP_MAX_MB . ' MB. Take a smaller photo or a PDF.';
+            return null;
+        }
+        $mime = (string) (new \finfo(FILEINFO_MIME_TYPE))->file((string) $slip['tmp_name']);
+        $ext = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'application/pdf' => 'pdf'][$mime] ?? null;
+        if ($ext === null) {
+            $e['slip'] = 'Upload a JPG, PNG, WebP or PDF file.';
+        }
+        return $ext;
+    }
+
+    /** The slip columns (migration 022), added here too so the sign-up never breaks on a database without them. */
+    private function ensureSlipColumns(): void
+    {
+        static $done = false;
+        if ($done) {
+            return;
+        }
+        $done = true;
+        if (!$this->db->value("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'requested_users' AND COLUMN_NAME = 'payment_slip'")) {
+            $this->db->execute('ALTER TABLE requested_users ADD COLUMN payment_slip varchar(120) NULL, ADD COLUMN payment_amount decimal(10,2) NULL, ADD COLUMN terms_accepted_at datetime NULL');
+        }
+    }
+
+    /** The slip file of a request, for the admin. */
+    public function slipFile(int $id): array
+    {
+        $this->ensureSlipColumns();
+        $name = (string) $this->db->value('SELECT payment_slip FROM requested_users WHERE requested_user_id = :id', ['id' => $id]);
+        $path = dirname(__DIR__, 2) . '/' . self::SLIP_DIR . '/' . basename($name);
+        if ($name === '' || !is_file($path)) {
+            throw HttpException::notFound('This request has no slip.');
+        }
+        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+        return ['path' => $path, 'name' => 'slip-' . self::ref($id) . '.' . $ext, 'type' => ['jpg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'pdf' => 'application/pdf'][$ext] ?? 'application/octet-stream'];
     }
 
     public static function ref(int $id): string
@@ -399,6 +501,9 @@ final class TutorRequests
             'decided_by' => $r['decided_by'] ? trim($r['d_fname'] . ' ' . $r['d_lname']) : null,
             'decision_note' => $r['decision_note'],
             'promo' => Promotions::find($r['promo_code'] ?? null),
+            // the first payment sent with the sign-up (migration 022): slip downloaded from GET /admin/tutor-requests/{id}/slip
+            'slip' => !empty($r['payment_slip']),
+            'payment_amount' => isset($r['payment_amount']) ? (float) $r['payment_amount'] : null,
         ];
     }
 }

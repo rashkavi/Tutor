@@ -43,7 +43,7 @@ const featureByKey = (k) => A.features.find((f) => f.key === k);
 const paidKey = () => A.paid_plan?.key ?? A.plan.key;
 const limitText = (l, plan) => {
   const v = l.limitsByPlan?.[plan];
-  return v === null || v === undefined ? 'Unlimited' : `${v} ${l.unit}${l.period === 'month' ? ' a month' : ''}`;
+  return v === null || v === undefined ? 'Unlimited' : `${v} ${l.unit}${l.period === 'month' ? ' per month' : ''}`;
 };
 
 /** The plan to recommend: the one the feature / limit needs, else ?plan=, else the next plan. */
@@ -202,7 +202,7 @@ function plansCard(rec, canPreview) {
     const adds = A.features.filter((f) => f.plans.includes(p.key) && !f.plans.includes(ORDER[rank(p.key) - 1] ?? '')).map((f) => f.name);
     const limitLines = Object.entries(LIMITS).map(([k, v]) => {
       const l = A.limits.find((x) => x.key === k);
-      return l ? `${v[p.key] === null || v[p.key] === undefined ? 'Unlimited' : v[p.key]} ${l.unit}${l.period === 'month' && v[p.key] !== null ? ' a month' : ''}` : null;
+      return l ? `${v[p.key] === null || v[p.key] === undefined ? 'Unlimited' : v[p.key]} ${l.unit}${l.period === 'month' && v[p.key] !== null ? ' per month' : ''}` : null;
     }).filter(Boolean);
     const tone = { start: 'blue', grow: 'green', pro: 'purple' }[p.key] ?? 'blue';
     const yearlyMonthly = Math.max(0, p.monthly - p.yearly_discount);
@@ -300,7 +300,7 @@ function compareCard() {
   for (const [k, v] of Object.entries(LIMITS)) {
     const l = A.limits.find((x) => x.key === k);
     if (!l) continue;
-    rows.push(h('tr', {}, h('td', {}, l.name, l.period === 'month' ? h('small', { class: 'sub-text' }, ' a month') : null), plans.map((p) => h('td', { class: 'text-center' }, v[p] === null ? 'Unlimited' : String(v[p])))));
+    rows.push(h('tr', {}, h('td', {}, l.name, l.period === 'month' ? h('small', { class: 'sub-text' }, ' per month') : null), plans.map((p) => h('td', { class: 'text-center' }, v[p] === null ? 'Unlimited' : String(v[p])))));
   }
   for (const c of cats) {
     const fs = A.features.filter((f) => f.category === c && f.plans.some((p) => plans.includes(p)));

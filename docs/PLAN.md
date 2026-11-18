@@ -348,3 +348,12 @@ Run `database/migrations/020_trial_requests.sql` and `021_lecture_type_both.sql`
 
 - **My Children** (`parent/my-children.php`) is on the learning frame like the other parent pages: one card per child (photo or initials, status, classes, attendance of the last 30 days with a bar, fees to pay / overdue, the next class, View Progress / Classes / Fees). Figures come from `ps_children()` / `ps_progress()`, the same as Child Progress. Styles `mc-*` in `assets/css/parent-progress.css`.
 - **One crop dialog:** the global `uploadImage()` (square photo, 600 px) and `uploadCover()` (16:9, 1600 px) in `assets/js/script.js` open `assets/js/enlixo/components/ImageCropper.js`, the dialog of the tutor class form (it loads `enlixo-ui.css` itself on older pages) and put the cropped file back into the `<input type="file">`, so the save code of every page is unchanged. The old `#crop-modal` markup and Cropper.js includes were removed from the student portal, parent, tutor and admin pages; never add them back.
+
+## Short sign-up with the payment slip, Terms and Conditions (2026-11-18)
+
+Run `database/migrations/022_signup_payment_slip.sql` (TutorRequests also adds the columns by itself).
+
+- **Sign-up is one short form** (`assets/landing/signup.js`): plan (from `?plan=`, changeable; monthly / yearly), name, e-mail, mobile; for STARTER / GROW the amount to pay, the ENVIIZ bank accounts (Admin > Plans & Billing, with Copy) and the bank slip (JPG / PNG / WebP / PDF, 5 MB, required); FREE and CUSTOM pay nothing here. Terms and Conditions must be accepted. Title, subject and how they teach are no longer asked (the team asks on the call; the API still accepts them).
+- `POST /public/tutor-signup` takes multipart (`data` JSON + `slip`); the slip goes to `assets/uploads/tutor-request-slips/`, the amount and the time the terms were accepted are saved on `requested_users`. Admin request page: "First payment" with the amount and **Open the slip** (`GET /admin/tutor-requests/{id}/slip`).
+- **Terms and Conditions:** `terms.php` (`/terms`), linked from the sign-up form and the landing footer. Have it checked by a lawyer before relying on it.
+- Landing: limits read "Tutes / Recordings / Notifications **per month**"; the FAQ card uses its own picture `assets/landing/img/talk.webp` (prompt in `docs/LANDING-IMAGES.md`), the team photo until it is uploaded.

@@ -8,3 +8,6 @@ assets/uploads/payment-slips/*
 
 # demo tute files made by bin/seed-demo.php
 assets/uploads/tutes-attachments/demo-*.pdf
+
+# bank slips sent with the online sign-up
+assets/uploads/tutor-request-slips/*

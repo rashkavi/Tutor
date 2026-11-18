@@ -252,8 +252,8 @@ function lp_icon(string $n, int $s = 22): string
                         <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Students, 3 classes and the timetable</span></li>
                         <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Fees with bank slips and approval</span></li>
                         <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Attendance marked by hand</span></li>
-                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>3 tutes and 15 recordings a month</span></li>
-                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>100 e-mail and WhatsApp notices a month</span></li>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>3 tutes and 15 recordings per month</span></li>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>100 e-mail and WhatsApp notices per month</span></li>
                         <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Online classes with your own Zoom link</span></li>
                     </ul>
                     <div class="lp-hero-cta" data-reveal>
@@ -637,7 +637,7 @@ function lp_icon(string $n, int $s = 22): string
                                     <?php if (!$pop) { ?>
                                         <li class="lp-strong lp-zoom-li"><img src="<?= $img ?>zoom.webp" alt="" width="16" height="16"> <span><?= $isFree ? 'Paste your Zoom link per class' : 'Zoom meetings made for you' ?></span></li>
                                     <?php } ?>
-                                    <li class="lp-strong"><?= lp_icon('sparkle', 16) ?> <span><?= $isFree ? '3 classes · 3 tutes · 15 recordings a month' : ($p['key'] === 'start' ? 'Unlimited classes, tutes and recordings' : 'Unlimited everything') ?></span></li>
+                                    <li class="lp-strong"><?= lp_icon('sparkle', 16) ?> <span><?= $isFree ? '3 classes · 3 tutes · 15 recordings per month' : ($p['key'] === 'start' ? 'Unlimited classes, tutes and recordings' : 'Unlimited everything') ?></span></li>
                                     <?php if ($p['everything_in']) { ?><li class="lp-strong"><?= lp_icon('sparkle', 16) ?> <span>Everything in <?= $e($p['everything_in']) ?>, plus:</span></li><?php } ?>
                                     <?php $list = array_values(array_filter($p['new_features'], static fn ($f) => !str_contains($f, 'Zoom')));
                                     foreach (array_slice($list, 0, $pop ? 9 : 5) as $f) { echo '<li>' . lp_icon('check', 16) . ' <span>' . $e($f) . '</span></li>'; }
@@ -658,7 +658,7 @@ function lp_icon(string $n, int $s = 22): string
                                 <tr class="lp-cat"><th colspan="<?= count($info['plans']) + 1 ?>" scope="colgroup">Limits</th></tr>
                                 <tr><th scope="row">Students</th><?php foreach ($info['plans'] as $p) { echo '<td data-no-i18n>' . ($p['limit'] === null ? 'Any' : (int) $p['limit']) . '</td>'; } ?></tr>
                                 <?php foreach (Enlixo\Catalog\FeatureCatalog::limits() as $lim) { ?>
-                                    <tr><th scope="row"><?= $e($lim['name']) ?><?= $lim['period'] === 'month' ? ' a month' : '' ?></th>
+                                    <tr><th scope="row"><?= $e($lim['name']) ?><?= $lim['period'] === 'month' ? ' <small class="lp-per">per month</small>' : '' ?></th>
                                         <?php foreach ($info['plans'] as $p) { $v = $lim['plans'][$p['key']] ?? null; echo $v === null ? '<td>Unlimited</td>' : '<td data-no-i18n>' . (int) $v . '</td>'; } ?>
                                     </tr>
                                 <?php } ?>
@@ -700,7 +700,7 @@ function lp_icon(string $n, int $s = 22): string
                     <h2 class="lp-h2"><span>Questions tutors</span> <span class="lp-grad">ask us.</span></h2>
                     <p class="lp-sub">Something else? Send your request and our team will call you.</p>
                     <div class="lp-talk" data-reveal="left">
-                        <img src="<?= $img ?>photo-1.webp" alt="" loading="lazy" aria-hidden="true">
+                        <img src="<?= $img . (is_file(__DIR__ . '/' . $img . 'talk.webp') ? 'talk' : 'photo-2') ?>.webp" alt="" loading="lazy" aria-hidden="true"><?php /* own picture: assets/landing/img/talk.webp (docs/LANDING-IMAGES.md) */ ?>
                         <div class="lp-talk-in">
                             <b>Rather talk to a person?</b>
                             <span>Send your request and our team calls you within one working day.</span>
@@ -768,9 +768,10 @@ function lp_icon(string $n, int $s = 22): string
                 </nav>
                 <nav class="lp-foot-col" aria-label="Get started"><b>Get started</b>
                     <a href="<?= $signup ?>?plan=free">Start free</a>
-                    <a href="<?= $signup ?>?plan=grow">Try GROW free</a>
+                    <a href="<?= $signup ?>?plan=grow">Choose GROW</a>
                     <a href="<?= $signup ?>?plan=pro">Talk to us about CUSTOM</a>
                     <a href="https://enviiz.com" target="_blank" rel="noopener">About ENVIIZ</a>
+                    <a href="terms">Terms and Conditions</a>
                 </nav>
             </div>
 

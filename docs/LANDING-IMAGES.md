@@ -19,6 +19,12 @@ keep the important part in the top two thirds and leave the bottom calm.
 | `strip-revision.webp` | Revision · Tutes posted or online | Revision season: a Sri Lankan A/L student at a study desk opens a freshly delivered courier envelope of printed tutes (plain white sheets, no text visible), a tablet beside it shows the same notes, sticky notes and a highlighter, bright morning light by a window. |
 | `strip-team.webp` | Your team · Staff logins for assistants | Behind the scenes of a tuition institute office in Sri Lanka: two young assistants at a desk, one checks student payments on a laptop, the other sorts printed tutes into labelled trays (labels blank), a class timetable board on the wall (no readable text), friendly busy mood. |
 
+## FAQ card "Rather talk to a person?"
+
+`talk.webp` (until it is uploaded the team photo is shown). Landscape **16:10**, export **1200 × 750 px**, WebP.
+
+> A friendly Sri Lankan customer support person in their late twenties sits at a bright modern office desk with a headset, smiling while talking on a call and looking at a laptop, a notebook and a cup of tea beside them, soft daylight from a window, plants in the background, warm and welcoming. Photorealistic, no text, no logos, no brand names, 16:10 landscape.
+
 Tips:
 - Generate 3–4 versions of each and pick the ones with similar colour and light, so the strip looks like one set.
 - If faces or hands look wrong, ask Nano Banana to "fix the hands and faces, keep everything else the same".
