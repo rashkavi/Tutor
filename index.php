@@ -50,6 +50,9 @@ $growLimit = (int) ($grow['limit'] ?? 500);
 $calcPlans = array_map(static fn ($p) => ['key' => $p['key'], 'name' => $p['name'], 'monthly' => (float) $p['monthly'], 'limit' => $p['limit'], 'pack_price' => $p['pack_price'], 'pack_size' => $p['pack_size'], 'custom' => !empty($p['custom'])], $info['plans']);
 $addonIcon = ['enviiz_gateway' => 'card', 'enviiz_zoom' => 'video', 'enviiz_streaming' => 'shield', 'enviiz_sms' => 'sms', 'enviiz_whatsapp' => 'chat', 'physical_id' => 'id'];
 $img = 'assets/landing/img/';
+// Every section has its own picture (prompts: docs/LANDING-IMAGES.md). Until that file is uploaded the older shared
+// photo is shown, so the page never has an empty box. Returns the file name with .webp.
+$photo = static fn (string $own, string $fallback): string => (is_file(__DIR__ . '/' . $img . $own . '.webp') ? $own : $fallback) . '.webp';
 
 // Small inline icons (stroke, currentColor)
 function lp_icon(string $n, int $s = 22): string
@@ -378,7 +381,7 @@ function lp_icon(string $n, int $s = 22): string
                 <div class="lp-portals">
                     <article class="lp-portal lp-portal-student" data-reveal="left">
                         <div class="lp-portal-dev" aria-hidden="true" data-no-i18n>
-                            <img class="lp-portal-photo" src="<?= $img ?>portal-3.webp" alt="" loading="lazy">
+                            <img class="lp-portal-photo" src="<?= $img . $photo('portal-student', 'portal-3') ?>" alt="" loading="lazy">
                             <div class="lp-dev-phone">
                                 <div class="lp-phone-notch"></div>
                                 <div class="lp-dev-scr">
@@ -404,7 +407,7 @@ function lp_icon(string $n, int $s = 22): string
                     </article>
                     <article class="lp-portal lp-portal-tutor" data-reveal>
                         <div class="lp-portal-dev" aria-hidden="true" data-no-i18n>
-                            <img class="lp-portal-photo" src="<?= $img ?>photo-3.webp" alt="" loading="lazy">
+                            <img class="lp-portal-photo" src="<?= $img . $photo('portal-tutor', 'photo-3') ?>" alt="" loading="lazy">
                             <div class="lp-dev-laptop">
                                 <div class="lp-dev-lscr">
                                     <div class="lp-dev-lside"><b></b><span class="on"></span><span></span><span></span><span></span></div>
@@ -432,7 +435,7 @@ function lp_icon(string $n, int $s = 22): string
                     </article>
                     <article class="lp-portal lp-portal-parent" data-reveal="right">
                         <div class="lp-portal-dev" aria-hidden="true" data-no-i18n>
-                            <img class="lp-portal-photo" src="<?= $img ?>photo-1.webp" alt="" loading="lazy">
+                            <img class="lp-portal-photo" src="<?= $img . $photo('portal-parent', 'photo-1') ?>" alt="" loading="lazy">
                             <div class="lp-dev-phone">
                                 <div class="lp-phone-notch"></div>
                                 <div class="lp-dev-scr">
@@ -540,7 +543,7 @@ function lp_icon(string $n, int $s = 22): string
                     $shots = [['strip-hall', 'portal-1', 'Hall classes', 'QR attendance at the door'], ['strip-paper', 'photo-3', 'Paper classes', 'Marks and papers in one place'],
                         ['strip-group', 'portal-2', 'Group classes', 'Every batch, every year'], ['strip-zoom', 'photo-1', 'Online on Zoom', 'Recordings for paid students'],
                         ['strip-revision', 'portal-3', 'Revision', 'Tutes posted or online'], ['strip-team', 'photo-2', 'Your team', 'Staff logins for assistants']];
-                    $shots = array_map(static fn ($x) => [is_file(__DIR__ . '/' . $img . $x[0] . '.webp') ? $x[0] : $x[1], $x[2], $x[3]], $shots);
+                    $shots = array_map(static fn ($x) => [basename($photo($x[0], $x[1]), '.webp'), $x[2], $x[3]], $shots);
                     foreach (array_merge($shots, $shots) as $i => [$pic, $t, $sub]) { ?>
                         <figure class="lp-shot<?= $i % 2 ? ' lp-shot-low' : '' ?>"<?= $i >= count($shots) ? ' aria-hidden="true"' : '' ?>>
                             <img src="<?= $img . $pic ?>.webp" alt="" loading="lazy">
@@ -565,7 +568,7 @@ function lp_icon(string $n, int $s = 22): string
                 </div>
                 <div class="lp-how">
                     <div class="lp-how-photo" data-reveal="left" aria-hidden="true">
-                        <img src="<?= $img ?>photo-2.webp" alt="" loading="lazy" data-parallax="-0.06">
+                        <img src="<?= $img . $photo('how-setup', 'photo-2') ?>" alt="" loading="lazy" data-parallax="-0.06">
                         <div class="lp-how-chip c1" data-no-i18n><span class="lp-dot lp-green">✓</span><span><b>Account ready</b><small>ENLIXO team · today</small></span></div>
                         <div class="lp-how-chip c2" data-no-i18n><span class="lp-dot lp-blue"><?= lp_icon('users', 16) ?></span><span><b>248 students added</b><small>from your Excel sheet</small></span></div>
                     </div>
@@ -700,7 +703,7 @@ function lp_icon(string $n, int $s = 22): string
                     <h2 class="lp-h2"><span>Questions tutors</span> <span class="lp-grad">ask us.</span></h2>
                     <p class="lp-sub">Something else? Send your request and our team will call you.</p>
                     <div class="lp-talk" data-reveal="left">
-                        <img src="<?= $img . (is_file(__DIR__ . '/' . $img . 'talk.webp') ? 'talk' : 'photo-2') ?>.webp" alt="" loading="lazy" aria-hidden="true"><?php /* own picture: assets/landing/img/talk.webp (docs/LANDING-IMAGES.md) */ ?>
+                        <img src="<?= $img . $photo('talk', 'photo-2') ?>" alt="" loading="lazy" aria-hidden="true">
                         <div class="lp-talk-in">
                             <b>Rather talk to a person?</b>
                             <span>Send your request and our team calls you within one working day.</span>
@@ -733,7 +736,7 @@ function lp_icon(string $n, int $s = 22): string
     <footer class="lp-foot">
         <div class="lp-wrap">
             <div class="lp-foot-cta" data-reveal>
-                <img class="lp-foot-cta-photo" src="<?= $img ?>photo-2.webp" alt="" loading="lazy" aria-hidden="true">
+                <img class="lp-foot-cta-photo" src="<?= $img . $photo('cta-start', 'photo-2') ?>" alt="" loading="lazy" aria-hidden="true">
                 <div class="lp-foot-cta-txt">
                     <span class="lp-foot-badge"><span class="lp-announce-tag">FREE</span> <span>Up to 50 students</span></span>
                     <h3>Bring your class online this week.</h3>
