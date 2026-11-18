@@ -57,7 +57,8 @@ test('limits: FREE has 3 classes and monthly caps, STARTER lifts them, GROW has 
     $repo->used = ['classes' => 3, 'tutes.month' => 1, 'recordings.month' => 0, 'messages.month' => 99];
     $svc = new EntitlementService($repo);
     T::eq(false, $svc->for(7)->within('classes'), 'a 4th class is over FREE');
-    T::true($svc->for(7)->within('tutes.month', 3), '1 + 3 = 4 tutes fits');
+    T::true($svc->for(7)->within('tutes.month', 2), '1 + 2 = 3 tutes fits');
+    T::eq(false, $svc->for(7)->within('tutes.month', 3), '1 + 3 = 4 tutes is over FREE');
     T::eq(false, $svc->for(7)->within('messages.month', 2), '99 + 2 > 100');
     T::true($svc->for(8)->within('classes', 50), 'STARTER: unlimited classes');
     T::eq(false, $svc->for(8)->within('messages.month', 1000), 'STARTER: 1,000 messages');

@@ -533,225 +533,60 @@ const removeItem = (value, condition) => {
 
 }
 
-const uploadImage = (input, displayTag) => {
+// Choose a picture and crop it with the ONE crop dialog of the system (assets/js/enlixo/components/ImageCropper.js,
+// the same as the tutor class form): drag, corner handles, zoom, rotate, flip, live preview, dark theme.
+// The cropped file replaces the chosen one in the <input type="file">, so the page's save code is unchanged.
+const ENLIXO_CROPPER_URL = (() => {
+    try { return new URL('enlixo/components/ImageCropper.js', document.currentScript?.src || location.href).href; } catch (e) { return null; }
+})();
+const cropIntoInput = (input, displayTag, { aspect, maxWidth, fileName, title }) => {
     const fileInput = document.getElementById(input);
     const imageTag = document.getElementById(displayTag);
-    const closeModalButtons = document.querySelectorAll('[data-bs-dismiss="modal"]');
-    const image = document.getElementById("image");
-    const cropButton = document.getElementById("crop-button");
-    let cropper;
-
-    // Trigger file input click
-    fileInput.click();
-
-    // Reset cropper and image before selecting a new file
-    fileInput.addEventListener('click', () => {
-        if (cropper) {
-            cropper.destroy(); // Destroy previous cropper instance
-        }
-        image.src = ''; // Clear previous image
-    }, { once: true });
-
-    fileInput.addEventListener('change', function (event) {
-        const selectedFile = event.target.files[0];
-
-        if (selectedFile) {
-            const img = new Image();
-            const reader = new FileReader();
-
-            reader.onload = function (e) {
-                img.src = e.target.result;
-
-                img.onload = function () {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-
-                    // Set a consistent minimum size for the image
-                    const minSize = 500; // Minimum width/height
-                    const scale = Math.max(minSize / img.width, minSize / img.height);
-
-                    canvas.width = img.width * scale;
-                    canvas.height = img.height * scale;
-
-                    // Draw the resized image on the canvas
-                    ctx.fillStyle = '#fff'; // Optional: Add a background color
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                    // Convert the canvas to a Blob and set it to the image source
-                    canvas.toBlob(function (blob) {
-                        const resizedURL = URL.createObjectURL(blob);
-                        image.src = resizedURL;
-
-                        // Show the modal
-                        $('#crop-modal').modal('show');
-
-                        // Initialize Cropper.js
-                        if (cropper) {
-                            cropper.destroy();
-                        }
-
-                        cropper = new Cropper(image, {
-                            aspectRatio: 1, // Maintain square crop
-                            viewMode: 1,    // Fully show the image in the canvas
-                            autoCropArea: 1, // Maximize crop area
-                            responsive: true, // Resize dynamically
-                            scalable: true, // Allow scaling
-                            minContainerWidth: 500, // Minimum cropper container width
-                            minContainerHeight: 500, // Minimum cropper container height
-                        });
-                    }, 'image/png');
-                };
-            };
-
-            reader.readAsDataURL(selectedFile);
-        }
-    }, { once: true });
-
-    $('#crop-modal').on('show.bs.modal', function () {
-        // Remove inert attribute and allow interactions
-        $(this).removeAttr('aria-hidden').prop('inert', false);
-    }).on('hidden.bs.modal', function () {
-        // Add inert attribute and prevent interactions when hidden
-        $(this).attr('aria-hidden', 'true').prop('inert', true);
-    });
-
-    // Add crop logic with proper checks
-    cropButton.addEventListener("click", function () {
-        if (cropper) {
-            const canvas = cropper.getCroppedCanvas();
-
-            if (canvas) {
-                canvas.toBlob(function (blob) {
-                    if (blob) {
-                        const reader = new FileReader();
-                        reader.onloadend = function () {
-                            const file = new File([blob], "cropped_image.png", {
-                                type: "image/png",
-                            });
-
-                            // Assign cropped image to file input and display
-                            const dataTransfer = new DataTransfer();
-                            dataTransfer.items.add(file);
-                            fileInput.files = dataTransfer.files;
-
-                            imageTag.src = reader.result; // Update preview image
-                        };
-
-                        reader.readAsDataURL(blob);
-                        $('#crop-modal').modal('hide');
-                    }
-                }, "image/png");
-            }
-        }
-    });
-
-
-    // Handle modal close and reset
-    closeModalButtons.forEach((button) => {
-        button.addEventListener("click", function () {
-            fileInput.value = ""; // Reset file input
-            image.src = "";       // Reset image source
-            $('#crop-modal').modal('hide');
-            if (cropper) {
-                cropper.destroy();
-                cropper = null;
-            }
-        });
-    });
-};
-
-const uploadCover = (input, displayTag) => {
-    const fileInput = document.getElementById(input);
-    const imageTag = document.getElementById(displayTag);
-    const closeModalButtons = document.querySelectorAll('[data-bs-dismiss="modal"]');
-    const image = document.getElementById("image");
-    const cropButton = document.getElementById("crop-button");
-    let cropper;
-
-    // Trigger the file input click
-    fileInput.click();
-
-    // Reset cropper and image before selecting a new file
-    fileInput.addEventListener('click', () => {
-        if (cropper) {
-            cropper.destroy(); // Destroy previous cropper instance
-        }
-        image.src = '';  // Clear previous image
-    }, { once: true });
-
-    // Handle file selection
-    fileInput.addEventListener('change', function (event) {
-        const selectedFile = event.target.files[0];
-
-        if (selectedFile) {
-            const reader = new FileReader();
-
-            reader.onload = function (e) {
-                image.src = e.target.result;
-                $('#crop-modal').modal('show');
-                image.onload = function () {  // Ensure image is fully loaded
-                    if (cropper) {
-                        cropper.destroy(); // Destroy previous cropper
-                    }
-                    cropper = new Cropper(image, {
-                        aspectRatio: 16 / 9, // Maintain square crop
-                        viewMode: 1,    // Fully show the image in the canvas
-                        autoCropArea: 1, // Maximize crop area
-                        responsive: true, // Resize dynamically
-                        scalable: true, // Allow scaling
-                        minContainerWidth: 500, // Minimum cropper container width
-                        minContainerHeight: 500, // Minimum cropper container width
-                    });
-                };
-            };
-
-            reader.readAsDataURL(selectedFile);
-        }
-    }, { once: true });
-
-    cropButton.addEventListener("click", function () {
-        if (cropper) {
-            const canvas = cropper.getCroppedCanvas();
-
-            if (canvas) {
-                canvas.toBlob(function (blob) {
-                    if (blob) {
-                        const reader = new FileReader();
-                        reader.onloadend = function () {
-                            const file = new File([blob], "cropped_image.png", {
-                                type: "image/png",
-                            });
-
-                            // Assign cropped image to file input and display
-                            const dataTransfer = new DataTransfer();
-                            dataTransfer.items.add(file);
-                            fileInput.files = dataTransfer.files;
-
-                            imageTag.src = reader.result; // Update preview image
-                        };
-
-                        reader.readAsDataURL(blob);
-                        $('#crop-modal').modal('hide');
-                    }
-                }, "image/png");
-            }
-        }
-    });
-
-    // Reset modal and cropper on close
-    closeModalButtons.forEach((button) => {
-        button.addEventListener("click", function () {
+    if (!fileInput) return;
+    fileInput.value = '';
+    fileInput.addEventListener('change', async (event) => {
+        const chosen = event.target.files[0];
+        if (!chosen) return;
+        if (!chosen.type.startsWith('image/')) {
+            if (typeof showToast === 'function') showToast('error', 'Please choose a picture (JPG, PNG or WebP).');
             fileInput.value = '';
-            image.src = "";
-            $('#crop-modal').modal('hide');
-            if (cropper) {
-                cropper.destroy();
-                cropper = null;
+            return;
+        }
+        try {
+            // older pages do not load the ENLIXO UI styles the dialog uses: add them once
+            if (!document.querySelector('link[href*="enlixo-ui.css"]')) {
+                const css = document.createElement('link');
+                css.rel = 'stylesheet';
+                css.href = new URL('../css/enlixo-ui.css', ENLIXO_CROPPER_URL.replace(/enlixo\/components\/ImageCropper\.js$/, '')).href;
+                document.head.append(css);
+                await new Promise((ok) => { css.onload = ok; css.onerror = ok; setTimeout(ok, 1500); });
             }
-        });
-    });
+            const { ImageCropper } = await import(ENLIXO_CROPPER_URL);
+            const file = await ImageCropper.open({ source: chosen, aspect, maxWidth, fileName, title });
+            if (!file) { fileInput.value = ''; return; } // cancelled
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+            if (imageTag) {
+                const reader = new FileReader();
+                reader.onloadend = () => { imageTag.src = reader.result; };
+                reader.readAsDataURL(file);
+            }
+            fileInput.dispatchEvent(new CustomEvent('enlixo:cropped', { detail: { file } }));
+        } catch (e) {
+            console.error(e);
+            if (typeof showToast === 'function') showToast('error', 'Could not open the picture. Please try another one.');
+            fileInput.value = '';
+        }
+    }, { once: true });
+    fileInput.click();
 };
+
+/** Profile photo: a square, saved up to 600 px. */
+const uploadImage = (input, displayTag) => cropIntoInput(input, displayTag, { aspect: 1, maxWidth: 600, fileName: 'photo.jpg', title: 'Crop Photo' });
+
+/** Cover / thumbnail: 16:9, saved up to 1600 px wide. */
+const uploadCover = (input, displayTag) => cropIntoInput(input, displayTag, { aspect: 16 / 9, maxWidth: 1600, fileName: 'cover.jpg', title: 'Crop Image' });
 
 const uploadRecording = () => {
 

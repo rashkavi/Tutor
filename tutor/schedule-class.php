@@ -47,9 +47,7 @@ if (!SessionUser::hasValidSession()) {
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/skeleton.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/enlixo-ui.css?v=<?= Project::getVersion() ?>">
-        <link href="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.css" rel="stylesheet">
 
-        <script src="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.js"></script>
         <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
         <script src="<?= Project::getAssetsPath() ?>/js/init.js?v=<?= Project::getVersion() ?>"></script>
     </head>
@@ -275,7 +273,7 @@ if (!SessionUser::hasValidSession()) {
                                                 </div>
                                                 <div class="col-12 d-flex flex-column">
                                                     <label class="text-16 main-text" for="">Lecture Attachment</label>
-                                                    <div class="p-5 d-flex flex-column bl-solid align-items-center justify-content-center w-100 h-auto cursor-pointer mt-2" id="drop-section">
+                                                    <div class="p-5 d-flex flex-column bl-solid align-items-center justify-content-center w-100 h-auto cursor-pointer mt-2<?= enlixo_lecture_file_limit((int) $sessionUserObject['user_id']) === 0 ? ' d-none' : '' ?>" id="drop-section">
                                                         <img src="../assets/imgs/icons/cloud.png" alt="cloud">
                                                         <span>Drag & Drop your files here</span>
                                                         <span>OR</span>
@@ -286,9 +284,7 @@ if (!SessionUser::hasValidSession()) {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <?php $oneFile = !enlixo_tutor_has((int) $sessionUserObject['user_id'], 'timetable.attachments'); ?>
-                                                    <span class="text-12 sub-text mt-1" id="attachment-hint" data-max-files="<?= $oneFile ? 1 : 0 ?>">PDF, Word or PowerPoint, up to 10 MB each<?= $oneFile ? '. On the FREE plan you can attach one file.' : '.' ?></span>
-                                                    <?php if ($oneFile) { ?><span class="d-inline-flex align-items-center gap-2 mt-1 text-12 sub-text">More files per class day <?= enlixo_lock_badge((int) $sessionUserObject['user_id'], 'timetable.attachments') ?></span><?php } ?>
+                                                    <?= enlixo_lecture_files_hint((int) $sessionUserObject['user_id']) ?>
                                                     <span id="attachment-feedback" class="text-dark-red text-12"></span>
                                                     <!-- File upload input field for PDF, Word, and PowerPoint files -->
                                                 </div>
@@ -355,22 +351,6 @@ if (!SessionUser::hasValidSession()) {
             </div>
         </div>
 
-        <div id="crop-modal" tabindex="-1" aria-hidden="true" class="modal fade" data-backdrop="static">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Crop Image</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body text-center">
-                        <img id="image" class="img-fluid" />
-                    </div>
-                    <div class="modal-footer">
-                        <button id="crop-button" type="button" class="custom-btn px-5 pe-5">Crop</button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <script src="<?= Project::getAssetsPath() ?>/plugins/bootstrap/js/bootstrap.bundle.min.js?v=<?= Project::getVersion() ?>"></script>
         <script src="<?= Project::getAssetsPath() ?>/plugins/jquery/jquery-3.7.1.min.js"></script>

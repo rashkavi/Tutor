@@ -2618,3 +2618,9 @@ a.ex-hd-cal-item:hover { transform: translateY(-1px); color: inherit; }
 /* the plan the Upgrade page recommends (same card as My Subscription → Plans) */
 .ex-plan.is-rec { box-shadow: 0 0 0 2px var(--tone), 0 18px 40px rgba(16, 24, 40, .12); }
 .ex-plan-per { white-space: nowrap; }
+/* Header buttons given as V3 col-6 cells (gear + main button) sit side by side inside the flex header row: a col-6 is
+   50% wide, so two of them plus the gap wrapped and the gear ended up above the button. Cells size to their content. */
+.ex-header-actions > [class*="col-"] { flex: 0 1 auto; width: auto; max-width: 100%; padding: 0; }
+.ex-header-actions > [class*="col-"] > .custom-btn, .ex-header-actions > [class*="col-"] > .custom-btn-outline { min-width: 174px; }
+@media (min-width: 1400px) { .ex-header-actions > [class*="col-"] > .custom-btn, .ex-header-actions > [class*="col-"] > .custom-btn-outline { min-width: 210px; } }
+@media (max-width: 575.98px) { .ex-header-actions > [class*="col-"]:has(> .custom-btn) { flex: 1 1 auto; } }

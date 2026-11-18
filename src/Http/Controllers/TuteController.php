@@ -83,7 +83,7 @@ final class TuteController
         if ($errors) {
             throw new HttpException(422, 'validation_failed', 'Please check the highlighted fields.', $errors);
         }
-        // plan: tutes by post are STARTER and up; FREE adds 4 tutes a month
+        // plan: tutes by post are STARTER and up; FREE adds 3 tutes a month
         $tenant = $r->auth()->tenantId();
         if ($t['type'] !== TuteRules::TYPE_DOWNLOAD) {
             $this->app->entitlements()->require($tenant, 'tutes.courier');

@@ -31,7 +31,7 @@ async function load() {
   try {
     const [m, access] = await Promise.all([api.get('/tutor/tutes/form', { class: String(classId) }).then((r) => r.data), api.get('/me/access').then((r) => r.data).catch(() => null)]);
     meta = m;
-    // posting tutes is STARTER and up (tutes.courier); FREE has 4 tutes a month (shown under the title)
+    // posting tutes is STARTER and up (tutes.courier); FREE has 3 tutes a month (shown under the title)
     courierLocked = access ? !access.features.find((f) => f.key === 'tutes.courier')?.unlocked : false;
     tuteLimit = access?.limits.find((l) => l.key === 'tutes.month') ?? null;
     state.month = meta.this_month;

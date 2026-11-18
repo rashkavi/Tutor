@@ -4,12 +4,13 @@ require_once("../../includes/UserClass.php");
 require_once("../../includes/connection.php");
 require_once("../../includes/UserPermissionsClass.php");
 require_once("../../includes/Project.php");
+require_once("../../includes/enlixo/plan-guard.php");
 if (SessionUser::ifUserIsTutor()) {
     $sessionUserObject = SessionUser::getCurrentUserObject('Tutor');
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-        $lecture_id = isset($_POST['lecture_id']) ? trim($_POST['lecture_id']) : 0;
+        $lecture_id = (int) ($_POST['lecture_id'] ?? 0);
         $title = isset($_POST['title']) ? trim($_POST['title']) : '';
         $lecture_date = isset($_POST['lecture_date']) ? trim($_POST['lecture_date']) : '';
         $start_time = isset($_POST['start_time']) ? trim($_POST['start_time']) : '';
@@ -69,6 +70,15 @@ if (SessionUser::ifUserIsTutor()) {
 
                 if ($time_table_status == 0) {
                     $status->time_table_status = 'Please select a time table status';
+                }
+
+                // class notes per class day follow the plan (FREE 0, STARTER 2, GROW 10): saved ones + the new ones
+                $newFiles = isset($_FILES['tutes']['name']) ? count(array_filter((array) $_FILES['tutes']['name'], fn ($n) => $n !== '')) : 0;
+                if ($newFiles > 0) {
+                    $savedFiles = (int) (Database::search("SELECT COUNT(*) n FROM `attachments` WHERE `time_table_time_table_id` = '" . $lecture_id . "'")->fetch_assoc()['n'] ?? 0);
+                    if ($fileMsg = enlixo_lecture_file_error((int) $lectureData['tutor_id'], $savedFiles + $newFiles)) {
+                        $status->tute[] = $fileMsg;
+                    }
                 }
 
                 $tutes = array();
@@ -145,19 +155,13 @@ if (SessionUser::ifUserIsTutor()) {
                     $duration = ($interval->h * 60) + $interval->i;
 
                     $time_table_update_query = "`time_table_status_time_table_status_id`='" . $time_table_status . "'
-                            ,`date`='" . $lecture_date . "',`start_time`='" . $start_time . "',`end_time`='" . $end_time . "',`duration`='" . $duration . "',`lecture_title`='" . $title . "'";
+                            ,`date`='" . $lecture_date . "',`start_time`='" . $start_time . "',`end_time`='" . $end_time . "',`duration`='" . $duration . "',`lecture_title`='" . Database::escape($title) . "'";
 
-                    if (filter_var($physical, FILTER_VALIDATE_BOOLEAN)) {
-                        $time_table_update_query .= ",`lecture_type_lecture_type_id`='1',`lecture`=''";
-                    }
-
-                    if (filter_var($online, FILTER_VALIDATE_BOOLEAN)) {
-                        $time_table_update_query .= ",`lecture_type_lecture_type_id`='2',`lecture`='" . $link . "'";
-                    }
-
-                    if (filter_var($recording, FILTER_VALIDATE_BOOLEAN)) {
-                        $time_table_update_query .= ",`lecture_type_lecture_type_id`='3',`lecture`='" . $link . "'";
-                    }
+                    // Physical (1), Online (2), Recording (3) or Both = hall and online (4, migration 021)
+                    $isPhysical = filter_var($physical, FILTER_VALIDATE_BOOLEAN);
+                    $isOnline = filter_var($online, FILTER_VALIDATE_BOOLEAN);
+                    $typeId = filter_var($recording, FILTER_VALIDATE_BOOLEAN) ? 3 : ($isPhysical && $isOnline ? 4 : ($isOnline ? 2 : 1));
+                    $time_table_update_query .= ",`lecture_type_lecture_type_id`='" . $typeId . "',`lecture`='" . ($typeId === 1 ? '' : Database::escape($link)) . "'";
 
                     try {
                         Database::iud("UPDATE `time_table` SET " . $time_table_update_query . " WHERE `time_table_id` = '" . $lecture_id . "'");

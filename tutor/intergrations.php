@@ -32,9 +32,7 @@ if (!SessionUser::ifUserIsTutor()) {
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/intergration-card.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/communication.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css?v=<?= Project::getVersion() ?>">
-        <link href="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.css" rel="stylesheet">
 
-        <script src="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.js"></script>
         <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <script src="<?= Project::getAssetsPath() ?>/js/init.js?v=<?= Project::getVersion() ?>"></script>
@@ -92,6 +90,9 @@ if (!SessionUser::ifUserIsTutor()) {
                                         <div class="ex-bill-banner <?= $zoomMsg[0] === 'ok' ? 'is-ok' : 'is-bad' ?>" role="status">
                                             <span class="ex-bill-text"><strong><?= $zoomMsg[0] === 'ok' ? 'Done.' : 'Zoom is not connected.' ?></strong> <?= htmlspecialchars($zoomMsg[1], ENT_QUOTES, 'UTF-8') ?></span>
                                             <?php if (($_GET['zoom'] ?? '') === 'plan') { ?><a class="custom-btn ex-bill-btn" href="upgrade?feature=zoom.tutor_integration">See STARTER</a><?php } ?>
+                                            <?php if (in_array($_GET['zoom'] ?? '', ['token', 'not_setup', 'expired'], true)) { // what Zoom said + the address the Zoom app must allow ?>
+                                                <span class="ex-bill-text d-block text-12 mt-1"><?= ($_GET['why'] ?? '') !== '' ? 'Zoom said: ' . htmlspecialchars((string) $_GET['why'], ENT_QUOTES, 'UTF-8') . '. ' : '' ?>Return address the Zoom app must allow: <code><?= htmlspecialchars(enlixo_zoom_redirect((string) ((\Enlixo\Legacy\Bridge::app()?->config['zoom'] ?? [])['oauth_redirect'] ?? '')), ENT_QUOTES, 'UTF-8') ?></code></span>
+                                            <?php } ?>
                                         </div>
                                     </div>
                                 <?php } ?>

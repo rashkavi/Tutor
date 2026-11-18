@@ -42,7 +42,7 @@ final class FeatureCatalog
             'timetable.manage'       => ['name' => 'Timetable Management', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Plan lessons per class.'],
             'classes.scheduling'     => ['name' => 'Physical & Online Class Scheduling', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Weekly schedules for physical and online classes.'],
             'timetable.recurring'    => ['name' => 'Recurring Class Days', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Schedule a class for many weeks in one go (days of the week, start and end date, skip Poya days and holidays). On FREE you add each class day yourself.'],
-            'timetable.attachments'  => ['name' => 'Several Class Notes per Class Day', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Attach several files (up to 10 MB each) to a class day. On FREE you attach one file of up to 10 MB.'],
+            'timetable.attachments'  => ['name' => 'Class Notes on Class Days', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Attach notes to a class day (10 MB each): 2 files on STARTER, up to 10 on GROW. On FREE you share notes as tutes.'],
             'tutes.manage'           => ['name' => 'Tute / Material Management', 'category' => 'Class & Student Management', 'plans' => self::ALL, 'description' => 'Share tutes and materials per class.'],
             'tutes.courier'          => ['name' => 'Tute Posting & Courier Tracking', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Post printed tutes to students\' homes: parcels, address labels and tracking numbers.'],
             'exams.mcq'              => ['name' => 'MCQ Exams + Grading', 'category' => 'Class & Student Management', 'plans' => self::PAID, 'description' => 'Online MCQ papers with auto marking.'],
@@ -103,12 +103,21 @@ final class FeatureCatalog
             'classes'          => ['name' => 'Classes', 'unit' => 'classes', 'period' => 'total', 'help' => 'Active classes you run at the same time.',
                                    'plans' => ['free' => 3, 'start' => null, 'grow' => null, 'pro' => null]],
             'tutes.month'      => ['name' => 'Tutes', 'unit' => 'tutes', 'period' => 'month', 'help' => 'Tutes you add this month (download or post).',
-                                   'plans' => ['free' => 4, 'start' => null, 'grow' => null, 'pro' => null]],
-            'recordings.month' => ['name' => 'Recordings', 'unit' => 'recordings', 'period' => 'month', 'help' => 'Class recordings you add this month.',
-                                   'plans' => ['free' => 8, 'start' => null, 'grow' => null, 'pro' => null]],
+                                   'plans' => ['free' => 3, 'start' => null, 'grow' => null, 'pro' => null]],
+            'recordings.month' => ['name' => 'Recordings', 'unit' => 'recordings', 'period' => 'month', 'help' => 'Class recordings you add this month. FREE: enough for every class day of 3 weekly classes (up to 5 weeks in a month).',
+                                   'plans' => ['free' => 15, 'start' => null, 'grow' => null, 'pro' => null]],
             'messages.month'   => ['name' => 'Notifications', 'unit' => 'messages', 'period' => 'month', 'help' => 'E-mail and WhatsApp messages sent from Message Center this month (one per person).',
                                    'plans' => ['free' => 100, 'start' => 1000, 'grow' => null, 'pro' => null]],
         ];
+    }
+
+    /** Class notes files a class day can have (timetable.attachments), 10 MB each. FREE shares notes as tutes instead. */
+    public const LECTURE_FILES = ['free' => 0, 'start' => 2, 'grow' => 10, 'pro' => 10];
+    public const LECTURE_FILE_MB = 10;
+
+    public static function lectureFilesFor(string $planKey): int
+    {
+        return self::LECTURE_FILES[$planKey] ?? 10;
     }
 
     public static function limitFor(string $limitKey, string $planKey): ?int

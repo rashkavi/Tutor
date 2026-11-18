@@ -248,7 +248,7 @@ function lp_icon(string $n, int $s = 22): string
                         <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Students, 3 classes and the timetable</span></li>
                         <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Fees with bank slips and approval</span></li>
                         <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Attendance marked by hand</span></li>
-                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>4 tutes and 8 recordings a month</span></li>
+                        <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>3 tutes and 15 recordings a month</span></li>
                         <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>100 e-mail and WhatsApp notices a month</span></li>
                         <li><span class="lp-tick"><?= lp_icon('check', 14) ?></span><span>Online classes with your own Zoom link</span></li>
                     </ul>
@@ -628,7 +628,7 @@ function lp_icon(string $n, int $s = 22): string
                                     <?php if (!$pop) { ?>
                                         <li class="lp-strong lp-zoom-li"><img src="<?= $img ?>zoom.webp" alt="" width="16" height="16"> <span><?= $isFree ? 'Paste your Zoom link per class' : 'Zoom meetings made for you' ?></span></li>
                                     <?php } ?>
-                                    <li class="lp-strong"><?= lp_icon('sparkle', 16) ?> <span><?= $isFree ? '3 classes · 4 tutes · 8 recordings a month' : ($p['key'] === 'start' ? 'Unlimited classes, tutes and recordings' : 'Unlimited everything') ?></span></li>
+                                    <li class="lp-strong"><?= lp_icon('sparkle', 16) ?> <span><?= $isFree ? '3 classes · 3 tutes · 15 recordings a month' : ($p['key'] === 'start' ? 'Unlimited classes, tutes and recordings' : 'Unlimited everything') ?></span></li>
                                     <?php if ($p['everything_in']) { ?><li class="lp-strong"><?= lp_icon('sparkle', 16) ?> <span>Everything in <?= $e($p['everything_in']) ?>, plus:</span></li><?php } ?>
                                     <?php $list = array_values(array_filter($p['new_features'], static fn ($f) => !str_contains($f, 'Zoom')));
                                     foreach (array_slice($list, 0, $pop ? 9 : 5) as $f) { echo '<li>' . lp_icon('check', 16) . ' <span>' . $e($f) . '</span></li>'; }

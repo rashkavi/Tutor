@@ -40,8 +40,6 @@ if (!SessionUser::ifUserIsStudent()) {
         <title>Edit Profile - Student Portal | <?= Project::getBaseName() ?></title>
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/css/style.css?v=<?= Project::getVersion() ?>">
         <link rel="stylesheet" href="<?= Project::getAssetsPath() ?>/plugins/bootstrap/css/bootstrap.min.css">
-        <link href="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.css" rel="stylesheet">
-        <script src="<?= Project::getAssetsPath() ?>/plugins/cropperjs/cropper.min.js"></script>
         <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
         <script src="<?= Project::getAssetsPath() ?>/js/init.js?v=<?= Project::getVersion() ?>"></script>
     </head>
@@ -351,22 +349,6 @@ if (!SessionUser::ifUserIsStudent()) {
             </div>
         </div>
 
-        <div id="crop-modal" tabindex="-1" aria-hidden="true" class="modal fade" data-backdrop="static">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Crop Image</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="crop-model-close"></button>
-                    </div>
-                    <div class="modal-body text-center">
-                        <img id="image" class="img-fluid" />
-                    </div>
-                    <div class="modal-footer">
-                        <button id="crop-button" type="button" class="custom-btn px-5 pe-5">Crop</button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <script src="<?= Project::getAssetsPath() ?>/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
         <script src="<?= Project::getAssetsPath() ?>/plugins/jquery/jquery-3.7.1.min.js"></script>

@@ -6,7 +6,7 @@ namespace Enlixo\Entitlements;
 use Enlixo\Catalog\FeatureCatalog;
 use Enlixo\Core\HttpException;
 
-/** HTTP 402 `limit_reached`: the plan limit (FREE: 3 classes, 4 tutes a month ...) is used up. The page shows the upgrade page. */
+/** HTTP 402 `limit_reached`: the plan limit (FREE: 3 classes, 3 tutes a month ...) is used up. The page shows the upgrade page. */
 final class LimitReachedException extends HttpException
 {
     public function __construct(string $limitKey, string $planKey, int $limit, int $used)
