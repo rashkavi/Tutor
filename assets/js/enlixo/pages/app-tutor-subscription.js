@@ -53,8 +53,14 @@ function plansPanel(panel) {
   const card = (p) => {
     const mine = p.key === t.plan;
     const up = p.monthly > D.plan.monthly;
+    // CUSTOM is agreed with the ENLIXO team: no price, no self-service "Choose", only a way to talk (unless it is theirs)
+    const talk = p.key === 'pro' && !mine;
     let action = null;
-    if (!locked && !waiting) {
+    if (talk) {
+      action = h('a', { class: 'custom-btn w-100 mt-auto text-decoration-none d-inline-flex align-items-center justify-content-center gap-2', target: '_blank', rel: 'noopener',
+        href: `https://wa.me/94769679778?text=${encodeURIComponent(`Hi ENLIXO, I am ${t.name ?? ''} (Tutor ID T-${t.id ?? ''}). I would like to talk about a CUSTOM plan for my classes.`)}` },
+      icon('whatsapp', { size: 18 }), 'Talk to ENLIXO');
+    } else if (!locked && !waiting) {
       if (mine && (cycle === t.cycle || paying)) {
         action = open ? h('button', { type: 'button', class: 'custom-btn w-100 mt-auto', onclick: () => payDialog(open) }, 'Pay Now')
           : (freeNow || !paying) ? h('button', { type: 'button', class: 'custom-btn w-100 mt-auto' }, 'Pay Now') : h('span', { class: 'ad-tag mt-auto align-self-start' }, 'Your plan');
@@ -82,14 +88,15 @@ function plansPanel(panel) {
         h('div', { class: 'min-w-0' },
           h('div', { class: 'ex-plan-name' }, p.name, t.next_plan === p.key ? h('span', { class: 'ex-plan-tag' }, 'From your next renewal') : null),
           h('div', { class: 'ex-plan-tagline' }, p.tagline))),
-      h('div', { class: 'ex-plan-price' },
-        h('span', { class: 'ex-plan-cur' }, 'LKR'), h('span', { class: 'ex-plan-amount' }, lkr(priceOf(p)).replace(/^LKR\s*/, '')), h('span', { class: 'ex-plan-per' }, '/ month')),
-      h('div', { class: 'ex-plan-note' }, !p.yearly_discount ? (cycle === 'yearly' ? `${lkr(p.monthly * 12)} a year` : '\u00a0')
+      talk ? h('div', { class: 'ex-plan-price' }, h('span', { class: 'ex-plan-amount' }, "Let's talk"))
+        : h('div', { class: 'ex-plan-price' },
+          h('span', { class: 'ex-plan-cur' }, 'LKR'), h('span', { class: 'ex-plan-amount' }, lkr(priceOf(p)).replace(/^LKR\s*/, '')), h('span', { class: 'ex-plan-per' }, '/ month')),
+      h('div', { class: 'ex-plan-note' }, talk ? 'Price agreed with our team for your classes' : !p.yearly_discount ? (cycle === 'yearly' ? `${lkr(p.monthly * 12)} a year` : '\u00a0')
         : cycle === 'yearly' ? [`${lkr(yearlyMonthly(p) * 12)} a year, `, h('b', {}, `you save ${lkr(p.yearly_discount * 12)}`)]
           : ['or ', h('b', {}, `${lkr(yearlyMonthly(p))} a month`), ' when you pay yearly']),
       h('ul', { class: 'ex-plan-list' },
         tick(p.limit ? `Up to ${p.limit} students` : 'Unlimited students', true),
-        p.pack_price ? tick(`More students: ${lkr(p.pack_price)} a month for every ${p.pack_size}`) : null,
+        p.pack_price && !talk ? tick(`More students: ${lkr(p.pack_price)} a month for every ${p.pack_size}`) : null,
         p.features.map((f) => tick(f))),
       action));
   };

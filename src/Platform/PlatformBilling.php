@@ -1006,6 +1006,10 @@ final class PlatformBilling
         if ((int) $new['payment_plan_id'] === (int) $old['payment_plan_id'] && $cycle === $s['billing_cycle']) {
             throw new HttpException(422, 'validation_failed', 'Nothing changed.', ['plan' => 'Choose another plan or billing.']);
         }
+        if ($byTutor && $new['plan_key'] === 'pro' && $old['plan_key'] !== 'pro') {
+            // CUSTOM is a package agreed with the ENLIXO team; only the admin puts a tutor on it
+            throw new HttpException(422, 'validation_failed', 'CUSTOM is made with our team. Please WhatsApp or call ENLIXO.', ['plan' => 'Talk to ENLIXO for a CUSTOM plan.']);
+        }
         $students = (int) ($this->studentCounts($tutorId)[$tutorId] ?? 0);
         $paidPeriod = $s['period_start'] !== null && $s['period_end'] !== null && $s['period_end'] > $this->today && in_array($s['status'], ['active', 'due'], true);
         $label = strtoupper((string) $new['payment_plan']);
