@@ -1,31 +1,76 @@
-# Landing page photo strip: image prompts (Nano Banana / Gemini)
+# Landing page pictures: one prompt per picture (Nano Banana / Gemini)
 
-Section "Hall classes, Zoom classes, and everything in between." on `index.php`. Six cards slide to the left by
-themselves. Each card looks for its own picture; until it is uploaded the older photo is shown.
+The landing page (`index.php`) has **12 photo places**. Each place has its **own file name**, so no picture is used
+twice. Until a file is uploaded, that place shows one of the older shared photos (`photo-*.webp` / `portal-*.webp`).
+After you upload all 12, every section shows a different picture.
 
-**Size for every picture:** portrait **3:4**, export **900 × 1200 px**, save as **WebP** (quality ~80, under 250 KB),
-upload to `assets/landing/img/` with the file name below. The bottom third gets a dark fade with the white caption, so
-keep the important part in the top two thirds and leave the bottom calm.
+**Rules for every picture**
+- **No school uniforms.** Students wear normal clothes: T-shirts, shirts, frocks, kurtas, hoodies. No white uniforms, no ties, no school badges.
+- No text, logos, app names, brand names or watermarks. Screens show blurred or simple shapes, never readable words.
+- The same light and colour in all 12, so the page looks like one set.
+- Save as **WebP**, quality about 80, under 250 KB. Upload to `assets/landing/img/` with the **exact file name** below. Then hard refresh (Ctrl + F5).
 
-**Style line to add to every prompt (keeps the six pictures as one set):**
-> Photorealistic photo, Sri Lanka, natural warm daylight, soft shadows, shot on a 35 mm lens at eye level, shallow depth of field, real people with natural expressions, clean and uncluttered, no text, no logos, no watermarks, no brand names, 3:4 portrait.
+**Style line: add it to the end of every prompt**
+> Photorealistic photo, Sri Lanka, natural warm daylight, soft shadows, 35 mm lens at eye level, shallow depth of field, real Sri Lankan people with natural expressions, students in casual everyday clothes (no school uniforms), clean and uncluttered, no text, no logos, no watermarks, no brand names.
 
-| File | Card | Prompt |
+---
+
+## 1. "Made for real classes" moving strip (6 cards)
+
+Section "Hall classes, Zoom classes, and everything in between." The cards slide to the left by themselves.
+**Size:** portrait **3:4**, **900 × 1200 px**. The bottom third gets a dark fade with a white caption, so keep the important part in the top two thirds.
+
+| # | File | Card | Prompt |
+|---|---|---|---|
+| 1 | `strip-hall.webp` | Hall classes · QR attendance at the door | A large tuition class hall in Colombo in the early evening: teenage students in casual clothes (T-shirts, shirts, frocks) walk in one by one through the door; a young assistant at a small table scans the QR code on a student's ID card with a phone; rows of desks, a whiteboard and ceiling fans behind them, busy but friendly mood. 3:4 portrait. |
+| 2 | `strip-paper.webp` | Paper classes · Marks and papers in one place | A paper class in a Sri Lankan tuition hall: teenage students in casual clothes sit at long desks writing a model exam paper in silence; in the front a stack of marked answer sheets with red ticks lies on the teacher's desk; a plain wall clock and an empty whiteboard, calm focused mood. 3:4 portrait. |
+| 3 | `strip-group.webp` | Group classes · Every batch, every year | A small group class in a Sri Lankan home tuition room: a friendly female teacher in a saree explains a sum to five teenage students in casual clothes around a round table with exercise books and calculators; potted plants by an open window, warm afternoon light. 3:4 portrait. |
+| 4 | `strip-zoom.webp` | Online on Zoom · Recordings for paid students | A Sri Lankan teenage girl in a casual hoodie at home in the evening joins an online class on a laptop: the screen shows a teacher on a video call (no app logo), notebook and pen beside the laptop, a desk lamp and a cup of tea, a younger sibling reading in the soft background. 3:4 portrait. |
+| 5 | `strip-revision.webp` | Revision · Tutes posted or online | Revision season: a Sri Lankan teenage boy in a casual T-shirt at a study desk opens a courier envelope of printed notes (plain sheets, no readable text); a tablet beside it shows the same notes as blurred shapes; sticky notes and a highlighter, bright morning light from a window. 3:4 portrait. |
+| 6 | `strip-team.webp` | Your team · Staff logins for assistants | The office of a Sri Lankan tuition institute: two young assistants in smart casual clothes at a desk, one checks student payments on a laptop, the other sorts printed notes into trays with blank labels; a timetable board on the wall with no readable text, friendly busy mood. 3:4 portrait. |
+
+## 2. "Students and parents get their own login" (3 cards)
+
+Each card has a phone drawing in the **middle and bottom** of the picture, so keep the person to the **left or right side** and the top part clear.
+**Size:** landscape **4:3**, **1200 × 900 px**.
+
+| # | File | Card | Prompt |
+|---|---|---|---|
+| 7 | `portal-student.webp` | Student Portal | A Sri Lankan teenage girl in a casual shirt sits on a sofa at home and smiles at her phone while watching a class recording; earphones in, a notebook on her lap; she sits on the left side of the picture, the right side is a soft blurred living room with plants, warm evening light. 4:3 landscape. |
+| 8 | `portal-tutor.webp` | Tutor Dashboard | A confident Sri Lankan male tutor in his thirties in a neat shirt stands in front of a whiteboard with simple maths shapes (no readable text) and checks a tablet in his hand; he stands on the right side of the picture, the left side shows an empty classroom with desks softly blurred, daylight. 4:3 landscape. |
+| 9 | `portal-parent.webp` | Parent Portal | A Sri Lankan mother in her forties in a simple dress sits at a dining table in the morning and looks at her phone with a relieved smile, a cup of tea beside her; she sits on the left side of the picture, the right side is a bright kitchen softly blurred. 4:3 landscape. |
+
+## 3. "Teaching on ENLIXO in three steps"
+
+The big photo next to the three steps. Two small cards ("Account ready", "248 students added") float over the **top left and bottom right**, so keep the person in the middle.
+**Size:** landscape **5:4**, **1250 × 1000 px**.
+
+| # | File | Prompt |
 |---|---|---|
-| `strip-hall.webp` | Hall classes · QR attendance at the door | A tuition class hall in Colombo at the start of a class: Sri Lankan A/L students in white school uniforms walk in through the door one by one; a young assistant at a small table holds up a phone that scans the QR code on a student's ID card; rows of desks and a whiteboard behind them, ceiling fans, early evening light. |
-| `strip-paper.webp` | Paper classes · Marks and papers in one place | A paper class in a Sri Lankan tuition hall: students in white uniforms sit at long desks writing a model exam paper in silence, a stack of marked answer papers with red ticks on the teacher's desk in front, a wall clock and a whiteboard reading nothing, focused calm mood. |
-| `strip-group.webp` | Group classes · Every batch, every year | A small group class at a Sri Lankan home tuition room: a friendly female teacher in a saree explains a sum to five O/L students around a round table with exercise books and calculators, potted plants by an open window, warm afternoon light. |
-| `strip-zoom.webp` | Online on Zoom · Recordings for paid students | A Sri Lankan student at home in the evening joins an online class on a laptop: the screen shows a teacher on a video call (no app logos), notebook and pen beside the laptop, a desk lamp, a cup of tea, a younger sibling reading in the soft background. |
-| `strip-revision.webp` | Revision · Tutes posted or online | Revision season: a Sri Lankan A/L student at a study desk opens a freshly delivered courier envelope of printed tutes (plain white sheets, no text visible), a tablet beside it shows the same notes, sticky notes and a highlighter, bright morning light by a window. |
-| `strip-team.webp` | Your team · Staff logins for assistants | Behind the scenes of a tuition institute office in Sri Lanka: two young assistants at a desk, one checks student payments on a laptop, the other sorts printed tutes into labelled trays (labels blank), a class timetable board on the wall (no readable text), friendly busy mood. |
+| 10 | `how-setup.webp` | A Sri Lankan female tutor in her thirties in a smart kurta sits at a desk at home with a laptop and smiles while a support person helps her on a phone call (speaker on, phone on the desk); an open register book and a cup of tea beside the laptop, the laptop screen shows a simple table as blurred shapes, bright calm room, morning light. 5:4 landscape. |
 
-## FAQ card "Rather talk to a person?"
+## 4. FAQ card "Rather talk to a person?"
 
-`talk.webp` (until it is uploaded the team photo is shown). Landscape **16:10**, export **1200 × 750 px**, WebP.
+**Size:** landscape **16:10**, **1200 × 750 px**.
 
-> A friendly Sri Lankan customer support person in their late twenties sits at a bright modern office desk with a headset, smiling while talking on a call and looking at a laptop, a notebook and a cup of tea beside them, soft daylight from a window, plants in the background, warm and welcoming. Photorealistic, no text, no logos, no brand names, 16:10 landscape.
+| # | File | Prompt |
+|---|---|---|
+| 11 | `talk.webp` | A friendly Sri Lankan customer support person in their late twenties sits at a bright modern office desk with a headset, smiling while talking on a call and looking at a laptop; a notebook and a cup of tea beside them, soft daylight from a window, plants in the background, warm and welcoming. 16:10 landscape. |
 
-Tips:
-- Generate 3–4 versions of each and pick the ones with similar colour and light, so the strip looks like one set.
-- If faces or hands look wrong, ask Nano Banana to "fix the hands and faces, keep everything else the same".
-- After uploading, hard refresh the page (Ctrl + F5).
+## 5. Footer "Bring your class online this week."
+
+The picture sits on the **right** of the footer box and fades out to the left, so keep the people on the **right half**.
+**Size:** landscape **16:10**, **1200 × 750 px**.
+
+| # | File | Prompt |
+|---|---|---|
+| 12 | `cta-start.webp` | A happy Sri Lankan tutor in her late twenties in casual smart clothes waves goodbye to her students at the end of an evening class, standing at the door of a small tuition room; two teenage students in casual clothes with backpacks walk out smiling; the people are on the right half of the picture, the left half is a soft blurred wall, warm golden evening light. 16:10 landscape. |
+
+---
+
+**Tips**
+- Make 3 or 4 versions of each picture and pick the ones with the same colour and light.
+- If faces or hands look wrong, ask Nano Banana: "fix the hands and faces, keep everything else the same".
+- If a uniform still appears, add: "students wear casual clothes, not school uniforms".
+- Cut the picture to the size above before saving (Nano Banana: "make it 3:4 portrait", "make it 16:10 landscape").
+- Files the page no longer needs after all 12 are uploaded: none to delete. The older `photo-*` / `portal-*` files stay as fallbacks.
