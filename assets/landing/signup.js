@@ -99,21 +99,23 @@ function clearErr(key, el) {
   el?.closest('.su-f')?.querySelector('.su-err')?.remove();
 }
 
+// "Your plan": only the plan chosen on the landing page (?plan=), with a link back to the plans to pick another
 function planPicker() {
   const p = plan();
-  const yearlyOn = isPaid(p) && D.plans.some((x) => x.yearly_discount > 0);
+  const yearlyOn = isPaid(p) && p.yearly_discount > 0;
   return h('div', { class: 'su-block' },
     h('div', { class: 'su-block-head' }, h('span', { class: 'su-block-n' }, '1'), h('b', {}, 'Your plan'),
       yearlyOn ? h('div', { class: 'su-cycle su-cycle-sm', role: 'radiogroup', 'aria-label': 'Billing' },
         ['monthly', 'yearly'].map((c) => h('button', { type: 'button', role: 'radio', 'aria-checked': String(v.cycle === c), class: v.cycle === c ? 'on' : '', onclick: () => { v.cycle = c; save(); render(); } },
           c === 'monthly' ? 'Monthly' : 'Yearly', c === 'yearly' ? h('span', { class: 'lp-save' }, 'Save more') : null))) : null),
-    h('div', { class: 'su-mini-plans', role: 'radiogroup', 'aria-label': 'Plan' },
-      D.plans.map((x) => h('label', { class: `su-mini su-plan-${x.key}` },
-        h('input', { type: 'radio', name: 'plan', value: x.key, checked: v.plan === x.key, onchange: () => { v.plan = x.key; delete errors.slip; save(); render(); } }),
-        h('span', { class: 'su-plan-name' }, x.name),
-        h('span', { class: 'su-mini-price' }, x.free ? 'Free' : x.custom ? "Let's talk" : [lkr(monthlyOf(x)), h('small', {}, ' / month')]),
-        h('span', { class: 'su-mini-meta' }, x.custom ? 'Any size' : x.limit ? `Up to ${x.limit} students` : 'Unlimited students')))),
-    errors.plan ? h('span', { class: 'su-err', role: 'alert' }, errors.plan) : null);
+    h('div', { class: `su-chosen su-plan-${p.key}` },
+      h('span', { class: 'su-plan-check' }, ic(I.check, 14)),
+      h('div', { class: 'su-chosen-body' },
+        h('span', { class: 'su-plan-name' }, p.name),
+        h('span', { class: 'su-mini-price' }, p.free ? 'Free' : p.custom ? "Let's talk" : [lkr(monthlyOf(p)), h('small', {}, ' / month')],
+          isPaid(p) && v.cycle === 'yearly' ? h('small', {}, ` · ${lkr(toPay(p))} a year`) : null),
+        h('span', { class: 'su-mini-meta' }, p.custom ? 'Any size, price agreed with our team' : p.limit ? `Up to ${p.limit} students` : 'Unlimited students')),
+      h('a', { class: 'su-change', href: './#pricing' }, 'Change plan')));
 }
 
 function payment() {
@@ -187,8 +189,10 @@ function render(focusFirstError = false) {
         h('span', {}, 'I accept the ', h('a', { href: 'terms', target: '_blank', rel: 'noopener' }, 'Terms and Conditions'), ' and agree that the ENLIXO team may call, WhatsApp and e-mail me about this request.')),
       errors.agree ? h('span', { class: 'su-err', role: 'alert' }, errors.agree) : null,
       h('div', { class: 'su-nav su-nav-end' },
-        h('button', { type: 'submit', class: 'lp-btn lp-btn-primary lp-shine', id: 'su-next', disabled: sending || null },
-          sending ? 'Sending…' : isPaid(p) ? 'Send request and slip' : 'Send my request', ic(I.arrow)))));
+        isPaid(p) && !slip ? h('span', { class: 'su-hint su-need-slip' }, ic(I.upload, 14), 'Upload the payment slip to continue') : null,
+        h('button', { type: 'submit', class: 'lp-btn lp-btn-primary lp-shine', id: 'su-next', disabled: sending || (isPaid(p) && !slip) || null,
+          title: isPaid(p) && !slip ? 'Upload the payment slip to continue' : null },
+        sending ? 'Sending…' : isPaid(p) ? 'Send request and slip' : 'Send my request', ic(I.arrow)))));
   const target = focusFirstError ? app.querySelector('.bad, .su-err') : null;
   if (target) { target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); target.focus?.({ preventScroll: true }); }
 }
