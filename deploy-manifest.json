@@ -1,14 +1,14 @@
 {
-    "generated": "2026-11-18T04:01:02+00:00",
-    "commit": "77c2f84",
+    "generated": "2026-11-18T07:56:40+00:00",
+    "commit": "0b9e9e9",
     "files": {
         ".DS_Store": [
             10244,
             "e204a3fd1d9d5a504204cfd16c71fae986fff271"
         ],
         ".gitignore": [
-            258,
-            "fbeb361649b5b00e60b0c664ccec9f3804155137"
+            338,
+            "0bf3d9c3491c630197c96b24dec146dbf910cebd"
         ],
         ".htaccess": [
             972,
@@ -367,12 +367,12 @@
             "57eca1b17bdec83b93fc22947afb32291430683c"
         ],
         "assets/i18n/phrases.si.json": [
-            88224,
-            "6787e8842ff7c247f3e03b05e18eafb0759e2cb8"
+            88655,
+            "08fa506f5dfc6917bc4e27a068e607d331d6153b"
         ],
         "assets/i18n/phrases.ta.json": [
-            105065,
-            "aa3a0e113a247f379637e7b4f823bbea6d365612"
+            105710,
+            "47ea0a02e6c3de3ba04743b4471f71760e15db30"
         ],
         "assets/i18n/si.json": [
             13694,
@@ -895,8 +895,8 @@
             "ce8a108996412a4e484c4fb6dbf6015473c1b108"
         ],
         "assets/js/enlixo/pages/app-admin-tutor-request.js": [
-            7790,
-            "83268c4dc92760c23d28d8460a23cfcbbb321608"
+            8457,
+            "68cca13f21dc281571d12b73c86cb7d558d74a98"
         ],
         "assets/js/enlixo/pages/app-admin-tutor-requests.js": [
             7474,
@@ -1063,8 +1063,8 @@
             "e7c124b6be57527c53c7b9ad46cf3d05be0095e7"
         ],
         "assets/js/enlixo/pages/app-tutor-upgrade.js": [
-            22024,
-            "89cec3af5a079d91fbc7fba3dc0e5e054e30353e"
+            22030,
+            "070440bfce6ff340d42a00ce6ca3f5f446907736"
         ],
         "assets/js/enlixo/pages/app-tutor-whatsapp.js": [
             13750,
@@ -1203,16 +1203,16 @@
             "7ba0541893f2b44f39edfd329abf43607496ed28"
         ],
         "assets/landing/landing.css": [
-            123554,
-            "6a8ec91ccd703e51c2f9c03addebc77f5471eb14"
+            127750,
+            "d9f4e058452fcb1e5f281c7fbfe4e2eb05d3243e"
         ],
         "assets/landing/landing.js": [
             19491,
             "5ab2cd631e25b2b1c1442e5b22d1efe7b4c78ddc"
         ],
         "assets/landing/signup.js": [
-            22701,
-            "97ba8c766368b8d5c09021c3feaff46277a3133e"
+            18133,
+            "491c49caed6db86fc8d88f965ce675391fcbe34e"
         ],
         "assets/landing/vendor/qrcode-generator-1.4.4.js": [
             56694,
@@ -2046,6 +2046,10 @@
             459,
             "8181fff8b3a86f5e7716a2af835a0f4362aaa7b5"
         ],
+        "database/migrations/022_signup_payment_slip.sql": [
+            650,
+            "a4767c80e2a346d692b71b6d8589feecb8146c6b"
+        ],
         "database/samples/dashboard-sample-data.sql": [
             19596,
             "46b8d16d6cbe824e377c7cb5950b15d0ec535fb0"
@@ -2323,8 +2327,8 @@
             "8ef4eda9fc441e929cf1174b10d5244948961de4"
         ],
         "index.php": [
-            67084,
-            "b691ed166c5f2cfc58a9306a1b7227dfe8bdbbb0"
+            67324,
+            "55c7a3c49f2f80c1a84bc132f87ff849052bbf67"
         ],
         "offer.php": [
             8839,
@@ -2867,8 +2871,8 @@
             "86fa830bdfeb9e6c3da464bfe7fca3eb2542b6a3"
         ],
         "src/Http/Controllers/TutorRequestController.php": [
-            4469,
-            "d14b36e8a1b3dd3cc61624d96a4ab65993d85f31"
+            5200,
+            "c7e4a6a027decae609ca506895fbbc6225564be7"
         ],
         "src/Http/Controllers/ZoomWebhookController.php": [
             1236,
@@ -2927,8 +2931,8 @@
             "d8f4da0d75ddc8b83897c82cc7166f429f037f1a"
         ],
         "src/Platform/TutorRequests.php": [
-            22058,
-            "bff9a5816e4a23f6c1c14c64a6cab96aa97bd7d7"
+            28259,
+            "41a10697c98e637cbae780d8cc9d628307003037"
         ],
         "src/Platform/TutorWelcome.php": [
             5002,
@@ -3135,12 +3139,16 @@
             "a315190aca2e263cf185a8fccd4de6029cf2ecf6"
         ],
         "src/routes.php": [
-            13129,
-            "ee7671e6c752216a4d7c8868aa73d6e6318a19ac"
+            13207,
+            "ce21ed34d8010b8ad9c5b156d4efe9adcf661c08"
+        ],
+        "terms.php": [
+            9171,
+            "459f271c717932861cbef1c7188fef8681268b01"
         ],
         "tutor-registration-application.php": [
-            6009,
-            "b79dd0e93f74196e5ef236a84cd047cb1c1ec6a1"
+            6040,
+            "c97adb1a640028d01cea763a47fd43d90f3a66bb"
         ],
         "tutor/.DS_Store": [
             12292,

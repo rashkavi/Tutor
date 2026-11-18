@@ -48,22 +48,28 @@ const mailLog = () => { try { return fs.readFileSync(path.join(__dirname, '..', 
     const links = await p().$$eval('a[href*="tutor-registration-application"]', (as) => as.map((a) => a.getAttribute('href')));
     t.expect(links.some((l) => /plan=grow/.test(l)) && links.some((l) => /plan=start/.test(l)), `Links: ${links.join(', ')}`);
   });
-  await t.tc('BJ-02', 'Sign-up', 'The sign-up form opens on the chosen plan, on a phone too', ['Open the sign-up form with ?plan=grow at 390 px'], 'Step 1 "Tell us about you" is shown, nothing cut off', async () => {
+  await t.tc('BJ-02', 'Sign-up', 'The sign-up form opens on the chosen plan, on a phone too', ['Open the sign-up form with ?plan=grow at 390 px'], 'The one-page form "Create your account" is shown with GROW chosen, nothing cut off', async () => {
     await p().setViewportSize({ width: 390, height: 844 });
     await t.open('tutor-registration-application.php?plan=grow', 2000);
-    t.expect(/Tell us about you/.test(await text()), 'Step 1 missing');
+    t.expect(/Create your account/.test(await text()), 'Form missing');
+    t.expect(await p().isChecked('input[name=plan][value=grow]'), 'GROW not chosen');
     const wide = await p().evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 2 && getComputedStyle(document.body).overflowX !== 'hidden');
     t.expect(!wide, 'The page scrolls sideways on a phone');
     await p().setViewportSize({ width: 1440, height: 900 });
   });
-  await t.tc('BJ-03', 'Sign-up', 'A tutor sends a sign-up request for GROW', ['Send the form (title, name, e-mail, mobile, subject, how they teach, plan GROW, agree)'], 'A reference TR-… comes back and a "request received" e-mail goes out', async () => {
-    const info = JSON.parse((await p().evaluate(async () => (await fetch('/api/v1/public/tutor-signup', { headers: { Accept: 'application/json' } })).text())));
+  await t.tc('BJ-03', 'Sign-up', 'A tutor sends a sign-up request for GROW with the payment slip', ['Fill name, e-mail, mobile', 'Upload the bank slip', 'Accept the terms', 'Send'], 'A reference TR-… comes back, the slip is saved and a "request received" e-mail goes out', async () => {
     const before = mailLog().length;
-    const r = await post('/api/v1/public/tutor-signup', {
-      title: info.data.titles[0].id, first_name: SIGNUP.first, last_name: SIGNUP.last, email: SIGNUP.email, mobile: SIGNUP.mobile,
-      subject: 'Physics', mode: Object.keys(info.data.modes ?? { physical: 1 })[0] ?? 'physical', plan: 'grow', cycle: 'monthly', agree: true, students: '40', website: '',
-    });
-    t.expect(r.status === 201 && /TR-/.test(r.body), `Answer ${r.status}: ${r.body.slice(0, 200)}`);
+    await t.open('tutor-registration-application.php?plan=grow', 2000);
+    await p().click('#su-next'); // nothing filled: the form shows what is missing
+    t.expect(/Upload the slip/.test(await text()) && /Terms and Conditions/.test(await text()), 'Missing-field messages not shown');
+    await p().fill('#su-name', `${SIGNUP.first} ${SIGNUP.last}`);
+    await p().fill('#su-email', SIGNUP.email);
+    await p().fill('#su-mobile', SIGNUP.mobile);
+    await p().setInputFiles('#su-slip', { name: 'slip.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64') });
+    await p().check('#su-agree');
+    await p().click('#su-next');
+    await p().waitForSelector('.su-ref', { timeout: 8000 });
+    t.expect(/TR-\d+/.test(await text('.su-ref')), `No reference: ${await text('.su-ref')}`);
     t.expect(mailLog().slice(before).includes(SIGNUP.email), 'No "request received" e-mail');
   });
 

@@ -43,12 +43,23 @@ final class TutorRequestController
     public function submit(Request $r): JsonResponse
     {
         $now = (new \DateTimeImmutable('now', new \DateTimeZone($this->app->config['app']['timezone'])))->format('Y-m-d H:i:s');
-        $res = $this->app->tutorRequests()->submit($r->body, $r->ip, $now);
+        // JSON, or multipart with `data` (the form as JSON) + `slip` (the bank slip of the first payment)
+        $in = isset($r->body['data']) && is_string($r->body['data']) ? (json_decode($r->body['data'], true) ?: []) : $r->body;
+        $slip = $r->files['slip'] ?? null;
+        $res = $this->app->tutorRequests()->submit($in, $r->ip, $now, is_array($slip) && !is_array($slip['name'] ?? null) ? $slip : null);
         if (isset($res['id'])) {
-            $name = trim((string) ($r->body['first_name'] ?? ''));
-            PlatformController::mail(strtolower(trim((string) $r->body['email'])), $name, 'We received your ENLIXO Tutor request ' . $res['ref'], self::receivedHtml($name, $res['ref']));
+            $name = trim((string) ($in['name'] ?? $in['first_name'] ?? ''));
+            PlatformController::mail(strtolower(trim((string) ($in['email'] ?? ''))), $name, 'We received your ENLIXO Tutor request ' . $res['ref'], self::receivedHtml($name, $res['ref']));
         }
         return JsonResponse::ok(['ref' => $res['ref']], [], 201);
+    }
+
+    /** GET /admin/tutor-requests/{id}/slip: the bank slip sent with the sign-up */
+    public function slip(Request $r): \Enlixo\Core\FileResponse
+    {
+        $this->admin($r);
+        $f = $this->app->tutorRequests()->slipFile((int) $r->param('id'));
+        return new \Enlixo\Core\FileResponse((string) file_get_contents($f['path']), $f['name'], $f['type'], true);
     }
 
     public function index(Request $r): JsonResponse

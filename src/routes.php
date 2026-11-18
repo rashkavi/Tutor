@@ -59,6 +59,7 @@ return static function (Router $router, App $app): void {
     $router->post('/api/v1/public/tutor-signup', $treq->submit(...));
     $router->get('/api/v1/admin/tutor-requests', $treq->index(...));
     $router->get('/api/v1/admin/tutor-requests/{id}', $treq->show(...));
+    $router->get('/api/v1/admin/tutor-requests/{id}/slip', $treq->slip(...));
     $router->post('/api/v1/admin/tutor-requests/{id}/approve', $treq->approve(...));
     $router->post('/api/v1/admin/tutor-requests/{id}/reject', $treq->reject(...));
     $router->post('/api/v1/admin/tutor-requests/{id}/reopen', $treq->reopen(...));

@@ -1444,3 +1444,52 @@ html:is([lang=si], [lang=ta]) .su-step { font-size: 12px; line-height: 1.4; }
 .lp-h2-brand > span { display: none; }
 html:not([lang="si"]):not([lang="ta"]) .lp-h2-brand .lp-lang-en, html[lang="si"] .lp-h2-brand .lp-lang-si, html[lang="ta"] .lp-h2-brand .lp-lang-ta { display: inline; }
 .lp .lp-h2-brand .lp-h2-logo { display: inline-block; height: .78em; width: auto; vertical-align: -.02em; margin: 0 .04em; }
+
+/* ---------- Sign-up as one short form (assets/landing/signup.js): plan, name / e-mail / mobile, payment + slip, terms ---------- */
+.su-block { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }
+.su-block:first-of-type { border-top: 0; padding-top: 0; }
+.su-block-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.su-block-head b { font-size: 16px; }
+.su-block-n { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 13px; font-weight: 700; }
+.su-cycle-sm { margin: 0 0 0 auto; }
+.su-mini-plans { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.su-mini { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 14px; border: 1px solid #d7dce8; border-radius: var(--r); background: #fff; cursor: pointer; transition: border-color .2s, box-shadow .2s; }
+.su-mini input { position: absolute; opacity: 0; pointer-events: none; }
+.su-mini:hover { border-color: #b9c2d6; }
+.su-mini:has(input:checked) { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue); background: #f2f7ff; }
+.su-mini:has(input:focus-visible) { box-shadow: 0 0 0 4px rgba(47, 123, 255, .25); }
+.su-mini-price { font-weight: 700; font-size: 15px; color: var(--text); white-space: nowrap; }
+.su-mini-price small { font-weight: 500; color: var(--muted); font-size: 12px; }
+.su-mini-meta { font-size: 12px; color: var(--muted); }
+.su-pay { display: grid; grid-template-columns: 220px 1fr; gap: 14px; margin-bottom: 14px; }
+.su-pay-amount { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 16px; background: var(--ink-2); color: #fff; border-radius: var(--r); }
+.su-pay-amount small { color: rgba(255, 255, 255, .7); font-size: 12.5px; }
+.su-pay-amount b { font-size: 24px; letter-spacing: -.02em; }
+.su-pay-amount .su-hint { color: #86efac; }
+.su-banks { display: grid; gap: 10px; }
+.su-bank, .su-slip { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r); background: #fff; }
+.su-bank .lp-dot, .su-slip .lp-dot { width: 36px; height: 36px; flex: none; }
+.su-bank-body { display: flex; flex-direction: column; min-width: 0; flex: 1; font-size: 13px; color: var(--muted); }
+.su-bank-body b { color: var(--text); font-size: 14px; overflow-wrap: anywhere; }
+.su-bank-no { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 15px; color: var(--text); letter-spacing: .04em; }
+.su-copy { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--text); border-radius: var(--r); padding: 7px 10px; font: 600 12.5px 'Inter', sans-serif; cursor: pointer; flex: none; }
+.su-copy:hover { border-color: #b9c2d6; }
+.su-copy.ok { color: var(--green); border-color: var(--green); }
+.su-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.su-drop { display: flex; align-items: center; gap: 14px; padding: 20px; border: 1.5px dashed #b9c2d6; border-radius: var(--r); background: #fafbff; cursor: pointer; transition: border-color .2s, background .2s; }
+.su-drop:hover, .su-drop.over { border-color: var(--blue); background: #f2f7ff; }
+.su-drop.bad { border-color: #dc2626; background: #fff5f5; }
+.su-drop span { display: flex; flex-direction: column; }
+.su-drop small { color: var(--muted); font-size: 12.5px; }
+.su-drop-ic { width: 44px; height: 44px; border-radius: 50%; background: #e8f0ff; color: var(--blue); align-items: center; justify-content: center; flex: none; }
+.su-pay-note { margin-top: 10px; }
+.su-agree { margin-top: 24px; }
+.su-agree.bad { color: #dc2626; }
+.su-agree a { color: var(--blue); font-weight: 600; text-decoration: underline; }
+.su-nav-end { justify-content: flex-end; }
+@media (max-width: 760px) {
+  .su-mini-plans { grid-template-columns: repeat(2, 1fr); }
+  .su-pay { grid-template-columns: 1fr; }
+}
+/* plans table: limits counted per month carry a small "per month" under the name */
+.lp-per { display: block; font-size: 12px; font-weight: 500; color: var(--muted); }

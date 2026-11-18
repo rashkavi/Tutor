@@ -45,7 +45,7 @@ header('X-Frame-Options: DENY');
             <div class="su-aside-body">
                 <span class="lp-pill"><span class="lp-pill-tag">Free</span> <span id="su-trial-pill">Free up to 50 students, no card needed</span></span>
                 <h1>Teach more.<br><span class="lp-grad">Manage less.</span></h1>
-                <p>Tell us about your classes and pick a plan. Our team calls you, sets up your account and helps you bring your students in.</p>
+                <p>Pick a plan, leave your name, e-mail and mobile, and for a paid plan upload the slip. Our team sets up your account and helps you bring your students in.</p>
                 <ul class="su-perks">
                     <li><span class="lp-dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4.5 4.5L19 7" /></svg></span> Fees, attendance, recordings and tutes in one place</li>
                     <li><span class="lp-dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4.5 4.5L19 7" /></svg></span> Students and parents in Sinhala, Tamil or English</li>

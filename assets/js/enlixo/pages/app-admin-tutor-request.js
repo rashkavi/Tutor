@@ -5,6 +5,7 @@ import { QuickGuide } from '../components/QuickGuide.js';
 import { ActionMenu } from '../components/Popover.js';
 import { DetailPage } from '../components/DetailPage.js';
 import { api, h, fill, icon, lkr } from './admin-common.js';
+import { DEFAULT_API_BASE } from '../core/ApiClient.js';
 import { PLAN, statusChip, when, rejectRequest, reopenRequest, noteRequest } from './tutor-request-common.js';
 
 QuickGuide.attachAll();
@@ -52,8 +53,8 @@ function draw() {
   const offerPrice = r.promo && plan && !plan.free && !plan.custom ? lkr(Math.round((plan.monthly * (100 - r.promo.percent)) / 1000) * 10) : null;
   const sections = [
     { key: 'classes', title: 'Classes', icon: 'classes', items: [
-      { label: 'Main subject', value: r.subject, required: true }, { label: 'Grades or exams', value: r.grades },
-      { label: 'Institute / class name', value: r.institute }, { label: 'How they teach', value: r.mode_label, required: true },
+      { label: 'Main subject', value: r.subject }, { label: 'Grades or exams', value: r.grades },
+      { label: 'Institute / class name', value: r.institute }, { label: 'How they teach', value: r.mode_label },
       { label: 'District', value: r.district }, { label: 'About how many students', value: r.students },
       { label: 'Heard about us from', value: r.heard_from }, { label: 'NIC', value: r.nic },
     ] },
@@ -63,6 +64,11 @@ function draw() {
       offerPrice ? { label: 'Price with the offer', value: `${offerPrice} a month` } : null,
       { label: 'Add-ons they are interested in', value: r.addons.length ? r.addons.join(', ').replaceAll('_', ' ') : null, wide: true },
     ].filter(Boolean) },
+    // first payment sent with the sign-up (STARTER / GROW): amount + the bank slip (GET /admin/tutor-requests/{id}/slip)
+    r.slip || r.payment_amount ? { key: 'payment', title: 'First payment', icon: 'payments', items: [
+      { label: 'Amount to receive', value: r.payment_amount ? lkr(r.payment_amount) : null },
+      { label: 'Bank slip', node: r.slip ? h('a', { href: `${DEFAULT_API_BASE}/admin/tutor-requests/${r.id}/slip`, target: '_blank', rel: 'noopener', class: 'dark-theme' }, 'Open the slip') : h('span', { class: 'sub-text' }, 'Not sent') },
+    ] } : null,
     { key: 'request', title: 'Request details', icon: 'application', items: [
       { label: 'Reference', value: r.ref }, { label: 'Status', node: statusChip(r.status) },
       { label: 'Requested on', value: when(r.requested_at) }, { label: 'Decided by', value: r.decided_by },
@@ -70,6 +76,7 @@ function draw() {
       r.decision_note ? { label: r.status === 'rejected' ? 'Reason' : 'Admin note', value: r.decision_note, wide: true } : null,
     ].filter(Boolean) },
   ];
+  sections.splice(0, sections.length, ...sections.filter(Boolean));
   const allItems = sections.flatMap((s) => s.items.filter((i) => !i.node));
   const filled = allItems.filter((i) => i.value !== null && i.value !== undefined && String(i.value).trim() !== '').length;
 
