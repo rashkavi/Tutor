@@ -1,6 +1,6 @@
 {
-    "generated": "2026-11-18T10:19:50+00:00",
-    "commit": "2a2e857",
+    "generated": "2026-11-18T10:43:11+00:00",
+    "commit": "1bd2457",
     "files": {
         ".DS_Store": [
             10244,
@@ -847,8 +847,8 @@
             "88e68a2feeddeecbd11eecc404f54681e0950182"
         ],
         "assets/js/enlixo/pages/app-admin-add-tutor.js": [
-            20277,
-            "fe70d1a7b672a86bb981e7a69ce8ad5eef33ed1c"
+            21033,
+            "b67bdf66e674b25beb9e281f7564515e68b4879a"
         ],
         "assets/js/enlixo/pages/app-admin-class-form.js": [
             5943,
@@ -2843,8 +2843,8 @@
             "82a5bfc0d10b23421c527cf5dc3b39a26511cc82"
         ],
         "src/Http/Controllers/PlatformController.php": [
-            17218,
-            "6891bf8f30129f23c78e7a43a031e37ba801ea3a"
+            17550,
+            "31605850bab72922e4df4424ae90cd8a3cf781d8"
         ],
         "src/Http/Controllers/RecordingController.php": [
             1610,
@@ -2871,8 +2871,8 @@
             "86fa830bdfeb9e6c3da464bfe7fca3eb2542b6a3"
         ],
         "src/Http/Controllers/TutorRequestController.php": [
-            5200,
-            "c7e4a6a027decae609ca506895fbbc6225564be7"
+            5508,
+            "37c75e775ec1da31c7353e25d15498d29c35ace3"
         ],
         "src/Http/Controllers/ZoomWebhookController.php": [
             1236,
@@ -2931,8 +2931,8 @@
             "d8f4da0d75ddc8b83897c82cc7166f429f037f1a"
         ],
         "src/Platform/TutorRequests.php": [
-            28748,
-            "9ac82dc461bfc079beb73fde0b4303a89f3bc427"
+            29615,
+            "2eb87e696e6385e2293dcd12d7b0b075104e6554"
         ],
         "src/Platform/TutorWelcome.php": [
             5002,
