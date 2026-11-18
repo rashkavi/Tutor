@@ -535,7 +535,12 @@ function lp_icon(string $n, int $s = 22): string
             <div class="lp-strip" id="lp-strip">
                 <div class="lp-strip-track">
                     <?php // the cards twice: the strip slides left by itself and starts again without a gap (CSS lp-strip-run)
-                    $shots = [['portal-1', 'Hall classes', 'QR attendance at the door'], ['photo-3', 'Paper classes', 'Marks and papers in one place'], ['portal-2', 'Group classes', 'Every batch, every year'], ['photo-1', 'Online on Zoom', 'Recordings for paid students'], ['portal-3', 'Revision', 'Tutes posted or online'], ['photo-2', 'Your team', 'Staff logins for assistants']];
+                    // each card has its own picture assets/landing/img/strip-<name>.webp (docs/LANDING-IMAGES.md); until it is
+                    // uploaded the older photo is shown
+                    $shots = [['strip-hall', 'portal-1', 'Hall classes', 'QR attendance at the door'], ['strip-paper', 'photo-3', 'Paper classes', 'Marks and papers in one place'],
+                        ['strip-group', 'portal-2', 'Group classes', 'Every batch, every year'], ['strip-zoom', 'photo-1', 'Online on Zoom', 'Recordings for paid students'],
+                        ['strip-revision', 'portal-3', 'Revision', 'Tutes posted or online'], ['strip-team', 'photo-2', 'Your team', 'Staff logins for assistants']];
+                    $shots = array_map(static fn ($x) => [is_file(__DIR__ . '/' . $img . $x[0] . '.webp') ? $x[0] : $x[1], $x[2], $x[3]], $shots);
                     foreach (array_merge($shots, $shots) as $i => [$pic, $t, $sub]) { ?>
                         <figure class="lp-shot<?= $i % 2 ? ' lp-shot-low' : '' ?>"<?= $i >= count($shots) ? ' aria-hidden="true"' : '' ?>>
                             <img src="<?= $img . $pic ?>.webp" alt="" loading="lazy">

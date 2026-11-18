@@ -1301,7 +1301,7 @@ body.of { min-height: 100vh; background: radial-gradient(900px 600px at 80% 0%, 
 .lp-talk-in b { font-size: 18px; }
 .lp-talk-in span { color: rgba(255, 255, 255, .8); font-size: 14px; margin-bottom: 8px; }
 
-/* photo strip: moves sideways with the scroll */
+/* photo strip: slides to the left by itself (pauses on hover) */
 .lp-strip-sec { background: #fff; overflow: hidden; padding-bottom: 120px; }
 .lp-words { position: absolute; left: 0; right: 0; top: 30px; pointer-events: none; opacity: .9; }
 .lp-words-row { white-space: nowrap; font-weight: 800; font-size: clamp(48px, 7vw, 96px); letter-spacing: -.04em; color: #eef2f9; line-height: 1.05; will-change: transform; font-family: 'Inter', 'Noto Sans Sinhala', 'Noto Sans Tamil', sans-serif; }
@@ -1312,7 +1312,11 @@ body.of { min-height: 100vh; background: radial-gradient(900px 600px at 80% 0%, 
 .lp-strip-track .lp-shot:last-child { margin-right: 20px; } /* the gap after the last card, so the loop meets without a jump */
 .lp-strip:hover .lp-strip-track { animation-play-state: paused; }
 @keyframes lp-strip-run { to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) { .lp-strip-track { animation: none; } .lp-strip { overflow-x: auto; } }
+/* the strip always slides by itself and never shows a scroll bar (Windows "Animation effects" off = reduce motion:
+   it still moves, only slower, instead of turning into a scroll box) */
+.lp-strip { overflow: hidden !important; scrollbar-width: none; }
+.lp-strip::-webkit-scrollbar { display: none; }
+@media (prefers-reduced-motion: reduce) { .lp-strip-track { animation-duration: 120s !important; animation-iteration-count: infinite !important; } }
 .lp-shot { position: relative; margin: 0; width: 300px; height: 400px; overflow: hidden; border-radius: var(--r); box-shadow: 0 30px 60px -30px rgba(5, 11, 31, .5); flex: none; }
 .lp-shot-low { margin-top: 60px; }
 .lp-shot img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
