@@ -35,7 +35,9 @@ if ($info === null) {
 }
 $e = static fn ($s): string => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 $lkr = static fn (float $v): string => number_format($v, 0);
+// cache-buster: the version + the file's own change time, so a re-uploaded landing.css / landing.js is never served stale
 $v = Project::getVersion();
+$lv = static fn (string $f): string => $v . '-' . (@filemtime(__DIR__ . '/' . $f) ?: '0');
 $name = Project::getBaseName();
 $trial = $info['trial'];
 $signup = 'tutor-registration-application.php';
@@ -102,7 +104,9 @@ function lp_icon(string $n, int $s = 22): string
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/landing/landing.css?v=<?= $v ?>">
+    <link rel="stylesheet" href="assets/landing/landing.css?v=<?= $lv('assets/landing/landing.css') ?>">
+    <!-- the loading screen never shows a full-size logo, even when landing.css is missing or still loading -->
+    <style>.lp-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:#050b1f}.lp-loader img{height:34px;width:auto}</style>
     <script>
         // Start in the language chosen last time, else the device language (Sinhala / Tamil), before the page shows.
         (function () {
@@ -777,7 +781,7 @@ function lp_icon(string $n, int $s = 22): string
 
     <div class="lp-cursor" aria-hidden="true"></div><div class="lp-cursor-dot" aria-hidden="true"></div>
     <script src="assets/landing/vendor/qrcode-generator-1.4.4.js" defer></script>
-    <script src="assets/landing/landing.js?v=<?= $v ?>" defer></script>
+    <script src="assets/landing/landing.js?v=<?= $lv('assets/landing/landing.js') ?>" defer></script>
 </body>
 
 </html>

@@ -24,7 +24,7 @@ header('X-Frame-Options: DENY');
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/landing/landing.css?v=<?= $v ?>">
+    <link rel="stylesheet" href="assets/landing/landing.css?v=<?= $v . '-' . (@filemtime(__DIR__ . '/assets/landing/landing.css') ?: '0') ?>">
     <script>
         // Same language as the landing page: the saved choice, else the device language.
         (function () {
@@ -79,7 +79,7 @@ header('X-Frame-Options: DENY');
             </div>
         </main>
     </div>
-    <script type="module" src="assets/landing/signup.js?v=<?= $v ?>"></script>
+    <script type="module" src="assets/landing/signup.js?v=<?= $v . '-' . (@filemtime(__DIR__ . '/assets/landing/signup.js') ?: '0') ?>"></script>
 </body>
 
 </html>
