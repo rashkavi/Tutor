@@ -8,6 +8,11 @@ if (str_starts_with($path, '/api/v1/')) {
     require $root . '/api/v1/index.php';
     return true;
 }
+if (basename($path) === 'deploy-manifest.json') {
+    http_response_code(403);
+    echo 'Forbidden';
+    return true;
+}
 if (is_file($root . $path)) {
     return false; // static file or .php as-is
 }
@@ -25,6 +30,5 @@ if (is_file($root . $path . '.php')) { // extensionless URLs like /tutor/student
     require $root . $path . '.php';
     return true;
 }
-http_response_code(404);
-echo 'Not found';
+require $root . '/404.php'; // like Apache's ErrorDocument 404
 return true;

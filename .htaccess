@@ -4,7 +4,24 @@
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
+# A missing page or file shows our own "Page not found" (404.php) instead of the server's default.
+ErrorDocument 404 /404.php
+
+# The upload checklist is for the admin's Deploy Check page only
+<Files "deploy-manifest.json">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</Files>
+
 RewriteEngine On
+# extensionless addresses (/tutor/students -> /tutor/students.php), only when that .php file exists;
+# anything else that does not exist ends on 404.php
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^([^\.]+)$ $1.php [NC,L]
