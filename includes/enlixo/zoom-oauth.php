@@ -13,12 +13,34 @@ if (!function_exists('enlixo_zoom_oauth')) {
     {
         $app = \Enlixo\Legacy\Bridge::app();
         $cfg = $app?->config['zoom'] ?? [];
-        $base = rtrim((string) (getenv('APP_URL') ?: Project::getBaseUrl()), '/');
         return [
             'client_id' => (string) ($cfg['oauth_client_id'] ?? ''),
             'client_secret' => (string) ($cfg['oauth_client_secret'] ?? ''),
-            'redirect' => $base . '/zoom-callback.php',
+            'redirect' => enlixo_zoom_redirect((string) ($cfg['oauth_redirect'] ?? '')),
         ];
+    }
+
+    /**
+     * The address Zoom sends the tutor back to. It must be on the SAME address the tutor is signed in on: the session
+     * (and the check that the answer belongs to this tutor) lives in a cookie of that address. The old code always used
+     * https://enlixotutor.com, so a tutor on www.enlixotutor.com (or another domain) came back signed out and the
+     * connection never finished. Order: ZOOM_OAUTH_REDIRECT (config) > the address of this request > APP_URL / BASE_URL.
+     * Every address used must be added to the Zoom app's "OAuth Redirect URL" and "OAuth Allow List".
+     */
+    function enlixo_zoom_redirect(string $configured = ''): string
+    {
+        if ($configured !== '') {
+            return $configured;
+        }
+        $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+        if ($host !== '' && preg_match('/^[a-z0-9.-]+(:\d+)?$/i', $host)) {
+            $https = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+            // the app root: /tutor/zoom-connect.php and /zoom-callback.php both live under it
+            $dir = str_replace('\\', '/', dirname((string) ($_SERVER['SCRIPT_NAME'] ?? '/')));
+            $dir = preg_replace('~/tutor$~', '', rtrim($dir, '/'));
+            return ($https ? 'https' : 'http') . '://' . strtolower($host) . $dir . '/zoom-callback.php';
+        }
+        return rtrim((string) (getenv('APP_URL') ?: Project::getBaseUrl()), '/') . '/zoom-callback.php';
     }
 
     /** The tutor's own Zoom integration row: the one asked for when it is theirs, else their first one, else a new one. */

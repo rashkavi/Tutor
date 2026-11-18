@@ -13,13 +13,13 @@ if (!SessionUser::ifUserIsTutor()) {
 }
 $tutor = SessionUser::getCurrentUserObject('Tutor');
 $tutorId = (int) ($tutor['user_id'] ?? 0);
-$back = static function (string $code): void {
-    header('Location: tutor/intergrations?zoom=' . $code);
+$back = static function (string $code, string $why = ''): void {
+    header('Location: tutor/intergrations?zoom=' . $code . ($why !== '' ? '&why=' . rawurlencode(substr($why, 0, 120)) : ''));
     exit;
 };
 
 if (isset($_GET['error'])) {
-    $back('denied'); // the tutor pressed Decline on the Zoom page
+    $back($_GET['error'] === 'access_denied' ? 'denied' : 'token', (string) ($_GET['error_description'] ?? $_GET['error'])); // Decline, or Zoom refused the app
 }
 if (!isset($_GET['code'], $_GET['state'])) {
     $back('expired');
@@ -53,8 +53,8 @@ $curlError = curl_error($ch);
 curl_close($ch);
 $token = json_decode((string) $response, true);
 if ($curlError !== '' || $httpCode !== 200 || !isset($token['access_token'], $token['refresh_token'], $token['expires_in'])) {
-    error_log('Zoom token exchange failed: HTTP ' . $httpCode . ' ' . $curlError . ' ' . substr((string) $response, 0, 300));
-    $back('token');
+    error_log('Zoom token exchange failed: HTTP ' . $httpCode . ' ' . $curlError . ' ' . substr((string) $response, 0, 300) . ' redirect=' . $oauth['redirect']);
+    $back('token', $curlError !== '' ? 'Could not reach Zoom from the server' : (string) ($token['reason'] ?? $token['error'] ?? ('HTTP ' . $httpCode)));
 }
 
 $access = Database::escape((string) $token['access_token']);

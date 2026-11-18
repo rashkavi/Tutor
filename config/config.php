@@ -26,6 +26,8 @@ $config = [
         // OAuth (user) app used when a tutor connects their own Zoom
         'oauth_client_id' => getenv('ZOOM_OAUTH_CLIENT_ID') ?: '',
         'oauth_client_secret' => getenv('ZOOM_OAUTH_CLIENT_SECRET') ?: '',
+        // optional: one fixed return address (e.g. https://enlixotutor.com/zoom-callback.php); empty = the address the tutor uses
+        'oauth_redirect' => getenv('ZOOM_OAUTH_REDIRECT') ?: '',
         'webhook_secret' => getenv('ZOOM_WEBHOOK_SECRET') ?: '',
         'schedule_weeks_ahead' => 2,
     ],
