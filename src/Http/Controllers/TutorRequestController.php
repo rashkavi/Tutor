@@ -80,7 +80,12 @@ final class TutorRequestController
         $id = (int) $r->param('id');
         $tutorId = $this->app->tutorRequests()->approve($id, $r->body, $auth->userId, $this->app->platformBilling());
         $req = $this->app->tutorRequests()->one($id);
-        $welcome = $this->app->tutorWelcome()->send($tutorId, PlatformController::baseUrl($r));
+        try { // the tutor is made: a mail problem must not turn the answer into an error
+            $welcome = $this->app->tutorWelcome()->send($tutorId, PlatformController::baseUrl($r));
+        } catch (\Throwable $e) {
+            error_log('Tutor welcome mail failed for user ' . $tutorId . ': ' . $e->getMessage());
+            $welcome = ['sent' => false, 'link' => '', 'email' => ''];
+        }
         return JsonResponse::ok(['id' => $tutorId, 'request' => $req, 'mailed' => $welcome['sent'], 'welcome' => $welcome], [], 201);
     }
 

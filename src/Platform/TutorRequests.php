@@ -405,7 +405,18 @@ final class TutorRequests
         if ($r['status'] !== 'pending') {
             throw new HttpException(409, 'already_decided', 'This request was already ' . $r['status'] . '.');
         }
-        $tutorId = $billing->addTutor($in, $by);
+        // Claim the request first: a second click (or a second admin) gets "already approved" instead of making the
+        // tutor twice or failing with "e-mail already used". If making the tutor fails it goes back to pending.
+        if (!$this->db->execute('UPDATE requested_users SET request_status_request_status_id = :a WHERE requested_user_id = :id AND request_status_request_status_id = :p',
+            ['a' => self::APPROVED, 'p' => self::PENDING, 'id' => $id])) {
+            throw new HttpException(409, 'already_decided', 'This request was already approved or rejected. Refresh the page.');
+        }
+        try {
+            $tutorId = $billing->addTutor($in, $by);
+        } catch (\Throwable $e) {
+            $this->db->execute('UPDATE requested_users SET request_status_request_status_id = :p WHERE requested_user_id = :id', ['p' => self::PENDING, 'id' => $id]);
+            throw $e;
+        }
         $this->db->transaction(function () use ($id, $r, $tutorId, $by, $in) {
             if ($r['nic'] !== '') {
                 $this->db->execute('UPDATE users SET nic = :n WHERE user_id = :u AND (nic IS NULL OR nic = \'\')', ['n' => $r['nic'], 'u' => $tutorId]);

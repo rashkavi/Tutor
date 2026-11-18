@@ -81,7 +81,13 @@ final class PlatformController
     {
         $auth = $this->admin($r);
         $id = $this->app->platformBilling()->addTutor($r->body, $auth->userId);
-        return JsonResponse::ok(['id' => $id, 'welcome' => $this->app->tutorWelcome()->send($id, self::baseUrl($r))], [], 201);
+        try { // the tutor is made: a mail problem must not turn the answer into an error
+            $welcome = $this->app->tutorWelcome()->send($id, self::baseUrl($r));
+        } catch (\Throwable $e) {
+            error_log('Tutor welcome mail failed for user ' . $id . ': ' . $e->getMessage());
+            $welcome = ['sent' => false, 'link' => '', 'email' => ''];
+        }
+        return JsonResponse::ok(['id' => $id, 'welcome' => $welcome], [], 201);
     }
 
     public function tutor(Request $r): JsonResponse

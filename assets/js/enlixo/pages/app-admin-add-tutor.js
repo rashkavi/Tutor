@@ -155,10 +155,25 @@ function summary() {
     h('div', { class: 'ad-sum-row' }, h('span', { class: 'main-text fw-semibold' }, ['comp', 'free'].includes(start) ? 'To pay' : 'Each invoice'), h('span', { class: 'main-topic' }, ['comp', 'free'].includes(start) ? lkr(0) : lkr(total))),
     h('div', { class: 'text-14 main-text fw-semibold mt-4 mb-2' }, 'What happens when you save'),
     h('ol', { class: 'ad-steps' }, steps.map((s, i) => h('li', {}, h('span', { class: 'ad-step-dot' }, String(i + 1)), h('span', {}, s)))),
-    h('button', { type: 'button', class: 'custom-btn w-100 mt-3', onclick: save }, REQ ? 'Approve and Add Tutor' : 'Add Tutor'));
+    h('button', { type: 'button', class: 'custom-btn w-100 mt-3 at-save', onclick: save }, saveLabel()));
+  if (saving) busy(true);
 }
 
+// Saving: both save buttons (header + summary) show a spinner and are off, so nobody presses twice while the
+// tutor is made and the welcome e-mail goes out (that can take several seconds on the live mail server).
+let saving = false;
+const saveLabel = () => (REQ ? 'Approve and Add Tutor' : 'Add Tutor');
+function busy(on) {
+  root.ownerDocument.querySelectorAll('.at-save').forEach((b) => {
+    b.disabled = on;
+    b.setAttribute('aria-busy', on ? 'true' : 'false');
+    fill(b, on ? [h('span', { class: 'spinner-border spinner-border-sm me-2', role: 'status', 'aria-hidden': 'true' }), REQ ? 'Approving...' : 'Adding...'] : saveLabel());
+  });
+}
 async function save() {
+  if (saving) return;
+  saving = true;
+  busy(true);
   const body = Object.fromEntries(Object.entries(inputs).map(([k, el]) => [k, el.value]));
   Object.assign(body, { plan: val('plan'), cycle: val('cycle'), start: val('start'), addons: [...root.querySelectorAll('input[name="addon"]:checked')].map((x) => x.value), custom_price: customOn.checked ? body.custom_price : '', custom_price_reason: customOn.checked ? body.custom_price_reason : '' });
   root.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
@@ -167,8 +182,10 @@ async function save() {
     const { data } = await api.post(REQ ? `/admin/tutor-requests/${REQ.id}/approve` : '/admin/tutors', body);
     Toast.success(`${body.first_name} ${body.last_name} added.`);
     try { sessionStorage.setItem(`enlixo-welcome-${data.id}`, JSON.stringify({ ...(data.welcome ?? {}), whatsapp: body.whatsapp || body.mobile, name: body.first_name })); } catch { /* storage blocked */ }
-    setTimeout(() => { location.href = `tutor-details?tutor-id=${data.id}`; }, 900);
+    setTimeout(() => { location.href = `tutor-details?tutor-id=${data.id}`; }, 900); // stays busy until the page changes
   } catch (e) {
+    saving = false;
+    busy(false);
     const errs = e.details ?? {};
     let first = null;
     Object.entries(errs).forEach(([k, msg]) => { const el = inputs[k]; if (!el) return; el.classList.add('is-invalid'); const er = document.getElementById(`at-${k}-err`); er.textContent = msg; er.classList.remove('d-none'); first ??= el; });
@@ -179,7 +196,7 @@ async function save() {
 
 document.getElementById('add-tutor-actions').append(
   h('a', { class: 'ex-gear', href: 'plans?tab=rules', title: 'Trial & Billing Rules', 'aria-label': 'Trial & Billing Rules' }, icon('settings', { size: 30 })),
-  h('button', { type: 'button', class: 'custom-btn px-5', onclick: save }, REQ ? 'Approve and Add Tutor' : 'Add Tutor'));
+  h('button', { type: 'button', class: 'custom-btn px-5 at-save', onclick: save }, saveLabel()));
 
 if (REQ) {
   const set = (k, val) => { if (inputs[k] && val !== null && val !== undefined && val !== '') inputs[k].value = String(val); };
