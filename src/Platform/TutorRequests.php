@@ -48,11 +48,21 @@ final class TutorRequests
             'heard' => self::HEARD,
             'promos' => array_map(static fn ($p) => ['plan' => $p['plan'], 'percent' => $p['percent'], 'title' => $p['title']], Promotions::CODES),
             // the accounts the first payment of STARTER / GROW goes to (Admin > Plans & Billing > bank accounts)
-            'banks' => array_values(array_map(static fn ($b) => ['bank' => (string) $b['bank'], 'branch' => (string) ($b['branch'] ?? ''), 'name' => (string) $b['name'], 'number' => (string) $b['number']],
-                array_filter($this->settings->banks(), static fn ($b) => !empty($b['on'])))),
+            'banks' => $this->signupBanks(),
             'slip' => ['max_mb' => self::SLIP_MAX_MB, 'types' => 'JPG, PNG, WebP or PDF'],
             'trial' => ['days' => (int) $rules['trial_days'], 'plan' => strtoupper((string) ($this->catalog->planByKey((string) $rules['trial_plan'])['payment_plan'] ?? $rules['trial_plan'])), 'students' => (int) $rules['trial_student_cap']],
         ];
+    }
+
+    /** Sample account shown until the admin adds the real ones (Admin > Plans & Billing > bank accounts). */
+    public const SAMPLE_BANK = ['bank' => 'Commercial Bank', 'branch' => 'Colombo City', 'name' => 'ENVIIZ (Pvt) Ltd', 'number' => '1000 2345 6789'];
+
+    /** The accounts the first payment goes to: the switched-on ones, else the sample account. */
+    private function signupBanks(): array
+    {
+        $on = array_values(array_map(static fn ($b) => ['bank' => (string) $b['bank'], 'branch' => (string) ($b['branch'] ?? ''), 'name' => (string) $b['name'], 'number' => (string) $b['number']],
+            array_filter($this->settings->banks(), static fn ($b) => !empty($b['on']))));
+        return $on ?: [self::SAMPLE_BANK];
     }
 
     /** START / GROW / PRO from payment_plans (prices the admin set) with the features from the pricing sheet. */

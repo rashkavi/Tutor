@@ -1493,3 +1493,12 @@ html:not([lang="si"]):not([lang="ta"]) .lp-h2-brand .lp-lang-en, html[lang="si"]
 }
 /* plans table: limits counted per month carry a small "per month" under the name */
 .lp-per { display: block; font-size: 12px; font-weight: 500; color: var(--muted); }
+/* sign-up: the chosen plan only, with "Change plan"; the button waits for the slip */
+.su-chosen { position: relative; display: flex; align-items: center; gap: 14px; padding: 16px 18px; border: 1px solid var(--blue); border-radius: var(--r); background: #f2f7ff; box-shadow: 0 0 0 1px var(--blue); }
+.su-chosen .su-plan-check { position: static; flex: none; background: var(--blue); border-color: var(--blue); color: #fff; }
+.su-chosen-body { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.su-chosen .su-mini-price { font-size: 18px; }
+.su-chosen .su-change { flex: none; font-size: 13.5px; font-weight: 600; color: var(--blue); text-decoration: underline; }
+.su-need-slip { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; color: #b45309; font-weight: 600; }
+#su-next:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+@media (max-width: 560px) { .su-nav-end { flex-wrap: wrap; } .su-need-slip { width: 100%; } }

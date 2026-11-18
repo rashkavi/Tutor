@@ -1,6 +1,6 @@
 {
-    "generated": "2026-11-18T07:56:40+00:00",
-    "commit": "0b9e9e9",
+    "generated": "2026-11-18T10:19:50+00:00",
+    "commit": "2a2e857",
     "files": {
         ".DS_Store": [
             10244,
@@ -1203,16 +1203,16 @@
             "7ba0541893f2b44f39edfd329abf43607496ed28"
         ],
         "assets/landing/landing.css": [
-            127750,
-            "d9f4e058452fcb1e5f281c7fbfe4e2eb05d3243e"
+            128732,
+            "bc9636d6f1122f60e8d8db452e0b493bf53b19f3"
         ],
         "assets/landing/landing.js": [
             19491,
             "5ab2cd631e25b2b1c1442e5b22d1efe7b4c78ddc"
         ],
         "assets/landing/signup.js": [
-            18133,
-            "491c49caed6db86fc8d88f965ce675391fcbe34e"
+            18418,
+            "31c6c6c574f07cf0a9022b18e12bda2a9003782f"
         ],
         "assets/landing/vendor/qrcode-generator-1.4.4.js": [
             56694,
@@ -2931,8 +2931,8 @@
             "d8f4da0d75ddc8b83897c82cc7166f429f037f1a"
         ],
         "src/Platform/TutorRequests.php": [
-            28259,
-            "41a10697c98e637cbae780d8cc9d628307003037"
+            28748,
+            "9ac82dc461bfc079beb73fde0b4303a89f3bc427"
         ],
         "src/Platform/TutorWelcome.php": [
             5002,

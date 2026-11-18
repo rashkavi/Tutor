@@ -52,7 +52,7 @@ const mailLog = () => { try { return fs.readFileSync(path.join(__dirname, '..', 
     await p().setViewportSize({ width: 390, height: 844 });
     await t.open('tutor-registration-application.php?plan=grow', 2000);
     t.expect(/Create your account/.test(await text()), 'Form missing');
-    t.expect(await p().isChecked('input[name=plan][value=grow]'), 'GROW not chosen');
+    t.expect(/GROW/.test(await text('.su-chosen')), 'GROW not chosen');
     const wide = await p().evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 2 && getComputedStyle(document.body).overflowX !== 'hidden');
     t.expect(!wide, 'The page scrolls sideways on a phone');
     await p().setViewportSize({ width: 1440, height: 900 });
@@ -60,8 +60,8 @@ const mailLog = () => { try { return fs.readFileSync(path.join(__dirname, '..', 
   await t.tc('BJ-03', 'Sign-up', 'A tutor sends a sign-up request for GROW with the payment slip', ['Fill name, e-mail, mobile', 'Upload the bank slip', 'Accept the terms', 'Send'], 'A reference TR-… comes back, the slip is saved and a "request received" e-mail goes out', async () => {
     const before = mailLog().length;
     await t.open('tutor-registration-application.php?plan=grow', 2000);
-    await p().click('#su-next'); // nothing filled: the form shows what is missing
-    t.expect(/Upload the slip/.test(await text()) && /Terms and Conditions/.test(await text()), 'Missing-field messages not shown');
+    t.expect(await p().isDisabled('#su-next'), 'Send is possible without a slip'); // GROW: the slip comes first
+    t.expect(await p().locator('.su-chosen').count() === 1 && await p().locator('.su-mini').count() === 0, 'More than the chosen plan is shown');
     await p().fill('#su-name', `${SIGNUP.first} ${SIGNUP.last}`);
     await p().fill('#su-email', SIGNUP.email);
     await p().fill('#su-mobile', SIGNUP.mobile);
