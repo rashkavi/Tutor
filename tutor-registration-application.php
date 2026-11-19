@@ -40,7 +40,7 @@ header('X-Frame-Options: DENY');
 <body class="lp">
     <div class="su">
         <aside class="su-aside">
-            <img class="su-aside-photo" src="assets/landing/img/portal-3.webp" alt="" aria-hidden="true">
+            <img class="su-aside-photo" src="assets/landing/img/signup-side.webp" alt="" aria-hidden="true">
             <a href="./" class="su-aside-logo"><img src="assets/imgs/common/enlixo-light.webp" alt="<?= $e($name) ?>"></a>
             <div class="su-aside-body">
                 <span class="lp-pill"><span class="lp-pill-tag">Free</span> <span id="su-trial-pill">Free up to 50 students, no card needed</span></span>
