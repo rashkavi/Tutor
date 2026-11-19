@@ -1,8 +1,8 @@
 # Landing page pictures: one prompt per picture (Nano Banana / Gemini)
 
-The landing page (`index.php`) has **12 photo places**. Each place has its **own file name**, so no picture is used
-twice. Until a file is uploaded, that place shows one of the older shared photos (`photo-*.webp` / `portal-*.webp`).
-After you upload all 12, every section shows a different picture.
+The landing page (`index.php`) has **12 photo places** and the sign-up page has **1**. Each place has its **own file**
+in `assets/landing/img/` (today they hold the older photos as placeholders). To change a picture, generate it and upload
+it with the **same file name**, replacing the old file: the page picks it up at once, no code change needed.
 
 **Rules for every picture**
 - **No school uniforms.** Students wear normal clothes: T-shirts, shirts, frocks, kurtas, hoodies. No white uniforms, no ties, no school badges.
@@ -66,6 +66,15 @@ The picture sits on the **right** of the footer box and fades out to the left, s
 |---|---|---|
 | 12 | `cta-start.webp` | A happy Sri Lankan tutor in her late twenties in casual smart clothes waves goodbye to her students at the end of an evening class, standing at the door of a small tuition room; two teenage students in casual clothes with backpacks walk out smiling; the people are on the right half of the picture, the left half is a soft blurred wall, warm golden evening light. 16:10 landscape. |
 
+## 6. Sign-up page (`tutor-registration-application.php`), left side
+
+The photo fills the tall dark-blue left panel behind the white heading and the list of perks, so keep it **calm and a bit dark**, with the person in the **lower half**.
+**Size:** portrait **3:4**, **900 × 1200 px**.
+
+| # | File | Prompt |
+|---|---|---|
+| 13 | `signup-side.webp` | A Sri Lankan female tutor in her early thirties in a smart casual blouse sits at a wooden desk in the evening and plans her week on a laptop, a small stack of exercise books and a cup of tea beside her, soft lamp light, deep blue shadows in the room, calm and confident mood; she sits in the lower half of the picture, the top half is a dark plain wall. 3:4 portrait. |
+
 ---
 
 **Tips**
@@ -73,4 +82,4 @@ The picture sits on the **right** of the footer box and fades out to the left, s
 - If faces or hands look wrong, ask Nano Banana: "fix the hands and faces, keep everything else the same".
 - If a uniform still appears, add: "students wear casual clothes, not school uniforms".
 - Cut the picture to the size above before saving (Nano Banana: "make it 3:4 portrait", "make it 16:10 landscape").
-- Files the page no longer needs after all 12 are uploaded: none to delete. The older `photo-*` / `portal-*` files stay as fallbacks.
+- Keep the file names exactly as above (small letters, `-`, `.webp`), or the picture will not show.

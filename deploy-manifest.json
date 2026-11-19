@@ -1,6 +1,6 @@
 {
-    "generated": "2026-11-18T23:27:20+00:00",
-    "commit": "3e7f8a2",
+    "generated": "2026-11-19T00:28:33+00:00",
+    "commit": "e431e64",
     "files": {
         ".DS_Store": [
             10244,
@@ -1174,29 +1174,57 @@
             1314,
             "2433eb0e09bd5f1e8bf9ad3e37dff66868fbf5ec"
         ],
-        "assets/landing/img/photo-1.webp": [
-            33366,
-            "f3dc4005f469d25924db9c8e33fe204d82e1d130"
-        ],
-        "assets/landing/img/photo-2.webp": [
+        "assets/landing/img/cta-start.webp": [
             25882,
             "eb52c78fcf4c610db15b73fea36d16ba50e026f9"
         ],
-        "assets/landing/img/photo-3.webp": [
+        "assets/landing/img/how-setup.webp": [
+            25882,
+            "eb52c78fcf4c610db15b73fea36d16ba50e026f9"
+        ],
+        "assets/landing/img/portal-parent.webp": [
+            33366,
+            "f3dc4005f469d25924db9c8e33fe204d82e1d130"
+        ],
+        "assets/landing/img/portal-student.webp": [
+            35728,
+            "750d8abf076cd651daab6d389dc341d48cc19451"
+        ],
+        "assets/landing/img/portal-tutor.webp": [
             46206,
             "467c21f95bb9d02bfc18b39feab27006fc9407eb"
         ],
-        "assets/landing/img/portal-1.webp": [
-            41766,
-            "7c2d977410e48b7bac4b733d7db27bbd7e3bb58a"
+        "assets/landing/img/signup-side.webp": [
+            35728,
+            "750d8abf076cd651daab6d389dc341d48cc19451"
         ],
-        "assets/landing/img/portal-2.webp": [
+        "assets/landing/img/strip-group.webp": [
             40590,
             "e82eebd9b600bb1e953fce586cb9a06f23be43ea"
         ],
-        "assets/landing/img/portal-3.webp": [
+        "assets/landing/img/strip-hall.webp": [
+            41766,
+            "7c2d977410e48b7bac4b733d7db27bbd7e3bb58a"
+        ],
+        "assets/landing/img/strip-paper.webp": [
+            46206,
+            "467c21f95bb9d02bfc18b39feab27006fc9407eb"
+        ],
+        "assets/landing/img/strip-revision.webp": [
             35728,
             "750d8abf076cd651daab6d389dc341d48cc19451"
+        ],
+        "assets/landing/img/strip-team.webp": [
+            25882,
+            "eb52c78fcf4c610db15b73fea36d16ba50e026f9"
+        ],
+        "assets/landing/img/strip-zoom.webp": [
+            33366,
+            "f3dc4005f469d25924db9c8e33fe204d82e1d130"
+        ],
+        "assets/landing/img/talk.webp": [
+            25882,
+            "eb52c78fcf4c610db15b73fea36d16ba50e026f9"
         ],
         "assets/landing/img/zoom.webp": [
             1344,
@@ -2327,8 +2355,8 @@
             "8ef4eda9fc441e929cf1174b10d5244948961de4"
         ],
         "index.php": [
-            67637,
-            "e42dc603430cc584164038d2f46f603fc1cbd161"
+            67081,
+            "db61f97dfee41ca4ff4badbf8f5957de8f4dc57a"
         ],
         "offer.php": [
             8839,
@@ -3147,8 +3175,8 @@
             "459f271c717932861cbef1c7188fef8681268b01"
         ],
         "tutor-registration-application.php": [
-            6040,
-            "c97adb1a640028d01cea763a47fd43d90f3a66bb"
+            6043,
+            "abf5f98938a535d6b7f3f9564b99f7514478f52e"
         ],
         "tutor/.DS_Store": [
             12292,
