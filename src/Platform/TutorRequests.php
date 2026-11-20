@@ -281,23 +281,23 @@ final class TutorRequests
                 $monthly = round($monthly * (100 - (int) $promo['percent']) / 1000) * 10;
             }
             $amount = $cycle === 'yearly' ? $monthly * 12 : $monthly;
-            $slipExt = $this->checkSlip($slip, $e);
+          
         }
         if ($e) {
             throw new HttpException(422, 'validation_failed', 'Please check the highlighted fields.', $e);
         }
-        $slipName = null;
-        if ($paid && $slipExt !== null) {
-            $dir = dirname(__DIR__, 2) . '/' . self::SLIP_DIR;
-            if (!is_dir($dir)) {
-                @mkdir($dir, 0775, true);
-            }
-            $slipName = 'tr-' . bin2hex(random_bytes(10)) . '.' . $slipExt;
-            if (!@move_uploaded_file((string) $slip['tmp_name'], $dir . '/' . $slipName) && !@rename((string) $slip['tmp_name'], $dir . '/' . $slipName)) {
-                throw new HttpException(500, 'upload_failed', 'We could not save your slip. Please try again.');
-            }
-        }
-        $this->ensureSlipColumns();
+        // $slipName = null;
+        // if ($paid && $slipExt !== null) {
+        //     $dir = dirname(__DIR__, 2) . '/' . self::SLIP_DIR;
+        //     if (!is_dir($dir)) {
+        //         @mkdir($dir, 0775, true);
+        //     }
+        //     $slipName = 'tr-' . bin2hex(random_bytes(10)) . '.' . $slipExt;
+        //     if (!@move_uploaded_file((string) $slip['tmp_name'], $dir . '/' . $slipName) && !@rename((string) $slip['tmp_name'], $dir . '/' . $slipName)) {
+        //         throw new HttpException(500, 'upload_failed', 'We could not save your slip. Please try again.');
+        //     }
+        // }
+        // $this->ensureSlipColumns();
 
         $id = $this->db->insert(
             'INSERT INTO requested_users (user_fname, user_lname, email, mobile, whatsapp, nic, title_title_id, requested_date_time, request_status_request_status_id,
@@ -307,8 +307,8 @@ final class TutorRequests
                 'p' => $plan, 'c' => $cycle, 'a' => $addons ? json_encode($addons) : null, 'ins' => $institute ?: null, 'sub' => $subject, 'g' => $grades ?: null, 'mode' => $mode,
                 'd' => $district ?: null, 'n' => $students === '' ? null : (int) $students, 'h' => $heard ?: null, 'msg' => $message ?: null, 'ip' => $ip, 'promo' => $promo['code'] ?? null],
         );
-        $this->db->execute('UPDATE requested_users SET payment_slip = :s, payment_amount = :a, terms_accepted_at = :t WHERE requested_user_id = :id',
-            ['s' => $slipName, 'a' => $amount, 't' => $now, 'id' => $id]);
+        // $this->db->execute('UPDATE requested_users SET payment_slip = :s, payment_amount = :a, terms_accepted_at = :t WHERE requested_user_id = :id',
+        //     ['s' => $slipName, 'a' => $amount, 't' => $now, 'id' => $id]);
         return ['ref' => self::ref($id), 'id' => $id];
     }
 

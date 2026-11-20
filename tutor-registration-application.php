@@ -54,7 +54,7 @@ header('X-Frame-Options: DENY');
                 </ul>
                 <div class="su-quote"><b>What happens next?</b> We call or WhatsApp you within one working day, make your account and send your sign-in details by e-mail.</div>
             </div>
-            <div class="su-aside-foot"><span>&copy; <?= date('Y') ?> <?= $e($name) ?></span><a href="https://enviiz.com" target="_blank" rel="noopener">Powered by ENVIIZ</a></div>
+            <div class="su-aside-foot"><span>&copy; <?= date('Y') ?> <?= $e($name) ?></span><a href="https://enviiz.com" target="_blank" rel="noopener" class="lp-powered"><span>Powered by</span> <img src="assets/imgs/common/enviiz-white.webp" alt="ENVIIZ Softwares"></a></div>
         </aside>
 
         <main class="su-main" id="su-root">

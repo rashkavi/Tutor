@@ -421,7 +421,7 @@ body.lp { margin: 0; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI',
 .lp-foot-col a:hover { color: #fff; }
 .lp-foot-bottom { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 48px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, .08); font-size: 13px; flex-wrap: wrap; }
 .lp-powered { display: inline-flex; align-items: center; gap: 8px; }
-.lp-powered img { height: .8em; width: auto; display: block; } /* as tall as the letters of "Powered by" */
+.lp-powered img { height: .7em; width: auto; display: block; } /* as tall as the letters of "Powered by" */
 
 /* ---------- responsive ---------- */
 @media (max-width: 1100px) {
@@ -1294,7 +1294,7 @@ body.of { min-height: 100vh; background: radial-gradient(900px 600px at 80% 0%, 
 .lp-how-chip.c2 { right: 20px; bottom: 24px; animation-delay: 1.5s; }
 
 /* FAQ: talk to a person */
-.lp-talk { position: relative; margin-top: 28px; overflow: hidden; border-radius: var(--r); min-height: 230px; display: flex; align-items: flex-end; }
+.lp-talk { position: relative; margin-top: 28px; overflow: hidden; border-radius: var(--r); min-height: 530px; display: flex; align-items: flex-end; }
 .lp-talk img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .lp-talk::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5, 11, 31, .1), rgba(5, 11, 31, .9)); }
 .lp-talk-in { position: relative; z-index: 1; padding: 22px; color: #fff; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
@@ -1443,7 +1443,7 @@ html:is([lang=si], [lang=ta]) .su-step { font-size: 12px; line-height: 1.4; }
 /* "Teaching on [logo] in three steps." (index.php #how): one line per language, the ENLIXO logo instead of the word */
 .lp-h2-brand > span { display: none; }
 html:not([lang="si"]):not([lang="ta"]) .lp-h2-brand .lp-lang-en, html[lang="si"] .lp-h2-brand .lp-lang-si, html[lang="ta"] .lp-h2-brand .lp-lang-ta { display: inline; }
-.lp .lp-h2-brand .lp-h2-logo { display: inline-block; height: .78em; width: auto; vertical-align: -.02em; margin: 0 .04em; }
+.lp .lp-h2-brand .lp-h2-logo { display: inline-block; height: .60em !important; width: auto; vertical-align: -.02em; margin: 0 .04em; }
 
 /* ---------- Sign-up as one short form (assets/landing/signup.js): plan, name / e-mail / mobile, payment + slip, terms ---------- */
 .su-block { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }

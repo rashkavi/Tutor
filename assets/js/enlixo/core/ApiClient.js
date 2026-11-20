@@ -11,7 +11,7 @@ export class ApiError extends Error {
   }
 }
 
-export class FeatureLockedError extends ApiError {}
+export class FeatureLockedError extends ApiError { }
 
 // assets/js/enlixo/core/ApiClient.js → <site root>/api/v1 (works at the domain root and in a sub-folder like XAMPP's)
 export const DEFAULT_API_BASE = new URL('../../../../api/v1', import.meta.url).href.replace(/\/$/, '');
@@ -60,6 +60,7 @@ export class ApiClient {
   async #fetch(method, path, body, signal) {
     let response;
     try {
+
       response = await fetch(this.baseUrl + path, {
         method,
         signal,
